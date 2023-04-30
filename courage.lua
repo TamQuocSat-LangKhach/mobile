@@ -33,13 +33,14 @@ local quedi = fk.CreateTriggerSkill{
       target == player and
       player:hasSkill(self.name) and
       player:usedSkillTimes(self.name, Player.HistoryTurn) < (1 + player:getMark("choujue_buff-turn")) and
-      table.contains({ "slash", "duel" }, data.card.trueName)
+      table.contains({ "slash", "duel" }, data.card.trueName) and
+      player.room:getPlayerById(data.to):isAlive()
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local choices = {}
     local to = room:getPlayerById(data.to)
-    if to:isAlive() and not to:isKongcheng() then
+    if not to:isKongcheng() then
       table.insert(choices, "quedi-prey")
     end
 
@@ -52,7 +53,7 @@ local quedi = fk.CreateTriggerSkill{
     if #choices > 0 then
       table.insert(choices, 1, "beishui")
       table.insert(choices, "Cancel")
-     
+
       local choice = room:askForChoice(player, choices, self.name)
       if choice ~= "Cancel" then
         self.cost_data = choice
@@ -68,8 +69,9 @@ local quedi = fk.CreateTriggerSkill{
       room:changeMaxHp(player, -1)
     end
 
-    if self.cost_data == "quedi-prey" or self.cost_data == "beishui" then
-      local cardId = room:askForCardChosen(player, room:getPlayerById(data.to), "h", self.name)
+    local to = room:getPlayerById(data.to)
+    if self.cost_data == "quedi-prey" or (self.cost_data == "beishui" and not to:isKongcheng()) then
+      local cardId = room:askForCardChosen(player, to, "h", self.name)
       room:obtainCard(player, cardId, false, fk.ReasonPrey)
     end
     if self.cost_data == "quedi-offense" or

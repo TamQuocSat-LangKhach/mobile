@@ -6,17 +6,6 @@ Fk:loadTranslationTable{
   ["mobile"] = "手杀",
 }
 
-local canDiscard = function(player, card) 
-  local status_skills = Fk:currentRoom().status_skills[ProhibitSkill] or {}
-  for _, skill in ipairs(status_skills) do
-    if skill:prohibitDiscard(player, card) then
-      return false
-    end
-  end
-
-  return true
-end
-
 local wenyang = General(extension, "mobile__wenyang", "wei", 4)
 wenyang.subkingdom = "wu"
 Fk:loadTranslationTable{
@@ -45,7 +34,7 @@ local quedi = fk.CreateTriggerSkill{
     end
 
     if table.find(player:getCardIds(Player.Hand), function(id)
-      return Fk:getCardById(id).type == Card.TypeBasic and canDiscard(player, Fk:getCardById(id))
+      return Fk:getCardById(id).type == Card.TypeBasic and not player:prohibitDiscard(Fk:getCardById(id))
     end) then
       table.insert(choices, "quedi-offense")
     end
@@ -77,7 +66,7 @@ local quedi = fk.CreateTriggerSkill{
     if self.cost_data == "quedi-offense" or
       (
         self.cost_data == "beishui" and table.find(player:getCardIds(Player.Hand), function(id)
-          return Fk:getCardById(id).type == Card.TypeBasic and canDiscard(player, Fk:getCardById(id))
+          return Fk:getCardById(id).type == Card.TypeBasic and not player:prohibitDiscard(Fk:getCardById(id))
         end)
       )
     then
@@ -121,7 +110,7 @@ local chuifengDefence = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and table.contains(data.card.skillNames, chuifeng.name)
+    return target == player and player:hasSkill(self.name) and data.card and table.contains(data.card.skillNames, chuifeng.name)
   end,
   on_cost = function(self, event, target, player, data)
     return true

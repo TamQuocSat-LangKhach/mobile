@@ -2,6 +2,7 @@ local extension = Package("mobile_sp")
 extension.extensionName = "mobile"
 Fk:loadTranslationTable{
   ["mobile_sp"] = "手杀专属",
+  ["mxing"] = "手杀星",
 }
 
 local maojie = General(extension, "maojie", "wei", 3)
@@ -140,7 +141,7 @@ Fk:loadTranslationTable{
 local xingtu = fk.CreateTriggerSkill{
   name = "xingtu",
   events = {fk.CardUsing},
-  anim_type = "drawCard",
+  anim_type = "drawcard",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return
@@ -189,7 +190,7 @@ peixiu:addSkill(xingtu)
 
 local juezhi = fk.CreateActiveSkill{
   name = "juezhi",
-  anim_type = "drawCard",
+  anim_type = "drawcard",
   min_card_num = 2,
   can_use = function(self, player)
     return true
@@ -226,5 +227,142 @@ Fk:loadTranslationTable{
 }
 
 peixiu:addSkill(juezhi)
+
+local xinghuangzhong = General(extension, "mxing__huangzhong", "qun", 4)
+Fk:loadTranslationTable{
+  ["mxing__huangzhong"] = "星黄忠",
+  ["~mxing__huangzhong"] = "关云长义释黄某，吾又安忍射之……",
+}
+
+local shidi = fk.CreateTriggerSkill{
+  name = "shidi",
+  events = {fk.EventPhaseStart},
+  mute = true,
+  frequency = Skill.Compulsory,
+  switch_skill_name = "shidi",
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self.name) and
+      (
+        (player.phase == Player.Start and player:getSwitchSkillState(self.name) == fk.SwitchYin) or
+        (player.phase == Player.Finish and player:getSwitchSkillState(self.name) == fk.SwitchYang)
+      )
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:broadcastSkillInvoke(self.name, player:getSwitchSkillState(self.name) + 1)
+    room:notifySkillInvoked(player, self.name, "switch")
+  end,
+
+  refresh_events = {fk.CardUsing},
+  can_refresh = function(self, event, target, player, data)
+    return
+      player:hasSkill(self.name) and
+      data.card.trueName == "slash" and
+      (
+        (player:getSwitchSkillState(self.name) == fk.SwitchYang and data.card.color == Card.Black and data.from == player.id) or
+        (
+          player:getSwitchSkillState(self.name) == fk.SwitchYin and
+          data.card.color == Card.Red and
+          data.from ~= player.id and
+          table.contains(TargetGroup:getRealTargets(data.tos), player.id)
+        )
+      )
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+
+    data.disresponsiveList = data.disresponsiveList or {}
+    if player:getSwitchSkillState(self.name) == fk.SwitchYang then
+      table.insertTable(data.disresponsiveList, table.map(room.players, function(p) return p.id end))
+    else
+      table.insertIfNeed(data.disresponsiveList, player.id)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["shidi"] = "势敌",
+  [":shidi"] = "锁定技，准备阶段开始时，转换为阳；结束阶段开始时，转换为阴；阳：你计算与其他角色的距离-1，且你使用的黑色【杀】不可被响应；阴：其他角色计算与你的距离+1，且你不可响应其他角色对你使用的红色【杀】。",
+  ["$shidi1"] = "诈败以射之，其必死矣！",
+  ["$shidi2"] = "呃啊，中其拖刀计矣！",
+}
+
+local shidiBuff = fk.CreateDistanceSkill{
+  name = "#shidi-buff",
+  correct_func = function(self, from, to)
+    if from:hasSkill(self.name) and from:getSwitchSkillState("shidi") == fk.SwitchYang then
+      return -1
+    elseif to:hasSkill(self.name) and to:getSwitchSkillState("shidi") == fk.SwitchYin then
+      return 1
+    end
+  end,
+}
+
+shidi:addRelatedSkill(shidiBuff)
+xinghuangzhong:addSkill(shidi)
+
+local xingYishi = fk.CreateTriggerSkill{
+  name = "xing__yishi",
+  anim_type = "control",
+  events = {fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.to ~= player and #data.to:getCardIds(Player.Equip) > 0
+  end,
+  on_use = function(self, event, target, player, data)
+    data.damage = data.damage - 1
+    local room = player.room
+
+    if #data.to:getCardIds(Player.Equip) > 0 then
+      local cardId = room:askForCardChosen(player, data.to, "e", self.name)
+      room:obtainCard(player, cardId, true, fk.ReasonPrey)
+    end
+
+    return data.damage < 1
+  end,
+}
+Fk:loadTranslationTable{
+  ["xing__yishi"] = "义释",
+  [":xing__yishi"] = "当你对其他角色造成伤害时，你可以令此伤害-1并获得其装备区里的一张牌。",
+  ["$xing__yishi1"] = "昨日释忠之恩，今吾虚射以报。",
+  ["$xing__yishi2"] = "君刀不砍头颅，吾箭只射盔缨。",
+}
+
+xinghuangzhong:addSkill(xingYishi)
+
+local qishe = fk.CreateViewAsSkill{
+  name = "qishe",
+  anim_type = "offensive",
+  pattern = "analeptic",
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:getCardById(to_select).type == Card.TypeEquip
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then return nil end
+    local c = Fk:cloneCard("analeptic")
+    c.skillName = self.name
+    c:addSubcard(cards[1])
+    return c
+  end,
+  enabled_at_response = function(self, player, cardResponding)
+    return not cardResponding
+  end
+}
+Fk:loadTranslationTable{
+  ["qishe"] = "骑射",
+  [":qishe"] = "你可以将一张装备牌当【酒】使用；你的手牌上限+X（X为你装备区里的牌数）。",
+  ["$xing__yishi1"] = "诱敌之计已成，吾且拈弓搭箭！",
+  ["$xing__yishi2"] = "关羽即至吊桥，既已控弦，如何是好？",
+}
+
+local qisheBuff = fk.CreateMaxCardsSkill{
+  name = "#qishe-buff",
+  correct_func = function(self, player)
+    return player:hasSkill(self.name) and #player:getCardIds(Player.Equip) or 0
+  end,
+}
+
+shidi:addRelatedSkill(qisheBuff)
+xinghuangzhong:addSkill(qishe)
 
 return extension

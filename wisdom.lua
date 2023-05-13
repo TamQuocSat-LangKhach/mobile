@@ -13,7 +13,7 @@ Fk:loadTranslationTable{
 
 local godHuishi = fk.CreateActiveSkill{
   name = "mobile__god_huishi",
-  anim_type = "drawCard",
+  anim_type = "drawcard",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player.maxHp < 10
   end,

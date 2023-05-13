@@ -8,6 +8,7 @@ Fk:loadTranslationTable{
 local godguojia = General(extension, "godguojia", "god", 3)
 Fk:loadTranslationTable{
   ["godguojia"] = "神郭嘉",
+  ["~godguojia"] = "可叹桢干命也迂……",
 }
 
 local godHuishi = fk.CreateActiveSkill{
@@ -78,6 +79,8 @@ Fk:loadTranslationTable{
   [":mobile__god_huishi"] = "出牌阶段限一次，若你的体力上限小于10，你可以判定，若结果与本次流程中的其他判定结果均不同，且你的体力上限小于10，你可加1点体力上限并重复此流程。最后你将本次流程中所有生效的判定牌交给一名角色，若其手牌为全场最多，你减1点体力上限。",
   ["#mobile__god_huishi-ask"] = "慧识：你可以加1点体力上限并重复此流程",
   ["#mobile__god_huishi-give"] = "慧识：你可以将这些判定牌交给一名角色",
+  ["$mobile__god_huishi1"] = "聪以知远，明以察微。",
+  ["$mobile__god_huishi2"] = "见微知著，识人心智。",
 }
 
 godguojia:addSkill(godHuishi)
@@ -128,6 +131,8 @@ Fk:loadTranslationTable{
   ["mobile__tianyi"] = "天翊",
   [":mobile__tianyi"] = "觉醒技，准备阶段开始时，若所有存活角色于本局游戏内均受到过伤害，你加2点体力上限，回复1点体力，令一名角色获得技能“佐幸”。",
   ["#mobile__tianyi-choose"] = "天翊：请选择一名角色获得技能“佐幸”",
+  ["$mobile__tianyi1"] = "天命靡常，惟德是辅。",
+  ["$mobile__tianyi2"] = "可成吾志者，必此人也！",
 }
 
 godguojia:addSkill(tianyi)
@@ -179,6 +184,8 @@ Fk:loadTranslationTable{
   ["mobile__limited_huishi"] = "辉逝",
   [":mobile__limited_huishi"] = "限定技，出牌阶段，你可以选择一名角色，若其有未发动过的觉醒技且你的体力上限不小于存活角色数，你选择其中一项技能，视为该角色满足其觉醒条件；否则其摸四张牌。最后你减2点体力上限。",
   ["@mobile__limited_huishi"] = "辉逝",
+  ["$mobile__limited_huishi1"] = "丧家之犬，主公实不足虑也。",
+  ["$mobile__limited_huishi2"] = "时事兼备，主公复有何忧？",
 }
 
 local limitedHuishiClear = fk.CreateTriggerSkill{
@@ -249,6 +256,8 @@ local zuoxing = fk.CreateViewAsSkill{
 Fk:loadTranslationTable{
   ["zuoxing"] = "佐幸",
   [":zuoxing"] = "出牌阶段限一次，若场上有存活且体力上限大于1的神郭嘉，你可以令其中于当前结算顺序上的第一个神郭嘉减1点体力上限，并视为使用一张普通锦囊牌。",
+  ["$zuoxing1"] = "以聪虑难，悉咨于上。",
+  ["$zuoxing2"] = "身计国谋，不可两遂。",
 }
 
 godguojia:addRelatedSkill(zuoxing)

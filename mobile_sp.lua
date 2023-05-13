@@ -7,6 +7,7 @@ Fk:loadTranslationTable{
 local maojie = General(extension, "maojie", "wei", 3)
 Fk:loadTranslationTable{
   ["maojie"] = "毛玠",
+  ["~maojie"] = "废立大事，公不可不慎……",
 }
 
 local bingqing = fk.CreateTriggerSkill{
@@ -123,99 +124,107 @@ Fk:loadTranslationTable{
   ["#bingqing-draw"] = "秉清：你可以令一名角色摸两张牌",
   ["#bingqing-discard"] = "秉清：你可以弃置一名角色区域里的一张牌",
   ["#bingqing-damage"] = "秉清：你可以对一名其他角色造成1点伤害",
+
+  ["$bingqing1"] = "常怀圣言，以是自励。",
+  ["$bingqing2"] = "身受贵宠，不忘初心。",
 }
 
 maojie:addSkill(bingqing)
 
--- local peixiu = General(extension, "peixiu", "qun", 3)
--- Fk:loadTranslationTable{
---   ["peixiu"] = "裴秀",
--- }
+local peixiu = General(extension, "peixiu", "qun", 3)
+Fk:loadTranslationTable{
+  ["peixiu"] = "裴秀",
+  ["~peixiu"] = "既食寒石散，便不可饮冷酒啊……",
+}
 
--- local xingtu = fk.CreateTriggerSkill{
---   name = "xingtu",
---   events = {fk.CardUsing},
---   anim_type = "drawCard",
---   frequency = Skill.Compulsory,
---   can_trigger = function(self, event, target, player, data)
---     return
---       target == player and
---       player:hasSkill(self.name) and
---       type((data.extra_data or {}).xingtuNumber) == "number" and
---       (data.extra_data or {}).xingtuNumber % data.card.number == 0
---   end,
---   on_use = function(self, event, target, player, data)
---     player:drawCards(1, self.name)
---   end,
+local xingtu = fk.CreateTriggerSkill{
+  name = "xingtu",
+  events = {fk.CardUsing},
+  anim_type = "drawCard",
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self.name) and
+      type((data.extra_data or {}).xingtuNumber) == "number" and
+      (data.extra_data or {}).xingtuNumber % data.card.number == 0
+  end,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, self.name)
+  end,
 
---   refresh_events = {fk.AfterCardUseDeclared},
---   can_refresh = function(self, event, target, player, data)
---     return target == player and player:hasSkill(self.name, true)
---   end,
---   on_refresh = function(self, event, target, player, data)
---     local lastNumber = player:getMark("@xingtu")
---     local realNumber = math.max(data.card.number, 0)
---     player.room:setPlayerMark(player, "@xingtu", realNumber)
---     if lastNumber > 0 then
---       data.extra_data = data.extra_data or {}
---       data.extra_data.xingtuNumber = lastNumber
---     end
---   end,
--- }
--- Fk:loadTranslationTable{
---   ["xingtu"] = "行图",
---   [":xingtu"] = "锁定技，当你使用牌时，若此牌的点数为X的因数，你摸一张牌；你使用点数为X的倍数的牌无次数限制（X为你使用的上一张牌的点数）。",
---   ["@xingtu"] = "行图",
--- }
+  refresh_events = {fk.AfterCardUseDeclared},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name, true)
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local lastNumber = player:getMark("@xingtu")
+    local realNumber = math.max(data.card.number, 0)
+    player.room:setPlayerMark(player, "@xingtu", realNumber)
+    if lastNumber > 0 then
+      data.extra_data = data.extra_data or {}
+      data.extra_data.xingtuNumber = lastNumber
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["xingtu"] = "行图",
+  [":xingtu"] = "锁定技，当你使用牌时，若此牌的点数为X的因数，你摸一张牌；你使用点数为X的倍数的牌无次数限制（X为你使用的上一张牌的点数）。",
+  ["@xingtu"] = "行图",
+  ["$xingtu1"] = "制图之体有六，缺一不可言精。",
+  ["$xingtu2"] = "图设分率，则宇内地域皆可绘于一尺。",
+}
 
--- local xingtuBuff = fk.CreateTargetModSkill{
---   name = "#xingtu-buff",
---   residue_func = function(self, player, skill, scope, card)
---     return (player:hasSkill(self.name) and player:getMark("@xingtu") > 0 and card.number % player:getMark("@xingtu") == 0) and
---       999 or
---       0
---   end,
--- }
+local xingtuBuff = fk.CreateTargetModSkill{
+  name = "#xingtu-buff",
+  residue_func = function(self, player, skill, scope, card)
+    return (player:hasSkill(self.name) and player:getMark("@xingtu") > 0 and card.number % player:getMark("@xingtu") == 0) and
+      999 or
+      0
+  end,
+}
 
--- xingtu:addRelatedSkill(xingtuBuff)
--- peixiu:addSkill(xingtu)
+xingtu:addRelatedSkill(xingtuBuff)
+peixiu:addSkill(xingtu)
 
--- local juezhi = fk.CreateActiveSkill{
---   name = "juezhi",
---   anim_type = "drawCard",
---   min_card_num = 2,
---   can_use = function(self, player)
---     return true
---   end,
---   card_filter = function(self, to_select, selected)
---     return not Self:prohibitDiscard(to_select)
---   end,
---   target_filter = function(self, to_select, selected, selected_cards)
---     return false
---   end,
---   on_use = function(self, room, effect)
---     local from = room:getPlayerById(effect.from)
---     local number = 0
---     for _, id in ipairs(effect.cards) do
---       number = number + math.max(Fk:getCardById(id).number, 0)
---     end
+local juezhi = fk.CreateActiveSkill{
+  name = "juezhi",
+  anim_type = "drawCard",
+  min_card_num = 2,
+  can_use = function(self, player)
+    return true
+  end,
+  card_filter = function(self, to_select, selected)
+    return not Self:prohibitDiscard(to_select)
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return false
+  end,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    local number = 0
+    for _, id in ipairs(effect.cards) do
+      number = number + math.max(Fk:getCardById(id).number, 0)
+    end
 
---     number = number % 13
---     number = number == 0 and 13 or number
+    number = number % 13
+    number = number == 0 and 13 or number
 
---     room:throwCard(effect.cards, self.name, from, from)
+    room:throwCard(effect.cards, self.name, from, from)
 
---     local randomId = room:getCardsFromPileByRule(".|" .. number)
---     if #randomId > 0 then
---       room:obtainCard(from, randomId[1], true, fk.ReasonPrey)
---     end
---   end,
--- }
--- Fk:loadTranslationTable{
---   ["juezhi"] = "爵制",
---   [":juezhi"] = "出牌阶段，你可以弃置至少两张牌，然后从牌堆中随机获得一张点数为X的牌（X为以此法弃置的牌点数和与13的余数，若余数为0则改为13）。",
--- }
+    local randomId = room:getCardsFromPileByRule(".|" .. number)
+    if #randomId > 0 then
+      room:obtainCard(from, randomId[1], true, fk.ReasonPrey)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["juezhi"] = "爵制",
+  [":juezhi"] = "出牌阶段，你可以弃置至少两张牌，然后从牌堆中随机获得一张点数为X的牌（X为以此法弃置的牌点数和与13的余数，若余数为0则改为13）。",
+  ["$juezhi1"] = "复设五等之制，以解天下土崩之势。",
+  ["$juezhi2"] = "表为建爵五等，实则藩卫帝室。",
+}
 
--- peixiu:addSkill(juezhi)
+peixiu:addSkill(juezhi)
 
 return extension

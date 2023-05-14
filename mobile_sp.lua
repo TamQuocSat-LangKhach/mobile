@@ -365,4 +365,78 @@ local qisheBuff = fk.CreateMaxCardsSkill{
 shidi:addRelatedSkill(qisheBuff)
 xinghuangzhong:addSkill(qishe)
 
+local xingxuhuang = General(extension, "mxing__xuhuang", "qun", 4)
+Fk:loadTranslationTable{
+  ["mxing__xuhuang"] = "星徐晃",
+  ["~mxing__xuhuang"] = "唉，明主未遇，大功未成……",
+}
+
+local xingZhiyan = fk.CreateActiveSkill{
+  name = "mxing__zhiyan",
+  anim_type = "support",
+  interaction = function(self)
+    local choiceList = {}
+    local handcardNum = #Self:getCardIds(Player.Hand)
+    if handcardNum < Self.maxHp and Self:getMark("mxing__zhiyan_draw-phase") == 0 then
+      table.insert(choiceList, "mxing__zhiyan_draw")
+    end
+    if handcardNum > Self.hp and Self:getMark("mxing__zhiyan_give-phase") == 0 then 
+      table.insert(choiceList, "mxing__zhiyan_give")
+    end
+
+    return UI.ComboBox { choices = choiceList }
+  end,
+  card_num = function(self)
+    return self.interaction.data == "mxing__zhiyan_draw" and 0 or (#Self:getCardIds(Player.Hand) - Self.hp)
+  end,
+  target_num = function(self)
+    return self.interaction.data == "mxing__zhiyan_draw" and 0 or 1
+  end,
+  can_use = function(self, player)
+    local handcardNum = #player:getCardIds(player.Hand)
+    return
+      (handcardNum < player.maxHp and player:getMark("mxing__zhiyan_draw-phase") == 0) or
+      (handcardNum > player.hp and player:getMark("mxing__zhiyan_give-phase") == 0)
+  end,
+  card_filter = function(self, to_select, selected)
+    return
+      self.interaction.data == "mxing__zhiyan_give" and
+      #selected < (#Self:getCardIds(Player.Hand) - Self.hp) and
+      Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return self.interaction.data == "mxing__zhiyan_give" and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    if self.interaction.data == "mxing__zhiyan_draw" then
+      from:drawCards(from.maxHp - #from:getCardIds(Player.Hand), self.name)
+      room:setPlayerMark(from, "mxing__zhiyan_draw-phase", 1)
+    else
+      local pack = Fk:cloneCard("slash")
+      pack:addSubcards(effect.cards)
+      room:moveCardTo(pack, Player.Hand, room:getPlayerById(effect.tos[1]), fk.ReasonGive, self.name)
+      room:setPlayerMark(from, "mxing__zhiyan_give-phase", 1)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["mxing__zhiyan"] = "治严",
+  [":mxing__zhiyan"] = "出牌阶段每项各限一次，你可以：1.将手牌摸至体力上限，然后你于此阶段内不能对其他角色使用牌；2.将多于体力值数量的手牌交给一名其他角色。",
+  ["mxing__zhiyan_draw"] = "将手牌摸至体力上限",
+  ["mxing__zhiyan_give"] = "交给其他角色多于体力值的牌",
+  ["$mxing__zhiyan1"] = "治军严谨，方得精锐之师。",
+  ["$mxing__zhiyan2"] = "精兵当严于律己，束身自修。",
+}
+
+local xingZhiyanProhibit = fk.CreateProhibitSkill{
+  name = "#xingZhiyan-prohibit",
+  is_prohibited = function(self, from, to)
+    return from:getMark("mxing__zhiyan_draw-phase") > 0 and from ~= to
+  end,
+}
+
+xingZhiyan:addRelatedSkill(xingZhiyanProhibit)
+xingxuhuang:addSkill(xingZhiyan)
+
 return extension

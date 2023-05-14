@@ -7,7 +7,7 @@ Fk:loadTranslationTable{
 }
 
 return {
-  courage,
   wisdom,
+  courage,
   mobileSP,
 }

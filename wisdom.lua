@@ -5,6 +5,180 @@ Fk:loadTranslationTable{
   ["wisdom"] = "智包",
 }
 
+local wisdomWangcan = General(extension, "mobile__wangcan", "wei", 3)
+Fk:loadTranslationTable{
+  ["mobile__wangcan"] = "王粲",
+  ["~mobile__wangcan"] = "悟彼下泉人，喟然伤心肝……",
+}
+
+local wisdomQiai = fk.CreateActiveSkill{
+  name = "wisdom__qiai",
+  anim_type = "support",
+  card_num = 1,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name) == 0 and not player:isNude()
+  end,
+  card_filter = function(self, to_select, selected)
+    return Fk:getCardById(to_select).type ~= Card.TypeBasic
+  end,
+  target_filter = function(self, to_select)
+    return to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.tos[1])
+    room:moveCardTo(Fk:getCardById(effect.cards[1]), Player.Hand, to, fk.ReasonGive, self.name, nil, true)
+
+    local choices = { "wisdom__qiai-draw" }
+    if from:isWounded() then
+      table.insert(choices, 1, "wisdom__qiai-recover")
+    end
+
+    local choice = room:askForChoice(to, choices, self.name, "#wisdom__qiai-choose::" .. from.id)
+    if choice:startsWith("wisdom__qiai-draw") then
+      from:drawCards(2, self.name)
+    else
+      room:recover({
+        who = from,
+        num = 1,
+        recoverBy = to,
+        skillName = self.name,
+      })
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["wisdom__qiai"] = "七哀",
+  [":wisdom__qiai"] = "出牌阶段限一次，你可以将一张非基本牌交给一名其他角色，然后其须选择一项：1.令你回复1点体力；2.令你摸两张牌。",
+  ["#wisdom__qiai-choose"] = "七哀：请选择一项令 %dest 执行",
+  ["wisdom__qiai-draw"] = "令其摸两张牌",
+  ["wisdom__qiai-recover"] = "令其回复1点体力",
+  ["$wisdom__qiai1"] = "亲戚对我悲，朋友相追攀。",
+  ["$wisdom__qiai2"] = "出门无所见，白骨蔽平原。",
+}
+
+wisdomWangcan:addSkill(wisdomQiai)
+
+local wisdomShanxi = fk.CreateTriggerSkill{
+  name = "wisdom__shanxi",
+  anim_type = "control",
+  events = {fk.EventPhaseStart, fk.HpRecover},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then
+      return false
+    end
+
+    if event == fk.EventPhaseStart then
+      return
+        target == player and
+        player.phase == Player.Play and
+        table.find(player.room:getOtherPlayers(player, false), function(p)
+          return p:getMark("@@wisdom__xi") == 0
+        end)
+    else
+      return target:getMark("@@wisdom__xi") > 0 and not target.dying and target:isAlive()
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.EventPhaseStart then
+      local to = player.room:askForChoosePlayers(
+        player,
+        table.map(table.filter(player.room:getOtherPlayers(player, false), function(p)
+          return p:getMark("@@wisdom__xi") == 0
+        end), function(p)
+          return p.id
+        end),
+        1,
+        1,
+        "#wisdom__shanxi-choose",
+        self.name
+      )
+
+      if #to == 0 then
+        return false
+      end
+
+      self.cost_data = to[1]
+    end
+
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      local source = table.find(player.room:getOtherPlayers(player, false), function(p)
+        return p:getMark("@@wisdom__xi") > 0
+      end)
+      if source then
+        room:setPlayerMark(source, "@@wisdom__xi", 0)
+      end
+      room:setPlayerMark(room:getPlayerById(self.cost_data), "@@wisdom__xi", 1)
+    else
+      local cardIds = room:askForCard(target, 2, 2, false, self.name, true, nil, "#wisdom__shanxi-give::" .. player.id)
+      if #cardIds == 2 then
+        local pack = Fk:cloneCard("slash")
+        pack:addSubcards(cardIds)
+        room:moveCardTo(pack, Player.Hand, player, fk.ReasonGive, self.name)
+      else
+        room:loseHp(target, 1, self.name)
+      end
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["wisdom__shanxi"] = "善檄",
+  [":wisdom__shanxi"] = "出牌阶段开始时，你可以令一名没有“檄”的角色获得一枚“檄”标记（若场上有该标记则改为转移至该角色）；当有“檄”标记的角色回复体力后，若其不处于濒死状态，其须选择一项：1.交给你两张牌；2.失去1点体力。",
+  ["#wisdom__shanxi-choose"] = "善檄：请选择一名其他角色获得“檄”标记（场上已有则转移标记至该角色）",
+  ["@@wisdom__xi"] = "檄",
+  ["#wisdom__shanxi-give"] = "善檄：请交给%dest两张牌，否则失去1点体力",
+  ["$wisdom__shanxi1"] = "西京乱无象，豺虎方遘患。",
+  ["$wisdom__shanxi2"] = "复弃中国去，委身适荆蛮。",
+}
+
+wisdomWangcan:addSkill(wisdomShanxi)
+
+local chenzhen = General(extension, "chenzhen", "shu", 3)
+Fk:loadTranslationTable{
+  ["chenzhen"] = "陈震",
+  ["~chenzhen"] = "若毁盟约，则两败俱伤！",
+}
+
+local shameng = fk.CreateActiveSkill{
+  name = "shameng",
+  anim_type = "drawcard",
+  card_num = 2,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name) == 0 and #player:getCardIds(Player.Hand) > 1
+  end,
+  card_filter = function(self, to_select, selected)
+    if Fk:currentRoom():getCardArea(to_select) ~= Player.Hand then
+      return false
+    end
+
+    return #selected == 0 or Fk:getCardById(selected[1]):compareColorWith(Fk:getCardById(to_select))
+  end,
+  target_filter = function(self, to_select)
+    return to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    room:throwCard(effect.cards, self.name, from, from)
+
+    room:getPlayerById(effect.tos[1]):drawCards(2, self.name)
+    from:drawCards(3, self.name)
+  end,
+}
+Fk:loadTranslationTable{
+  ["shameng"] = "歃盟",
+  [":shameng"] = "出牌阶段限一次，你可以弃置两张颜色相同的手牌并选择一名其他角色，该角色摸两张牌，然后你摸三张牌。",
+  ["$mobile__god_huishi1"] = "震以不才，得充下使，愿促两国盟好。",
+  ["$mobile__god_huishi2"] = "震奉聘叙好，若有违贵国典制，万望告之。",
+}
+
+chenzhen:addSkill(shameng)
+
 local godguojia = General(extension, "godguojia", "god", 3)
 Fk:loadTranslationTable{
   ["godguojia"] = "神郭嘉",

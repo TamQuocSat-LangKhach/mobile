@@ -252,4 +252,128 @@ Fk:loadTranslationTable{
 
 wenyang:addSkill(mobileChoujue)
 
+local courageGaolan = General(extension, "mobile__gaolan", "qun", 4)
+wenyang.subkingdom = "wu"
+Fk:loadTranslationTable{
+  ["mobile__gaolan"] = "高览",
+  ["~mobile__gaolan"] = "满腹忠肝，难抵一句谮言……唉！",
+}
+
+local jungong = fk.CreateViewAsSkill{
+  name = "jungong",
+  anim_type = "offensive",
+  interaction = function(self)
+    -- local usedTimes = Self:usedSkillTimes(self.name) + 1
+    -- local choiceList = { "jungong_discard:::" .. usedTimes }
+    -- if (Self.hp > 0) then
+    --   table.insert(choiceList, "jungong_loseHp:::" .. usedTimes)
+    -- end
+
+    local choiceList = { "jungong_discard" }
+    if (Self.hp > 0) then
+      table.insert(choiceList, "jungong_loseHp")
+    end
+
+    return UI.ComboBox { choices = choiceList }
+  end,
+  enabled_at_play = function(self, player)
+    local usedTimes = player:usedSkillTimes(self.name) + 1
+    return player:getMark("jungong_nullified-turn") == 0 and
+      (player.hp > 0 or
+      #player:getCardIds({ Player.Hand, Player.Equip }) >= usedTimes)
+  end,
+  card_filter = function(self, to_select, selected)
+    return
+    self.interaction.data:startsWith("jungong_discard") and
+      #selected <= Self:usedSkillTimes(self.name) and
+      not Self:prohibitDiscard(Fk:getCardById(to_select))
+  end,
+  view_as = function(self, cards)
+    self.cost_data = nil
+    if self.interaction.data:startsWith("jungong_discard") then
+      if #cards ~= Self:usedSkillTimes(self.name) + 1 then
+        return nil
+      else
+        self.cost_data = cards
+      end
+    end
+    local card = Fk:cloneCard("slash")
+    card.skillName = self.name
+    return card
+  end,
+  before_use = function(self, player, useData)
+    local room = player.room
+    if #(self.cost_data or {}) > 0 then
+      room:throwCard(self.cost_data, self.name, player, player)
+    else
+      room:loseHp(player, player:usedSkillTimes(self.name))
+    end
+    room:addPlayerMark(player, "@jungong-turn")
+
+    useData.extraUse = true
+  end
+}
+Fk:loadTranslationTable{
+  ["jungong"] = "峻攻",
+  [":jungong"] = "出牌阶段，你可以弃置X+1张牌或失去X+1点体力（X为你于本回合内发动过本技能的次数），并视为使用一张不计入次数，且无距离和次数限制的【杀】。若如此做，当此【杀】对目标角色造成伤害后，本技能于本回合内失效。",
+  -- ["jungong_discard"] = "弃置%arg张牌",
+  -- ["jungong_loseHp"] = "失去%arg点体力",
+  ["jungong_discard"] = "弃置牌",
+  ["jungong_loseHp"] = "失去体力",
+  ["@jungong-turn"] = "峻攻",
+
+  ["$jungong1"] = "曹军营守，不能野战，此乃攻敌之机！",
+  ["$jungong2"] = "若此营攻之不下，览何颜面见袁公！",
+}
+
+local jungongNullified = fk.CreateTriggerSkill{
+  name = "#jungong-nullified",
+  mute = true,
+  events = {fk.Damage},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self.name) and
+      table.contains(data.card.skillNames, "jungong") and
+      not data.chain
+  end,
+  on_cost = function(self, event, target, player, data)
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "jungong_nullified-turn", 1)
+  end,
+}
+
+jungong:addRelatedSkill(jungongNullified)
+courageGaolan:addSkill(jungong)
+
+local dengli = fk.CreateTriggerSkill{
+  name = "dengli",
+  anim_type = "drawcard",
+  events = {fk.TargetSpecified, fk.TargetConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      data.card.trueName == "slash" and
+      player:hasSkill(self.name) and
+      (
+        event == fk.TargetSpecified and
+        (data.to ~= player.id and player.hp == player.room:getPlayerById(data.to).hp) or
+        (data.from ~= player.id and player.hp == player.room:getPlayerById(data.from).hp)
+      )
+  end,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, self.name)
+  end,
+}
+Fk:loadTranslationTable{
+  ["dengli"] = "等力",
+  [":dengli"] = "当你使用【杀】指定其他角色为目标后，或当你成为其他角色使用【杀】的目标后，若你与其体力值相等，你可以摸一张牌。",
+  ["$dengli1"] = "纵尔勇冠天下，吾亦不退半分！",
+  ["$dengli2"] = "虚名何足夸口，败吾休得再提！",
+}
+
+courageGaolan:addSkill(dengli)
+
 return extension

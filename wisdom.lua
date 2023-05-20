@@ -436,4 +436,165 @@ Fk:loadTranslationTable{
 
 godguojia:addRelatedSkill(zuoxing)
 
+local godxunyu = General(extension, "godxunyu", "god", 3)
+Fk:loadTranslationTable{
+  ["godxunyu"] = "神荀彧",
+  ["~godguojia"] = "宁鸣而死，不默而生……",
+}
+
+local tianzuo = fk.CreateTriggerSkill{
+  name = "tianzuo",
+  anim_type = "defensive",
+  events = {fk.GameStart, fk.PreCardEffect},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then
+      return false
+    end
+
+    if event == fk.PreCardEffect then
+      return data.to == player.id and data.card.name == "raid_and_frontal_attack"
+    end
+
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.GameStart then
+      for i = #room.void, 1, -1 do
+        if Fk:getCardById(room.void[i]).name == "raid_and_frontal_attack" then
+          local idRemoved = table.remove(room.void, i)
+          print(idRemoved)
+          table.insert(room.draw_pile, math.random(1, #room.draw_pile), idRemoved)
+          room:setCardArea(idRemoved, Card.DrawPile, nil)
+        end
+      end
+
+      room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
+    else
+      return true
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["tianzuo"] = "天佐",
+  [":tianzuo"] = "锁定技，游戏开始时，将8张【奇正相生】加入牌堆；【奇正相生】对你无效。",
+  ["$tianzuo1"] = "此时进之多弊，守之多利，愿主公熟虑。",
+  ["$tianzuo2"] = "主公若不时定，待四方生心，则无及矣。",
+}
+
+godxunyu:addSkill(tianzuo)
+
+local zhinang = { "ex_nihilo", "dismantlement", "nullification" }
+
+local lingce = fk.CreateTriggerSkill{
+  name = "lingce",
+  anim_type = "drawcard",
+  events = {fk.CardUsing},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return
+      player:hasSkill(self.name) and
+      not data.card:isVirtual() and
+      (
+        table.contains(zhinang, data.card.trueName) or
+        table.contains(type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}, data.card.trueName) or
+        data.card.trueName == "raid_and_frontal_attack"
+      )
+  end,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, self.name)
+  end,
+}
+Fk:loadTranslationTable{
+  ["lingce"] = "灵策",
+  [":lingce"] = "锁定技，当非虚拟且非转化的锦囊牌被使用时，若此牌的牌名属于智囊牌名、“定汉”已记录的牌名或【奇正相生】时，你摸一张牌。",
+  ["$lingce1"] = "绍士卒虽众，其实难用，必无为也。",
+  ["$lingce2"] = "袁军不过一盘砂砾，主公用奇则散。",
+}
+
+godxunyu:addSkill(lingce)
+
+local dinghan = fk.CreateTriggerSkill{
+  name = "dinghan",
+  anim_type = "defensive",
+  events = {fk.TargetConfirming, fk.EventPhaseChanging},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if target ~= player or not player:hasSkill(self.name) then
+      return false
+    end
+
+    if event == fk.TargetConfirming then
+      return
+        data.card.type == Card.TypeTrick and
+        data.card.name ~= "raid_and_frontal_attack" and
+        not table.contains(type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}, data.card.trueName)
+    else
+      return data.from == Player.RoundStart
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.EventPhaseChanging then
+      local room = player.room
+
+      local dinghanRecord = type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}
+      local allTricksName = {}
+      for _, id in ipairs(Fk:getAllCardIds()) do
+        local card = Fk:getCardById(id)
+        if card.type == Card.TypeTrick and not card.is_derived and not table.contains(dinghanRecord, card.trueName) then
+          table.insertIfNeed(allTricksName, card.trueName)
+        end
+      end
+
+      local choices = {"Cancel"}
+      if #allTricksName > 0 then
+        table.insert(choices, 1, "dinghan_addRecord")
+      end
+      if #dinghanRecord > 0 then
+        table.insert(choices, 2, "dinghan_removeRecord")
+      end
+      local choice = room:askForChoice(player, choices, self.name)
+
+      if choice == "Cancel" then
+        return false
+      end
+
+      local cardName = room:askForChoice(player, choice == "dinghan_addRecord" and allTricksName or dinghanRecord, self.name)
+
+      self.cost_data = { choice = choice, cardName = cardName }
+    end
+
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local dinghanRecord = type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}
+    if event == fk.TargetConfirming then
+      table.insert(dinghanRecord, data.card.trueName)
+      room:setPlayerMark(player, "@$dinghan", dinghanRecord)
+      AimGroup:cancelTarget(data, player.id)
+    else
+      local costData = self.cost_data
+      if costData.choice == "dinghan_addRecord" then
+        table.insert(dinghanRecord, costData.cardName)
+      else
+        table.removeOne(dinghanRecord, costData.cardName)
+      end
+      room:setPlayerMark(player, "@$dinghan", #dinghanRecord > 0 and dinghanRecord or 0)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["dinghan"] = "定汉",
+  [":dinghan"] = "当你成为锦囊牌的目标时，若此牌牌名未被“定汉”记录，则“定汉”记录此牌名，然后取消此目标；回合开始时，你可以为“定汉”记录增加或移除一种锦囊牌的牌名。",
+  ["@$dinghan"] = "定汉",
+  ["dinghan_addRecord"] = "增加牌名",
+  ["dinghan_removeRecord"] = "移除牌名",
+  ["$dinghan1"] = "杀身有地，报国有时。",
+  ["$dinghan2"] = "益国之事，虽死弗避。",
+}
+
+godxunyu:addSkill(dinghan)
+
 return extension

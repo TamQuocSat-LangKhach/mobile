@@ -263,15 +263,10 @@ local jungong = fk.CreateViewAsSkill{
   name = "jungong",
   anim_type = "offensive",
   interaction = function(self)
-    -- local usedTimes = Self:usedSkillTimes(self.name) + 1
-    -- local choiceList = { "jungong_discard:::" .. usedTimes }
-    -- if (Self.hp > 0) then
-    --   table.insert(choiceList, "jungong_loseHp:::" .. usedTimes)
-    -- end
-
-    local choiceList = { "jungong_discard" }
+    local usedTimes = Self:usedSkillTimes(self.name) + 1
+    local choiceList = { "jungong_discard:::" .. usedTimes }
     if (Self.hp > 0) then
-      table.insert(choiceList, "jungong_loseHp")
+      table.insert(choiceList, "jungong_loseHp:::" .. usedTimes)
     end
 
     return UI.ComboBox { choices = choiceList }
@@ -316,10 +311,8 @@ local jungong = fk.CreateViewAsSkill{
 Fk:loadTranslationTable{
   ["jungong"] = "峻攻",
   [":jungong"] = "出牌阶段，你可以弃置X+1张牌或失去X+1点体力（X为你于本回合内发动过本技能的次数），并视为使用一张不计入次数，且无距离和次数限制的【杀】。若如此做，当此【杀】对目标角色造成伤害后，本技能于本回合内失效。",
-  -- ["jungong_discard"] = "弃置%arg张牌",
-  -- ["jungong_loseHp"] = "失去%arg点体力",
-  ["jungong_discard"] = "弃置牌",
-  ["jungong_loseHp"] = "失去体力",
+  ["jungong_discard"] = "弃置%arg张牌",
+  ["jungong_loseHp"] = "失去%arg点体力",
   ["@jungong-turn"] = "峻攻",
 
   ["$jungong1"] = "曹军营守，不能野战，此乃攻敌之机！",
@@ -345,7 +338,15 @@ local jungongNullified = fk.CreateTriggerSkill{
   end,
 }
 
+local jungongBuff = fk.CreateTargetModSkill{
+  name = "#jungong-buff",
+  residue_func = function(self, player, skill, scope, card)
+    return (player:hasSkill(self.name) and table.contains(card.skillNames, jungong.name)) and 999 or 0
+  end,
+}
+
 jungong:addRelatedSkill(jungongNullified)
+jungong:addRelatedSkill(jungongBuff)
 courageGaolan:addSkill(jungong)
 
 local dengli = fk.CreateTriggerSkill{

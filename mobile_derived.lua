@@ -10,10 +10,7 @@ local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
   end,
   target_num = 1,
   on_effect = function(self, room, effect)
-    local cardResponded = nil
-    if not (effect.disresponsive or table.contains(effect.disresponsiveList or {}, effect.to)) then
-      cardResponded = room:askForResponse(room:getPlayerById(effect.to), 'slash,jink', "#RFA-response:" .. effect.from)
-    end
+    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), "slash,jink", nil, "#RFA-response:" .. effect.from, false, nil, effect)
 
     if cardResponded then
       room:responseCard({

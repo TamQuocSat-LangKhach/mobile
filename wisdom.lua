@@ -464,7 +464,6 @@ local tianzuo = fk.CreateTriggerSkill{
       for i = #room.void, 1, -1 do
         if Fk:getCardById(room.void[i]).name == "raid_and_frontal_attack" then
           local idRemoved = table.remove(room.void, i)
-          print(idRemoved)
           table.insert(room.draw_pile, math.random(1, #room.draw_pile), idRemoved)
           room:setCardArea(idRemoved, Card.DrawPile, nil)
         end

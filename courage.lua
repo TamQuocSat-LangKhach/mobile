@@ -221,7 +221,7 @@ chongjian:addRelatedSkill(chongjianBuff)
 local chongjianUnlimited = fk.CreateTargetModSkill{
   name = "#chongjian_unlimited",
   distance_limit_func = function(self, player, skill, card)
-    return table.contains(card.skillNames, chongjian.name) and 999 or 0
+    return (card and table.contains(card.skillNames, chongjian.name)) and 999 or 0
   end,
 }
 chongjian:addRelatedSkill(chongjianUnlimited)

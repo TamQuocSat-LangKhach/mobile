@@ -321,7 +321,7 @@ local juezhi = fk.CreateActiveSkill{
     return true
   end,
   card_filter = function(self, to_select, selected)
-    return not Self:prohibitDiscard(to_select)
+    return not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected, selected_cards)
     return false

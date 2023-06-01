@@ -416,9 +416,9 @@ Fk:loadTranslationTable{
 local shidiBuff = fk.CreateDistanceSkill{
   name = "#shidi-buff",
   correct_func = function(self, from, to)
-    if from:hasSkill(self.name) and from:getSwitchSkillState("shidi") == fk.SwitchYang then
+    if from:hasSkill("shidi") and from:getSwitchSkillState("shidi") == fk.SwitchYang then
       return -1
-    elseif to:hasSkill(self.name) and to:getSwitchSkillState("shidi") == fk.SwitchYin then
+    elseif to:hasSkill("shidi") and to:getSwitchSkillState("shidi") == fk.SwitchYin then
       return 1
     end
   end,
@@ -713,7 +713,7 @@ local mobileYizheng = fk.CreateActiveSkill{
 }
 Fk:loadTranslationTable{
   ["mobile__yizheng"] = "义争",
-  [":mobile__yizheng"] = "出牌阶段限一次，你可以。",
+  [":mobile__yizheng"] = "出牌阶段限一次，你可以与一名体力值不大于你的角色拼点。若你：赢，跳过其下个摸牌阶段；没赢，你减1点体力上限。",
   ["@@mobile__yizheng"] = "义争",
   ["#yizheng-debuff"] = "义争",
   ["$mobile__yizheng1"] = "一人劫天子，一人质公卿，此可行邪？",

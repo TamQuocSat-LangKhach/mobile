@@ -59,12 +59,15 @@ local fuhai = fk.CreateTriggerSkill{
   events = {fk.TargetSpecified, fk.Death},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if target ~= player or not player:hasSkill(self.name) then
+    if not player:hasSkill(self.name) then
       return false
     end
 
     if event == fk.TargetSpecified then
-      return player.room:getPlayerById(data.to):getMark("@yingba_pingding") > 0 and player:usedSkillTimes(self.name) < 2
+      return
+        target == player and
+        player.room:getPlayerById(data.to):getMark("@yingba_pingding") > 0 and
+        player:usedSkillTimes(self.name) < 2
     else
       return player.room:getPlayerById(data.who):getMark("@yingba_pingding") > 0
     end
@@ -91,6 +94,8 @@ local fuhai = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     data.disresponsive = true
+    -- data.disresponsiveList = data.disresponsiveList or {}
+    -- table.insert(data.disresponsiveList, data.to)
   end,
 }
 Fk:loadTranslationTable{
@@ -152,7 +157,7 @@ local pingheBuff = fk.CreateMaxCardsSkill {
   name = "#pinghe-buff",
   frequency = Skill.Compulsory,
   fixed_func = function(self, player)
-    return player:hasSkill(self.name) and player:getLostHp() or nil
+    return player:hasSkill("pinghe") and player:getLostHp() or nil
   end
 }
 

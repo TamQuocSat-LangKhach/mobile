@@ -5,6 +5,71 @@ Fk:loadTranslationTable{
   ["mxing"] = "手杀星",
 }
 
+local liuzan = General(extension, "liuzan", "wu", 4)
+local fenyin = fk.CreateTriggerSkill{
+  name = "fenyin",
+  anim_type = "drawcard",
+  events = {fk.CardUsing},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and
+      player.phase < Player.NotActive and self.can_fenyin
+  end,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, self.name)
+  end,
+
+  refresh_events = {fk.CardUsing, fk.EventPhaseStart},
+  can_refresh = function(self, event, target, player, data)
+    if not (target == player and player:hasSkill(self.name)) then return end
+    if event == fk.EventPhaseStart then
+      return player.phase == Player.NotActive
+    else
+      return player.phase < Player.NotActive -- FIXME: this is a bug of FK 0.0.2!!
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      room:setPlayerMark(player, self.name, 0)
+      room:setPlayerMark(player, "@" .. self.name, 0)
+    else
+      self.can_fenyin = data.card.color ~= player:getMark(self.name) and player:getMark(self.name) ~= 0
+      room:setPlayerMark(player, self.name, data.card.color)
+      room:setPlayerMark(player, "@" .. self.name, data.card:getColorString())
+    end
+  end,
+}
+liuzan:addSkill(fenyin)
+Fk:loadTranslationTable{
+  ["liuzan"] = "留赞",
+  ["fenyin"] = "奋音",
+  [":fenyin"] = "你的回合内，当你使用和上一张牌颜色不同的牌时，你可以摸一张牌。",
+  ["@fenyin"] = "奋音",
+
+  ["$fenyin1"] = "吾军杀声震天，则敌心必乱！",
+  ["$fenyin2"] = "阵前亢歌，以振军心！",
+  ["~liuzan"] = "贼子们，来吧！啊…………",
+}
+
+local dujin = fk.CreateTriggerSkill{
+  name = "dujin",
+  anim_type = "drawcard",
+  events = {fk.DrawNCards},
+  on_use = function(self, event, target, player, data)
+    data.n = data.n + 1 + #player:getCardIds(Player.Equip) // 2
+  end,
+}
+local lingcao = General(extension, "lingcao", "wu", 4)
+lingcao:addSkill(dujin)
+Fk:loadTranslationTable{
+  ["lingcao"] = "凌操",
+  ["dujin"] = "独进",
+  [":dujin"] = "摸牌阶段，你可以多摸X+1张牌，X为你装备区内牌数的一半（向下取整）",
+  ["$dujin1"] = "带兵十万，不如老夫多甲一件！",
+  ["$dujin2"] = "轻舟独进，破敌先锋！",
+  ["~lingcao"] = "呃啊！（扑通）此箭……何来……",
+}
+
 local maojie = General(extension, "maojie", "wei", 3)
 Fk:loadTranslationTable{
   ["maojie"] = "毛玠",

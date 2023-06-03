@@ -179,6 +179,97 @@ Fk:loadTranslationTable{
 
 chenzhen:addSkill(shameng)
 
+local qinzheng = fk.CreateTriggerSkill{
+  name = "qinzheng",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.CardUsing, fk.CardResponding},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self.name) and
+      not table.every({ 3, 5, 8 }, function(num)
+        return player:getMark("@" .. self.name) % num ~= 0
+      end)
+  end,
+  on_use = function(self, event, player, target, data)
+    local randCard = function(cardName)
+      local cardNum = #player.room.draw_pile
+      local randNum = math.random(1, cardNum)
+      
+      for i = randNum, cardNum do
+        local card = Fk:getCardById(player.room.draw_pile[i])
+        
+        if table.contains(cardName, card.name) then
+          return card
+        end
+      end
+      
+      for i = 1, randNum do
+        local card = Fk:getCardById(player.room.draw_pile[i])
+        
+        if table.contains(cardName, card.name) then
+          return card
+        end
+      end
+      
+      return nil
+    end
+
+    local loopList = table.filter({ 3, 5, 8 }, function(num)
+      return player:getMark("@" .. self.name) % num == 0
+    end)
+
+    local toObtain = {}
+    for _, count in ipairs(loopList) do
+      local cardList = {"slash", "jink"}
+      if count == 5 then
+        cardList = {"peach", "analeptic"}
+      elseif count == 8 then
+        cardList = {"ex_nihilo", "duel"}
+      end
+
+      local randomCard = randCard(cardList)
+      if randomCard then
+        table.insert(toObtain, randomCard.id)
+      end
+    end
+
+    if #toObtain > 0 then
+      player.room:moveCards({
+        ids = toObtain,
+        to = player.id,
+        toArea = Player.Hand,
+        moveReason = fk.ReasonPrey,
+        proposer = player.id,
+        skillName = self.name,
+      })
+    end
+  end,
+
+  refresh_events = {fk.PreCardUse, fk.PreCardRespond},
+  can_refresh = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target == player
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:addPlayerMark(player, "@" .. self.name, 1)
+  end,
+}
+
+local luotong = General:new(extension, "luotong", "wu", 4)
+luotong:addSkill(qinzheng)
+
+Fk:loadTranslationTable{
+  ["luotong"] = "骆统",
+  ["qinzheng"] = "勤政",
+  [":qinzheng"] = "锁定技，你每使用或打出：三张牌时，你随机获得一张【杀】或【闪】；五张牌时，你随机获得一张【桃】或【酒】；八张牌时，你随机获得一张【无中生有】或【决斗】。",
+  ["@qinzheng"] = "勤政",
+
+  ["$qinzheng1"] = "夫国之有民，犹水之有舟，停则以安，扰则以危。",
+  ["$qinzheng2"] = "治疾及其未笃，除患贵其莫深。",
+  ["~luotong"] = "臣统之大愿，足以死而不朽矣。",
+}
+
 local godguojia = General(extension, "godguojia", "god", 3)
 Fk:loadTranslationTable{
   ["godguojia"] = "神郭嘉",

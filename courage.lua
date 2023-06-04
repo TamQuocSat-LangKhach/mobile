@@ -341,7 +341,10 @@ local jungongNullified = fk.CreateTriggerSkill{
 local jungongBuff = fk.CreateTargetModSkill{
   name = "#jungong-buff",
   residue_func = function(self, player, skill, scope, card)
-    return (player:hasSkill(self.name) and table.contains(card.skillNames, jungong.name)) and 999 or 0
+    return (player:hasSkill(self.name) and card and table.contains(card.skillNames, jungong.name)) and 999 or 0
+  end,
+  distance_limit_func = function(self, player, skill, card)
+    return (player:hasSkill(self.name) and card and table.contains(card.skillNames, jungong.name)) and 999 or 0
   end,
 }
 

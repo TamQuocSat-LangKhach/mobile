@@ -93,9 +93,8 @@ local fuhai = fk.CreateTriggerSkill{
       player.room:getPlayerById(data.to):getMark("@yingba_pingding") > 0
   end,
   on_refresh = function(self, event, target, player, data)
-    data.disresponsive = true
-    -- data.disresponsiveList = data.disresponsiveList or {}
-    -- table.insert(data.disresponsiveList, data.to)
+    data.disresponsiveList = data.disresponsiveList or {}
+    table.insert(data.disresponsiveList, data.to)
   end,
 }
 Fk:loadTranslationTable{

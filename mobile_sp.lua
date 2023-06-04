@@ -811,8 +811,8 @@ Fk:loadTranslationTable{
 local zhujian = fk.CreateActiveSkill{
   name = "zhujian",
   anim_type = "drawcard",
-  min_target_num = 1,
-  max_target_num = 2,
+  min_target_num = 2,
+  max_target_num = 999,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
@@ -820,7 +820,7 @@ local zhujian = fk.CreateActiveSkill{
     return false
   end,
   target_filter = function(self, to_select, selected, selected_cards)
-    return #selected < 2 and #Fk:currentRoom():getPlayerById(to_select):getCardIds(Player.Equip) > 0
+    return #Fk:currentRoom():getPlayerById(to_select):getCardIds(Player.Equip) > 0
   end,
   on_use = function(self, room, effect)
     local tos = table.simpleClone(effect.tos)

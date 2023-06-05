@@ -122,7 +122,7 @@ local bingqing = fk.CreateTriggerSkill{
     targets = table.map(targets, function(p)
       return p.id
     end)
-    local to = room:askForChoosePlayers(player, targets, 1, 1, prompt, self.name)
+    local to = room:askForChoosePlayers(player, targets, 1, 1, prompt, self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true

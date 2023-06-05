@@ -1,4 +1,6 @@
 local extension = Package:new("mobile_derived", Package.CardPack)
+extension.extensionName = "mobile"
+
 Fk:loadTranslationTable{
   ["mobile_derived"] = "手杀衍生牌",
 }

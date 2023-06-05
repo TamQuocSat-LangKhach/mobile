@@ -92,7 +92,8 @@ local wisdomShanxi = fk.CreateTriggerSkill{
         1,
         1,
         "#wisdom__shanxi-choose",
-        self.name
+        self.name,
+        true
       )
 
       if #to == 0 then
@@ -322,11 +323,22 @@ local godHuishi = fk.CreateActiveSkill{
     local alivePlayerIds = table.map(room.alive_players, function(p)
       return p.id
     end)
-    local targets = room:askForChoosePlayers(from, alivePlayerIds, 1, 1, "#mobile__god_huishi-give", self.name)
+
+    cardsJudged = table.filter(cardsJudged, function(card)
+      return room:getCardArea(card.id) == Card.Processing
+    end)
+    if #cardsJudged == 0 then
+      return false
+    end
+
+    local targets = room:askForChoosePlayers(from, alivePlayerIds, 1, 1, "#mobile__god_huishi-give", self.name, true)
+    
     if #targets > 0 then
       local to = targets[1]
       local pack = Fk:cloneCard("slash")
-      pack:addSubcards(cardsJudged)
+      pack:addSubcards(table.map(cardsJudged, function(card)
+        return card:getEffectiveId()
+      end))
       room:obtainCard(to, pack, true, fk.ReasonGive)
 
       if
@@ -336,6 +348,15 @@ local godHuishi = fk.CreateActiveSkill{
       then
         room:changeMaxHp(from, -1)
       end
+    else
+      room:moveCards({
+        ids = table.map(cardsJudged, function(card)
+          return card:getEffectiveId()
+        end),
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+      })
     end
   end,
 }

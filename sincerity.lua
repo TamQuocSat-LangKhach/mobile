@@ -5,6 +5,91 @@ Fk:loadTranslationTable{
   ["sincerity"] = "信包",
 }
 
+-- local wangling = General(extension, "wangling", "wei", 4)
+-- Fk:loadTranslationTable{
+--   ["wangling"] = "王凌",
+--   ["~wangling"] = "一生尽忠事魏，不料，今日晚节尽毁啊！",
+-- }
+
+-- local xingqi = fk.CreateTriggerSkill{
+--   name = "xingqi",
+--   anim_type = "drawcard",
+--   events = {fk.CardUsing, fk.EventPhaseStart},
+--   can_trigger = function(self, event, target, player, data)
+--     if target ~= player or not player:hasSkill(self.name) then
+--       return false
+--     end
+
+--     if event == fk.CardUsing then
+--       return
+--         data.card.sub_type ~= Card.SubtypeDelayedTrick and
+--         not table.contains(type(player:getMark("@xingqi_bei")) == "table" and player:getMark("@xingqi_bei") or {}, data.card.trueName)
+--     else
+--       return player.phase == Player.Finish and #(type(player:getMark("@xingqi_bei")) == "table" and player:getMark("@xingqi_bei") or {}) > 0
+--     end
+--   end,
+--   on_cost = function(self, event, target, player, data)
+--     if event == fk.EventPhaseStart then
+--       local room = player.room
+--       if not room:askForSkillInvoke(player, self.name) then
+--         return false
+--       end
+--       self.cost_data = room:askForChoice(player, player:getMark("@xingqi_bei"), self.name, "#xingqi-obtain")
+--     end
+
+--     return true
+--   end,
+--   on_use = function(self, event, target, player, data)
+--     local room = player.room
+--     if event == fk.CardUsing then
+--       local xingqiRecord = type(player:getMark("@xingqi_bei")) == "table" and player:getMark("@xingqi_bei") or {}
+--       table.insert(xingqiRecord, data.card.trueName)
+--       room:setPlayerMark(player, "@$xingqi", xingqiRecord)
+--     else
+--       local xingqiRecord = player:getMark("@xingqi_bei")
+--       table.removeOne(xingqiRecord, self.cost_data)
+--       room:setPlayerMark(player, "@$xingqi", #xingqiRecord > 0 and xingqiRecord or 0)
+
+--       local cardId = room:getCardsFromPileByRule(self.cost_data, 1)
+--       room:obtainCard(player, cardId, true, fk.ReasonPrey)
+--     end
+--   end,
+-- }
+-- Fk:loadTranslationTable{
+--   ["xingqi"] = "星启",
+--   [":xingqi"] = "当你使用不为延时类锦囊牌的牌时，若你没有此牌名的“备”，你将此牌牌名记录为“备”；结束阶段开始时，你可以移出一个“备”，从牌堆中随机获得一张与此牌名相同的牌。",
+--   ["$xingqi1"] = "翻江复蹈海，六合定乾坤！",
+--   ["$xingqi2"] = "力攻平江东，威名扬天下！",
+-- }
+
+-- wangling:addSkill(xingqi)
+
+-- local zifu = fk.CreateTriggerSkill{
+--   name = "zifu",
+--   anim_type = "negative",
+--   events = {fk.EventPhaseEnd},
+--   frequency = Skill.Compulsory,
+--   can_trigger = function(self, event, target, player, data)
+--     return
+--       target == player and
+--       player:hasSkill(self.name) and
+--       player.phase == Player.Play and
+--       player:getMark("zifu-phase") == 0
+--   end,
+--   on_use = function(self, event, target, player, data)
+--     local room = player.room
+--     room:addPlayerMark(player, MarkEnum.MinusMaxCardsInTurn)
+--   end,
+-- }
+-- Fk:loadTranslationTable{
+--   ["zifu"] = "自缚",
+--   [":zifu"] = "当你使用不为延时类锦囊牌的牌时，若你没有此牌名的“备”，你将此牌牌名记录为“备”；结束阶段开始时，你可以移出一个“备”，从牌堆中随机获得一张与此牌名相同的牌。",
+--   ["$zifu1"] = "翻江复蹈海，六合定乾坤！",
+--   ["$zifu2"] = "力攻平江东，威名扬天下！",
+-- }
+
+-- wangling:addSkill(zifu)
+
 local godsunce = General(extension, "godsunce", "god", 1, 6)
 Fk:loadTranslationTable{
   ["godsunce"] = "神孙策",
@@ -57,6 +142,7 @@ godsunce:addSkill(yingba)
 local fuhai = fk.CreateTriggerSkill{
   name = "fuhai",
   events = {fk.TargetSpecified, fk.Death},
+  anim_type = "drawcard",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     if not player:hasSkill(self.name) then
@@ -109,6 +195,7 @@ godsunce:addSkill(fuhai)
 local pinghe = fk.CreateTriggerSkill{
   name = "pinghe",
   events = {fk.DamageInflicted},
+  anim_type = "defensive",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return
@@ -172,6 +259,7 @@ Fk:loadTranslationTable{
 local dulie = fk.CreateTriggerSkill{
   name = "dulie",
   events = {fk.TargetConfirming},
+  anim_type = "defensive",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return
@@ -336,7 +424,9 @@ local powei = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["powei"] = "破围",
-  [":powei"] = "使命技，游戏开始时，你令所有其他角色获得“围”标记；回合开始时，你令所有拥有“围”标记的角色将“围”标记移动至下家（若下家为你，则改为移动至你的下家）；有“围”标记的角色受到伤害后，移去其“围”标记；有“围”的角色的回合开始时，你可以选择一项并令你于本回合内视为处于其攻击范围内：1.弃置一张手牌，对其造成1点伤害；2.若其体力值不大于你，你获得其一张手牌。",
+  [":powei"] = "使命技，游戏开始时，你令所有其他角色获得“围”标记；回合开始时，你令所有拥有“围”标记的角色将“围”标记移动至下家（若下家为你，则改为移动至你的下家）；有“围”标记的角色受到伤害后，移去其“围”标记；有“围”的角色的回合开始时，你可以选择一项并令你于本回合内视为处于其攻击范围内：1.弃置一张手牌，对其造成1点伤害；2.若其体力值不大于你，你获得其一张手牌。<br>\
+               <strong>成功</strong>：回合开始时，若场上没有“围”标记，则你获得技能“神著”；<br>\
+               <strong>失败</strong>：当你进入濒死状态时，若你的体力值小于1，你回复体力至1点，移去场上所有的“围”标记，然后弃置你装备区里所有的牌。",
   ["@@powei_wei"] = "围",
   ["powei_damage"] = "弃一张手牌对其造成1点伤害",
   ["powei_prey"] = "获得其1张手牌",
@@ -359,6 +449,7 @@ godTaishici:addSkill(powei)
 local shenzhuo = fk.CreateTriggerSkill{
   name = "shenzhuo",
   events = {fk.CardUseFinished},
+  anim_type = "drawcard",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return

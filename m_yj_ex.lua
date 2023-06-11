@@ -5,6 +5,38 @@ Fk:loadTranslationTable{
   ["m_yj_ex"] = "手杀界一将",
 }
 
+local function getUseExtraTargets(room, data)
+  if not (data.card.type == Card.TypeBasic or data.card:isCommonTrick()) then return {} end
+  local ban_cards = {"jink", "nullification", "adaptation", "collateral"} --stupid collateral
+  if table.contains(ban_cards, data.card.trueName) then return {} end
+  local tos = {}
+  local current_targets = TargetGroup:getRealTargets(data.tos)
+  local aoe_names = {"savage_assault", "archery_attack"}
+
+  Self = room:getPlayerById(data.from) -- for targetFilter
+
+  for _, p in ipairs(room.alive_players) do
+    if not table.contains(current_targets, p.id) and not Self:isProhibited(p, data.card) then
+      if data.card.skill:getMinTargetNum() == 0 then
+        if data.card.trueName == "peach" then
+          if p:isWounded() then
+            table.insertIfNeed(tos, p.id)
+          end
+        elseif table.contains(aoe_names, data.card.name) then
+          if p.id ~= data.from then
+            table.insertIfNeed(tos, p.id)
+          end
+        else
+          table.insertIfNeed(tos, p.id)
+        end
+      elseif data.card.skill:targetFilter(p.id, {}, {}, data.card) then
+        table.insertIfNeed(tos, p.id)
+      end
+    end
+  end
+  return tos
+end
+
 local wuguotai = General(extension, "m_ex__wuguotai", "wu", 3, 3, General.Female)
 
 Fk:loadTranslationTable{
@@ -1174,6 +1206,8 @@ local m_ex__zhuikong_prohibit = fk.CreateProhibitSkill{
     return from:getMark("@@m_ex__zhuikong_prohibit-turn") > 0 and from ~= to
   end,
 }
+
+--[[ -- FIXME:can't read data.reason in fk.PindianResultConfirmed
 local m_ex__zhuikong_delay = fk.CreateTriggerSkill{
   name = "#m_ex__zhuikong_delay",
   events = {fk.PindianResultConfirmed},
@@ -1189,8 +1223,10 @@ local m_ex__zhuikong_delay = fk.CreateTriggerSkill{
     end
   end,
 }
+m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_delay)
+]]
+
 m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_prohibit)
---m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_delay)
 
 Fk:loadTranslationTable{
   ["m_ex__zhuikong"] = "惴恐",
@@ -1411,7 +1447,7 @@ Fk:loadTranslationTable{
   ["$m_ex__sidi1"] = "司敌之动，先发而制。",
   ["$m_ex__sidi2"] = "料敌之行，伏兵灭之。",
 }
---[[
+
 local sunluban = General(extension, "m_ex__sunluban", "wu", 3, 3, General.Female)
 
 Fk:loadTranslationTable{
@@ -1424,21 +1460,14 @@ local m_ex__zenhui = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.TargetSpecifying},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
-      data.tos and #data.tos == 1 and
-      (data.card.trueName == "slash" or
-      (data.card.color == Card.Black and data.card.type == Card.TypeTrick and data.card.sub_type ~= Card.SubtypeDelayedTrick))
+    if target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
+      (data.card.trueName == "slash" or (data.card.color == Card.Black and data.card:isCommonTrick())) then
+      return data.firstTarget and data.tos and #AimGroup:getAllTargets(data.tos) == 1
+    end
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local card_targets = TargetGroup:getRealTargets(data.tos)
-    local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
-      if not table.contains(card_targets, p.id) and data.card.skill:targetFilter(p.id, {}, {}, data.card)
-        and not player:isProhibited(p, data.card) then
-        table.insertIfNeed(targets, p.id)
-      end
-    end
+    local targets = getUseExtraTargets(room, data)
     local to = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__zenhui-choose:::"..data.card:toLogString(), self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
@@ -1448,17 +1477,13 @@ local m_ex__zenhui = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = room:getPlayerById(self.cost_data)
-    if to:isNude() then
-      table.insert(data.tos, {self.cost_data})  --TODO: sort by action order
-      return
-    end
-    local card = room:askForCard(to, 1, 1, true, self.name, true, ".", "#zenhui-give::"..player.id)
-    if #card > 0 then
-      room:obtainCard(player, card[1], false, fk.ReasonGive)
+    if not to:isNude() and room:askForChoice(player, {"m_ex__zenhui_becomeuser", "m_ex__zenhui_becometarget"},
+        self.name, "@m_ex__zenhui-choice::" .. to.id) == "m_ex__zenhui_becomeuser" then
+      local card = room:askForCardChosen(player, to, "he", self.name)
+      room:obtainCard(player.id, card, false, fk.ReasonPrey)
       data.from = to.id
-      --room.logic:trigger(fk.PreCardUse, to, data)
     else
-      table.insert(data.tos, {self.cost_data})  --TODO: sort by action order
+      TargetGroup:pushTargets(data.targetGroup, to.id)
     end
   end,
 }
@@ -1466,7 +1491,10 @@ local m_ex__zenhui = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["m_ex__zenhui"] = "谮毁",
   [":m_ex__zenhui"] = "出牌阶段限一次，当你使用【杀】或黑色普通锦囊牌指定一名角色为唯一目标时，你可以选择另一名能成为此牌合法目标的角色，并选择一项：1.获得该角色的一张牌，然后其代替你成为此牌的使用者；2.令其也成为此牌的目标。",
-
+  ["#m_ex__zenhui-choose"] = "谮毁：选择一名能成为%arg的目标的角色",
+  ["@m_ex__zenhui-choice"] = "谮毁：选择一项令%dest执行",
+  ["m_ex__zenhui_becomeuser"] = "获得其一张牌并令其成为使用者",
+  ["m_ex__zenhui_becometarget"] = "令其也成为此牌的目标",
   ["$m_ex__zenhui1"] = "本公主说你忤逆，岂能有假？",
   ["$m_ex__zenhui2"] = "不用挣扎了，你们谁都逃不了！",
 }
@@ -1481,7 +1509,7 @@ local m_ex__jiaojin = fk.CreateTriggerSkill{
     return target == player and player:hasSkill(self.name) and data.from and data.from.gender == General.Male and not player:isNude()
   end,
   on_cost = function(self, event, target, player, data)
-    local cards = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".|.|.|.|.|equip", "#m_ex__jiaojin-discard", true) > 0
+    local cards = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".|.|.|.|.|equip", "#m_ex__jiaojin-discard", true)
     if #cards > 0 then
       self.cost_data = cards
       return true
@@ -1501,7 +1529,7 @@ Fk:loadTranslationTable{
 }
 
 sunluban:addSkill(m_ex__jiaojin)
-]]
+
 local caifuren = General(extension, "m_ex__caifuren", "qun", 3, 3, General.Female)
 
 Fk:loadTranslationTable{
@@ -1684,8 +1712,7 @@ Fk:loadTranslationTable{
 }
 
 jvshou:addSkill("shibei")
---[[
-  
+
 local wuyi = General(extension, "m_ex__wuyi", "shu", 4)
 
 Fk:loadTranslationTable{
@@ -1713,10 +1740,11 @@ local m_ex__benxi = fk.CreateTriggerSkill{
     room:broadcastSkillInvoke(self.name, 1)
     room:notifySkillInvoked(player, self.name)
     room:throwCard(self.cost_data, self.name, player)
-    room:addPlayerMark(player, "@@m_ex__benxi-phase")
     room:addPlayerMark(player, "@m_ex__benxi-phase", #self.cost_data)
+    room:addPlayerMark(player, "@@m_ex__benxi-phase")
   end,
 }
+
 local m_ex__benxi_delay = fk.CreateTriggerSkill{
   name = "#m_ex__benxi_delay",
   events = {fk.AfterCardTargetDeclared, fk.CardUseFinished},
@@ -1736,17 +1764,17 @@ local m_ex__benxi_delay = fk.CreateTriggerSkill{
       room:broadcastSkillInvoke(m_ex__benxi.name, 2)
       room:notifySkillInvoked(player, m_ex__benxi.name, "offensive")
 
+      if (data.card.name == "collateral") then return end
+      local n = player:getMark("@m_ex__benxi-phase")
 
+      local tos = room:askForChoosePlayers(player, getUseExtraTargets(room, data), 1, n,
+      "#m_ex__benxi-choose:::"..data.card:toLogString()..":"..tostring(n), m_ex__benxi.name, true)
 
-
-
-
-
-
-
-
-
-
+      if #tos > 0 then
+        table.forEach(tos, function (id)
+          table.insert(data.tos, {id})
+        end)
+      end
 
     elseif event == fk.CardUseFinished then
       room:broadcastSkillInvoke(m_ex__benxi.name, 3)
@@ -1782,7 +1810,7 @@ Fk:loadTranslationTable{
   [":m_ex__benxi"] = "出牌阶段开始时，你可以弃置任意张牌，令你本阶段：计算与其他角色的距离-X、使用的下一张基本牌或普通锦囊牌可以额外指定至多X名你计算与其距离为1的角色为目标（X为你以此法弃置的牌数），然后此牌结算结束后，若此牌造成过伤害，你摸五张牌。",
 
   ["#m_ex__benxi-discard"] = "你可发动奔袭，弃置数张牌，此阶段使用第一张牌可额外指定等量目标",
-  ["#m_ex__benxi-choose"] = "奔袭：可为此【%arg】额外指定%arg个目标",
+  ["#m_ex__benxi-choose"] = "奔袭：可为此【%arg】额外指定至多%arg2个目标",
 
   ["@m_ex__benxi-phase"] = "奔袭减距离",
   ["@@m_ex__benxi-phase"] = "奔袭加目标",
@@ -1793,7 +1821,7 @@ Fk:loadTranslationTable{
 }
 
 wuyi:addSkill(m_ex__benxi)
-]]
+
 local zhuhuan = General(extension, "m_ex__zhuhuan", "wu", 4)
 
 Fk:loadTranslationTable{
@@ -2123,8 +2151,8 @@ Fk:loadTranslationTable{
   ["m_ex__anguo_losehp"] = "失去体力至1点",
   ["m_ex__anguo_losemaxhp"] = "减少体力上限至1点",
   ["$m_ex__anguo1"] = "感文台知遇，自当鞠躬尽瘁，扶其身后之业。",
-  ["$m_ex__anguo2"] = "孙氏为危难之际，吾当尽力辅之！",
-  ["$m_ex__anguo3"] = "安国定邦，克成东南一统！",
+  ["$m_ex__anguo2"] = "安国定邦，克成东南一统！",
+  ["$m_ex__anguo3"] = "孙氏为危难之际，吾当尽力辅之！",
 }
 
 zhuzhi:addSkill(m_ex__anguo)

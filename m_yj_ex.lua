@@ -962,7 +962,7 @@ local m_ex__danshou = fk.CreateTriggerSkill{
   on_refresh = function(self, event, target, player, data)
     local room = player.room
     room:addPlayerMark(player, "m_ex__danshou_count-turn")
-    if player:hasSkill(self.name, true) and player.phase ~= Player.NotActive then
+    if player:hasSkill(self.name, true) and player.phase == Player.NotActive then
       room:setPlayerMark(player, "@m_ex__danshou_count-turn", player:getMark("m_ex__danshou_count-turn"))
     end
   end,
@@ -1433,20 +1433,106 @@ zhoucang:addSkill(m_ex__zhongyong)
 
 ]]
 
---local caozhen = General(extension, "m_ex__caozhen", "wei", 4)
+local caozhen = General(extension, "m_ex__caozhen", "wei", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__caozhen"] = "界曹真",
   ["~m_ex__caozhen"] = "雍凉动乱，皆吾之过也……",
 }
 
+local m_ex__sidi = fk.CreateTriggerSkill{
+  name = "m_ex__sidi",
+  anim_type = "control",
+  events = {fk.CardUseFinished, fk.TargetSpecifying},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then return false end
+    if event == fk.CardUseFinished and target == player then
+      return data.card.sub_type ~= Card.SubtypeDelayedTrick and table.find(player.room.alive_players, function (p)
+          return p:getMark("@@m_ex__sidi") == 0 and p ~= player end)
+    elseif event == fk.TargetSpecifying then
+      return target:getMark("@@m_ex__sidi") > 0 and data.card.sub_type ~= Card.SubtypeDelayedTrick
+        and #AimGroup:getAllTargets(data.tos) == 1 and target:getMark(self.name) == data.to
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.CardUseFinished then
+      local to = player.room:askForChoosePlayers(player, table.map(table.filter(player.room.alive_players, function (p)
+        return p:getMark("@@m_ex__sidi") == 0 and p ~= player end), function(p)
+        return p.id end), 1, 1, "#m_ex__sidi-choose", self.name, true)
+      if #to > 0 then
+        self.cost_data = to[1]
+        return true
+      end
+    end
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.CardUseFinished then
+      local to = room:getPlayerById(self.cost_data)
+      room:addPlayerMark(to, "@@m_ex__sidi")
+      local to2 = player.room:askForChoosePlayers(player, table.map(room.alive_players, function(p)
+        return p.id end), 1, 1, "#m_ex__sidi-choose2::" .. to.id, self.name, false, true)
+      if #to2 > 0 then
+        room:setPlayerMark(to, self.name, to2[1])
+      end
+    elseif event == fk.TargetSpecifying then
+      room:doIndicate(player.id, {target.id})
+      if data.to == player.id then
+        player:drawCards(1, self.name)
+      else
+        local choices = {"m_ex__sidi_nagate", "draw2"}
+        if not target.dead and table.every(room.alive_players, function(p) return not p.dying end) then
+          choices[1] = "m_ex__sidi_nagate_and_damage"
+        end
+        local choice = room:askForChoice(player, choices, self.name, "#m_ex__sidi-choice::"..target.id..":"..data.card:toLogString())
+        if choice == "draw2" then
+          player:drawCards(2, self.name)
+        elseif choice:startsWith("m_ex__sidi_nagate") then
+          AimGroup:cancelTarget(data, data.to)
+          if not target.dead and table.every(room.alive_players, function(p) return not p.dying end) then
+            room:damage{
+              from = player,
+              to = target,
+              damage = 1,
+              skillName = self.name,
+            }
+          end
+        end
+      end
+      room:setPlayerMark(target, "@@m_ex__sidi", 0)
+      room:setPlayerMark(target, self.name, 0)
+    end
+  end,
+
+  refresh_events = {fk.TargetSpecifying},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and target:getMark("@@m_ex__sidi") > 0 and data.card.sub_type ~= Card.SubtypeDelayedTrick and
+      not (#AimGroup:getAllTargets(data.tos) == 1 and target:getMark(self.name) == data.to)
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:setPlayerMark(target, "@@m_ex__sidi", 0)
+    player.room:setPlayerMark(target, self.name, 0)
+  end,
+}
+
 Fk:loadTranslationTable{
   ["m_ex__sidi"] = "司敌",
-  [":m_ex__sidi"] = "当你使用除延时锦囊以外的牌结算结束后，可以选择一名还未指定“司敌”目标的其他角色，并为其指定一名“司敌”目标角色（仅你可见）。其使用的第一张除延时锦囊以外的牌仅指定“司敌”目标为唯一角色时（否则清除你为其指定的“司敌”目标角色），你根据以下情况执行效果：若目标为你，你摸一张牌；若目标不为你，你选择一项：1.取消之，然后若此时场上没有任何角色处于濒死状态，你对其造成1点伤害；2.你摸两张牌。然后清除你为其指定的“司敌”目标角色。",
+  [":m_ex__sidi"] = "当你使用除延时锦囊以外的牌结算结束后，可以选择一名还未指定“司敌”目标的其他角色，并为其指定一名“司敌”目标角色（均不可见）。其使用的第一张除延时锦囊以外的牌仅指定“司敌”目标为唯一角色时（否则清除你为其指定的“司敌”目标角色），你根据以下情况执行效果：若目标为你，你摸一张牌；若目标不为你，你选择一项：1.取消之，然后若此时场上没有任何角色处于濒死状态，你对其造成1点伤害；2.你摸两张牌。然后清除你为其指定的“司敌”目标角色。",
+
+  ["#m_ex__sidi-choose"] = "你可发动司敌，选择1名角色，为其指定司敌目标",
+  ["#m_ex__sidi-choose2"] = "司敌：为%dest指定司敌目标，若正确，可发动响应效果",
+  ["#m_ex__sidi-choice"] = "司敌：选择取消%dest使用的%arg，或摸两张牌",
+  ["m_ex__sidi_nagate"] = "取消此牌",
+  ["m_ex__sidi_nagate_and_damage"] = "取消此牌并对使用者造成伤害",
+
+  ["@@m_ex__sidi"] = "司敌",
 
   ["$m_ex__sidi1"] = "司敌之动，先发而制。",
   ["$m_ex__sidi2"] = "料敌之行，伏兵灭之。",
 }
+
+caozhen:addSkill(m_ex__sidi)
 
 local sunluban = General(extension, "m_ex__sunluban", "wu", 3, 3, General.Female)
 
@@ -1462,7 +1548,7 @@ local m_ex__zenhui = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
       (data.card.trueName == "slash" or (data.card.color == Card.Black and data.card:isCommonTrick())) then
-      return data.firstTarget and data.tos and #AimGroup:getAllTargets(data.tos) == 1
+      return data.firstTarget and data.tos and #AimGroup:getAllTargets(data.tos) == 1 and #getUseExtraTargets(player.room, data) > 0
     end
   end,
   on_cost = function(self, event, target, player, data)
@@ -1673,19 +1759,36 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
+    if data.card:getSuitString() == player:getMark("m_ex__jianying_suit-phase") or
+        (data.card.number == player:getMark("m_ex__jianying_number-phase") and data.card.number ~= 0) then
+      data.extra_data = data.extra_data or {}
+      data.extra_data.m_ex__jianying_triggerable = true
+    end
+    local jianying_record = {"log_" .. data.card:getSuitString()}
     if data.card.suit == Card.NoSuit then
-      room:setPlayerMark(player, "@m_ex__jianying_suit-phase", 0)
-      room:setPlayerMark(player, "m_ex__jianying_suit-phase", 0)
       room:setPlayerMark(player, "m_ex__jianying_suit-phase", 0)
     else
-      if data.card:getSuitString() == player:getMark("m_ex__jianying_suit-phase") or
-          data.card.number == player:getMark("m_ex__jianying_number-phase") then
-        data.extra_data = data.extra_data or {}
-        data.extra_data.m_ex__jianying_triggerable = true
-      end
-      room:setPlayerMark(player, "@m_ex__jianying_suit-phase", string.format("%s-%d", Fk:translate(data.card:getSuitString()), data.card.number))
       room:setPlayerMark(player, "m_ex__jianying_suit-phase", data.card:getSuitString())
-      room:setPlayerMark(player, "m_ex__jianying_number-phase", data.card.number)
+    end
+    room:setPlayerMark(player, "m_ex__jianying_number-phase", data.card.number)
+
+    local num = data.card.number
+    if num > 0 then
+      if num == 1 then
+        num = "A"
+      elseif num == 11 then
+        num = "J"
+      elseif num == 12 then
+        num = "Q"
+      elseif num == 13 then
+        num = "K"
+      end
+      table.insert(jianying_record, num)
+    end
+    if #jianying_record > 0 then
+      room:setPlayerMark(player, "@m_ex__jianying_record-phase", jianying_record)
+    else
+      room:setPlayerMark(player, "@m_ex__jianying_record-phase", 0)
     end
   end,
 }
@@ -1696,7 +1799,7 @@ Fk:loadTranslationTable{
   ["m_ex__jianying"] = "渐营",
   ["#m_ex__jianying_trigger"] = "渐营",
   [":m_ex__jianying"] = "当你于出牌阶段内使用牌时，若此牌与你于此阶段内使用的上一张牌点数或花色相同，你可以摸一张牌。出牌阶段限一次，你可以将一张牌当任意一种基本牌使用，若你于此阶段内使用的上一张牌有花色，则此牌花色视为你本回合使用的上一张牌的花色。",
-  ["@m_ex__jianying_suit-phase"] = "渐营",
+  ["@m_ex__jianying_record-phase"] = "渐营",
   ["$m_ex__jianying1"] = "良谋百出，渐定决战胜势！",
   ["$m_ex__jianying2"] = "佳策数成，破敌垂手可得！",
 }
@@ -2043,15 +2146,15 @@ local m_ex__anguo = fk.CreateTriggerSkill{
         return true
       elseif event == fk.EventPhaseStart and player.phase == Player.Play and player == target then
         return table.find(room.alive_players, function (p)
-          return p:hasMark("@@m_ex__anguo")
+          return p:getMark("@@m_ex__anguo") > 0
         end) and table.find(room.alive_players, function (p)
-          return not p:hasMark("m_ex__anguo_given") and p ~= player
+          return p:getMark("m_ex__anguo_given") == 0 and p ~= player
         end)
       elseif event == fk.DamageInflicted and player == target then
         return data.damage >= player.hp and table.find(room.alive_players, function (p)
-          return p:hasMark("@@m_ex__anguo") and data.from ~= p
+          return p:getMark("@@m_ex__anguo") > 0 and data.from ~= p
         end)
-      elseif event == fk.EnterDying and target:hasMark("@@m_ex__anguo") then
+      elseif event == fk.EnterDying and target:getMark("@@m_ex__anguo") > 0 then
         return true
       end
     end
@@ -2060,10 +2163,10 @@ local m_ex__anguo = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.EventPhaseStart then
       local anguo_target = table.find(room.alive_players, function (p)
-        return p:hasMark("@@m_ex__anguo")
+        return p:getMark("@@m_ex__anguo") > 0
       end)
       local targets = table.map(table.filter(room.alive_players, function (p)
-        return not p:hasMark("m_ex__anguo_given") and p ~= player
+        return  p:getMark("m_ex__anguo_given") == 0 and p ~= player
       end), function (p)
         return p.id
       end)

@@ -161,20 +161,178 @@ Fk:loadTranslationTable{
 }
 
 wuguotai:addSkill("buyi")
-
---local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
+--[[
+local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__gaoshun"] = "界高顺",
   ["~m_ex__gaoshun"] = "可叹主公知而不用啊！",
 }
 
+local m_ex__xianzhen = fk.CreateActiveSkill{
+  name = "m_ex__xianzhen",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 1,
+  can_use = function(self, player)
+    return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
+  end,
+  card_filter = function() return false end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    local pindian = player:pindian({target}, self.name)
+
+    if pindian.fromCard and pindian.fromCard.trueName == "slash" then
+      room:addPlayerMark(player, "@@m_ex__xianzhen_maxcards-turn")
+    end
+    if pindian.results[target.id].winner == player then
+      room:addPlayerMark(target, "@@m_ex__xianzhen-phase")
+      local targetRecorded = type(player:getMark("m_ex__xianzhen_target-phase")) == "table" and player:getMark("m_ex__xianzhen_target") or {}
+      table.insertIfNeed(targetRecorded, target.id)
+      room:setPlayerMark(player, "m_ex__xianzhen_target-phase", targetRecorded)
+    else
+      room:addPlayerMark(player, "m_ex__xianzhen_prohibit-phase")
+    end
+  end,
+}
+
+local m_ex__xianzhen_armor_invalidity = fk.CreateTriggerSkill{
+  name = "#m_ex__xianzhen_armor_invalidity",
+  mute = true,
+  frequency = Skill.Compulsory,
+
+  refresh_events = {fk.PreCardUse, fk.CardUseFinished},
+  can_refresh = function(self, event, target, player, data)
+    if target ~= player then return end
+    if event == fk.PreCardUse then
+      return type(player:getMark("m_ex__xianzhen_target-phase")) == "table"
+    elseif event == fk.CardUseFinished then
+      return data.extra_data and data.extra_data.m_ex__xianzhen_record
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.PreCardUse then
+      local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
+      data.extra_data = data.extra_data or {}
+      data.extra_data.m_ex__xianzhen_record = data.extra_data.m_ex__xianzhen_record or {}
+      for _, id in pairs(targetRecorded) do
+        room:addPlayerMark(room:getPlayerById(id), fk.MarkArmorNullified)
+        data.extra_data.m_ex__xianzhen_record[tostring(id)] = (data.extra_data.m_ex__xianzhen_record[tostring(id)] or 0) + 1
+      end
+    elseif event == fk.CardUseFinished then
+      for key, num in pairs(data.extra_data.m_ex__xianzhen_record) do
+        local p = room:getPlayerById(tonumber(key))
+        if p:getMark(fk.MarkArmorNullified) > 0 then
+          room:removePlayerMark(p, fk.MarkArmorNullified, num)
+        end
+      end
+    end
+  end,
+}
+
+local m_ex__xianzhen_targetmod = fk.CreateTargetModSkill{
+  name = "#m_ex__xianzhen_targetmod",
+  residue_func = function(self, player, skill, scope, card, to)
+    if card and to then
+      local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
+      if type(targetRecorded) == "table" and table.contains(targetRecorded, to.id) then
+        return 998
+      end
+    end
+  end,
+  distance_limit_func = function(self, player, skill, card, to)
+    if card and to then
+      local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
+      if type(targetRecorded) == "table" and table.contains(targetRecorded, to.id) then
+        return 998
+      end
+    end
+  end,
+}
+local m_ex__xianzhen_prohibit = fk.CreateProhibitSkill{
+  name = "#m_ex__xianzhen_prohibit",
+  prohibit_use = function(self, player, card)
+    return player:getMark("m_ex__xianzhen_prohibit-phase") > 0 and card.trueName == "slash"
+  end,
+}
+local m_ex__xianzhen_maxcards = fk.CreateMaxCardsSkill{
+  name = "#m_ex__xianzhen_maxcards",
+  exclude_from = function(self, player, card)
+    return player:getMark("@@m_ex__xianzhen_maxcards-turn") > 0 and card.trueName == "slash"
+  end,
+}
+
+m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_armor_invalidity)
+m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_targetmod)
+m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_prohibit)
+m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_maxcards)
+
 Fk:loadTranslationTable{
   ["m_ex__xianzhen"] = "陷阵",
   [":m_ex__xianzhen"] = "出牌阶段限一次，你可以与一名角色拼点：若你赢，此出牌阶段你无视该角色的防具，对其使用牌没有距离和次数限制；若你没赢，此出牌阶段你不能使用【杀】。若你发动“陷阵”拼点的牌为【杀】，则本回合你的【杀】不计入手牌上限。",
+  
+  ["@@m_ex__xianzhen-phase"] = "陷阵",
+  ["@@m_ex__xianzhen_maxcards-turn"] = "陷阵",
   ["$m_ex__xianzhen1"] = "陷阵之志，有死无生！",
   ["$m_ex__xianzhen2"] = "攻则破城，战则克敌。",
 }
+
+gaoshun:addSkill(m_ex__xianzhen)
+
+local m_ex__jinjiu = fk.CreateFilterSkill{
+  name = "m_ex__jinjiu",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  card_filter = function(self, card, player)
+    return player:hasSkill(self.name) and card.name == "analeptic"
+  end,
+  view_as = function(self, to_select)
+    return Fk:cloneCard("slash", to_select.suit, to_select.number)
+  end,
+}
+
+local m_ex__jinjiu_trigger = fk.CreateTriggerSkill{
+  name = "#m_ex__jinjiu_trigger",
+  frequency = Skill.Compulsory,
+  events = {fk.DamageInflicted},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(m_ex__jinjiu.name) and data.card and data.card.trueName == "slash" then
+      local parentUseData = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+      if parentUseData then
+        local drankBuff = parentUseData and (parentUseData.data[1].extra_data or {}).drankBuff or 0
+        if drankBuff > 0 then
+          self.cost_data = drankBuff
+          return true
+        end
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:broadcastSkillInvoke(m_ex__jinjiu.name)
+    player.room:notifySkillInvoked(player, m_ex__jinjiu.name, "defensive")
+    data.damage = data.damage - self.cost_data
+  end,
+}
+
+local m_ex__jinjiu_prohibit = fk.CreateProhibitSkill{
+  name = "#m_ex__jinjiu_prohibit",
+  prohibit_use = function(self, player, card)
+    if card.name == "analeptic" then
+      return table.find(Fk:currentRoom().alive_players, function(p)
+        return p.phase ~= Player.NotActive and p:hasSkill(m_ex__jinjiu.name) and p ~= player
+      end)
+    end
+  end,
+}
+
+m_ex__jinjiu:addRelatedSkill(m_ex__jinjiu_trigger)
+m_ex__jinjiu:addRelatedSkill(m_ex__jinjiu_prohibit)
 
 Fk:loadTranslationTable{
   ["m_ex__jinjiu"] = "禁酒",
@@ -183,6 +341,8 @@ Fk:loadTranslationTable{
   ["$m_ex__jinjiu2"] = "陷阵营中，不可饮酒。",
 }
 
+gaoshun:addSkill(m_ex__jinjiu)
+]]
 local yujin = General(extension, "m_ex__yujin", "wei", 4)
 
 Fk:loadTranslationTable{
@@ -377,7 +537,7 @@ local m_ex__chengzhang = fk.CreateTriggerSkill{
   on_refresh = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "m_ex__chengzhang_count", data.damage)
     if player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 then
-      player.room:setPlayerMark(player, "@m_ex__", player:getMark("m_ex__chengzhang_count"))
+      player.room:setPlayerMark(player, "@m_ex__chengzhang", player:getMark("m_ex__chengzhang_count"))
     end
   end,
 }
@@ -1629,9 +1789,11 @@ local m_ex__qieting = fk.CreateTriggerSkill{
   events = {fk.EventPhaseChanging},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self.name) and player ~= target and data.to == Player.NotActive then
-      return #player.room.logic:getEventsOfScope(GameEvent.Damage, 1, function (e)
-        local damage = e.data[1]
-        return damage.from == target and damage.to ~= target
+      return #player.room.logic:getEventsOfScope(GameEvent.ChangeHp, 1, function (e)
+        local damage = e.data[5]
+        if damage and target == damage.from and target ~= damage.to then
+          return true
+        end
       end, Player.HistoryTurn) == 0
     end
   end,
@@ -1651,7 +1813,7 @@ local m_ex__qieting = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if self.cost_data  == "qieting_move" and target:canMoveCardsInBoardTo(player, "e") then
+    if self.cost_data  == "m_ex__qieting_move" and target:canMoveCardsInBoardTo(player, "e") then
       room:askForMoveCardInBoard(player, target, player, self.name, "e", target)
     elseif self.cost_data  == "m_ex__qieting_pry" and not target.dead then
       local handcards = target:getCardIds(Player.Hand)

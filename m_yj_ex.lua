@@ -161,7 +161,7 @@ Fk:loadTranslationTable{
 }
 
 wuguotai:addSkill("buyi")
---[[
+
 local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
 
 Fk:loadTranslationTable{
@@ -342,7 +342,7 @@ Fk:loadTranslationTable{
 }
 
 gaoshun:addSkill(m_ex__jinjiu)
-]]
+
 local yujin = General(extension, "m_ex__yujin", "wei", 4)
 
 Fk:loadTranslationTable{
@@ -1623,8 +1623,9 @@ local m_ex__sidi = fk.CreateTriggerSkill{
         self.cost_data = to[1]
         return true
       end
+    elseif event == fk.TargetSpecifying then
+      return true
     end
-    return true
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -1641,14 +1642,14 @@ local m_ex__sidi = fk.CreateTriggerSkill{
       if data.to == player.id then
         player:drawCards(1, self.name)
       else
-        local choices = {"m_ex__sidi_nagate", "draw2"}
+        local choices = {"m_ex__sidi_negate", "draw2"}
         if not target.dead and table.every(room.alive_players, function(p) return not p.dying end) then
-          choices[1] = "m_ex__sidi_nagate_and_damage"
+          choices[1] = "m_ex__sidi_negate_and_damage"
         end
         local choice = room:askForChoice(player, choices, self.name, "#m_ex__sidi-choice::"..target.id..":"..data.card:toLogString())
         if choice == "draw2" then
           player:drawCards(2, self.name)
-        elseif choice:startsWith("m_ex__sidi_nagate") then
+        elseif choice:startsWith("m_ex__sidi_negate") then
           AimGroup:cancelTarget(data, data.to)
           if not target.dead and table.every(room.alive_players, function(p) return not p.dying end) then
             room:damage{
@@ -1683,8 +1684,8 @@ Fk:loadTranslationTable{
   ["#m_ex__sidi-choose"] = "你可发动司敌，选择1名角色，为其指定司敌目标",
   ["#m_ex__sidi-choose2"] = "司敌：为%dest指定司敌目标，若正确，可发动响应效果",
   ["#m_ex__sidi-choice"] = "司敌：选择取消%dest使用的%arg，或摸两张牌",
-  ["m_ex__sidi_nagate"] = "取消此牌",
-  ["m_ex__sidi_nagate_and_damage"] = "取消此牌并对使用者造成伤害",
+  ["m_ex__sidi_negate"] = "取消此牌",
+  ["m_ex__sidi_negate_and_damage"] = "取消此牌并对使用者造成伤害",
 
   ["@@m_ex__sidi"] = "司敌",
 

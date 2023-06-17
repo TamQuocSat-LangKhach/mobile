@@ -507,7 +507,7 @@ local zuoxing = fk.CreateViewAsSkill{
     local names = {}
     for _, id in ipairs(Fk:getAllCardIds()) do
       local card = Fk:getCardById(id)
-      if card:isCommonTrick() and card.skill.canUse(Self, card) and not Self:prohibitUse(card) then
+      if card:isCommonTrick() and card.skill:canUse(Self, card) and not Self:prohibitUse(card) then
         table.insertIfNeed(names, card.name)
       end
     end

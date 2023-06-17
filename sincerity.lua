@@ -296,6 +296,7 @@ local powei = fk.CreateTriggerSkill{
   name = "powei",
   events = {fk.GameStart, fk.EventPhaseChanging, fk.Damaged, fk.EnterDying},
   frequency = Skill.Quest,
+  mute = true,
   can_trigger = function(self, event, target, player, data)
     if player:getQuestSkillState(self.name) or not player:hasSkill(self.name) then
       return false
@@ -352,6 +353,8 @@ local powei = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.GameStart then
+      room:notifySkillInvoked(player, self.name)
+      room:broadcastSkillInvoke(self.name, 1)
       for _, p in ipairs(room:getOtherPlayers(player)) do
         room:setPlayerMark(p, "@@powei_wei", 1)
       end
@@ -360,6 +363,8 @@ local powei = fk.CreateTriggerSkill{
         if table.find(room.alive_players, function(p)
           return p:getMark("@@powei_wei") > 0
         end) then
+          room:notifySkillInvoked(player, self.name)
+          room:broadcastSkillInvoke(self.name, 1)
           local hasLastPlayer = false
           for _, p in ipairs(room:getAlivePlayers()) do
             if p:getMark("@@powei_wei") > (hasLastPlayer and 1 or 0) and not (#room.alive_players < 3 and p:getNextAlive() == player)  then
@@ -376,12 +381,16 @@ local powei = fk.CreateTriggerSkill{
             end
           end
         else
+          room:notifySkillInvoked(player, self.name)
+          room:broadcastSkillInvoke(self.name, 2)
           room:updateQuestSkillState(player, self.name)
           room:handleAddLoseSkills(player, "shenzhuo")
         end
       end
 
       if type(self.cost_data) == "number" then
+        room:notifySkillInvoked(player, self.name, "offensive")
+        room:broadcastSkillInvoke(self.name, 1)
         room:throwCard({ self.cost_data }, self.name, player, player)
         room:damage({
           from = player,
@@ -393,6 +402,8 @@ local powei = fk.CreateTriggerSkill{
 
         room:setPlayerMark(player, "powei_debuff-turn", target.id)
       elseif self.cost_data == "powei_prey" then
+        room:notifySkillInvoked(player, self.name, "control")
+        room:broadcastSkillInvoke(self.name, 1)
         local cardId = room:askForCardChosen(player, target, "h", self.name)
         room:obtainCard(player, cardId, false, fk.ReasonPrey)
         room:setPlayerMark(player, "powei_debuff-turn", target.id)
@@ -400,6 +411,8 @@ local powei = fk.CreateTriggerSkill{
     elseif event == fk.Damaged then
       room:setPlayerMark(target, "@@powei_wei", 0)
     else
+      room:notifySkillInvoked(player, self.name, "negative")
+      room:broadcastSkillInvoke(self.name, 3)
       room:updateQuestSkillState(player, self.name, true)
       if player.hp < 1 then
         room:recover({
@@ -431,9 +444,9 @@ Fk:loadTranslationTable{
   ["powei_damage"] = "弃一张手牌对其造成1点伤害",
   ["powei_prey"] = "获得其1张手牌",
   ["#powei-damage"] = "破围：你可以弃置一张手牌，对 %dest 造成1点伤害",
-  ["$powei1"] = "弓马骑射洒热血，突破重围显英豪！",
-  ["$powei2"] = "敌军尚犹严防，有待明日再看！",
-  ["$powei2"] = "君且城中等候，待吾探敌虚实。",
+  ["$powei1"] = "君且城中等候，待吾探敌虚实。",
+  ["$powei2"] = "弓马骑射洒热血，突破重围显英豪！",
+  ["$powei3"] = "敌军尚犹严防，有待明日再看！",
 }
 
 local poweiDebuff = fk.CreateAttackRangeSkill{  --FIXME!!!

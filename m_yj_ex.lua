@@ -161,7 +161,7 @@ Fk:loadTranslationTable{
 }
 
 wuguotai:addSkill("buyi")
-
+--[[
 local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
 
 Fk:loadTranslationTable{
@@ -342,7 +342,7 @@ Fk:loadTranslationTable{
 }
 
 gaoshun:addSkill(m_ex__jinjiu)
-
+]]
 local yujin = General(extension, "m_ex__yujin", "wei", 4)
 
 Fk:loadTranslationTable{
@@ -882,7 +882,7 @@ local m_ex__anxu = fk.CreateActiveSkill{
     local target2 = room:getPlayerById(use.tos[2])
     local card = room:askForCardChosen(target1, target2, "he", self.name)
     local can_draw = (Fk:currentRoom():getCardArea(card) ~= Card.PlayerEquip)
-    room:obtainCard(target1.id, card, true)
+    room:obtainCard(target1.id, card, false, fk.ReasonPrey)
     if can_draw and not player.dead then
       player:drawCards(1, self.name)
     end

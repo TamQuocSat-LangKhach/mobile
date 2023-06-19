@@ -174,8 +174,8 @@ local shameng = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["shameng"] = "歃盟",
   [":shameng"] = "出牌阶段限一次，你可以弃置两张颜色相同的手牌并选择一名其他角色，该角色摸两张牌，然后你摸三张牌。",
-  ["$mobile__god_huishi1"] = "震以不才，得充下使，愿促两国盟好。",
-  ["$mobile__god_huishi2"] = "震奉聘叙好，若有违贵国典制，万望告之。",
+  ["$shameng1"] = "震以不才，得充下使，愿促两国盟好。",
+  ["$shameng2"] = "震奉聘叙好，若有违贵国典制，万望告之。",
 }
 
 chenzhen:addSkill(shameng)
@@ -270,6 +270,128 @@ Fk:loadTranslationTable{
   ["$qinzheng2"] = "治疾及其未笃，除患贵其莫深。",
   ["~luotong"] = "臣统之大愿，足以死而不朽矣。",
 }
+
+local duyu = General(extension, "mobile__duyu", "qun", 4)
+Fk:loadTranslationTable{
+  ["mobile__duyu"] = "杜预",
+  ["~mobile__duyu"] = "洛水圆石，遂道向南，吾将以俭自完耳……",
+}
+
+local wuku = fk.CreateTriggerSkill{
+  name = "wuku",
+  events = {fk.CardUsing},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and player:getMark("@wuku") < 3 and data.card.type == Card.TypeEquip
+  end,
+  on_use = function(self, event, target, player)
+    player.room:addPlayerMark(player, "@wuku")
+  end,
+}
+
+Fk:loadTranslationTable{
+  ["wuku"] = "武库",
+  [":wuku"] = "锁定技，当一名角色使用装备时，你获得1个“武库”标记。（“武库”数量至多为3）",
+  ["@wuku"] = "武库",
+  ["$wuku1"] = "损益万枢，竭世运机。",
+  ["$wuku2"] = "胸藏万卷，充盈如库。",
+}
+
+duyu:addSkill(wuku)
+
+local mobile__sanchen = fk.CreateTriggerSkill{
+  name = "mobile__sanchen",
+  frequency = Skill.Wake,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Finish and
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    return player:getMark("@wuku") == 3
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:changeMaxHp(player, 1)
+    if player:isWounded() then
+      room:recover{ who = player, num = 1, skillName = self.name }
+    end
+    room:handleAddLoseSkills(player, "miewu", nil)
+  end,
+}
+
+Fk:loadTranslationTable{
+  ["mobile__sanchen"] = "三陈",
+  [":mobile__sanchen"] = "觉醒技，结束阶段，若你已有3个“武库”，你增加一点体力上限，回复一点体力，然后获得技能〖灭吴〗。",
+  ["$mobile__sanchen1"] = "贼计已穷，陈兵吴地，可一鼓而下也。",
+  ["$mobile__sanchen2"] = "伐吴此举，十有九利，惟陛下察之。",
+}
+
+duyu:addSkill(mobile__sanchen)
+
+local miewu = fk.CreateViewAsSkill{
+  name = "miewu",
+  pattern = ".",
+  interaction = function()
+    local names = {}
+    for _, id in ipairs(Fk:getAllCardIds()) do
+      local card = Fk:getCardById(id)
+      if (card.type == Card.TypeBasic or card.type == Card.TypeTrick) and not card.is_derived then
+        local to_use = Fk:cloneCard(card.name)
+        if ((Fk.currentResponsePattern == nil and card.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use)) or
+        (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(to_use))) then
+          table.insertIfNeed(names, card.name)
+        end
+      end
+    end
+    if #names == 0 then return false end
+    return UI.ComboBox { choices = names }
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 or not self.interaction.data then return end
+    local card = Fk:cloneCard(self.interaction.data)
+    card:addSubcards(cards)
+    card.skillName = self.name
+    return card
+  end,
+  before_use = function(self, player, use)
+    player.room:removePlayerMark(player, "@wuku")
+  end,
+  enabled_at_play = function(self, player)
+    return player:getMark("@wuku") > 0 and player:usedSkillTimes(self.name) == 0
+  end,
+  enabled_at_response = function(self, player, response)
+    return player:getMark("@wuku") > 0 and player:usedSkillTimes(self.name) == 0
+  end,
+}
+
+local miewu_delay = fk.CreateTriggerSkill{
+  name = "#miewu_delay",
+  events = {fk.CardUseFinished, fk.CardRespondFinished},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return not player.dead and player == target and table.contains(data.card.skillNames, miewu.name)
+  end,
+  on_cost = function() return true end,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(1, miewu.name)
+  end,
+}
+
+miewu:addRelatedSkill(miewu_delay)
+
+Fk:loadTranslationTable{
+  ["miewu"] = "灭吴",
+  ["#miewu_delay"] = "灭吴",
+  [":miewu"] = "每回合限一次，你可以弃置1个“武库”，将一张牌当做任意一张基本牌或锦囊牌使用或打出；若如此做，你摸一张牌。",
+  ["$miewu1"] = "倾荡之势已成，石城尽在眼下",
+  ["$miewu2"] = "吾军势如破竹，江东六郡唾手可得。",
+}
+
+duyu:addRelatedSkill(miewu)
 
 local godguojia = General(extension, "godguojia", "god", 3)
 Fk:loadTranslationTable{
@@ -507,8 +629,11 @@ local zuoxing = fk.CreateViewAsSkill{
     local names = {}
     for _, id in ipairs(Fk:getAllCardIds()) do
       local card = Fk:getCardById(id)
-      if card:isCommonTrick() and card.skill:canUse(Self, card) and not Self:prohibitUse(card) then
-        table.insertIfNeed(names, card.name)
+      if card:isCommonTrick() and not card.is_derived then
+        local to_use = Fk:cloneCard(card.name)
+        if card.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use) then
+          table.insertIfNeed(names, card.name)
+        end
       end
     end
     return UI.ComboBox { choices = names }
@@ -551,7 +676,7 @@ godguojia:addRelatedSkill(zuoxing)
 local godxunyu = General(extension, "godxunyu", "god", 3)
 Fk:loadTranslationTable{
   ["godxunyu"] = "神荀彧",
-  ["~godguojia"] = "宁鸣而死，不默而生……",
+  ["~godxunyu"] = "宁鸣而死，不默而生……",
 }
 
 local tianzuo = fk.CreateTriggerSkill{

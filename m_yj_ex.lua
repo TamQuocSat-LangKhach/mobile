@@ -1034,12 +1034,12 @@ local m_ex__jiangchi = fk.CreateTriggerSkill{
 local m_ex__jiangchi_targetmod = fk.CreateTargetModSkill{
   name = "#m_ex__jiangchi_targetmod",
   residue_func = function(self, player, skill, scope)
-    if player:hasSkill(self.name, true) and skill.trueName == "slash_skill" and player:getMark("@@m_ex__jiangchi_targetmod-phase") > 0 and scope == Player.HistoryPhase then
+    if skill.trueName == "slash_skill" and player:getMark("@@m_ex__jiangchi_targetmod-phase") > 0 and scope == Player.HistoryPhase then
       return 1
     end
   end,
   distance_limit_func =  function(self, player, skill)
-    if player:hasSkill(self.name, true) and skill.trueName == "slash_skill" and player:getMark("@@m_ex__jiangchi_targetmod-phase") > 0 then
+    if skill.trueName == "slash_skill" and player:getMark("@@m_ex__jiangchi_targetmod-phase") > 0 then
       return 999
     end
   end,
@@ -1047,7 +1047,7 @@ local m_ex__jiangchi_targetmod = fk.CreateTargetModSkill{
 local m_ex__jiangchi_prohibit = fk.CreateProhibitSkill{
   name = "#local m_ex__jiangchi_prohibit",
   prohibit_use = function(self, player, card)
-    return player:hasSkill(self.name, true) and player:getMark("@@m_ex__jiangchi_prohibit-phase") > 0 and card.trueName == "slash"
+    return player:getMark("@@m_ex__jiangchi_prohibit-phase") > 0 and card.trueName == "slash"
   end,
 }
 m_ex__jiangchi:addRelatedSkill(m_ex__jiangchi_select)
@@ -1869,7 +1869,7 @@ local m_ex__jianying = fk.CreateViewAsSkill{
       local card = Fk:getCardById(id)
       if card.type == Card.TypeBasic and not card.is_derived then
         local to_use = Fk:cloneCard(card.name)
-        if card.skill.canUse(card.skill, Self, to_use) and not Self:prohibitUse(to_use) then
+        if card.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use) then
           table.insertIfNeed(names, card.name)
         end
       end

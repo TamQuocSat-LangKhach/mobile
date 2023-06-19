@@ -219,12 +219,14 @@ local pinghe = fk.CreateTriggerSkill{
       1,
       ".|.|.|hand",
       "#pinghe-give",
-      self.name
+      self.name,
+      false,
+      true
     )
 
     room:obtainCard(tos[1], cardId, false, fk.ReasonGive)
 
-    if player:hasSkill(yingba.name) and data.from:isAlive() then
+    if player:hasSkill(yingba.name, true) and data.from:isAlive() then
       room:addPlayerMark(data.from, "@yingba_pingding")
     end
 
@@ -345,7 +347,7 @@ local powei = fk.CreateTriggerSkill{
         self.cost_data = cardIds[1]
       else
         self.cost_data = choice
-      end      
+      end
     end
 
     return true

@@ -161,7 +161,7 @@ Fk:loadTranslationTable{
 }
 
 wuguotai:addSkill("buyi")
---[[
+
 local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
 
 Fk:loadTranslationTable{
@@ -191,7 +191,7 @@ local m_ex__xianzhen = fk.CreateActiveSkill{
     end
     if pindian.results[target.id].winner == player then
       room:addPlayerMark(target, "@@m_ex__xianzhen-phase")
-      local targetRecorded = type(player:getMark("m_ex__xianzhen_target-phase")) == "table" and player:getMark("m_ex__xianzhen_target") or {}
+      local targetRecorded = type(player:getMark("m_ex__xianzhen_target-phase")) == "table" and player:getMark("m_ex__xianzhen_target-phase") or {}
       table.insertIfNeed(targetRecorded, target.id)
       room:setPlayerMark(player, "m_ex__xianzhen_target-phase", targetRecorded)
     else
@@ -342,7 +342,7 @@ Fk:loadTranslationTable{
 }
 
 gaoshun:addSkill(m_ex__jinjiu)
-]]
+
 local yujin = General(extension, "m_ex__yujin", "wei", 4)
 
 Fk:loadTranslationTable{

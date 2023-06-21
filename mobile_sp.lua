@@ -541,8 +541,8 @@ local qishe = fk.CreateViewAsSkill{
 Fk:loadTranslationTable{
   ["qishe"] = "骑射",
   [":qishe"] = "你可以将一张装备牌当【酒】使用；你的手牌上限+X（X为你装备区里的牌数）。",
-  ["$xing__yishi1"] = "诱敌之计已成，吾且拈弓搭箭！",
-  ["$xing__yishi2"] = "关羽即至吊桥，既已控弦，如何是好？",
+  ["$qishe1"] = "诱敌之计已成，吾且拈弓搭箭！",
+  ["$qishe2"] = "关羽即至吊桥，既已控弦，如何是好？",
 }
 
 local qisheBuff = fk.CreateMaxCardsSkill{

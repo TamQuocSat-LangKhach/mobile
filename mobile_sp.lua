@@ -336,7 +336,7 @@ local xingtu = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return
       target == player and
-      player:hasSkill(self.name) and
+      player:hasSkill(self.name) and data.card.number > 0 and
       type((data.extra_data or {}).xingtuNumber) == "number" and
       (data.extra_data or {}).xingtuNumber % data.card.number == 0
   end,
@@ -369,7 +369,7 @@ Fk:loadTranslationTable{
 local xingtuBuff = fk.CreateTargetModSkill{
   name = "#xingtu-buff",
   residue_func = function(self, player, skill, scope, card)
-    return (player:hasSkill(self.name) and player:getMark("@xingtu") > 0 and card.number % player:getMark("@xingtu") == 0) and
+    return (player:hasSkill(self.name) and player:getMark("@xingtu") > 0 and card and card.number > 0 and card.number % player:getMark("@xingtu") == 0) and
       999 or
       0
   end,

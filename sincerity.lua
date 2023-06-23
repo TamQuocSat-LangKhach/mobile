@@ -14,7 +14,9 @@ Fk:loadTranslationTable{
 local xianghai = fk.CreateFilterSkill{
   name = "xianghai",
   card_filter = function(self, to_select, player)
-    return player:hasSkill(self.name) and to_select.type == Card.TypeEquip and table.contains(player.player_cards[Player.Hand], to_select.id)
+    return player:hasSkill(self.name) and to_select.type == Card.TypeEquip and
+      not table.contains(player.player_cards[Player.Equip], to_select.id) and
+      not table.contains(player.player_cards[Player.Judge], to_select.id)
   end,
   view_as = function(self, to_select)
     local card = Fk:cloneCard("analeptic", to_select.suit, to_select.number)
@@ -133,6 +135,14 @@ local chuhai_trigger = fk.CreateTriggerSkill{
       room:notifySkillInvoked(player, chuhai.name, "special")
       room:broadcastSkillInvoke(chuhai.name, 2)
       room:updateQuestSkillState(player, chuhai.name, false)
+      if player:isWounded() then
+        room:recover({
+          who = player,
+          num = player.maxHp - player.hp,
+          recoverBy = player,
+          skillName = chuhai.name
+        })
+      end
       room:handleAddLoseSkills(player, "-xianghai|zhangming")
     elseif event == fk.PindianResultConfirmed then
       room:notifySkillInvoked(player, chuhai.name, "negative")
@@ -230,13 +240,14 @@ local zhangming = fk.CreateTriggerSkill{
   events = {fk.Damage},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name) == 0 and player ~= data.to
+    return target == player and player:hasSkill(self.name) and player:usedSkillTimes(self.name) == 0 and
+      player ~= data.to and not data.to.dead
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local types = {"basic", "trick", "equip"}
     local to = data.to
-    if to:isAlive() then
+    if not to.dead then
       local cards = table.filter(to.player_cards[Player.Hand], function (id)
         return not to:prohibitDiscard(Fk:getCardById(id))
       end)
@@ -341,7 +352,8 @@ local heji = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local targets = TargetGroup:getRealTargets(data.tos)
-    local use = player.room:askForUseCard(player, "slash,duel", "slash,duel", "#heji-use::" .. targets[1], true, { must_targets = targets, bypass_distances = true, bypass_times = true})
+    local use = player.room:askForUseCard(player, "slash,duel", "slash,duel", "#heji-use::" .. targets[1], true,
+      { must_targets = targets, bypass_distances = true, bypass_times = true })
     if use then
       if not use.card:isVirtual() then
         use.extra_data = {hejiDrawer = player.id}
@@ -403,9 +415,9 @@ local liubing = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local cardlist = data.card:isVirtual() and data.card.subcards or {data.card.id}
-      if table.every(cardlist, function(id) return player.room:getCardArea(id) == Card.Processing end) then
-        player.room:obtainCard(player.id, data.card, false)
-      end
+    if table.every(cardlist, function(id) return player.room:getCardArea(id) == Card.Processing end) then
+      player.room:obtainCard(player.id, data.card, false)
+    end
   end,
 }
 

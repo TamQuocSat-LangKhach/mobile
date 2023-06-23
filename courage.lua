@@ -37,22 +37,21 @@ local jungong = fk.CreateViewAsSkill{
       not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   view_as = function(self, cards)
-    self.cost_data = nil
     if self.interaction.data:startsWith("jungong_discard") then
       if #cards ~= Self:usedSkillTimes(self.name) + 1 then
         return nil
-      else
-        self.cost_data = cards
       end
     end
     local card = Fk:cloneCard("slash")
     card.skillName = self.name
+    card:setMark("jungong_discard", cards)
     return card
   end,
   before_use = function(self, player, useData)
     local room = player.room
-    if #(self.cost_data or {}) > 0 then
-      room:throwCard(self.cost_data, self.name, player, player)
+    local cards = useData.card:getMark("jungong_discard")
+    if cards and #cards > 0 then
+      room:throwCard(cards, self.name, player, player)
     else
       room:loseHp(player, player:usedSkillTimes(self.name))
     end

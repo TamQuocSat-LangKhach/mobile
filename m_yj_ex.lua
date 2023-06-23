@@ -5,7 +5,7 @@ Fk:loadTranslationTable{
   ["m_yj_ex"] = "手杀界一将",
 }
 
-local function getUseExtraTargets(room, data)
+local function getUseExtraTargets(room, data, bypass_distances)
   if not (data.card.type == Card.TypeBasic or data.card:isCommonTrick()) then return {} end
   local ban_cards = {"jink", "nullification", "adaptation", "collateral"} --stupid collateral
   if table.contains(ban_cards, data.card.trueName) then return {} end
@@ -29,8 +29,16 @@ local function getUseExtraTargets(room, data)
         else
           table.insertIfNeed(tos, p.id)
         end
-      elseif data.card.skill:targetFilter(p.id, {}, {}, data.card) then
-        table.insertIfNeed(tos, p.id)
+      else
+        room:setPlayerMark(Self, MarkEnum.BypassTimesLimit, 1)
+        if bypass_distances then
+          room:setPlayerMark(Self, MarkEnum.BypassDistancesLimit, 1)
+        end
+        if data.card.skill:targetFilter(p.id, {}, {}, data.card) then
+          table.insertIfNeed(tos, p.id)
+        end
+        room:setPlayerMark(Self, MarkEnum.BypassTimesLimit, 0)
+        room:setPlayerMark(Self, MarkEnum.BypassDistancesLimit, 0)
       end
     end
   end

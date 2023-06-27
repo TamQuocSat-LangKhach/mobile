@@ -925,20 +925,26 @@ local qianchong = fk.CreateTriggerSkill{
     local hasmingzhe = player:hasSkill(self.name, true) and #equips > 0 and table.every(equips, function (id)
       return Fk:getCardById(id).color == Card.Red end)
 
+    local qianchong_skills = type(player:getMark("qianchong_skills")) == "table" and player:getMark("qianchong_skills") or {}
     local skillchange = {}
     if hasweimu and not player:hasSkill("weimu", true) then
       table.insert(skillchange, "weimu")
-    elseif not hasweimu and player:hasSkill("weimu", true) then
+      table.insertIfNeed(qianchong_skills, "weimu")
+    elseif not hasweimu and player:hasSkill("weimu", true) and table.contains(qianchong_skills, "weimu") then
       table.insert(skillchange, "-weimu")
+      table.removeOne(qianchong_skills, "mingzhe")
     end
     if hasmingzhe and not player:hasSkill("mingzhe", true) then
       table.insert(skillchange, "mingzhe")
-    elseif not hasmingzhe and player:hasSkill("mingzhe", true) then
+      table.insertIfNeed(qianchong_skills, "mingzhe")
+    elseif not hasmingzhe and player:hasSkill("mingzhe", true) and table.contains(qianchong_skills, "mingzhe") then
       table.insert(skillchange, "-mingzhe")
+      table.removeOne(qianchong_skills, "mingzhe")
     end
     if #skillchange > 0 then
       room:handleAddLoseSkills(player, table.concat(skillchange, "|"), nil, true, false)
     end
+    room:setPlayerMark(player, "qianchong_skills", qianchong_skills)
   end,
 }
 
@@ -1118,11 +1124,11 @@ yanghuiyu:addSkill(hongyi)
 
 local quanfeng = fk.CreateTriggerSkill{
   name = "quanfeng",
-  events = {fk.Death, fk.AskForPeaches},
+  events = {fk.Deathed, fk.AskForPeaches},
   frequency = Skill.Limited,
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self.name) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 then
-      if event == fk.Death then
+      if event == fk.Deathed then
         return player:hasSkill(hongyi.name, true)
       else
         return player == target and player.dying and player.hp < 1
@@ -1130,17 +1136,25 @@ local quanfeng = fk.CreateTriggerSkill{
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local prompt = event == fk.Death and "#quanfeng1-invoke::" .. target.id or "#quanfeng2-invoke"
+    local prompt = event == fk.Deathed and "#quanfeng1-invoke::" .. target.id or "#quanfeng2-invoke"
     return player.room:askForSkillInvoke(player, self.name, nil, prompt)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.Death then
+    if event == fk.Deathed then
       room:handleAddLoseSkills(player, "-hongyi", nil, true, false)
+
       local skills = {}
-      for _, s in ipairs(target.player_skills) do
-        if not (s.attached_equip or s.name[#s.name] == "&" or s.lordSkill) then
-          table.insertIfNeed(skills, s.name)
+      for _, skill_name in ipairs(Fk.generals[target.general]:getSkillNameList()) do
+        if not Fk.skills[skill_name].lordSkill then
+          table.insertIfNeed(skills, skill_name)
+        end
+      end
+      if target.deputyGeneral and target.deputyGeneral ~= "" then
+        for _, skill_name in ipairs(Fk.generals[target.deputyGeneral]:getSkillNameList()) do
+          if not Fk.skills[skill_name].lordSkill then
+            table.insertIfNeed(skills, skill_name)
+          end
         end
       end
       if #skills > 0 then

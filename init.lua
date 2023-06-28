@@ -4,6 +4,7 @@ local mobileSP = require "packages/mobile/mobile_sp"
 local mobileDerived = require "packages/mobile/mobile_derived"
 local sincerity = require "packages/mobile/sincerity"
 local mYjEx = require "packages/mobile/m_yj_ex"
+local strictness = require "packages/mobile/strictness"
 
 Fk:loadTranslationTable{
   ["mobile"] = "手杀",
@@ -13,6 +14,7 @@ return {
   wisdom,
   courage,
   sincerity,
+  strictness,
   mobileSP,
   mYjEx,
   mobileDerived,

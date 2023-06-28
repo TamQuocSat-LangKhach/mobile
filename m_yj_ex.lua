@@ -977,7 +977,7 @@ local m_ex__fuli = fk.CreateTriggerSkill{
       skillName = self.name
     })
     if not player.dead and table.every(room.alive_players, function(p)
-      return p.hp < player.hp
+      return p == player or p.hp < player.hp
     end) then
       player:turnOver()
     end

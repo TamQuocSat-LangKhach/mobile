@@ -915,7 +915,7 @@ local qianchong = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardsMove, fk.EventAcquireSkill, fk.EventLoseSkill},
   can_refresh = function(self, event, target, player, data)
-    return event == fk.AfterCardsMove or data == self
+    return event == fk.AfterCardsMove or (data == self and player == target)
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room

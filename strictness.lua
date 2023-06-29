@@ -7,7 +7,7 @@ Fk:loadTranslationTable{
 
 Fk:loadTranslationTable{
   ["mobile__huangfusong"] = "皇甫嵩",
-  ["~mobile__huangfusong"] = "郭汜小竖！气煞我也！嗯……",
+  ["~mobile__huangfusong"] = "力有所能，臣必为也……",
 }
 
 Fk:loadTranslationTable{
@@ -159,25 +159,29 @@ local houfeng = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.CardUsing then
       if player:getMark("zhengsu_leijin-turn") ~= 0 then
-        room:addPlayerMark(player, "zhengsu_leijin_times-turn")
         local x = data.card.number
-        if x > 0 and player:getMark("zhengsu_point-turn") < x then
-          room:setPlayerMark(player, "zhengsu_point-turn", x)
-        else
-          room:broadcastSkillInvoke(self.name, 3)
-          room:setPlayerMark(player, "zhengsu_leijin-turn", 0)
-          room:setPlayerMark(player, "@zhengsu_leijin-turn", "zhengsu_failure")
+        if x > 0 then
+          room:addPlayerMark(player, "zhengsu_leijin_times-turn")
+          if player:getMark("zhengsu_point-turn") < x then
+            room:setPlayerMark(player, "zhengsu_point-turn", x)
+          else
+            room:broadcastSkillInvoke(self.name, 3)
+            room:setPlayerMark(player, "zhengsu_leijin-turn", 0)
+            room:setPlayerMark(player, "@zhengsu_leijin-turn", "zhengsu_failure")
+          end
         end
       end
       if player:getMark("zhengsu_bianzhen-turn") ~= 0 then
-        room:addPlayerMark(player, "zhengsu_bianzhen_times-turn")
         local suit = data.card:getSuitString()
-        if suit ~= "nosuit" and (player:getMark("zhengsu_suit-turn") == 0 or player:getMark("zhengsu_suit-turn") == suit) then
-          room:setPlayerMark(player, "zhengsu_suit-turn", suit)
-        else
-          room:broadcastSkillInvoke(self.name, 3)
-          room:setPlayerMark(player, "zhengsu_bianzhen-turn", 0)
-          room:setPlayerMark(player, "@zhengsu_bianzhen-turn", "zhengsu_failure")
+        if suit ~= "nosuit" then
+          room:addPlayerMark(player, "zhengsu_bianzhen_times-turn")
+          if (player:getMark("zhengsu_suit-turn") == 0 or player:getMark("zhengsu_suit-turn") == suit) then
+            room:setPlayerMark(player, "zhengsu_suit-turn", suit)
+          else
+            room:broadcastSkillInvoke(self.name, 3)
+            room:setPlayerMark(player, "zhengsu_bianzhen-turn", 0)
+            room:setPlayerMark(player, "@zhengsu_bianzhen-turn", "zhengsu_failure")
+          end
         end
       end
     elseif event == fk.AfterCardsMove then
@@ -283,8 +287,13 @@ houfeng:addRelatedSkill(houfeng_delay)
 Fk:loadTranslationTable{
   ["houfeng"] = "厚俸",
   ["#houfeng_delay"] = "厚俸",
-  [":houfeng"] = "每轮限一次，你攻击范围内一名角色出牌阶段开始时，你可以令其开始一次“整肃”，若如此做，其弃牌阶段结束后，若其“整肃”未失败，你与其获得“整肃”奖励。",
-
+  [":houfeng"] = "每轮限一次，你攻击范围内一名角色出牌阶段开始时，你可以令其开始一次“整肃”，若如此做，其弃牌阶段结束后，若其“整肃”未失败，你与其获得“整肃”奖励。"..
+  "<br/><font color='grey'>#\"<b>整肃</b>\"<br/>"..
+  "技能发动者从擂进、变阵、鸣止中选择一项令目标执行，若其于其回合内弃牌阶段结束后未整肃失败，则选择“整肃奖励”。<br/>"..
+  "<b>擂进：</b>出牌阶段内，使用的所有牌点数需递增且至少使用三张牌。<br/>"..
+  "<b>变阵：</b>出牌阶段内，使用的所有牌花色需相同且至少使用两张牌。<br/>"..
+  "<b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同且至少弃置两张牌。<br/>"..
+  "<b>整肃奖励：</b>选择一项：1.摸两张牌；2.回复1点体力。",
   ["#houfeng-invoke"] = "你可发动厚俸，令%dest开始一次整肃，若未失败则获得整肃奖励",
   ["@houfeng-turn"] = "厚俸",
   ["#houfeng-choice"] = "厚俸：为%dest选择一项整肃条件",
@@ -294,7 +303,6 @@ Fk:loadTranslationTable{
   ["$houfeng2"] = "有功自当行赏，来人呈上！",
   ["$houfeng3"] = "叉出去！罚其二十军杖！",
 }
-
 Fk:loadTranslationTable{
   ["zhengsu_leijin"] = "擂进",
   ["@zhengsu_leijin-turn"] = "擂进",

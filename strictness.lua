@@ -5,6 +5,148 @@ Fk:loadTranslationTable{
   ["strictness"] = "严包",
 }
 
+local zhangchangpu = General(extension, "mobile__zhangchangpu", "wei", 3, 3, General.Female)
+Fk:loadTranslationTable{
+  ["mobile__zhangchangpu"] = "张昌蒲",
+  ["~mobile__zhangchangpu"] = "钟氏门楣，待我儿光耀……",
+}
+
+local difei = fk.CreateTriggerSkill{
+  name = "difei",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and player == target and player:usedSkillTimes(self.name) < 1
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local prompt = "#difei-discard"
+    if data.card then
+      if data.card.suit == Card.NoSuit then
+        prompt = prompt .. "-recover1"
+      else
+        prompt = prompt .. "-recover2:::" .. data.card:getSuitString(true)
+      end
+    end
+    local card = room:askForDiscard(player, 1, 1, false, self.name, true, ".", prompt)
+    if #card == 0 then
+      room:drawCards(player, 1, self.name)
+    end
+    if player:isKongcheng() then return false end
+    local cards = player.player_cards[Player.Hand]
+    player:showCards(cards)
+
+    if player:isWounded() and data.card then
+      local suit = data.card.suit
+      if suit ~= Card.NoSuit then
+        for _, id in ipairs(cards) do
+          if Fk:getCardById(id).suit == suit then
+            return false
+          end
+        end
+      end
+      room:recover({
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
+  end,
+}
+
+Fk:loadTranslationTable{
+  ["difei"] = "抵诽",
+  [":difei"] = "锁定技，每回合限一次，当你受到伤害后，你摸一张牌或弃置一张手牌，然后你展示所有手牌，若对你造成伤害的牌无花色或你的手牌中没有与对你造成伤害的牌花色相同的牌，你回复1点体力。",
+
+  ["#difei-discard"] = "抵诽：你可选择一张手牌弃置，或点取消则摸一张牌",
+  ["#difei-discard-recover1"] = "抵诽：你可选择一张手牌弃置，或点取消则摸一张牌，然后展示所有手牌并回复1点体力",
+  ["#difei-discard-recover2"] = "抵诽：你可选择一张手牌弃置，或点取消则摸一张牌，然后展示所有手牌，若其中没有%arg牌则回复1点体力",
+
+  ["$difei1"] = "称病不见，待其自露马脚。",
+  ["$difei2"] = "孙氏之诽，伤不到我分毫。",
+}
+
+zhangchangpu:addSkill(difei)
+
+local mobile__yanjiao = fk.CreateActiveSkill{
+  name = "mobile__yanjiao",
+  anim_type = "offensive",
+  prompt = "#mobile__yanjiao-active",
+  interaction = function(self)
+    local choiceList = {}
+    local cards = Self.player_cards[Player.Hand]
+    for _, id in ipairs(cards) do
+      table.insertIfNeed(choiceList, Fk:getCardById(id):getSuitString(true))
+    end
+    return UI.ComboBox { choices = choiceList }
+  end,
+  max_card_num = 0,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
+  end,
+  card_filter = function() return false end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    local suit = self.interaction.data
+    local handcards = player.player_cards[Player.Hand]
+    local cards = table.filter(handcards, function (id)
+      return Fk:getCardById(id):getSuitString(true) == suit
+    end)
+    if #cards == 0 then return false end
+    room:addPlayerMark(player, "@mobile__yanjiao", #cards)
+    local dummy = Fk:cloneCard'slash'
+    dummy:addSubcards(cards)
+    room:obtainCard(target.id, dummy, false, fk.ReasonGive)
+    if not target.dead then
+      room:damage{
+        from = player,
+        to = target,
+        damage = 1,
+        skillName = self.name,
+      }
+    end
+  end,
+}
+
+local mobile__yanjiao_delay = fk.CreateTriggerSkill{
+  name = "#mobile__yanjiao_delay",
+  anim_type = "control",
+  events = {fk.EventPhaseChanging},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and data.to == Player.Start and not player.dead and player:getMark("@mobile__yanjiao") > 0
+  end,
+  on_cost = function() return true end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local x = player:getMark("@mobile__yanjiao")
+    room:setPlayerMark(player, "@mobile__yanjiao", 0)
+    room:drawCards(player, x, mobile__yanjiao.name)
+  end,
+}
+
+mobile__yanjiao:addRelatedSkill(mobile__yanjiao_delay)
+
+Fk:loadTranslationTable{
+  ["mobile__yanjiao"] = "严教",
+  [":mobile__yanjiao"] = "出牌阶段限一次，你可以将手牌中某种花色的所有牌（至少一张）交给一名其他角色，然后对其造成1点伤害，若如此做，你的下个回合开始时，你摸X张牌（X为你以此法给出的牌数）。",
+
+  ["#mobile__yanjiao-active"] = "严教：选择一种花色和一名其他角色，将手牌中所有该花色的牌交给该角色并对其造成1点伤害",
+  ["@mobile__yanjiao"] = "严教",
+
+  ["$mobile__yanjiao1"] = "此篇未记，会儿便不可嬉戏。",
+  ["$mobile__yanjiao2"] = "母亲虽严，却皆为汝好。",
+}
+
+zhangchangpu:addSkill(mobile__yanjiao)
+
 Fk:loadTranslationTable{
   ["mobile__huangfusong"] = "皇甫嵩",
   ["~mobile__huangfusong"] = "力有所能，臣必为也……",
@@ -77,6 +219,7 @@ local yangjie = fk.CreateActiveSkill{
     end
   end,
 }
+
 Fk:loadTranslationTable{
   ["yangjie"] = "佯解",
   [":yangjie"] = "出牌阶段限一次，你可以与一名角色拼点。若你没赢，你可以令另一名其他角色视为对与你拼点的角色使用一张无距离限制的火【杀】。",

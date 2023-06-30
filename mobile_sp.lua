@@ -1083,11 +1083,11 @@ local hongyi_delay = fk.CreateTriggerSkill{
     }
     room:judge(judge)
     if judge.card.color == Card.Red then
-      data.damage = data.damage - 1
-    elseif judge.card.color == Card.Black then
       if data.to and not data.to.dead then
         room:drawCards(data.to, 1, hongyi.name)
       end
+    elseif judge.card.color == Card.Black then
+      data.damage = data.damage - 1
     end
   end,
 

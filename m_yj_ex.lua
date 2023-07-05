@@ -57,6 +57,9 @@ local m_ex__ganlu = fk.CreateActiveSkill{
   anim_type = "control",
   target_num = 2,
   card_num = 0,
+  prompt = function ()
+    return "#m_ex__ganlu-active:::" .. tostring(Self:getLostHp())
+  end,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
@@ -157,6 +160,7 @@ local m_ex__ganlu = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["m_ex__ganlu"] = "甘露",
   [":m_ex__ganlu"] = "出牌阶段限一次，你可以选择两名装备区里的牌数之差不大于你已损失的体力值的角色，交换他们装备区里的牌；若你选择的角色中含有你，则不受牌数之差的限制。",
+  ["#m_ex__ganlu-active"] = "发动甘露，令两名装备区里的牌数之差不大于%arg的角色交换装备区里的牌，若选择自己则此无限制",
   ["$m_ex__ganlu1"] = "玄德实乃佳婿呀。",
   ["$m_ex__ganlu2"] = "好一个郎才女貌，真是天作之合啊。",
 }
@@ -180,6 +184,7 @@ Fk:loadTranslationTable{
 local m_ex__xianzhen = fk.CreateActiveSkill{
   name = "m_ex__xianzhen",
   anim_type = "offensive",
+  prompt = "#m_ex__xianzhen-active",
   card_num = 0,
   target_num = 1,
   can_use = function(self, player)
@@ -283,7 +288,7 @@ m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_maxcards)
 Fk:loadTranslationTable{
   ["m_ex__xianzhen"] = "陷阵",
   [":m_ex__xianzhen"] = "出牌阶段限一次，你可以与一名角色拼点：若你赢，此出牌阶段你无视该角色的防具，对其使用牌没有距离和次数限制；若你没赢，此出牌阶段你不能使用【杀】。若你发动“陷阵”拼点的牌为【杀】，则本回合你的【杀】不计入手牌上限。",
-  
+  ["#m_ex__xianzhen-active"] = "发动陷阵，选择与你拼点的角色",
   ["@@m_ex__xianzhen-phase"] = "陷阵",
   ["@@m_ex__xianzhen_maxcards-turn"] = "陷阵",
   ["$m_ex__xianzhen1"] = "陷阵之志，有死无生！",
@@ -395,7 +400,7 @@ local m_ex__jieyue = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data[1])
     room:obtainCard(to, self.cost_data[2], false, fk.ReasonGive)
-    if to.dead then return end
+    if player.dead or to.dead then return false end
     local _, ret = room:askForUseActiveSkill(to, "#m_ex__jieyue_select", "#m_ex__jieyue-select:" .. player.id, true)
     if ret then
       local cards = table.filter(to:getCardIds{Player.Hand, Player.Equip}, function (id)
@@ -405,7 +410,7 @@ local m_ex__jieyue = fk.CreateTriggerSkill{
         room:throwCard(cards, self.name, to)
       end
     else
-      player:drawCards(3, self.name)
+      room:drawCards(player, 3, self.name)
     end
   end,
 }
@@ -416,7 +421,7 @@ Fk:loadTranslationTable{
   ["#m_ex__jieyue_select"] = "节钺",
   [":m_ex__jieyue"] = "结束阶段，你可以将一张牌交给一名其他角色，然后其选择一项：1.保留手牌和装备区内的各一张牌，然后弃置其余的牌；2.令你摸三张牌。",
   ["#m_ex__jieyue-choose"] = "节钺：可以选择一张牌交给一名其他角色",
-  ["#m_ex__jieyue-select"] = "节钺：选择一张手牌和一张装备区里的牌保留，弃置其他的牌；或点取消令%src摸三张牌",
+  ["#m_ex__jieyue-select"] = "节钺：选择一张手牌和一张装备区里的牌保留，弃置其他的牌；或点取消则令%src摸三张牌",
   ["$m_ex__jieyue1"] = "按丞相之命，此部今由余统摄！",
   ["$m_ex__jieyue2"] = "奉法行令，事上之节，岂有宽宥之理？",
 }
@@ -440,6 +445,7 @@ caozhi:addSkill("luoying")
 local m_ex__jiushi = fk.CreateViewAsSkill{
   name = "m_ex__jiushi",
   anim_type = "support",
+  prompt = "#m_ex__jiushi-active",
   pattern = "analeptic",
   card_filter = function() return false end,
   before_use = function(self, player)
@@ -505,6 +511,7 @@ Fk:loadTranslationTable{
   ["m_ex__jiushi"] = "酒诗",
   ["#m_ex__jiushi_trigger"] = "酒诗",
   [":m_ex__jiushi"] = "当你需要使用【酒】时，若你的武将牌正面向上，你可以翻面，视为使用一张【酒】；当你受到伤害后，若你的武将牌背面向上，你可以翻面并随机获得牌堆中的一张锦囊牌。",
+  ["#m_ex__jiushi-active"] = "发动酒诗，翻面来视为使用一张【酒】",
   ["$m_ex__jiushi1"] = "乐饮过三爵，缓带倾庶羞。",
   ["$m_ex__jiushi2"] = "归来宴平乐，美酒斗十千。",
 }
@@ -638,12 +645,10 @@ local m_ex__xuanfeng = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["m_ex__xuanfeng"] = "旋风",
   [":m_ex__xuanfeng"] = "当你于弃牌阶段弃置过至少两张牌，或当你失去装备区里的牌后，你可以选择一项：1.弃置至多两名其他角色的共计两张牌；2.将一名其他角色装备区里的牌移动到另一名其他角色的对应区域。",
-
   ["m_ex__xuanfeng_movecard"] = "移动场上的一张装备牌",
   ["m_ex__xuanfeng_discard"] = "弃置至多两名其他角色的共计两张牌",
   ["#m_ex__xuanfeng-discard"] = "旋风：你可以选择一名角色，弃置其一张牌",
   ["#m_ex__xuanfeng-movecard"] = "旋风：你可以选择两名角色，移动这些角色装备区的一张牌",
-
   ["$m_ex__xuanfeng1"] = "短兵相接，让敌人丢盔弃甲！",
   ["$m_ex__xuanfeng2"] = "攻敌不备，看他们闻风而逃！",
 }
@@ -686,7 +691,7 @@ local m_ex__quanji = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     player:drawCards(1, self.name)
-    if not player:isKongcheng() then
+    if not (player.dead or player:isKongcheng()) then
       local card = room:askForCard(player, 1, 1, false, self.name, false, "", "#m_ex__quanji-push")
       player:addToPile("m_ex__zhonghui_power", card, false, self.name)
     end
@@ -760,6 +765,7 @@ zhonghui:addSkill(m_ex__zili)
 local m_ex__paiyi = fk.CreateActiveSkill{
   name = "m_ex__paiyi",
   anim_type = "control",
+  prompt = "#m_ex__paiyi-active",
   card_num = 1,
   target_num = 1,
   expand_pile = "m_ex__zhonghui_power",
@@ -782,8 +788,10 @@ local m_ex__paiyi = fk.CreateActiveSkill{
       moveReason = fk.ReasonPutIntoDiscardPile,
       skillName = self.name,
     })
-    target:drawCards(2)
-    if #target.player_cards[Player.Hand] > #player.player_cards[Player.Hand] then
+    if not target.dead then
+      room:drawCards(target, 2, self.name)
+    end
+    if not player.dead and not target.dead and #target.player_cards[Player.Hand] > #player.player_cards[Player.Hand] then
       room:damage{
         from = player,
         to = target,
@@ -797,6 +805,7 @@ local m_ex__paiyi = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["m_ex__paiyi"] = "排异",
   [":m_ex__paiyi"] = "出牌阶段限一次，你可以移去一张“权”，令一名角色摸两张牌。若该角色的手牌数大于你，你对其造成1点伤害。",
+  ["#m_ex__paiyi-active"] = "发动排异，选择一张“权”牌置入弃牌堆并选择一名角色，令其摸两张牌",
   ["$m_ex__paiyi1"] = "坏吾大计者，罪死不赦！",
   ["$m_ex__paiyi2"] = "攻讦此子，祸咎已除！",
 }
@@ -874,6 +883,7 @@ Fk:loadTranslationTable{
 local m_ex__anxu = fk.CreateActiveSkill{
   name = "m_ex__anxu",
   anim_type = "control",
+  prompt = "#m_ex__anxu-active",
   card_num = 0,
   target_num = 2,
   can_use = function(self, player)
@@ -907,6 +917,7 @@ local m_ex__anxu = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["m_ex__anxu"] = "安恤",
   [":m_ex__anxu"] = "出牌阶段限一次，你可以令一名其他角色获得另一名其他角色的一张牌。若其获得的不是来自装备区里的牌，你摸一张牌。当其以此法获得牌后，你可以令两者手牌较少的角色摸一张牌。",
+  ["#m_ex__anxu-active"] = "发动安恤，选择两名其他角色，令先选择的角色获得后选择的角色的一张牌",
   ["#m_ex__anxu-draw"] = "安恤：是否令手牌数较少的%dest摸一张牌",
   ["$m_ex__anxu1"] = "贤淑重礼，育人育己。",
   ["$m_ex__anxu2"] = "雨露均沾，后宫不乱。",
@@ -998,7 +1009,6 @@ Fk:loadTranslationTable{
   ["m_ex__caozhang"] = "界曹彰",
   ["~m_ex__caozhang"] = "黄须金甲，也难敌骨肉毒心！",
 }
-
 
 local m_ex__jiangchi_select = fk.CreateActiveSkill{
   name = "#m_ex__jiangchi_select",
@@ -1157,13 +1167,14 @@ Fk:loadTranslationTable{
 local m_ex__junxing = fk.CreateActiveSkill{
   name = "m_ex__junxing",
   anim_type = "control",
+  prompt = "#m_ex__junxing-active",
   min_card_num = 1,
   target_num = 1,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, to_select, selected)
-    return Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
+    return Fk:currentRoom():getCardArea(to_select) ~= Player.Equip and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0 and to_select ~= Self.id
@@ -1185,6 +1196,7 @@ local m_ex__junxing = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["m_ex__junxing"] = "峻刑",
   [":m_ex__junxing"] = "出牌阶段限一次，你可以弃置任意张手牌并令一名其他角色选择一项：1.弃置等量的牌并失去1点体力；2.翻面，然后摸等量的牌。",
+  ["#m_ex__junxing-active"] = "发动峻刑，选择任意张手牌弃置并选择一名其他角色",
   ["#m_ex__junxing-discard"] = "峻刑：选择弃置%arg张牌并失去1点体力，或点取消则翻面并摸%arg张牌",
   ["$m_ex__junxing1"] = "严法尚公，岂分贵贱而异施？",
   ["$m_ex__junxing2"] = "情理可容之事，法未必能容！",
@@ -1266,6 +1278,7 @@ liru:addSkill(m_ex__juece)
 local m_ex__mieji = fk.CreateActiveSkill{
   name = "m_ex__mieji",
   anim_type = "control",
+  prompt = "#m_ex__mieji-active",
   card_num = 1,
   target_num = 1,
   can_use = function(self, player)
@@ -1314,6 +1327,7 @@ local m_ex__mieji = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["m_ex__mieji"] = "灭计",
   [":m_ex__mieji"] = "出牌阶段限一次，你可以将一张黑色锦囊牌置于牌堆顶，令一名其他角色选择一项：1.将一张锦囊牌交给你；2.依次弃置两张非锦囊牌（不足则弃置一张）。",
+  ["#m_ex__mieji-active"] = "发动灭计，选择一张黑色锦囊牌置于牌堆顶并一名其他角色",
   ["#m_ex__mieji-choice"] = "灭计：选择交给%src一张锦囊牌，或依次弃置两张非锦囊牌",
   ["m_ex__mieji_handovertrick"] = "交出一张锦囊牌",
   ["m_ex__mieji_dis2card"] = "依次弃置两张非锦囊牌",
@@ -1356,11 +1370,7 @@ local m_ex__zhuikong = fk.CreateTriggerSkill{
     local pindian = player:pindian({target}, self.name)
     if pindian.results[target.id].winner == player then
       room:addPlayerMark(target, "@@m_ex__zhuikong_prohibit-turn")
-    elseif not player.dead  then
-      local card = pindian.results[target.id].toCard
-      if room:getCardArea(card) == Card.DiscardPile then
-        room:obtainCard(player, card, true, fk.ReasonJustMove)
-      end
+    elseif not player.dead then
       local slash = Fk:cloneCard("slash")
       if not target.dead and not player.dead and not target:prohibitUse(slash) and not target:isProhibited(player, slash) then
         room:useVirtualCard("slash", nil, target, player, self.name, true)
@@ -1375,14 +1385,19 @@ local m_ex__zhuikong_prohibit = fk.CreateProhibitSkill{
   end,
 }
 
---[[ -- FIXME:can't read data.reason in fk.PindianResultConfirmed
 local m_ex__zhuikong_delay = fk.CreateTriggerSkill{
   name = "#m_ex__zhuikong_delay",
   events = {fk.PindianResultConfirmed},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    return data.reason == m_ex__zhuikong.name and data.from == player and data.winner and data.winner ~= player and
-      data.toCard and player.room:getCardArea(data.toCard) == Card.Processing
+    if data.from == player and data.winner and data.winner ~= player and
+        data.toCard and player.room:getCardArea(data.toCard) == Card.Processing then
+      local parentPindianEvent = player.room.logic:getCurrentEvent():findParent(GameEvent.Pindian, true)
+      if parentPindianEvent then
+        local pindianData = parentPindianEvent.data[1]
+        return pindianData.reason == m_ex__zhuikong.name
+      end
+    end
   end,
   on_cost = function() return true end,
   on_use = function(self, event, target, player, data)
@@ -1392,8 +1407,6 @@ local m_ex__zhuikong_delay = fk.CreateTriggerSkill{
   end,
 }
 m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_delay)
-]]
-
 m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_prohibit)
 
 Fk:loadTranslationTable{
@@ -1465,6 +1478,7 @@ Fk:loadTranslationTable{
 local m_ex__dingpin = fk.CreateActiveSkill{
   name = "m_ex__dingpin",
   anim_type = "support",
+  prompt = "#m_ex__dingpin-active",
   card_num = 1,
   target_num = 1,
   card_filter = function(self, to_select, selected)
@@ -1543,6 +1557,7 @@ m_ex__dingpin:addRelatedSkill(m_ex__dingpin_record)
 Fk:loadTranslationTable{
   ["m_ex__dingpin"] = "定品",
   [":m_ex__dingpin"] = "出牌阶段，你可以弃置一张牌（不能是你本回合使用或弃置过的类型）并选择一名角色，令其进行判定，若结果为：黑色，该角色摸X张牌（X为当前体力值且最大为3），然后你于此回合内不能对其发动“定品”；红桃，你此次发动“定品”弃置的牌不计入弃置过的类型；方块，你翻面。",
+  ["#m_ex__dingpin-active"] = "发动定品，选择一张牌弃置（不能是你本回合使用或弃置过的类型）并选择一名角色",
   ["$m_ex__dingpin1"] = "察举旧制已隳，简拔当立中正。",
   ["$m_ex__dingpin2"] = "置州郡中正，以九品进退人才。",
 }
@@ -1688,15 +1703,12 @@ local m_ex__sidi = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["m_ex__sidi"] = "司敌",
   [":m_ex__sidi"] = "当你使用除延时锦囊以外的牌结算结束后，可以选择一名还未指定“司敌”目标的其他角色，并为其指定一名“司敌”目标角色（均不可见）。其使用的第一张除延时锦囊以外的牌仅指定“司敌”目标为唯一角色时（否则清除你为其指定的“司敌”目标角色），你根据以下情况执行效果：若目标为你，你摸一张牌；若目标不为你，你选择一项：1.取消之，然后若此时场上没有任何角色处于濒死状态，你对其造成1点伤害；2.你摸两张牌。然后清除你为其指定的“司敌”目标角色。",
-
   ["#m_ex__sidi-choose"] = "你可发动司敌，选择1名角色，为其指定司敌目标",
   ["#m_ex__sidi-choose2"] = "司敌：为%dest指定司敌目标，若正确，可发动响应效果",
   ["#m_ex__sidi-choice"] = "司敌：选择取消%dest使用的%arg，或摸两张牌",
   ["m_ex__sidi_negate"] = "取消此牌",
   ["m_ex__sidi_negate_and_damage"] = "取消此牌并对使用者造成伤害",
-
   ["@@m_ex__sidi"] = "司敌",
-
   ["$m_ex__sidi1"] = "司敌之动，先发而制。",
   ["$m_ex__sidi2"] = "料敌之行，伏兵灭之。",
 }
@@ -1775,6 +1787,7 @@ local m_ex__jiaojin = fk.CreateTriggerSkill{
     return true
   end,
 }
+
 Fk:loadTranslationTable{
   ["m_ex__jiaojin"] = "骄矜",
   [":m_ex__jiaojin"] = "当你受到一名男性角色造成的伤害时，你可以弃置一张装备牌，防止此伤害。",
@@ -1871,6 +1884,7 @@ Fk:loadTranslationTable{
 local m_ex__jianying = fk.CreateViewAsSkill{
   name = "m_ex__jianying",
   pattern = ".|.|.|.|.|basic",
+  prompt = "#m_ex__jianying-active",
   interaction = function()
     local names = {}
     for _, id in ipairs(Fk:getAllCardIds()) do
@@ -1970,6 +1984,7 @@ Fk:loadTranslationTable{
   ["m_ex__jianying"] = "渐营",
   ["#m_ex__jianying_trigger"] = "渐营",
   [":m_ex__jianying"] = "当你于出牌阶段内使用牌时，若此牌与你于此阶段内使用的上一张牌点数或花色相同，你可以摸一张牌。出牌阶段限一次，你可以将一张牌当任意一种基本牌使用，若你于此阶段内使用的上一张牌有花色，则此牌花色视为你本回合使用的上一张牌的花色。",
+  ["#m_ex__jianying-active"] = "发动渐营，将一张牌转化为任意基本牌使用",
   ["@m_ex__jianying_record-phase"] = "渐营",
   ["$m_ex__jianying1"] = "良谋百出，渐定决战胜势！",
   ["$m_ex__jianying2"] = "佳策数成，破敌垂手可得！",
@@ -1978,9 +1993,6 @@ Fk:loadTranslationTable{
 jvshou:addSkill(m_ex__jianying)
 
 Fk:loadTranslationTable{
-  ["m_ex__shibei"] = "矢北",
-  [":m_ex__shibei"] = "锁定技，当你受到伤害后，若：是你本回合第一次受到伤害，你回复1点体力；不是你本回合第一次受到伤害，你失去1点体力。",
-
   ["$m_ex__shibei1"] = "只有杀身士，绝无降曹夫！",
   ["$m_ex__shibei2"] = "心向袁氏，绝无背离可言！",
 }
@@ -2041,8 +2053,9 @@ local m_ex__benxi_delay = fk.CreateTriggerSkill{
       if (data.card.name == "collateral") then return end
       local n = player:getMark("@m_ex__benxi-phase")
 
-      local tos = room:askForChoosePlayers(player, getUseExtraTargets(room, data), 1, n,
-      "#m_ex__benxi-choose:::"..data.card:toLogString()..":"..tostring(n), m_ex__benxi.name, true)
+      local tos = room:askForChoosePlayers(player, table.filter(getUseExtraTargets(room, data), function (pid)
+        return player:distanceTo(room:getPlayerById(pid)) == 1
+      end), 1, n, "#m_ex__benxi-choose:::"..data.card:toLogString()..":"..tostring(n), m_ex__benxi.name, true)
 
       if #tos > 0 then
         table.forEach(tos, function (id)
@@ -2084,7 +2097,7 @@ Fk:loadTranslationTable{
   [":m_ex__benxi"] = "出牌阶段开始时，你可以弃置任意张牌，令你本阶段：计算与其他角色的距离-X、使用的下一张基本牌或普通锦囊牌可以额外指定至多X名你计算与其距离为1的角色为目标（X为你以此法弃置的牌数），然后此牌结算结束后，若此牌造成过伤害，你摸五张牌。",
 
   ["#m_ex__benxi-discard"] = "你可发动奔袭，弃置数张牌，此阶段使用第一张牌可额外指定等量目标",
-  ["#m_ex__benxi-choose"] = "奔袭：可为此【%arg】额外指定至多%arg2个目标",
+  ["#m_ex__benxi-choose"] = "奔袭：可为此【%arg】额外指定至多%arg2个距离为1的目标",
 
   ["@m_ex__benxi-phase"] = "奔袭减距离",
   ["@@m_ex__benxi-phase"] = "奔袭加目标",
@@ -2151,7 +2164,6 @@ local m_ex__pingkou = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["m_ex__pingkou"] = "平寇",
   [":m_ex__pingkou"] = "回合结束时，你可以对至多X名其他角色各造成1点伤害（X为你本回合跳过的阶段数），若如此做，你从牌堆中随机获得一张装备牌。",
-
   ["#m_ex__pingkou-choose"] = "平寇：你可以对至多%arg名角色各造成1点伤害，然后随机获得一张装备牌",
   ["$m_ex__pingkou1"] = "等候多时，为的便是今日之胜。",
   ["$m_ex__pingkou2"] = "一鼓作气，击败疲敝之敌！",
@@ -2169,6 +2181,7 @@ Fk:loadTranslationTable{
 local m_ex__yanzhu = fk.CreateActiveSkill{
   name = "m_ex__yanzhu",
   anim_type = "control",
+  prompt = "#m_ex__yanzhu-active",
   card_num = 0,
   target_num = 1,
   can_use = function(self, player)
@@ -2186,7 +2199,7 @@ local m_ex__yanzhu = fk.CreateActiveSkill{
     if #target.player_cards[Player.Equip] > 0 then
       table.insert(choices, "m_ex__yanzhu_choice2")
     end
-    local choice = room:askForChoice(player, choices, self.name, "#m_ex__yanzhu-choice:" .. player.id)
+    local choice = room:askForChoice(target, choices, self.name, "#m_ex__yanzhu-choice:" .. player.id)
     if choice == "m_ex__yanzhu_choice1" then
       local card = room:askForCardChosen(player, target, "hej", self.name)
       room:obtainCard(player.id, card, false, fk.ReasonPrey)
@@ -2202,6 +2215,7 @@ local m_ex__yanzhu = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["m_ex__yanzhu"] = "宴诛",
   [":m_ex__yanzhu"] = "出牌阶段限一次，你可以令一名其他角色选择一项：1.令你获得其区域内的一张牌；2.令你获得其装备区里的所有牌（至少一张），然后你失去〖宴诛〗。",
+  ["#m_ex__yanzhu-active"] = "发动宴诛，选择一名区域里有牌的其他角色",
   ["#m_ex__yanzhu-choice"] = "宴诛：选择令%src获得你区域里一张牌或令%src获得你装备区所有牌并失去宴诛",
   ["m_ex__yanzhu_choice1"] = "令其获得你区域里的一张牌",
   ["m_ex__yanzhu_choice2"] = "令其获得你装备区里所有牌并失去宴诛",
@@ -2280,24 +2294,6 @@ Fk:loadTranslationTable{
 }
 
 sunxiu:addSkill(m_ex__xingxue)
-
---[[
-local quancong = General(extension, "m_ex__quancong", "wu", 4)
-
-Fk:loadTranslationTable{
-  ["m_ex__quancong"] = "界全琮",
-  ["~m_ex__quancong"] = "吾逐名如筑室道谋，而是用终不溃于成……",
-}
-
-Fk:loadTranslationTable{
-  ["m_ex__yaoming"] = "邀名",
-  [":m_ex__yaoming"] = "蓄力技（2/4），出牌阶段或当你受到伤害后，你可以减1点“蓄力”值并选择一项：1.弃置手牌数不小于你的一名其他角色的一张牌；2.令手牌数不大于你的一名角色摸一张牌。若与你上次选择的选项不同，你获得1点“蓄力”值，并清除已记录的选项。每当你受到1点伤害后，你获得1点“蓄力”值。",
-
-  ["$m_ex__yaoming1"] = "山不让纤介，而成其危；海不辞丰盈，而成其邃。",
-  ["$m_ex__yaoming2"] = "取上方可得中，取下则无所得矣。",
-}
-
-]]
 
 local zhuzhi = General(extension, "m_ex__zhuzhi", "wu", 4)
 
@@ -2418,7 +2414,6 @@ m_ex__anguo:addRelatedSkill(m_ex__anguo_maxcards)
 Fk:loadTranslationTable{
   ["m_ex__anguo"] = "安国",
   [":m_ex__anguo"] = "游戏开始时，你令一名其他角色获得“安国”标记；拥有“安国”标记的角色的手牌上限等于其体力上限；出牌阶段开始时，若场上有拥有“安国”标记的角色，你可以将“安国”标记移动给一名本局游戏未获得过此标记的角色；当你受到伤害时，若场上有拥有“安国”标记的角色、伤害来源没有“安国”标记、此次伤害的伤害值不小于你的体力值，防止此伤害；当拥有“安国”标记的角色进入濒死状态时，其移去“安国”标记并将体力值回复至1点，然后你选择一项：1.若你的体力值大于1，你失去体力至1点；2.若你的体力上限大于1，你将体力上限减至1。若如此做，其获得1点“护甲”。",
-
   ["@@m_ex__anguo"] = "安国",
   ["#m_ex__anguo-choose"] = "安国：选择一名角色，令其获得安国标记",
   ["#m_ex__anguo-move"] = "安国：你可以将%dest的角色的安国标记转移给另一名角色",

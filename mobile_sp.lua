@@ -1046,6 +1046,7 @@ Fk:loadTranslationTable{
 local hongyi = fk.CreateActiveSkill{
   name = "hongyi",
   anim_type = "control",
+  prompt = "#hongyi-active",
   max_card_num = 0,
   target_num = 1,
   can_use = function(self, player)
@@ -1115,6 +1116,7 @@ Fk:loadTranslationTable{
   ["#hongyi_delay"] = "弘仪",
   [":hongyi"] = "出牌阶段限一次，你可以指定一名其他角色，然后直到你的下个回合开始时，其造成伤害时进行一次判定：若结果为红色，则受伤角色摸一张牌；若结果为黑色则此伤害-1。",
 
+  ["#hongyi-active"] = "发动弘仪，选择一名其他角色",
   ["@@hongyi"] = "弘仪",
   ["$hongyi1"] = "克明礼教，约束不端之行。",
   ["$hongyi2"] = "训成弘操，以扬正明之德。",
@@ -1193,5 +1195,104 @@ Fk:loadTranslationTable{
 }
 
 yanghuiyu:addSkill(quanfeng)
+
+local zhangyi = General(extension, "mobile__zhangyiy", "shu", 4)
+Fk:loadTranslationTable{
+  ["mobile__zhangyiy"] = "张翼",
+  ["~mobile__zhangyiy"] = "唯愿百姓，不受此乱所害，哎……",
+}
+
+local zhiyi_viewas = fk.CreateViewAsSkill{
+  name = "zhiyi_viewas",
+  interaction = function()
+    local mark = Self:getMark("@$zhiyi-turn")
+    if type(mark) ~= "table" then return nil end
+    local names = table.filter(mark, function (card_name)
+      local to_use = Fk:cloneCard(card_name)
+      return to_use.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use)
+    end)
+    if #names > 0 then
+      return UI.ComboBox {choices = names}
+    end
+  end,
+  card_filter = function() return false end,
+  view_as = function(self, cards)
+    if not self.interaction.data then return end
+    local card = Fk:cloneCard(self.interaction.data)
+    card.skillName = "zhiyi"
+    return card
+  end,
+}
+
+Fk:addSkill(zhiyi_viewas)
+
+local zhiyi = fk.CreateTriggerSkill{
+  name = "zhiyi",
+  anim_type = "offensive",
+  events = {fk.EventPhaseStart, fk.CardUsing, fk.CardResponding},
+  frequency = Skill.Compulsory,
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then return false end
+    if event == fk.CardUsing or event == fk.CardResponding then
+      if player == target and data.card.type == Card.TypeBasic then
+        local mark = player:getMark("@$zhiyi-turn")
+        return type(mark) ~= "table" or not table.contains(mark, data.card.name)
+      end
+    elseif event == fk.EventPhaseStart and target.phase == Player.Finish then
+      local mark = player:getMark("@$zhiyi-turn")
+      return type(mark) == "table" and #mark > 0
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.CardUsing or event == fk.CardResponding then
+      local mark = player:getMark("@$zhiyi-turn")
+      if mark == 0 then mark = {} end
+      table.insertIfNeed(mark, data.card.name)
+      room:setPlayerMark(player, "@$zhiyi-turn", mark)
+    elseif event == fk.EventPhaseStart then
+      room:notifySkillInvoked(player, self.name)
+      room:broadcastSkillInvoke(self.name)
+      local mark = player:getMark("@$zhiyi-turn")
+      if type(mark) ~= "table" then return false end
+      if table.every(mark, function (card_name)
+        local to_use = Fk:cloneCard(card_name)
+        return not (to_use.skill:canUse(player, to_use) and not player:prohibitUse(to_use))
+      end) then
+        room:drawCards(player, 1, self.name)
+        return false
+      end
+      local success, dat = player.room:askForUseActiveSkill(player, "zhiyi_viewas", "#zhiyi-choose", true)
+      if success then
+        local card = Fk.skills["zhiyi_viewas"]:viewAs(dat.cards)
+        room:useCard{
+          from = player.id,
+          tos = table.map(dat.targets, function(id) return {id} end),
+          card = card,
+        }
+      else
+        room:drawCards(player, 1, self.name)
+      end
+    end
+  end,
+}
+
+Fk:loadTranslationTable{
+  ["zhiyi"] = "执义",
+  [":zhiyi"] = "锁定技，一名角色的结束阶段，若你本回合使用或打出过基本牌，你选择一项：1.视为使用任意一张你本回合使用或打出过的基本牌；2.摸一张牌。",
+
+  ["@$zhiyi-turn"] = "执义",
+  ["#zhiyi-choose"] = "执义：选择视为使用一张基本牌，或点取消则摸一张牌",
+
+  ["$zhiyi1"] = "岂可擅退而误国家之功？",
+  ["$zhiyi2"] = "统摄不懈，只为破敌！",
+}
+
+zhangyi:addSkill(zhiyi)
+
+
+
+
 
 return extension

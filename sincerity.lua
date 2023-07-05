@@ -46,6 +46,7 @@ zhouchu:addSkill(xianghai)
 local chuhai = fk.CreateActiveSkill{
   name = "chuhai",
   anim_type = "offensive",
+  prompt = "#chuhai-active",
   frequency = Skill.Quest,
   mute = true,
   max_card_num = 0,
@@ -226,6 +227,7 @@ Fk:loadTranslationTable{
   <strong>成功</strong>：当一张装备牌进入你的装备区后，若你的装备区有不少于3张装备，则你将体力值回复至上限，获得〖彰名〗，失去〖乡害〗。<br>\
   <strong>失败</strong>：若你于使命达成前，你使用〖除害〗拼点没赢，且你的拼点结果不大于6点，则使命失败。",
 
+  ["#chuhai-active"] = "发动除害，选择与你拼点的角色",
   ["@@chuhai-phase"] = "除害",
   ["$chuhai1"] = "有我在此，安敢为害？！",
   ["$chuhai2"] = "小小孽畜，还不伏诛？！",

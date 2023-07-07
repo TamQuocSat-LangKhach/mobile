@@ -1291,8 +1291,222 @@ Fk:loadTranslationTable{
 
 zhangyi:addSkill(zhiyi)
 
+local fuqian = General(extension, "fuqian", "shu", 4)
+Fk:loadTranslationTable{
+  ["fuqian"] = "傅佥",
+  ["~fuqian"] = "生为蜀臣，死……亦当为蜀！",
+}
 
+local poxiang = fk.CreateActiveSkill{
+  name = "poxiang",
+  anim_type = "drawcard",
+  prompt = "#poxiang-active",
+  card_num = 1,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0
+  end,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    room:obtainCard(effect.tos[1], effect.cards[1], false, fk.ReasonGive)
+    local player = room:getPlayerById(effect.from)
+    room:drawCards(player, 3, self.name)
+    local pile = player:getPile("jueyong_desperation")
+    if #pile > 0 then
+      room:moveCards({
+        from = player.id,
+        ids = pile,
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+      })
+    end
+    room:loseHp(player, 1, self.name)
+  end
+}
 
+local poxiang_refresh = fk.CreateTriggerSkill{
+  name = "#poxiang_refresh",
 
+  refresh_events = {fk.AfterCardsMove, fk.TurnEnd},
+  can_refresh = function(self, event, target, player, data)
+    return true
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterCardsMove then
+      for _, move in ipairs(data) do
+        if move.from == player.id and (move.to ~= player.id or move.toArea ~= Card.PlayerHand) then
+          for _, info in ipairs(move.moveInfo) do
+            room:setCardMark(Fk:getCardById(info.cardId), "@@poxiang", 0)
+          end
+        elseif move.to == player.id and move.toArea == Card.PlayerHand and move.skillName == "poxiang" then
+          for _, info in ipairs(move.moveInfo) do
+            local id = info.cardId
+            if room:getCardArea(id) == Card.PlayerHand and room:getCardOwner(id) == player then
+              room:setCardMark(Fk:getCardById(id), "@@poxiang", 1)
+            end
+          end
+        end
+      end
+    elseif event == fk.TurnEnd then
+      for _, id in ipairs(player:getCardIds(Player.Hand)) do
+        room:setCardMark(Fk:getCardById(id), "@@poxiang", 0)
+      end
+    end
+  end,
+}
+
+local poxiang_maxcards = fk.CreateMaxCardsSkill{
+  name = "#poxiang_maxcards",
+  exclude_from = function(self, player, card)
+    return card:getMark("@@poxiang") > 0
+  end,
+}
+
+poxiang:addRelatedSkill(poxiang_refresh)
+poxiang:addRelatedSkill(poxiang_maxcards)
+
+Fk:loadTranslationTable{
+  ["poxiang"] = "破降",
+  [":poxiang"] = "出牌阶段限一次，你可以交给一名其他角色一张牌，然后你摸三张牌，移去所有“绝”并失去1点体力，你以此法获得的牌本回合不计入手牌上限。",
+  ["#poxiang-active"] = "发动破降，选择一张牌交给一名角色，然后摸三张牌，移去所有绝并失去1点体力",
+  ["@@poxiang"] = "破降",
+  ["$poxiang1"] = "王瓘既然假降，吾等可将计就计。",
+  ["$poxiang2"] = "佥率已降两千魏兵，便可大破魏军主力。",
+}
+
+fuqian:addSkill(poxiang)
+
+local jueyong = fk.CreateTriggerSkill{
+  name = "jueyong",
+  anim_type = "defensive",
+  events = {fk.TargetConfirming, fk.EventPhaseStart},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) or player ~= target then return false end
+    if event == fk.TargetConfirming then
+      if data.card.trueName ~= "peach" and data.card.trueName ~= "analeptic" and
+      not (data.extra_data and data.extra_data.useByJueyong) and
+      not data.card:isVirtual() and data.card.trueName == Fk:getCardById(data.card.id, true).trueName then
+        if data.tos and #AimGroup:getAllTargets(data.tos) == 1 then
+          return #player:getPile("jueyong_desperation") < player.hp
+        end
+      end
+    elseif event == fk.EventPhaseStart then
+      return player.phase == Player.Finish and #player:getPile("jueyong_desperation") > 0
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TargetConfirming then
+      TargetGroup:removeTarget(data.targetGroup, player.id)
+      if room:getCardArea(data.card) ~= Card.Processing then return false end
+      player:addToPile("jueyong_desperation", data.card, true, self.name)
+      if table.contains(player:getPile("jueyong_desperation"), data.card.id) then
+        local mark = player:getMark(self.name)
+        if type(mark) ~= "table" then mark = {} end
+        table.insert(mark, {data.card.id, data.from})
+        room:setPlayerMark(player, self.name, mark)
+      end
+    elseif event == fk.EventPhaseStart then
+      while #player:getPile("jueyong_desperation") > 0 do
+        local id = player:getPile("jueyong_desperation")[1]
+        local card = Fk:getCardById(id)
+        if card.trueName ~= "collateral" then
+          local jy_remove = true
+          local mark = player:getMark(self.name)
+          if type(mark) == "table" then
+            local pid
+            for _, jy_record in ipairs(mark) do
+              if #jy_record == 2 and jy_record[1] == id then
+                pid = jy_record[2]
+                break
+              end
+            end
+            if pid ~= nil then
+              local from = room:getPlayerById(pid)
+              if from ~= nil and not from.dead then
+                if not from:prohibitUse(card) and not from:isProhibited(player, card) then
+                  Self = from -- for targetFilter
+                  room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 1)
+                  room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 1)
+                  local usecheak = card.skill:canUse(from, card) and
+                  (card.skill:getMinTargetNum() == 0 or card.skill:targetFilter(player.id, {}, {}, card))
+                  room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 0)
+                  room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 0)
+
+                  if usecheak then
+                    jy_remove = false
+                    room:moveCards({
+                      from = player.id,
+                      ids = {id},
+                      toArea = Card.Processing,
+                      moveReason = fk.ReasonUse,
+                      skillName = self.name,
+                    })
+                    room:useCard({
+                      from = pid,
+                      tos = {{player.id}},
+                      card = card,
+                      extra_data = {useByJueyong = true}
+                    })
+                  end
+                end
+              end
+            end
+          end
+          if jy_remove then
+            room:moveCards({
+              from = player.id,
+              ids = {id},
+              toArea = Card.DiscardPile,
+              moveReason = fk.ReasonPutIntoDiscardPile,
+              skillName = self.name,
+            })
+          end
+        end
+      end
+    end
+  end,
+
+  refresh_events = {fk.AfterCardsMove},
+  can_refresh = function(self, event, target, player, data)
+    return type(player:getMark(self.name)) == "table"
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    local pile = player:getPile("jueyong_desperation")
+    if #pile == 0 then
+      room:setPlayerMark(player, self.name, 0)
+      return false
+    end
+    local mark = player:getMark(self.name)
+    local to_record = {}
+    for _, jy_record in ipairs(mark) do
+      if #jy_record == 2 and table.contains(pile, jy_record[1]) then
+        table.insert(to_record, jy_record)
+      end
+    end
+    room:setPlayerMark(player, self.name, to_record)
+  end,
+}
+
+Fk:loadTranslationTable{
+  ["jueyong"] = "绝勇",
+  [":jueyong"] = "锁定技，当你成为一张非因〖绝勇〗使用的、非转化且非虚拟的牌（【桃】和【酒】除外）指定的目标时，若你是此牌的唯一目标，且此时“绝”的数量小于你的体力值，你取消之。然后将此牌置于你的武将牌上，称为“绝”。结束阶段，若你有“绝”，则按照置入顺序从前到后依次结算“绝”，令其原使用者对你使用（若此牌使用者不在场，则将此牌置入弃牌堆）。",
+
+  ["jueyong_desperation"] = "绝",
+
+  ["$jueyong1"] = "敌围何惧，有死而已！",
+  ["$jueyong2"] = "身陷敌阵，战而弥勇！",
+}
+
+fuqian:addSkill(jueyong)
 
 return extension

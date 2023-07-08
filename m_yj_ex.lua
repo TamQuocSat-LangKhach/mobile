@@ -1447,7 +1447,8 @@ local m_ex__qiuyuan = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = self.cost_data
-    local card = room:askForCard(room:getPlayerById(to), 1, 1, false, self.name, true, "^slash|.|.|.|.|basic", "#m_ex__qiuyuan-give::"..player.id)
+    --FIXME: cant use "^slash|.|.|.|.|basic"!!
+    local card = room:askForCard(room:getPlayerById(to), 1, 1, false, self.name, true, "jink,peach,analeptic,n_brick", "#m_ex__qiuyuan-give::"..player.id)
     if #card > 0 then
       room:obtainCard(player, Fk:getCardById(card[1]), true, fk.ReasonGive)
     else

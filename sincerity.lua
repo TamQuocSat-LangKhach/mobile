@@ -775,7 +775,7 @@ local powei = fk.CreateTriggerSkill{
         table.insert(choices, 1, "powei_prey")
       end
       if table.find(player:getCardIds(Player.Hand), function(id)
-        return not player:prohibitDiscard(id)
+        return not player:prohibitDiscard(Fk:getCardById(id))
       end) then
         table.insert(choices, 1, "powei_damage")
       end

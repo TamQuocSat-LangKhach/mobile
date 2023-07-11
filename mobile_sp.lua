@@ -1417,59 +1417,74 @@ local jueyong = fk.CreateTriggerSkill{
     elseif event == fk.EventPhaseStart then
       while #player:getPile("jueyong_desperation") > 0 do
         local id = player:getPile("jueyong_desperation")[1]
+        local jy_remove = true
         local card = Fk:getCardById(id)
-        if card.trueName ~= "collateral" then
-          local jy_remove = true
-          local mark = player:getMark(self.name)
-          if type(mark) == "table" then
-            local pid
-            for _, jy_record in ipairs(mark) do
-              if #jy_record == 2 and jy_record[1] == id then
-                pid = jy_record[2]
-                break
-              end
+        local mark = player:getMark(self.name)
+        if type(mark) == "table" then
+          local pid
+          for _, jy_record in ipairs(mark) do
+            if #jy_record == 2 and jy_record[1] == id then
+              pid = jy_record[2]
+              break
             end
-            if pid ~= nil then
-              local from = room:getPlayerById(pid)
-              if from ~= nil and not from.dead then
-                if not from:prohibitUse(card) and not from:isProhibited(player, card) then
-                  Self = from -- for targetFilter
-                  room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 1)
-                  room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 1)
-                  local usecheak = card.skill:canUse(from, card) and
-                  (card.skill:getMinTargetNum() == 0 or card.skill:targetFilter(player.id, {}, {}, card))
-                  room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 0)
-                  room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 0)
+          end
+          if pid ~= nil then
+            local from = room:getPlayerById(pid)
+            if from ~= nil and not from.dead then
+              if not from:prohibitUse(card) and not from:isProhibited(player, card) then
+                Self = from -- for targetFilter
+                room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 1)
+                room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 1)
+                local usecheak = card.skill:canUse(from, card) and
+                (card.skill:getMinTargetNum() == 0 or card.skill:targetFilter(player.id, {}, {}, card))
+                room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 0)
+                room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 0)
 
-                  if usecheak then
-                    jy_remove = false
-                    room:moveCards({
-                      from = player.id,
-                      ids = {id},
-                      toArea = Card.Processing,
-                      moveReason = fk.ReasonUse,
-                      skillName = self.name,
-                    })
-                    room:useCard({
-                      from = pid,
-                      tos = {{player.id}},
-                      card = card,
-                      extra_data = {useByJueyong = true}
-                    })
+                local tos = {{player.id}}
+                if usecheak and card.trueName == "collateral" then
+                  usecheak = false
+                  local targets = table.filter(room.alive_players, function (p)
+                    return card.skill:targetFilter(p.id, {player.id}, {}, card)
+                  end)
+                  if #targets > 0 then
+                    local to_slash = room:askForChoosePlayers(from, table.map(targets, function (p)
+                      return p.id
+                    end), 1, 1, "#collateral-choose::"..player.id..":"..card:toLogString(), "collateral_skill", false)
+                    if #to_slash > 0 then
+                      usecheak = true
+                      table.insert(tos, to_slash)
+                    end
                   end
+                end
+
+                if usecheak then
+                  jy_remove = false
+                  room:moveCards({
+                    from = player.id,
+                    ids = {id},
+                    toArea = Card.Processing,
+                    moveReason = fk.ReasonUse,
+                    skillName = self.name,
+                  })
+                  room:useCard({
+                    from = pid,
+                    tos = tos,
+                    card = card,
+                    extra_data = {useByJueyong = true}
+                  })
                 end
               end
             end
           end
-          if jy_remove then
-            room:moveCards({
-              from = player.id,
-              ids = {id},
-              toArea = Card.DiscardPile,
-              moveReason = fk.ReasonPutIntoDiscardPile,
-              skillName = self.name,
-            })
-          end
+        end
+        if jy_remove then
+          room:moveCards({
+            from = player.id,
+            ids = {id},
+            toArea = Card.DiscardPile,
+            moveReason = fk.ReasonPutIntoDiscardPile,
+            skillName = self.name,
+          })
         end
       end
     end

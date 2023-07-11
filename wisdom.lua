@@ -116,7 +116,7 @@ local wisdomShanxi = fk.CreateTriggerSkill{
       end
       room:setPlayerMark(room:getPlayerById(self.cost_data), "@@wisdom__xi", 1)
     else
-      local cardIds = room:askForCard(target, 2, 2, false, self.name, true, nil, "#wisdom__shanxi-give::" .. player.id)
+      local cardIds = room:askForCard(target, 2, 2, true, self.name, true, nil, "#wisdom__shanxi-give::" .. player.id)
       if #cardIds == 2 then
         local pack = Fk:cloneCard("slash")
         pack:addSubcards(cardIds)

@@ -106,9 +106,7 @@ local m_ex__ganlu = fk.CreateActiveSkill{
     if #moveInfos > 0 then
       room:moveCards(table.unpack(moveInfos))
     end
-
     moveInfos = {}
-
     if not target2.dead then
       local to_ex_cards1 = table.filter(cards1, function (id)
         return room:getCardArea(id) == Card.Processing and target2:getEquipment(Fk:getCardById(id).sub_type) == nil
@@ -144,9 +142,7 @@ local m_ex__ganlu = fk.CreateActiveSkill{
     if #moveInfos > 0 then
       room:moveCards(table.unpack(moveInfos))
     end
-
     table.insertTable(cards1, cards2)
-
     local dis_cards = table.filter(cards1, function (id)
       return room:getCardArea(id) == Card.Processing
     end)
@@ -177,13 +173,54 @@ wuguotai:addSkill("buyi")
 
 local m_ex__xusheng = General(extension, "m_ex__xusheng", "wu", 4)
 
-local m_ex__pojun_clean = fk.CreateTriggerSkill{
-  name = "#m_ex__pojun_clean",
-  mute = true,
-  events = {fk.EventPhaseStart},
+Fk:loadTranslationTable{
+  ["m_ex__xusheng"] = "界徐盛",
+  ["~m_ex__xusheng"] = "盛只恨，不能再为主公，破敌致胜了。",
+}
+
+local m_ex__pojun = fk.CreateTriggerSkill{
+  name = "m_ex__pojun",
+  anim_type = "offensive",
+  events = {fk.TargetSpecified, fk.DamageCaused},
   can_trigger = function(self, event, target, player, data)
-    return target.phase >= Player.NotActive and
-      #player:getPile("m_ex__pojun") > 0
+    if target == player and player:hasSkill(self.name) and data.card and data.card.trueName == "slash" then
+      if event == fk.TargetSpecified then
+        local to = player.room:getPlayerById(data.to)
+        return not to.dead and to.hp > 0 and not to:isNude()
+      elseif event == fk.DamageCaused then
+        return not data.chain and #player:getCardIds(Player.Hand) >= #data.to:getCardIds(Player.Hand) and
+        #player:getCardIds(Player.Equip) >= #data.to:getCardIds(Player.Equip)
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.TargetSpecified then
+      if player.room:askForSkillInvoke(player, self.name, nil, "#m_ex__pojun-invoke::"..data.to) then
+        player.room:doIndicate(player.id, {data.to})
+        return true
+      end
+    elseif event == fk.DamageCaused then
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TargetSpecified then
+      local to = room:getPlayerById(data.to)
+      local cards = room:askForCardsChosen(player, to, 1, to.hp, "he", self.name)
+      to:addToPile(self.name, cards, false, self.name)
+    else
+      data.damage = data.damage + 1
+    end
+  end,
+}
+
+local m_ex__pojun_delay = fk.CreateTriggerSkill{
+  name = "#m_ex__pojun_delay",
+  mute = true,
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    return data.to == Player.NotActive and #player:getPile("m_ex__pojun") > 0
   end,
   on_cost = function() return true end,
   on_use = function(self, event, target, player, data)
@@ -194,50 +231,19 @@ local m_ex__pojun_clean = fk.CreateTriggerSkill{
   end,
 }
 
-local m_ex__pojun = fk.CreateTriggerSkill{
-  name = "m_ex__pojun",
-  anim_type = "offensive",
-  events = {fk.TargetSpecified},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and
-      data.card.trueName == "slash" and not player.room:getPlayerById(data.to):isNude()
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = room:getPlayerById(data.to)
-    local cards = room:askForCardsChosen(player, to, 0, to.hp, "he", self.name)
-    to:addToPile(self.name, cards, false, self.name)
-  end,
-
-  refresh_events = {fk.DamageCaused},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and
-      data.card and data.card.trueName == "slash" and
-      #player:getCardIds(Player.Hand) >= #data.to:getCardIds(Player.Hand) and
-      #player:getCardIds(Player.Equip) >= #data.to:getCardIds(Player.Equip) and
-      not data.chain
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    room:broadcastSkillInvoke(self.name)
-    room:notifySkillInvoked(player, self.name)
-    data.damage = data.damage + 1
-  end,
-}
-
-m_ex__pojun:addRelatedSkill(m_ex__pojun_clean)
+m_ex__pojun:addRelatedSkill(m_ex__pojun_delay)
 
 m_ex__xusheng:addSkill(m_ex__pojun)
 
 Fk:loadTranslationTable{
-  ["m_ex__xusheng"] = "界徐盛",
   ["m_ex__pojun"] = "破军",
-  ["#m_ex__pojun_clean"] = "破军",
-  [":m_ex__pojun"] = "当你使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）；若如此做，当前回合结束后，该角色获得这些牌。你使用【杀】对手牌数与装备数均不大于你的角色造成伤害时，此伤害+1。",
+  ["#m_ex__pojun_delay"] = "破军",
+  [":m_ex__pojun"] = "当你使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）；若如此做，当前回合结束时，该角色获得这些牌。你使用【杀】对手牌数与装备数均不大于你的角色造成伤害时，此伤害+1。",
+
+  ["#m_ex__pojun-invoke"] = "是否对%dest发动 破军",
 
   ["$m_ex__pojun1"] = "犯大吴疆土者，盛必击而破之！",
   ["$m_ex__pojun2"] = "若敢来犯，必叫你大败而归！",
-  ["~m_ex__xusheng"] = "盛只恨，不能再为主公，破敌致胜了。",
 }
 
 local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
@@ -316,20 +322,16 @@ local m_ex__xianzhen_armor_invalidity = fk.CreateTriggerSkill{
 
 local m_ex__xianzhen_targetmod = fk.CreateTargetModSkill{
   name = "#m_ex__xianzhen_targetmod",
-  residue_func = function(self, player, skill, scope, card, to)
+  bypass_times = function(self, player, skill, scope, card, to)
     if card and to then
       local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
-      if type(targetRecorded) == "table" and table.contains(targetRecorded, to.id) then
-        return 998
-      end
+      return type(targetRecorded) == "table" and table.contains(targetRecorded, to.id)
     end
   end,
-  distance_limit_func = function(self, player, skill, card, to)
+  bypass_distances = function(self, player, skill, card, to)
     if card and to then
       local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
-      if type(targetRecorded) == "table" and table.contains(targetRecorded, to.id) then
-        return 998
-      end
+      return type(targetRecorded) == "table" and table.contains(targetRecorded, to.id)
     end
   end,
 }
@@ -656,8 +658,23 @@ local m_ex__xuanfeng = fk.CreateTriggerSkill{
             end
           end
         end
-      else
-        return target == player and player.phase == Player.Discard and player:getMark("m_ex__xuanfeng_discardcount-phase") > 1
+      elseif event == fk.EventPhaseEnd then
+        if target == player and player.phase == Player.Discard then
+          local x = 0
+          local logic = player.room.logic
+          local events = logic.event_recorder[GameEvent.MoveCards] or Util.DummyTable
+          local end_id = logic:getCurrentEvent().id
+          for i = #events, 1, -1 do
+            local e = events[i]
+            if e.id < end_id then break end
+            for _, move in ipairs(e.data) do
+              if move.from == player.id and move.moveReason == fk.ReasonDiscard and move.skillName == "game_rule" then
+                x = x + #move.ids
+                if x > 1 then return true end
+              end
+            end
+          end
+        end
       end
     end
   end,
@@ -689,22 +706,6 @@ local m_ex__xuanfeng = fk.CreateTriggerSkill{
         room:askForMoveCardInBoard(player, room:getPlayerById(to[1]), room:getPlayerById(to[2]), self.name, "e")
       end
     end
-  end,
-
-  refresh_events = {fk.AfterCardsMove},
-  can_refresh = function(self, event, target, player, data)
-    self.trigger_times = 0
-    for _, move in ipairs(data) do
-      if move.from and move.from == player.id and move.moveReason == fk.ReasonDiscard then
-        self.trigger_times = self.trigger_times + #table.filter(move.moveInfo, function(info)
-          return info.fromArea == Card.PlayerHand
-        end)
-      end
-    end
-    return self.trigger_times > 0
-  end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "m_ex__xuanfeng_discardcount-phase", self.trigger_times)
   end,
 }
 
@@ -920,11 +921,8 @@ local m_ex__zongshi_maxcards = fk.CreateMaxCardsSkill{
 }
 local m_ex__zongshi_targetmod = fk.CreateTargetModSkill{
   name = "#m_ex__zongshi_targetmod",
-  residue_func = function(self, player, skill, scope)
-    if player:getMark("@@m_ex__zongshi-turn") > 0 and skill.trueName == "slash_skill"
-      and scope == Player.HistoryPhase then
-      return 999
-    end
+  bypass_times = function(self, player, skill)
+    return player:getMark("@@m_ex__zongshi-turn") > 0 and skill.trueName == "slash_skill"
   end,
 }
 m_ex__zongshi:addRelatedSkill(m_ex__zongshi_maxcards)
@@ -1014,11 +1012,9 @@ local m_ex__dangxian = fk.CreateTriggerSkill{
     return target == player and player:hasSkill(self.name) and data.to == Player.Start
   end,
   on_use = function(self, event, target, player, data)
-    if #player.room.discard_pile > 0 then
-      local cards = player.room:getCardsFromPileByRule("slash", 1, "discardPile")
-      if #cards > 0 then
-        player.room:obtainCard(player, cards[1], true, fk.ReasonJustMove)
-      end
+    local cards = player.room:getCardsFromPileByRule("slash", 1, "discardPile")
+    if #cards > 0 then
+      player.room:obtainCard(player, cards[1], true, fk.ReasonJustMove)
     end
     player:gainAnExtraPhase(Player.Play)
   end,

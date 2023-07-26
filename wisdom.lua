@@ -194,45 +194,21 @@ local qinzheng = fk.CreateTriggerSkill{
       end)
   end,
   on_use = function(self, event, player, target, data)
-    local randCard = function(cardName)
-      local cardNum = #player.room.draw_pile
-      local randNum = math.random(1, cardNum)
-      
-      for i = randNum, cardNum do
-        local card = Fk:getCardById(player.room.draw_pile[i])
-        
-        if table.contains(cardName, card.name) then
-          return card
-        end
-      end
-      
-      for i = 1, randNum do
-        local card = Fk:getCardById(player.room.draw_pile[i])
-        
-        if table.contains(cardName, card.name) then
-          return card
-        end
-      end
-      
-      return nil
-    end
-
     local loopList = table.filter({ 3, 5, 8 }, function(num)
       return player:getMark("@" .. self.name) % num == 0
     end)
 
     local toObtain = {}
     for _, count in ipairs(loopList) do
-      local cardList = {"slash", "jink"}
+      local cardList = "slash,jink"
       if count == 5 then
-        cardList = {"peach", "analeptic"}
+        cardList = "peach,analeptic"
       elseif count == 8 then
-        cardList = {"ex_nihilo", "duel"}
+        cardList = "ex_nihilo,duel"
       end
-
-      local randomCard = randCard(cardList)
-      if randomCard then
-        table.insert(toObtain, randomCard.id)
+      local randomCard = player.room:getCardsFromPileByRule(cardList)
+      if #randomCard > 0 then
+        table.insert(toObtain, randomCard[1])
       end
     end
 

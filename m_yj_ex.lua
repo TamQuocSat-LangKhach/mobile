@@ -3,6 +3,7 @@ extension.extensionName = "mobile"
 
 Fk:loadTranslationTable{
   ["m_yj_ex"] = "手杀界一将",
+  ["m_ex"] = "手杀界",
 }
 
 local function getUseExtraTargets(room, data, bypass_distances)
@@ -173,6 +174,71 @@ Fk:loadTranslationTable{
 }
 
 wuguotai:addSkill("buyi")
+
+local m_ex__xusheng = General(extension, "m_ex__xusheng", "wu", 4)
+
+local m_ex__pojun_clean = fk.CreateTriggerSkill{
+  name = "#m_ex__pojun_clean",
+  mute = true,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target.phase >= Player.NotActive and
+      #player:getPile("m_ex__pojun") > 0
+  end,
+  on_cost = function() return true end,
+  on_use = function(self, event, target, player, data)
+    local dummy = Fk:cloneCard("zixing")
+    dummy:addSubcards(player:getPile("m_ex__pojun"))
+    local room = player.room
+    room:obtainCard(player.id, dummy, false)
+  end,
+}
+
+local m_ex__pojun = fk.CreateTriggerSkill{
+  name = "m_ex__pojun",
+  anim_type = "offensive",
+  events = {fk.TargetSpecified},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and
+      data.card.trueName == "slash" and not player.room:getPlayerById(data.to):isNude()
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(data.to)
+    local cards = room:askForCardsChosen(player, to, 0, to.hp, "he", self.name)
+    to:addToPile(self.name, cards, false, self.name)
+  end,
+
+  refresh_events = {fk.DamageCaused},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and
+      data.card and data.card.trueName == "slash" and
+      #player:getCardIds(Player.Hand) >= #data.to:getCardIds(Player.Hand) and
+      #player:getCardIds(Player.Equip) >= #data.to:getCardIds(Player.Equip) and
+      not data.chain
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    room:broadcastSkillInvoke(self.name)
+    room:notifySkillInvoked(player, self.name)
+    data.damage = data.damage + 1
+  end,
+}
+
+m_ex__pojun:addRelatedSkill(m_ex__pojun_clean)
+
+m_ex__xusheng:addSkill(m_ex__pojun)
+
+Fk:loadTranslationTable{
+  ["m_ex__xusheng"] = "界徐盛",
+  ["m_ex__pojun"] = "破军",
+  ["#m_ex__pojun_clean"] = "破军",
+  [":m_ex__pojun"] = "当你使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）；若如此做，当前回合结束后，该角色获得这些牌。你使用【杀】对手牌数与装备数均不大于你的角色造成伤害时，此伤害+1。",
+
+  ["$m_ex__pojun1"] = "犯大吴疆土者，盛必击而破之！",
+  ["$m_ex__pojun2"] = "若敢来犯，必叫你大败而归！",
+  ["~m_ex__xusheng"] = "盛只恨，不能再为主公，破敌致胜了。",
+}
 
 local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
 

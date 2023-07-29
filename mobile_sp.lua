@@ -5,6 +5,67 @@ Fk:loadTranslationTable{
   ["mxing"] = "手杀星",
 }
 
+local sunru = General(extension, "sunru", "wu", 3, 3, General.Female)
+local yingjian = fk.CreateTriggerSkill{
+  name = "yingjian",
+  anim_type = "offensive",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and
+      player.phase == Player.Start and not player:prohibitUse(Fk:cloneCard("slash"))
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local slash = Fk:cloneCard "slash"
+    local max_num = slash.skill:getMaxTargetNum(player, slash)
+    local targets = {}
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if not player:isProhibited(p, slash) then
+        table.insert(targets, p.id)
+      end
+    end
+    if #targets == 0 or max_num == 0 then return end
+    local tos = room:askForChoosePlayers(player, targets, 1, max_num, "#yingjian-choose", self.name, true)
+    if #tos > 0 then
+      self.cost_data = tos
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+
+    local slash = Fk:cloneCard "slash"
+    slash.skillName = self.name
+    room:useCard {
+      from = target.id,
+      tos = table.map(self.cost_data, function(pid) return { pid } end),
+      card = slash,
+      extraUse = true,
+    }
+  end,
+}
+sunru:addSkill(yingjian)
+local shixin = fk.CreateTriggerSkill{
+  name = "shixin",
+  anim_type = "defensive",
+  frequency = Skill.Compulsory,
+  events = {fk.DamageInflicted},
+  can_trigger = function(self, _, target, player, data)
+    return target == player and player:hasSkill(self.name) and
+      data.damageType == fk.FireDamage
+  end,
+  on_use = Util.TrueFunc,
+}
+sunru:addSkill(shixin)
+Fk:loadTranslationTable{
+  ["sunru"] = "孙茹",
+  ["yingjian"] = "影箭",
+  ["#yingjian-choose"] = "影箭: 你现在可以视为使用无视距离的【杀】",
+  [":yingjian"] = "准备阶段，你可以视为使用一张无距离限制的【杀】。",
+  ["shixin"] = "释衅",
+  [":shixin"] = "锁定技，防止你受到的火属性伤害。",
+}
+
 local liuzan = General(extension, "liuzan", "wu", 4)
 local fenyin = fk.CreateTriggerSkill{
   name = "fenyin",

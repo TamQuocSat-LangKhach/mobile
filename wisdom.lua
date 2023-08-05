@@ -2,7 +2,7 @@ local extension = Package("wisdom")
 extension.extensionName = "mobile"
 
 Fk:loadTranslationTable{
-  ["wisdom"] = "智包",
+  ["wisdom"] = "手杀-始计篇·智",
 }
 
 local wisdomWangcan = General(extension, "mobile__wangcan", "wei", 3)
@@ -127,6 +127,7 @@ local wisdomShanxi = fk.CreateTriggerSkill{
     end
   end,
 }
+wisdomWangcan:addSkill(wisdomShanxi)
 Fk:loadTranslationTable{
   ["wisdom__shanxi"] = "善檄",
   [":wisdom__shanxi"] = "出牌阶段开始时，你可以令一名没有“檄”的角色获得一枚“檄”标记（若场上有该标记则改为转移至该角色）；当有“檄”标记的角色回复体力后，若其不处于濒死状态，其须选择一项：1.交给你两张牌；2.失去1点体力。",
@@ -137,14 +138,7 @@ Fk:loadTranslationTable{
   ["$wisdom__shanxi2"] = "复弃中国去，委身适荆蛮。",
 }
 
-wisdomWangcan:addSkill(wisdomShanxi)
-
 local chenzhen = General(extension, "chenzhen", "shu", 3)
-Fk:loadTranslationTable{
-  ["chenzhen"] = "陈震",
-  ["~chenzhen"] = "若毁盟约，则两败俱伤！",
-}
-
 local shameng = fk.CreateActiveSkill{
   name = "shameng",
   anim_type = "drawcard",
@@ -171,15 +165,18 @@ local shameng = fk.CreateActiveSkill{
     from:drawCards(3, self.name)
   end,
 }
+chenzhen:addSkill(shameng)
 Fk:loadTranslationTable{
+  ["chenzhen"] = "陈震",
   ["shameng"] = "歃盟",
   [":shameng"] = "出牌阶段限一次，你可以弃置两张颜色相同的手牌并选择一名其他角色，该角色摸两张牌，然后你摸三张牌。",
+
   ["$shameng1"] = "震以不才，得充下使，愿促两国盟好。",
   ["$shameng2"] = "震奉聘叙好，若有违贵国典制，万望告之。",
+  ["~chenzhen"] = "若毁盟约，则两败俱伤！",
 }
 
-chenzhen:addSkill(shameng)
-
+local luotong = General:new(extension, "luotong", "wu", 4)
 local qinzheng = fk.CreateTriggerSkill{
   name = "qinzheng",
   anim_type = "drawcard",
@@ -232,14 +229,12 @@ local qinzheng = fk.CreateTriggerSkill{
     player.room:addPlayerMark(player, "@" .. self.name, 1)
   end,
 }
-
-local luotong = General:new(extension, "luotong", "wu", 4)
 luotong:addSkill(qinzheng)
-
 Fk:loadTranslationTable{
   ["luotong"] = "骆统",
   ["qinzheng"] = "勤政",
-  [":qinzheng"] = "锁定技，你每使用或打出：三张牌时，你随机获得一张【杀】或【闪】；五张牌时，你随机获得一张【桃】或【酒】；八张牌时，你随机获得一张【无中生有】或【决斗】。",
+  [":qinzheng"] = "锁定技，你每使用或打出：三张牌时，你随机获得一张【杀】或【闪】；五张牌时，你随机获得一张【桃】或【酒】；"..
+  "八张牌时，你随机获得一张【无中生有】或【决斗】。",
   ["@qinzheng"] = "勤政",
 
   ["$qinzheng1"] = "夫国之有民，犹水之有舟，停则以安，扰则以危。",
@@ -248,6 +243,7 @@ Fk:loadTranslationTable{
 }
 
 local duyu = General(extension, "mobile__duyu", "qun", 4)
+duyu.subkingdom = "jin"
 Fk:loadTranslationTable{
   ["mobile__duyu"] = "杜预",
   ["~mobile__duyu"] = "洛水圆石，遂道向南，吾将以俭自完耳……",

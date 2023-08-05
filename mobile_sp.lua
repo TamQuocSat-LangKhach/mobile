@@ -2,6 +2,7 @@ local extension = Package("mobile_sp")
 extension.extensionName = "mobile"
 Fk:loadTranslationTable{
   ["mobile_sp"] = "手杀专属",
+  ["mobile"] = "手杀",
   ["mxing"] = "手杀星",
 }
 
@@ -384,6 +385,7 @@ maojie:addSkill(bingqing)
 -- }
 
 local peixiu = General(extension, "peixiu", "qun", 3)
+peixiu.subkingdom = "jin"
 Fk:loadTranslationTable{
   ["peixiu"] = "裴秀",
   ["~peixiu"] = "既食寒石散，便不可饮冷酒啊……",
@@ -864,6 +866,7 @@ mobileYizheng:addRelatedSkill(mobileYizhengDebuff)
 yangbiao:addSkill(mobileYizheng)
 
 local wangjun = General(extension, "wangjun", "qun", 4)
+wangjun.subkingdom = "jin"
 Fk:loadTranslationTable{
   ["wangjun"] = "王濬",
   ["~wangjun"] = "问鼎金瓯碎，临江铁索寒……",

@@ -2,8 +2,7 @@ local extension = Package("courage")
 extension.extensionName = "mobile"
 
 Fk:loadTranslationTable{
-  ["courage"] = "勇包",
-  ["mobile"] = "手杀",
+  ["courage"] = "手杀-始计篇·勇",
 }
 
 local courageGaolan = General(extension, "mobile__gaolan", "qun", 4)

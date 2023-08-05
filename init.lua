@@ -1,21 +1,17 @@
-local courage = require "packages/mobile/courage"
-local wisdom = require "packages/mobile/wisdom"
 local mobileSP = require "packages/mobile/mobile_sp"
-local mobileDerived = require "packages/mobile/mobile_derived"
+local wisdom = require "packages/mobile/wisdom"
 local sincerity = require "packages/mobile/sincerity"
-local mYjEx = require "packages/mobile/m_yj_ex"
+local courage = require "packages/mobile/courage"
 local strictness = require "packages/mobile/strictness"
-
-Fk:loadTranslationTable{
-  ["mobile"] = "手杀",
-}
+local mYjEx = require "packages/mobile/m_yj_ex"
+local mobileDerived = require "packages/mobile/mobile_derived"
 
 return {
-  wisdom,
-  courage,
-  sincerity,
-  strictness,
   mobileSP,
+  wisdom,
+  sincerity,
+  courage,
+  strictness,
   mYjEx,
   mobileDerived,
 }

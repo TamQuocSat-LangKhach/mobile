@@ -760,7 +760,7 @@ local m_ex__quanji = fk.CreateTriggerSkill{
     player:drawCards(1, self.name)
     if not (player.dead or player:isKongcheng()) then
       local card = room:askForCard(player, 1, 1, false, self.name, false, "", "#m_ex__quanji-push")
-      player:addToPile("m_ex__zhonghui_power", card, false, self.name)
+      player:addToPile("m_ex__zhonghui_power", card, true, self.name)
     end
   end,
 }

@@ -1495,41 +1495,25 @@ local jueyong = fk.CreateTriggerSkill{
           if pid ~= nil then
             local from = room:getPlayerById(pid)
             if from ~= nil and not from.dead then
-              if not from:prohibitUse(card) and not from:isProhibited(player, card) then
-                Self = from -- for targetFilter
-                room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 1)
-                room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 1)
-                local usecheak = card.skill:canUse(from, card) and
-                (card.skill:getMinTargetNum() == 0 or card.skill:targetFilter(player.id, {}, {}, card))
-                room:setPlayerMark(from, MarkEnum.BypassDistancesLimit, 0)
-                room:setPlayerMark(from, MarkEnum.BypassTimesLimit, 0)
-
+              if from:canUse(card) and not from:prohibitUse(card) and not from:isProhibited(player, card) and
+                  (card.type == Card.TypeEquip or card.skill:modTargetFilter(player.id, {}, pid, card, false)) then
                 local tos = {{player.id}}
-                if usecheak and card.trueName == "collateral" then
-                  usecheak = false
+                if card.skill:getMinTargetNum() == 2 then
                   local targets = table.filter(room.alive_players, function (p)
                     return card.skill:targetFilter(p.id, {player.id}, {}, card)
                   end)
                   if #targets > 0 then
                     local to_slash = room:askForChoosePlayers(from, table.map(targets, function (p)
                       return p.id
-                    end), 1, 1, "#collateral-choose::"..player.id..":"..card:toLogString(), "collateral_skill", false)
+                    end), 1, 1, "#jueyong-choose::"..player.id..":"..card:toLogString(), self.name, false)
                     if #to_slash > 0 then
-                      usecheak = true
                       table.insert(tos, to_slash)
                     end
                   end
                 end
 
-                if usecheak then
+                if #tos >= card.skill:getMinTargetNum() then
                   jy_remove = false
-                  room:moveCards({
-                    from = player.id,
-                    ids = {id},
-                    toArea = Card.Processing,
-                    moveReason = fk.ReasonUse,
-                    skillName = self.name,
-                  })
                   room:useCard({
                     from = pid,
                     tos = tos,
@@ -1581,6 +1565,7 @@ Fk:loadTranslationTable{
   [":jueyong"] = "锁定技，当你成为一张非因〖绝勇〗使用的、非转化且非虚拟的牌（【桃】和【酒】除外）指定的目标时，若你是此牌的唯一目标，且此时“绝”的数量小于你的体力值，你取消之。然后将此牌置于你的武将牌上，称为“绝”。结束阶段，若你有“绝”，则按照置入顺序从前到后依次结算“绝”，令其原使用者对你使用（若此牌使用者不在场，则将此牌置入弃牌堆）。",
 
   ["jueyong_desperation"] = "绝",
+  ["#jueyong-choose"] = "绝勇：选择对%dest使用的%arg的副目标",
 
   ["$jueyong1"] = "敌围何惧，有死而已！",
   ["$jueyong2"] = "身陷敌阵，战而弥勇！",

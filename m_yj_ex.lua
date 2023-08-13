@@ -662,18 +662,16 @@ local m_ex__xuanfeng = fk.CreateTriggerSkill{
         if target == player and player.phase == Player.Discard then
           local x = 0
           local logic = player.room.logic
-          local events = logic.event_recorder[GameEvent.MoveCards] or Util.DummyTable
-          local end_id = logic:getCurrentEvent().id
-          for i = #events, 1, -1 do
-            local e = events[i]
-            if e.id < end_id then break end
+          logic:getEventsOfScope(GameEvent.MoveCards, 1, function (e)
             for _, move in ipairs(e.data) do
               if move.from == player.id and move.moveReason == fk.ReasonDiscard and move.skillName == "game_rule" then
-                x = x + #move.ids
+                x = x + #move.moveInfo
                 if x > 1 then return true end
               end
             end
-          end
+            return false
+          end, Player.HistoryTurn)
+          return x > 1
         end
       end
     end

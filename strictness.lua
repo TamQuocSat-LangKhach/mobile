@@ -807,6 +807,27 @@ local yangjie = fk.CreateActiveSkill{
     end
   end,
 }
+local zj__juxiang = fk.CreateTriggerSkill{
+  name = "zj__juxiang",
+  anim_type = "offensive",
+  frequency = Skill.Limited,
+  events = {fk.AfterDying},
+  can_trigger = function(self, event, target, player, data)
+    return target ~= player and player:hasSkill(self.name) and not target.dead and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#zj__juxiang-invoke::"..target.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:doIndicate(player.id, {target.id})
+    player.room:damage{
+      from = player,
+      to = target,
+      damage = 1,
+      skillName = self.name,
+    }
+  end,
+}
 local houfeng = fk.CreateTriggerSkill{
   name = "houfeng",
   anim_type = "support",
@@ -850,31 +871,10 @@ local houfeng_delay = fk.CreateTriggerSkill{
     end
   end,
 }
-local zj__juxiang = fk.CreateTriggerSkill{
-  name = "zj__juxiang",
-  anim_type = "offensive",
-  frequency = Skill.Limited,
-  events = {fk.AfterDying},
-  can_trigger = function(self, event, target, player, data)
-    return target ~= player and player:hasSkill(self.name) and not target.dead and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
-  end,
-  on_cost = function(self, event, target, player, data)
-    return player.room:askForSkillInvoke(player, self.name, nil, "#zj__juxiang-invoke::"..target.id)
-  end,
-  on_use = function(self, event, target, player, data)
-    player.room:doIndicate(player.id, {target.id})
-    player.room:damage{
-      from = player,
-      to = target,
-      damage = 1,
-      skillName = self.name,
-    }
-  end,
-}
 houfeng:addRelatedSkill(houfeng_delay)
 zhujun:addSkill(yangjie)
-zhujun:addSkill(houfeng)
 zhujun:addSkill(zj__juxiang)
+zhujun:addSkill(houfeng)
 Fk:loadTranslationTable{
   ["mobile__zhujun"] = "朱儁",
   ["yangjie"] = "佯解",

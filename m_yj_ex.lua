@@ -1952,7 +1952,7 @@ local m_ex__jianying = fk.CreateViewAsSkill{
       local card = Fk:getCardById(id)
       if card.type == Card.TypeBasic and not card.is_derived then
         local to_use = Fk:cloneCard(card.name)
-        if card.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use) then
+        if Self:canUse(to_use) and not Self:prohibitUse(to_use) then
           table.insertIfNeed(names, card.name)
         end
       end

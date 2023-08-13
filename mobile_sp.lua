@@ -1273,7 +1273,7 @@ local zhiyi_viewas = fk.CreateViewAsSkill{
     if type(mark) ~= "table" then return nil end
     local names = table.filter(mark, function (card_name)
       local to_use = Fk:cloneCard(card_name)
-      return to_use.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use)
+      return Self:canUse(to_use) and not Self:prohibitUse(to_use)
     end)
     if #names > 0 then
       return UI.ComboBox {choices = names}
@@ -1322,7 +1322,7 @@ local zhiyi = fk.CreateTriggerSkill{
       if type(mark) ~= "table" then return false end
       if table.every(mark, function (card_name)
         local to_use = Fk:cloneCard(card_name)
-        return not (to_use.skill:canUse(player, to_use) and not player:prohibitUse(to_use))
+        return not (player:canUse(to_useto_use) and not player:prohibitUse(to_use))
       end) then
         room:drawCards(player, 1, self.name)
         return false
@@ -1496,7 +1496,7 @@ local jueyong = fk.CreateTriggerSkill{
             local from = room:getPlayerById(pid)
             if from ~= nil and not from.dead then
               if from:canUse(card) and not from:prohibitUse(card) and not from:isProhibited(player, card) and
-                  (card.type == Card.TypeEquip or card.skill:modTargetFilter(player.id, {}, pid, card, false)) then
+                  (card.skill:modTargetFilter(player.id, {}, pid, card, false)) then
                 local tos = {{player.id}}
                 if card.skill:getMinTargetNum() == 2 then
                   local targets = table.filter(room.alive_players, function (p)

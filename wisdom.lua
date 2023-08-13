@@ -310,7 +310,7 @@ local miewu = fk.CreateViewAsSkill{
       local card = Fk:getCardById(id)
       if (card.type == Card.TypeBasic or card.type == Card.TypeTrick) and not card.is_derived then
         local to_use = Fk:cloneCard(card.name)
-        if ((Fk.currentResponsePattern == nil and card.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use)) or
+        if ((Fk.currentResponsePattern == nil and Self:canUse(to_use) and not Self:prohibitUse(to_use)) or
         (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(to_use))) then
           table.insertIfNeed(names, card.name)
         end
@@ -603,7 +603,7 @@ local zuoxing = fk.CreateViewAsSkill{
       local card = Fk:getCardById(id)
       if card:isCommonTrick() and not card.is_derived then
         local to_use = Fk:cloneCard(card.name)
-        if card.skill:canUse(Self, to_use) and not Self:prohibitUse(to_use) then
+        if Self:canUse(to_use) and not Self:prohibitUse(to_use) then
           table.insertIfNeed(names, card.name)
         end
       end

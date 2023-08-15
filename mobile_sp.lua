@@ -636,8 +636,8 @@ local xingZhiyan = fk.CreateActiveSkill{
     if handcardNum > Self.hp and Self:getMark("mxing__zhiyan_give-phase") == 0 then 
       table.insert(choiceList, "mxing__zhiyan_give")
     end
-
-    return UI.ComboBox { choices = choiceList }
+    if #choiceList == 0 then return false end
+    return UI.ComboBox { choices = choiceList , all_choices = {"mxing__zhiyan_draw", "mxing__zhiyan_give"}}
   end,
   card_num = function(self)
     return self.interaction.data == "mxing__zhiyan_draw" and 0 or (#Self:getCardIds(Player.Hand) - Self.hp)
@@ -1276,7 +1276,7 @@ local zhiyi_viewas = fk.CreateViewAsSkill{
       return Self:canUse(to_use) and not Self:prohibitUse(to_use)
     end)
     if #names > 0 then
-      return UI.ComboBox {choices = names}
+      return UI.ComboBox {choices = names, all_choices = mark }
     end
   end,
   card_filter = function() return false end,
@@ -1322,7 +1322,7 @@ local zhiyi = fk.CreateTriggerSkill{
       if type(mark) ~= "table" then return false end
       if table.every(mark, function (card_name)
         local to_use = Fk:cloneCard(card_name)
-        return not (player:canUse(to_useto_use) and not player:prohibitUse(to_use))
+        return not (player:canUse(to_use) and not player:prohibitUse(to_use))
       end) then
         room:drawCards(player, 1, self.name)
         return false

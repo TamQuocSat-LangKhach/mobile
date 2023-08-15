@@ -305,19 +305,20 @@ local miewu = fk.CreateViewAsSkill{
   name = "miewu",
   pattern = ".",
   interaction = function()
-    local names = {}
+    local names, all_names = {} , {}
     for _, id in ipairs(Fk:getAllCardIds()) do
       local card = Fk:getCardById(id)
-      if (card.type == Card.TypeBasic or card.type == Card.TypeTrick) and not card.is_derived then
+      if (card.type == Card.TypeBasic or card.type == Card.TypeTrick) and not card.is_derived and not table.contains(all_names, card.name) then
+        table.insert(all_names, card.name)
         local to_use = Fk:cloneCard(card.name)
         if ((Fk.currentResponsePattern == nil and Self:canUse(to_use) and not Self:prohibitUse(to_use)) or
         (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(to_use))) then
-          table.insertIfNeed(names, card.name)
+          table.insert(names, card.name)
         end
       end
     end
     if #names == 0 then return false end
-    return UI.ComboBox { choices = names }
+    return UI.ComboBox { choices = names, all_choices = all_names }
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0
@@ -598,17 +599,19 @@ godguojia:addSkill(limitedHuishi)
 local zuoxing = fk.CreateViewAsSkill{
   name = "zuoxing",
   interaction = function()
-    local names = {}
+    local names, all_names = {} , {}
     for _, id in ipairs(Fk:getAllCardIds()) do
       local card = Fk:getCardById(id)
-      if card:isCommonTrick() and not card.is_derived then
+      if card:isCommonTrick() and not card.is_derived and not table.contains(all_names, card.name) then
+        table.insert(all_names, card.name)
         local to_use = Fk:cloneCard(card.name)
         if Self:canUse(to_use) and not Self:prohibitUse(to_use) then
-          table.insertIfNeed(names, card.name)
+          table.insert(names, card.name)
         end
       end
     end
-    return UI.ComboBox { choices = names }
+    if #names == 0 then return false end
+    return UI.ComboBox {choices = names, all_choices = all_names}
   end,
   enabled_at_play = function(self, player)
     return
@@ -621,6 +624,7 @@ local zuoxing = fk.CreateViewAsSkill{
     return false
   end,
   view_as = function(self, cards)
+    if not self.interaction.data then return end
     local card = Fk:cloneCard(self.interaction.data)
     card.skillName = self.name
     return card

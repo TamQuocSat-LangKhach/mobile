@@ -42,7 +42,7 @@ local function RewardZhengsu(player, target, reward, skillName, prompt)
     if target:isWounded() and not target.dead then
       table.insert(choices, 1, "recover")
     end
-    reward = room:askForChoice(target, choices, skillName, prompt)
+    reward = room:askForChoice(target, choices, skillName, prompt, false, {"draw2", "recover"})
   end
   if reward == "draw2" then
     room:drawCards(target, 2, skillName)
@@ -230,7 +230,8 @@ local mobile__yanjiao = fk.CreateActiveSkill{
     for _, id in ipairs(cards) do
       table.insertIfNeed(choiceList, Fk:getCardById(id):getSuitString(true))
     end
-    return UI.ComboBox { choices = choiceList }
+    if #choiceList == 0 then return false end
+    return UI.ComboBox { choices = choiceList, all_choices = {"log_spade", "log_heart", "log_club", "log_diamond"} }
   end,
   max_card_num = 0,
   target_num = 1,

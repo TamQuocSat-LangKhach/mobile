@@ -8,38 +8,13 @@ Fk:loadTranslationTable{
 
 local function getUseExtraTargets(room, data, bypass_distances)
   if not (data.card.type == Card.TypeBasic or data.card:isCommonTrick()) then return {} end
-  local ban_cards = {"jink", "nullification", "adaptation", "collateral"} --stupid collateral
-  if table.contains(ban_cards, data.card.trueName) then return {} end
+  if data.card.skill:getMinTargetNum() > 1 then return {} end --stupid collateral
   local tos = {}
   local current_targets = TargetGroup:getRealTargets(data.tos)
-  local aoe_names = {"savage_assault", "archery_attack"}
-
-  Self = room:getPlayerById(data.from) -- for targetFilter
-
   for _, p in ipairs(room.alive_players) do
-    if not table.contains(current_targets, p.id) and not Self:isProhibited(p, data.card) then
-      if data.card.skill:getMinTargetNum() == 0 then
-        if data.card.trueName == "peach" then
-          if p:isWounded() then
-            table.insertIfNeed(tos, p.id)
-          end
-        elseif table.contains(aoe_names, data.card.name) then
-          if p.id ~= data.from then
-            table.insertIfNeed(tos, p.id)
-          end
-        else
-          table.insertIfNeed(tos, p.id)
-        end
-      else
-        room:setPlayerMark(Self, MarkEnum.BypassTimesLimit, 1)
-        if bypass_distances then
-          room:setPlayerMark(Self, MarkEnum.BypassDistancesLimit, 1)
-        end
-        if data.card.skill:targetFilter(p.id, {}, {}, data.card) then
-          table.insertIfNeed(tos, p.id)
-        end
-        room:setPlayerMark(Self, MarkEnum.BypassTimesLimit, 0)
-        room:setPlayerMark(Self, MarkEnum.BypassDistancesLimit, 0)
+    if not table.contains(current_targets, p.id) and not room:getPlayerById(data.from):isProhibited(p, data.card) then
+      if data.card.skill:modTargetFilter(p.id, {}, data.from, data.card, bypass_distances) then
+        table.insert(tos, p.id)
       end
     end
   end
@@ -1947,18 +1922,19 @@ local m_ex__jianying = fk.CreateViewAsSkill{
   pattern = ".|.|.|.|.|basic",
   prompt = "#m_ex__jianying-active",
   interaction = function()
-    local names = {}
+    local names, all_names = {} , {}
     for _, id in ipairs(Fk:getAllCardIds()) do
       local card = Fk:getCardById(id)
-      if card.type == Card.TypeBasic and not card.is_derived then
+      if card.type == Card.TypeBasic and not card.is_derived and not table.contains(all_names, card.name) then
+        table.insert(all_names, card.name)
         local to_use = Fk:cloneCard(card.name)
         if Self:canUse(to_use) and not Self:prohibitUse(to_use) then
-          table.insertIfNeed(names, card.name)
+          table.insert(names, card.name)
         end
       end
     end
     if #names == 0 then return false end
-    return UI.ComboBox {choices = names}
+    return UI.ComboBox { choices = names, all_choices = all_names }
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0
@@ -2001,7 +1977,7 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardUseDeclared},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.phase == Player.Play
+    return target == player and player:hasSkill(self.name, true) and player.phase == Player.Play
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
@@ -2010,7 +1986,6 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
       data.extra_data = data.extra_data or {}
       data.extra_data.m_ex__jianying_triggerable = true
     end
-    local jianying_record = {"log_" .. data.card:getSuitString()}
     if data.card.suit == Card.NoSuit then
       room:setPlayerMark(player, "m_ex__jianying_suit-phase", 0)
     else
@@ -2018,24 +1993,7 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
     end
     room:setPlayerMark(player, "m_ex__jianying_number-phase", data.card.number)
 
-    local num = data.card.number
-    if num > 0 then
-      if num == 1 then
-        num = "A"
-      elseif num == 11 then
-        num = "J"
-      elseif num == 12 then
-        num = "Q"
-      elseif num == 13 then
-        num = "K"
-      end
-      table.insert(jianying_record, num)
-    end
-    if #jianying_record > 0 then
-      room:setPlayerMark(player, "@m_ex__jianying_record-phase", jianying_record)
-    else
-      room:setPlayerMark(player, "@m_ex__jianying_record-phase", 0)
-    end
+    room:setPlayerMark(player, "@m_ex__jianying_record-phase", {data.card:getSuitString(true), data.card:getNumberStr()})
   end,
 }
 

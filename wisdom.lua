@@ -617,7 +617,7 @@ local zuoxing = fk.CreateViewAsSkill{
     return
       player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
       table.find(Fk:currentRoom().alive_players, function(p)
-        return table.contains({ p.general, p.deputyGeneral }, "godguojia") and p.maxHp > 1
+        return table.find({ p.general, p.deputyGeneral }, function(name) return string.find(name, "godguojia") end) and p.maxHp > 1
       end)
   end,
   card_filter = function()
@@ -631,12 +631,12 @@ local zuoxing = fk.CreateViewAsSkill{
   end,
   before_use = function(self, player)
     local room = player.room
-    local firstGodGuojia = table.find(room:getAlivePlayers(), function(p)
-      return table.contains({ p.general, p.deputyGeneral }, "godguojia") and p.maxHp > 1
+    local firstGodGuojia = table.filter(room:getAlivePlayers(), function(p)
+      return table.find({ p.general, p.deputyGeneral }, function(name) return string.find(name, "godguojia") end) and p.maxHp > 1
     end)
 
     if firstGodGuojia then
-      room:changeMaxHp(firstGodGuojia, -1)
+      room:changeMaxHp(firstGodGuojia[1], -1)
     end
   end,
 }

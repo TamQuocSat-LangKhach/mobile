@@ -1573,4 +1573,142 @@ Fk:loadTranslationTable{
 
 fuqian:addSkill(jueyong)
 
+local zhouqun = General(extension, "zhouqun", "shu", 3)
+local tiansuanProhibit = fk.CreateProhibitSkill{
+  name = "#tiansuan_prohibit",
+  is_prohibited = function() return false end,
+  prohibit_use = function(self, player, card)
+    return (card.trueName == "peach" or card.trueName == "analeptic")
+      and player:getMark("@tiansuan") == "tiansuanC"
+  end,
+}
+local tiansuanTrig = fk.CreateTriggerSkill{
+  name = "#tiansuan_trig",
+  events = { fk.DamageInflicted, fk.Damaged },
+  on_cost = Util.TrueFunc,
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    if target ~= player then return end
+    if event == fk.DamageInflicted then
+      return player:getMark("@tiansuan") ~= 0
+    elseif event == fk.Damaged then
+      return player:getMark("@tiansuan") == "tiansuanS"
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    -- local room = player.room
+    if event == fk.Damaged then
+      player:drawCards(data.damage, "tiansuan")
+      return
+    end
+
+    local mark = player:getMark("@tiansuan")
+    if mark == "tiansuanSSR" then
+      return true
+    elseif mark == "tiansuanS" then
+      if data.damage > 1 then data.damage = 1 end
+    elseif mark == "tiansuanA" then
+      data.damageType = fk.FireDamage
+      if data.damage > 1 then data.damage = 1 end
+    elseif mark == "tiansuanB" or mark == "tiansuanC" then
+      data.damage = data.damage + 1
+    end
+  end,
+
+  refresh_events = { fk.TurnStart },
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:getMark("tiansuan") ~= 0
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    room:setPlayerMark(player, "tiansuan", 0)
+    for _, p in ipairs(room.alive_players) do
+      if p:getMark("@tiansuan") ~= 0 then
+        room:setPlayerMark(p, "@tiansuan", 0)
+      end
+    end
+  end
+}
+local tiansuan = fk.CreateActiveSkill{
+  name = "tiansuan",
+  card_filter = Util.FalseFunc,
+  interaction = UI.ComboBox {
+    choices = { "tiansuanNone", "tiansuanSSR", "tiansuanS", "tiansuanA", "tiansuanB", "tiansuanC" }
+  },
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:setPlayerMark(player, "tiansuan", 1)
+    local choices = {
+      "SSR", "SSR",
+      "S", "S", "S",
+      "A", "A", "A", "A",
+      "B", "B", "B",
+      "C", "C",
+    }
+    local dat = self.interaction.data
+    if dat ~= "tiansuanNone" then
+      table.insert(choices, dat:sub(9))
+    end
+    local result = "tiansuan" .. table.random(choices)
+    room:doBroadcastNotify("ShowToast", Fk:translate("tiansuan_result") .. Fk:translate(result))
+
+    local tos = room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper),
+      1, 1, "#tiansuan-choose:::" .. result, self.name, false)
+    local tgt = room:getPlayerById(tos[1])
+    room:setPlayerMark(tgt, "@tiansuan", result)
+
+    if tgt == player then return end
+    if result == "tiansuanSSR" then
+      if tgt:isKongcheng() then return end
+      local cids = tgt.player_cards[Player.Hand]
+      room:fillAG(player, cids)
+
+      local id = room:askForAG(player, cids, false, self.name)
+      room:closeAG(player)
+
+      if not id then return false end
+      room:obtainCard(player, id, false)
+    elseif result == "tiansuanS" then
+      if tgt:isNude() then return end
+      local id = room:askForCardChosen(player, tgt, "he", self.name)
+      room:obtainCard(player, id, false)
+    end
+  end,
+}
+tiansuan:addRelatedSkill(tiansuanProhibit)
+tiansuan:addRelatedSkill(tiansuanTrig)
+zhouqun:addSkill(tiansuan)
+Fk:loadTranslationTable{
+  ['zhouqun'] = '周群',
+  ['tiansuan'] = '天算',
+  ['#tiansuan_trig'] = '天算',
+  [':tiansuan'] = '每轮限一次，出牌阶段，你可以抽取一个“命运签”' ..
+    '（在抽签开始前，你可以悄悄作弊，额外放入一个“命运签”增加其抽中的机会）。' ..
+    '<br/>然后你选择一名角色，其获得命运签的效果直到你的下回合开始。' ..
+    '<br/>若其获得的是“上上签”，你观看其手牌并从其区域内获得一张牌；' ..
+    '若其获得的是“上签”，你从其处获得一张牌。' ..
+    '<br/>各种“命运签”的效果如下：' ..
+    '<br/>上上签：防止受到的伤害。' ..
+    '<br/>上签：受到伤害时，若伤害值大于1，则将伤害值改为1；每受到一点伤害后，你摸一张牌。' ..
+    '<br/>中签：受到伤害时，将伤害改为火焰伤害，若此伤害值大于1，则将伤害值改为1。' ..
+    '<br/>下签：受到伤害时，伤害值+1。' ..
+    '<br/>下下签：受到伤害时，伤害值+1；不能使用【桃】和【酒】。 ',
+  ['tiansuanNone'] = '我足够会玩了，不需要作弊',
+  ['tiansuanSSR'] = '上上签',
+  ['tiansuanS'] = '上签',
+  ['tiansuanA'] = '中签',
+  ['tiansuanB'] = '下签',
+  ['tiansuanC'] = '下下签',
+  ['tiansuan_result'] = '天算的抽签结果是：',
+  ['@tiansuan'] = '天算',
+  ['#tiansuan-choose'] = '天算：抽签结果是 %arg ，请选择一名角色获得签的效果',
+
+  ['$tiansuan1'] = '汝既持签问卜，亦当应天授命。',
+  ['$tiansuan2'] = '尔若居正体道，福寿自当天成。',
+  ['~zhouqun'] = '及时止损，过犹不及…',
+}
+
 return extension

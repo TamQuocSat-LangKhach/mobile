@@ -5,6 +5,118 @@ Fk:loadTranslationTable{
   ["courage"] = "手杀-始计篇·勇",
 }
 
+Fk:loadTranslationTable{
+  ["mobile__wangshuang"] = "王双",
+  ["yiyongw"] = "异勇",
+  [":yiyongw"] = "当你受到其他角色使用【杀】造成的伤害后，若你装备区内有武器牌，你可以获得此【杀】，然后将之当无距离和次数限制的普通【杀】对其"..
+  "使用；若目标装备区内没有武器牌，此【杀】伤害+1。",
+  ["shanxie"] = "擅械",
+  [":shanxie"] = "出牌阶段限一次，你可以从牌堆中获得一张武器牌（若没有，则随机获得一名其他角色装备区内的武器牌）。其他角色使用【闪】响应你使用的【杀】"..
+  "时，若此【闪】点数不大于你攻击范围的两倍，则此【闪】无效。",
+}
+
+local yuanhuan = General(extension, "yuanhuan", "wei", 3)
+local qingjue = fk.CreateTriggerSkill{
+  name = "qingjue",
+  anim_type = "control",
+  events = {fk.TargetSpecifying},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target ~= player and #AimGroup:getAllTargets(data.tos) == 1 and
+      data.to ~= player.id and target.hp > player.room:getPlayerById(data.to).hp and
+      not table.find(player.room.alive_players, function(p) return p.dying end) and
+      player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#qingjue-invoke:"..data.from..":"..data.to..":"..data.card:toLogString())
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:drawCards(1, self.name)
+    if player.dead or target.dead or target:isKongcheng() then return end
+    room:doIndicate(player.id, {target.id})
+    local pindian = player:pindian({target}, self.name)
+    AimGroup:cancelTarget(data, data.to)
+    if pindian.results[target.id].winner == player then
+      --do nothing
+    else
+      if data.card.skill:targetFilter(player.id, {}, {}, data.card) then
+        if data.card.trueName == "collateral" then
+          if target.dead then return end
+          local victim = room:askForChoosePlayers(target, table.map(table.filter(room:getOtherPlayers(player), function(p)
+            return player:inMyAttackRange(p) end), function(p) return p.id end), 1, 1,
+            "#collateral-choose::"..player.id..":"..data.card:toLogString(), "collateral_skill", true)
+          if #victim > 0 then
+            room:doIndicate(target.id, {player.id})
+            room:delay(500)
+            room:doIndicate(player.id, {victim[1]})
+            AimGroup:addTargets(room, data, {player.id, victim[1]})
+          end
+        else
+          room:doIndicate(target.id, {player.id})
+          AimGroup:addTargets(room, data, player.id)
+        end
+      end
+    end
+  end,
+}
+local fengjie = fk.CreateTriggerSkill{
+  name = "fengjie",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self.name) then
+      if player.phase == Player.Start then
+        return true
+      elseif target.phase == Player.Finish then
+        if player:getMark(self.name) == 0 then return end
+        local to = player.room:getPlayerById(player:getMark(self.name))
+        return not to.dead and player:getHandcardNum() ~= to:getHandcardNum()
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if player.phase == Player.Start then
+      local targets = table.map(room:getOtherPlayers(player), function(p) return p.id end)
+      local to = room:askForChoosePlayers(player, targets, 1, 1, "#fengjie-choose", self.name, false)
+      if #to > 0 then
+        to = to[1]
+      else
+        to = table.random(targets)
+      end
+      room:setPlayerMark(player, "@fengjie", room:getPlayerById(to).general)
+      room:setPlayerMark(player, self.name, to)
+    else
+      local n = player:getHandcardNum() - room:getPlayerById(player:getMark(self.name)):getHandcardNum()
+      if n < 0 then
+        player:drawCards(-n, self.name)
+      else
+        room:askForDiscard(player, n, n, false, self.name, false)
+      end
+    end
+  end,
+}
+yuanhuan:addSkill(qingjue)
+yuanhuan:addSkill(fengjie)
+Fk:loadTranslationTable{
+  ["yuanhuan"] = "袁涣",
+  ["qingjue"] = "请决",
+  [":qingjue"] = "每轮限一次，一名其他角色使用牌指定一名体力值小于其的其他角色为唯一目标时，若没有角色处于濒死状态，你可以摸一张牌，与使用者拼点，"..
+  "若你赢或你不是此牌合法目标，取消此牌；若你没赢且是此牌合法目标，此牌目标转移为你。",
+  ["fengjie"] = "奉节",
+  [":fengjie"] = "锁定技，准备阶段，你选择一名其他角色，直到你下回合开始，每名角色结束阶段，若其存活，你将手牌摸或弃至与其相同（至多摸至四张）。",
+  ["#qingjue-invoke"] = "请决：%src 对 %dest 使用%arg，你可以摸一张牌与 %src 拼点，若赢则取消之，若没赢则转移给你",
+  ["#fengjie-choose"] = "奉节：选择一名角色，每回合结束阶段你将手牌调整至与其相同",
+  ["@fengjie"] = "奉节",
+
+  ["$qingjue1"] = "兵者，凶器也，宜不得已而用之。",
+  ["$qingjue2"] = "鼓之以道德，征之以仁义，才可得百姓之心。",
+  ["$fengjie1"] = "立本于道，置身于正。",
+  ["$fengjie2"] = "见贤思齐，内自省也。",
+  ["~yuanhuan"] = "乱世之中，有礼无用啊……",
+}
+
 local courageGaolan = General(extension, "mobile__gaolan", "qun", 4)
 Fk:loadTranslationTable{
   ["mobile__gaolan"] = "高览",
@@ -224,7 +336,8 @@ fangzong:addRelatedSkill(fangzong_prohibit)
 
 Fk:loadTranslationTable{
   ["fangzong"] = "芳踪",
-  [":fangzong"] = "锁定技，出牌阶段，你使用伤害类的牌不能指定你攻击范围内的角色为目标。攻击范围内含有你的其他角色使用伤害类的牌时，不能指定你为目标。结束阶段，你将手牌摸至X张（X为场上存活人数）。",
+  [":fangzong"] = "锁定技，出牌阶段，你使用伤害牌不能指定你攻击范围内的角色为目标；攻击范围内含有你的其他角色使用伤害牌不能指定你为目标。"..
+  "结束阶段，你将手牌摸至X张（X为场上存活人数）。",
 
   ["@@fangzong_invalidity-turn"] = "芳踪失效",
   ["$fangzong1"] = "一战结缘难再许，痛为大义斩此情！",
@@ -280,7 +393,9 @@ local xizhan = fk.CreateTriggerSkill{
 
 Fk:loadTranslationTable{
   ["xizhan"] = "嬉战",
-  [":xizhan"] = "锁定技，其他角色回合开始时，你选择：1.弃置一张牌并令你本回合〖芳踪〗失效，根据弃置牌的花色，执行以下效果：{黑桃，其视为使用一张【酒】；红桃，你视为使用一张【无中生有】；梅花，你视为对其使用一张【铁索连环】；方片，你视为对其使用一张火【杀】。}；2.失去1点体力。",
+  [":xizhan"] = "锁定技，其他角色回合开始时，你需选择一项：1.弃置一张牌并令你本回合〖芳踪〗失效，根据弃置牌的花色执行效果：♠，其视为使用一张【酒】；"..
+  "<font color='red'>♥</font>，你视为使用一张【无中生有】；♣，你视为对其使用一张【铁索连环】；<font color='red'>♦</font>，你视为对其使用一张"..
+  "火【杀】。}；2.失去1点体力。",
 
   ["#xizhan-invoke"] = "嬉战：%dest的回合，选择一张牌弃置并根据花色执行对应效果，或点取消则失去1点体力",
   ["$xizhan1"] = "战场纵非玩乐之所，尔等又能奈我何？",
@@ -364,7 +479,8 @@ local quedi = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["quedi"] = "却敌",
-  [":quedi"] = "每回合限一次，当你使用【杀】或【决斗】指定唯一目标后，你可以选择一项：1.获得其一张手牌；2.弃置一张基本牌，令此【杀】或【决斗】伤害基数+1；背水：减1点体力上限。",
+  [":quedi"] = "每回合限一次，当你使用【杀】或【决斗】指定唯一目标后，你可以选择一项：1.获得其一张手牌；2.弃置一张基本牌，令此【杀】或【决斗】"..
+  "伤害基数+1；背水：减1点体力上限。",
   ["quedi-prey"] = "获得其手牌",
   ["quedi-offense"] = "弃基本牌令此伤害+1",
 
@@ -412,7 +528,8 @@ chuifeng:addRelatedSkill(chuifengDefence)
 Fk:loadTranslationTable{
   ["chuifeng"] = "椎锋",
   ["#chuifeng_defence"] = "椎锋",
-  [":chuifeng"] = "魏势力技，出牌阶段限两次，你可以失去1点体力，并视为使用一张【决斗】。当你受到以此法使用的【决斗】造成的伤害时，防止此伤害，本技能于此阶段内失效。",
+  [":chuifeng"] = "魏势力技，出牌阶段限两次，你可以失去1点体力，并视为使用一张【决斗】。当你受到以此法使用的【决斗】造成的伤害时，防止此伤害，"..
+  "本技能于此阶段内失效。",
 
   ["$chuifeng1"] = "率军冲锋，不惧刀枪所阻！",
   ["$chuifeng2"] = "登锋履刃，何妨马革裹尸！",
@@ -447,7 +564,8 @@ local chongjian = fk.CreateViewAsSkill{
 }
 Fk:loadTranslationTable{
   ["chongjian"] = "冲坚",
-  [":chongjian"] = "吴势力技，你可以将装备牌当【酒】或无距离限制且无视防具的【杀】使用。当你以此法使用的【杀】对一名角色造成伤害后，你获得其装备区里的X张牌（X为伤害值）。",
+  [":chongjian"] = "吴势力技，你可以将装备牌当【酒】或无距离限制且无视防具的【杀】使用。当你以此法使用的【杀】对一名角色造成伤害后，"..
+  "你获得其装备区里的X张牌（X为伤害值）。",
   ["#chongjian_buff"] = "冲坚",
 
   ["$chongjian1"] = "尔等良将，于我不堪一击！",
@@ -531,7 +649,7 @@ local mobileChoujue = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["mobile__choujue"] = "仇决",
-  [":mobile__choujue"] = "锁定技，当一名角色死亡后，若杀死其的角色为你，你加1点体力上限，摸两张牌，你的“却敌”于本回合内可发动的次数上限+1。",
+  [":mobile__choujue"] = "锁定技，当你杀死一名角色后，你加1点体力上限，摸两张牌，你本回合〖却敌〗可发动次数+1。",
 
   ["$mobile__choujue1"] = "血海深仇，便在今日来报！",
   ["$mobile__choujue2"] = "取汝之头，以祭先父！",

@@ -897,7 +897,8 @@ local yingba = fk.CreateActiveSkill{
 }
 Fk:loadTranslationTable{
   ["yingba"] = "英霸",
-  [":yingba"] = "出牌阶段限一次，你可以令一名体力上限大于1的其他角色减1点体力上限，并令其获得一枚“平定”标记，然后你减1点体力上限；你对拥有“平定”标记的角色使用牌无距离限制。",
+  [":yingba"] = "出牌阶段限一次，你可以令一名体力上限大于1的其他角色减1点体力上限，并令其获得一枚“平定”标记，然后你减1点体力上限；"..
+  "你对拥有“平定”标记的角色使用牌无距离限制。",
   ["@yingba_pingding"] = "平定",
   ["$yingba1"] = "从我者可免，拒我者难容！",
   ["$yingba2"] = "卧榻之侧，岂容他人鼾睡！",
@@ -963,7 +964,8 @@ local fuhai = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["fuhai"] = "覆海",
-  [":fuhai"] = "锁定技，拥有“平定”标记的角色不能响应你对其使用的牌；当你使用牌指定拥有“平定”标记的角色为目标后，你摸一张牌；当拥有“平定”标记的角色死亡时，你加X点体力上限并摸X张牌（X为其“平定”标记数）。",
+  [":fuhai"] = "锁定技，拥有“平定”标记的角色不能响应你对其使用的牌；当你使用牌指定拥有“平定”标记的角色为目标后，你摸一张牌；当拥有“平定”标记"..
+  "的角色死亡时，你加X点体力上限并摸X张牌（X为其“平定”标记数）。",
   ["$fuhai1"] = "翻江复蹈海，六合定乾坤！",
   ["$fuhai2"] = "力攻平江东，威名扬天下！",
 }
@@ -1013,7 +1015,8 @@ local pinghe = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["pinghe"] = "冯河",
-  [":pinghe"] = "锁定技，你的手牌上限基值为你已损失的体力值；当你受到其他角色造成的伤害时，若你的体力上限大于1且你有手牌，你防止此伤害，减1点体力上限并将一张手牌交给一名其他角色，然后若你有技能“英霸”，伤害来源获得一枚“平定”标记。",
+  [":pinghe"] = "锁定技，你的手牌上限基值为你已损失的体力值；当你受到其他角色造成的伤害时，若你的体力上限大于1且你有手牌，你防止此伤害，"..
+  "减1点体力上限并将一张手牌交给一名其他角色，然后若你有技能〖英霸〗，伤害来源获得一枚“平定”标记。",
   ["#pinghe-give"] = "冯河：请交给一名其他角色一张手牌",
   ["$pinghe1"] = "不过胆小鼠辈，吾等有何惧哉！",
   ["$pinghe2"] = "只可得胜而返，岂能败战而归！",
@@ -1065,7 +1068,7 @@ local dulie = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["dulie"] = "笃烈",
-  [":dulie"] = "锁定技，当你成为体力值大于你的角色使用【杀】的目标时，你判定，若结果为红桃，取消之。",
+  [":dulie"] = "锁定技，当你成为体力值大于你的角色使用【杀】的目标时，你判定，若结果为<font color='red'>♥</font>，取消之。",
   ["$dulie1"] = "素来言出必践，成吾信义昭彰！",
   ["$dulie2"] = "小信如若不成，大信将以何立？",
 }
@@ -1147,7 +1150,7 @@ local powei = fk.CreateTriggerSkill{
           room:broadcastSkillInvoke(self.name, 1)
           local hasLastPlayer = false
           for _, p in ipairs(room:getAlivePlayers()) do
-            if p:getMark("@@powei_wei") > (hasLastPlayer and 1 or 0) and not (#room.alive_players < 3 and p:getNextAlive() == player)  then
+            if p:getMark("@@powei_wei") > (hasLastPlayer and 1 or 0) and not (#room.alive_players < 3 and p:getNextAlive() == player) then
               hasLastPlayer = true
               room:removePlayerMark(p, "@@powei_wei")
               local nextPlayer = p:getNextAlive()
@@ -1217,9 +1220,11 @@ local powei = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["powei"] = "破围",
-  [":powei"] = "使命技，游戏开始时，你令所有其他角色获得“围”标记；回合开始时，你令所有拥有“围”标记的角色将“围”标记移动至下家（若下家为你，则改为移动至你的下家）；有“围”标记的角色受到伤害后，移去其“围”标记；有“围”的角色的回合开始时，你可以选择一项并令你于本回合内视为处于其攻击范围内：1.弃置一张手牌，对其造成1点伤害；2.若其体力值不大于你，你获得其一张手牌。<br>\
-               <strong>成功</strong>：回合开始时，若场上没有“围”标记，则你获得技能“神著”；<br>\
-               <strong>失败</strong>：当你进入濒死状态时，若你的体力值小于1，你回复体力至1点，移去场上所有的“围”标记，然后弃置你装备区里所有的牌。",
+  [":powei"] = "使命技，游戏开始时，你令所有其他角色获得“围”标记；回合开始时，你令所有拥有“围”标记的角色将“围”标记移动至下家"..
+  "（若下家为你，则改为移动至你的下家）；有“围”标记的角色受到伤害后，移去其“围”标记；有“围”的角色的回合开始时，你可以选择一项并令"..
+  "你于本回合内视为处于其攻击范围内：1.弃置一张手牌，对其造成1点伤害；2.若其体力值不大于你，你获得其一张手牌。<br>\
+  <strong>成功</strong>：回合开始时，若场上没有“围”标记，则你获得技能〖神著〗；<br>\
+  <strong>失败</strong>：当你进入濒死状态时，若你的体力值小于1，你回复体力至1点，移去场上所有的“围”标记，然后弃置你装备区里所有的牌。",
   ["@@powei_wei"] = "围",
   ["powei_damage"] = "弃一张手牌对其造成1点伤害",
   ["powei_prey"] = "获得其1张手牌",
@@ -1265,7 +1270,8 @@ local shenzhuo = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["shenzhuo"] = "神著",
-  [":shenzhuo"] = "锁定技，当你使用非转化且非虚拟的【杀】结算结束后，你须选择一项：1.摸一张牌，令你于本回合内使用【杀】的次数上限+1；2.摸三张牌，令你于本回合内不能使用【杀】。",
+  [":shenzhuo"] = "锁定技，当你使用非转化且非虚拟的【杀】结算结束后，你须选择一项：1.摸一张牌，令你于本回合内使用【杀】的次数上限+1；"..
+  "2.摸三张牌，令你于本回合内不能使用【杀】。",
   ["shenzhuo_drawOne"] = "摸1张牌，可以继续出杀",
   ["shenzhuo_drawThree"] = "摸3张牌，本回合不能出杀",
   ["@shenzhuo_debuff-turn"] = "神著",

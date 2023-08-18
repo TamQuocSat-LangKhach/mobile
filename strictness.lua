@@ -28,22 +28,12 @@ end
 
 ---@param player ServerPlayer @ 发起整肃的玩家
 ---@param target ServerPlayer @ 获得奖励的玩家
----@param reward string|null @ 指定要获得的奖励
+---@param reward string|null @ 要获得的奖励（"draw2"|"recover"）
 ---@param skillName string @ 技能名
----@param prompt string|null @ 提示信息
----@return string @ 返回获得的奖励类型（"draw2"|"recover"）
 --获得整肃奖励
-local function RewardZhengsu(player, target, reward, skillName, prompt)
-  reward = reward or ""
-  prompt = prompt or ""
+local function RewardZhengsu(player, target, reward, skillName)
+  reward = reward or "draw2"
   local room = player.room
-  if reward == "" then
-    local choices = {"draw2"}
-    if target:isWounded() and not target.dead then
-      table.insert(choices, 1, "recover")
-    end
-    reward = room:askForChoice(target, choices, skillName, prompt, false, {"draw2", "recover"})
-  end
   if reward == "draw2" then
     room:drawCards(target, 2, skillName)
   elseif reward == "recover" then
@@ -56,7 +46,6 @@ local function RewardZhengsu(player, target, reward, skillName, prompt)
       })
     end
   end
-  return reward
 end
 
 --整肃记录技能
@@ -719,7 +708,12 @@ local yanji = fk.CreateTriggerSkill{
     if event == fk.EventPhaseStart then
       StartZhengsu(player, player, self.name, "#yanji-choice")
     else
-      RewardZhengsu(player, player, "", self.name, "#yanji-reward")
+      local choices = {"draw2"}
+      if player:isWounded() then
+        table.insert(choices, 1, "recover")
+      end
+      local reward = player.room:askForChoice(player, choices, self.name, "#yanji-reward", false, {"draw2", "recover"})
+      RewardZhengsu(player, player, reward, self.name)
     end
   end,
 }
@@ -748,18 +742,157 @@ Fk:loadTranslationTable{
   ["#yanji-reward"] = "严纪：“整肃”成功，选择一项整肃奖励",
 }
 
+local huangfusong = General(extension, "mobile__huangfusong", "qun", 4)
+local taoluanh = fk.CreateTriggerSkill{
+  name = "taoluanh",
+  anim_type = "control",
+  priority = 1.1,
+  events = {fk.FinishJudge},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and data.card.suit == Card.Spade and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local choices = {"Cancel"}
+    if room:getCardArea(data.card) == Card.Processing then
+      table.insert(choices, "taoluanh_prey")
+    end
+    if target ~= player then
+      table.insert(choices, "taoluanh_slash")
+    end
+    local choice = room:askForChoice(player, choices, self.name, "#taoluanh-invoke::"..target.id)
+    if choice ~= "Cancel" then
+      self.cost_data = choice
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local e = room.logic:getCurrentEvent():findParent(GameEvent.SkillEffect)
+    if e then
+      room.logic:getCurrentEvent():addExitFunc(function()
+        e:shutdown()
+      end)
+    end
+    if self.cost_data == "taoluanh_prey" then
+      room:doIndicate(player.id, {target.id})
+      room:obtainCard(player, data.card, true, fk.ReasonPrey)
+    else
+      room:useVirtualCard("fire__slash", nil, player, target, self.name, true)
+    end
+  end,
+}
+local shiji = fk.CreateTriggerSkill{
+  name = "shiji",
+  anim_type = "control",
+  events = {fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.to ~= player and data.damageType ~= fk.NormalDamage and
+      not data.to:isKongcheng() and
+      table.find(player.room:getOtherPlayers(player), function(p)
+        return p:getHandcardNum() >= player:getHandcardNum()
+      end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#shiji-invoke::"..data.to.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(player.id, {data.to.id})
+    room:fillAG(player, data.to:getCardIds("h"))
+    room:delay(3000)
+    room:closeAG(player)
+    local ids = {}
+    for _, id in ipairs(data.to:getCardIds("h")) do
+      if Fk:getCardById(id).color == Card.Red then
+        table.insert(ids, id)
+      end
+    end
+    if #ids > 0 then
+      room:throwCard(ids, self.name, data.to, player)
+      if not player.dead then
+        player:drawCards(#ids, self.name)
+      end
+    end
+  end,
+}
+local zhengjun = fk.CreateTriggerSkill{
+  name = "zhengjun",
+  events = {fk.EventPhaseStart, fk.EventPhaseEnd},
+  anim_type = "support",
+  can_trigger = function(self, event, target, player, data)
+    if target == player then
+      if event == fk.EventPhaseStart then
+        return player:hasSkill(self.name) and player.phase == Player.Play
+      else
+        return player.phase == Player.Discard and not player.dead and
+        table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
+          return player:getMark(name) ~= 0 and table.contains(player:getMark(name), player.id) end)
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.EventPhaseStart then
+      return player.room:askForSkillInvoke(player, self.name, nil, "#zhengjun-invoke")
+    else
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if event == fk.EventPhaseStart then
+      StartZhengsu(player, player, self.name, "#zhengjun-choice")
+    else
+      local room = player.room
+      local choices = {"draw2"}
+      if player:isWounded() then
+        table.insert(choices, 1, "recover")
+      end
+      local reward = room:askForChoice(player, choices, self.name, "#zhengjun-reward", false, {"draw2", "recover"})
+      RewardZhengsu(player, player, reward, self.name)
+      local to = room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), function (p)
+        return p.id end), 1, 1, "#zhengjun-choose", self.name, true)
+      if #to > 0 then
+        to = room:getPlayerById(to[1])
+        choices = {"draw2"}
+        if to:isWounded() then
+          table.insert(choices, 1, "recover")
+        end
+        reward = room:askForChoice(player, choices, self.name, "#zhengjun-support::"..to.id, false, {"draw2", "recover"})
+        RewardZhengsu(player, to, reward, self.name)
+      end
+    end
+  end,
+}
+huangfusong:addSkill(taoluanh)
+huangfusong:addSkill(shiji)
+huangfusong:addSkill(zhengjun)
 Fk:loadTranslationTable{
   ["mobile__huangfusong"] = "皇甫嵩",
-  ["hfs__taoluan"] = "讨乱",
-  [":hfs__taoluan"] = "每回合限一次，当判定牌生效时，若判定结果为♠，你可以终止此次判定，然后选择：1.你获得此判定牌；"..
+  ["taoluanh"] = "讨乱",
+  [":taoluanh"] = "每回合限一次，当一名角色判定牌生效前，若判定结果为♠，你可以终止此次判定并选择一项：1.你获得此判定牌；"..
   "2.若进行判定的角色不是你，你视为对其使用一张无距离和次数限制的火【杀】。",
   ["shiji"] = "势击",
-  [":shiji"] = "你对其他角色造成属性伤害时，若你的手牌数不为全场唯一最多，你可以查看其手牌并弃置其中所有的红色牌，然后你摸等量的牌。",
+  [":shiji"] = "当你对其他角色造成属性伤害时，若你的手牌数不为全场唯一最多，你可以观看其手牌并弃置其中所有的红色牌，然后你摸等量的牌。",
   ["zhengjun"] = "整军",
-  [":zhengjun"] = "出牌阶段开始时，你可以进行“整肃”，若如此做，弃牌阶段结束后，若你“整肃”未失败，你获得“整肃”奖励，并可以令一名其他角色也获得“整肃”奖励。",
+  [":zhengjun"] = "出牌阶段开始时，你可以进行“整肃”，弃牌阶段结束后，若“整肃”成功，你获得“整肃”奖励，然后你可以令一名其他角色也获得“整肃”奖励。"..
+  "<br/><font color='grey'>#\"<b>整肃</b>\"<br/>"..
+  "技能发动者从擂进、变阵、鸣止中选择一项令目标执行，若本回合“整肃”成功，则弃牌阶段结束后获得“整肃奖励”。<br/>"..
+  "<b>擂进：</b>出牌阶段内，使用的所有牌点数需递增，且至少使用三张牌。<br/>"..
+  "<b>变阵：</b>出牌阶段内，使用的所有牌花色需相同，且至少使用两张牌。<br/>"..
+  "<b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同，且至少弃置两张牌。<br/>"..
+  "<b>整肃奖励：</b>摸两张牌或回复1点体力。",
+  ["#taoluanh-invoke"] = "讨乱：%dest 的判定即将生效，你可以终止此判定并执行一项！",
+  ["taoluanh_prey"] = "获得判定牌",
+  ["taoluanh_slash"] = "视为对其使用火【杀】",
+  ["#shiji-invoke"] = "势击：你可以观看 %dest 的手牌并弃置其中所有红色牌，然后摸等量牌",
+  ["#zhengjun-invoke"] = "整军：你可以进行“整肃”，若成功，则弃牌阶段结束后获得奖励，且可以令一名其他角色获得奖励",
+  ["#zhengjun-choice"] = "整军：选择你本回合“整肃”的条件",
+  ["#zhengjun-reward"] = "整军：“整肃”成功，选择一项整肃奖励",
+  ["#zhengjun-choose"] = "整军：你可以令一名其他角色也获得整肃奖励",
+  ["#zhengjun-support"] = "整军：选择 %dest 获得的整肃奖励",
 
-  ["$hfs__taoluan1"] = "乱民桀逆，非威不服！",
-  ["$hfs__taoluan2"] = "欲定黄巾，必赖兵革之利！",
+  ["$taoluanh1"] = "乱民桀逆，非威不服！",
+  ["$taoluanh2"] = "欲定黄巾，必赖兵革之利！",
   ["$shiji1"] = "敌军依草结营，正犯兵家大忌！",
   ["$shiji2"] = "兵法所云火攻之计，正合此时之势！",
   ["$zhengjun1"] = "众将平日随心，战则务尽死力！",
@@ -866,7 +999,12 @@ local houfeng_delay = fk.CreateTriggerSkill{
     local room = player.room
     room:notifySkillInvoked(player, "houfeng")
     room:broadcastSkillInvoke("houfeng", 2)
-    local reward = RewardZhengsu(player, target, "", "houfeng", "#houfeng-reward:"..player.id)
+    local choices = {"draw2"}
+    if player:isWounded() or (target:isWounded() and not target.dead) then
+      table.insert(choices, 1, "recover")
+    end
+    local reward = room:askForChoice(target, choices, self.name, "#houfeng-reward:"..player.id, false, {"draw2", "recover"})
+    RewardZhengsu(player, target, reward, "houfeng")
     if not player.dead then
       RewardZhengsu(player, player, reward, "houfeng")
     end
@@ -884,9 +1022,9 @@ Fk:loadTranslationTable{
   [":houfeng"] = "每轮限一次，你攻击范围内一名角色出牌阶段开始时，你可以令其“整肃”；你与其共同获得“整肃”奖励。"..
   "<br/><font color='grey'>#\"<b>整肃</b>\"<br/>"..
   "技能发动者从擂进、变阵、鸣止中选择一项令目标执行，若本回合“整肃”成功，则弃牌阶段结束后获得“整肃奖励”。<br/>"..
-  "<b>擂进：</b>出牌阶段内，使用的所有牌点数需递增且至少使用三张牌。<br/>"..
-  "<b>变阵：</b>出牌阶段内，使用的所有牌花色需相同且至少使用两张牌。<br/>"..
-  "<b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同且至少弃置两张牌。<br/>"..
+  "<b>擂进：</b>出牌阶段内，使用的所有牌点数需递增，且至少使用三张牌。<br/>"..
+  "<b>变阵：</b>出牌阶段内，使用的所有牌花色需相同，且至少使用两张牌。<br/>"..
+  "<b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同，且至少弃置两张牌。<br/>"..
   "<b>整肃奖励：</b>摸两张牌或回复1点体力。",
   ["zj__juxiang"] = "拒降",
   [":zj__juxiang"] = "限定技，当一名其他角色的濒死结算结束后，你可对其造成1点伤害。",

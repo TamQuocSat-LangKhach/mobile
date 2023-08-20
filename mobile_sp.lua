@@ -1615,18 +1615,17 @@ local tiansuanTrig = fk.CreateTriggerSkill{
     end
   end,
 
-  refresh_events = { fk.TurnStart },
+  refresh_events = { fk.TurnStart, fk.Death },
   can_refresh = function(self, event, target, player, data)
     return target == player and player:getMark("tiansuan") ~= 0
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
+    for _, pid in ipairs(player:getMark("tiansuan")) do
+      local p = room:getPlayerById(pid)
+      room:setPlayerMark(p, "@tiansuan", 0)
+    end 
     room:setPlayerMark(player, "tiansuan", 0)
-    for _, p in ipairs(room.alive_players) do
-      if p:getMark("@tiansuan") ~= 0 then
-        room:setPlayerMark(p, "@tiansuan", 0)
-      end
-    end
   end
 }
 local tiansuan = fk.CreateActiveSkill{
@@ -1640,7 +1639,6 @@ local tiansuan = fk.CreateActiveSkill{
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
-    room:setPlayerMark(player, "tiansuan", 1)
     local choices = {
       "SSR", "SSR",
       "S", "S", "S",
@@ -1657,6 +1655,9 @@ local tiansuan = fk.CreateActiveSkill{
 
     local tos = room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper),
       1, 1, "#tiansuan-choose:::" .. result, self.name, false)
+    local record = type(player:getMark("tiansuan")) == "table" and player:getMark("tiansuan") or {}
+    table.insert(record, tos[1])
+    room:setPlayerMark(player, "tiansuan", record)
     local tgt = room:getPlayerById(tos[1])
     room:setPlayerMark(tgt, "@tiansuan", result)
 

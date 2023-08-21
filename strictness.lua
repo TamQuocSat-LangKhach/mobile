@@ -625,6 +625,111 @@ Fk:loadTranslationTable{
   ["#mobile__tongdu-card"] = "统度：重铸一张牌，若为<font color='red'>♥</font>牌或锦囊牌则额外摸一张，若为【无中生有】则 %src 重置〖锻币〗",
 }
 
+local jiangqin = General(extension, "mobile__jiangqin", "wu", 4)
+local jianyi = fk.CreateTriggerSkill{
+  name = "jianyi",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    if target ~= player and player:hasSkill(self.name) and data.to == Player.NotActive then
+      local events =  player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+        for _, move in ipairs(e.data) do
+          if move.moveReason == fk.ReasonDiscard then
+            for _, info in ipairs(move.moveInfo) do
+             return Fk:getCardById(info.cardId).sub_type == Card.SubtypeArmor and player.room:getCardArea(info.cardId) == Card.DiscardPile
+            end
+          end
+        end
+      end, Player.HistoryTurn)
+      return #events > 0
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local ids = {}
+    room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+      for _, move in ipairs(e.data) do
+        if move.moveReason == fk.ReasonDiscard then
+          for _, info in ipairs(move.moveInfo) do
+           if Fk:getCardById(info.cardId).sub_type == Card.SubtypeArmor and player.room:getCardArea(info.cardId) == Card.DiscardPile then
+            table.insertIfNeed(ids, info.cardId)
+           end
+          end
+        end
+      end
+    end, Player.HistoryTurn)
+    if #ids == 0 then return end
+    local get = {}
+    if #ids > 1 then
+      local result = room:askForCustomDialog(player, self.name, "packages/tenyear/qml/LargeAG.qml", {ids, 1, 1})
+      if result ~= "" then
+        get = json.decode(result)
+      else
+        get = table.random(ids, 1)
+      end
+    else
+      get = ids
+    end
+    if #get > 0 then
+      room:moveCards({
+        ids = get,
+        to = player.id,
+        toArea = Card.PlayerHand,
+        moveReason = fk.ReasonJustMove,
+        proposer = player.id,
+        skillName = self.name,
+      })
+    end
+  end,
+}
+local mobile__shangyi = fk.CreateActiveSkill{
+  name = "mobile__shangyi",
+  anim_type = "control",
+  card_num = 1,
+  target_num = 1,
+  prompt = "#mobile__shangyi",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
+  end,
+  card_filter = function(self, to_select, selected)
+    if #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select)) then
+      if Fk:currentRoom():getCardArea(to_select) == Player.Hand then
+        return Self:getHandcardNum() > 1
+      else
+        return true
+      end
+    end
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    room:throwCard(effect.cards, self.name, player, player)
+    if player.dead or target.dead or player:isKongcheng() or target:isKongcheng() then return end
+    room:fillAG(target, player:getCardIds("h"))
+    room:delay(3000)
+    room:closeAG(target)
+    local cards = table.simpleClone(target:getCardIds("h"))
+    room:fillAG(player, cards)
+    local id = room:askForAG(player, cards, false, self.name)
+    room:closeAG(player)
+    room:obtainCard(player, id, false, fk.ReasonPrey)
+  end,
+}
+jiangqin:addSkill(jianyi)
+jiangqin:addSkill(mobile__shangyi)
+Fk:loadTranslationTable{
+  ["mobile__jiangqin"] = "蒋钦",
+  ["jianyi"] = "俭衣",
+  [":jianyi"] = "锁定技，其他角色回合结束时，若弃牌堆中有本回合弃置的防具牌，则你选择其中一张获得。",
+  ["mobile__shangyi"] = "尚义",
+  [":mobile__shangyi"] = "出牌阶段限一次，你可以弃置一张牌并令一名有手牌的其他角色观看你的手牌，然后你观看其手牌并获得其中一张牌。",
+  ["#mobile__shangyi"] = "尚义：弃置一张牌令一名角色观看你的手牌，然后你观看其手牌并获得其中一张牌",
+}
+
 local lvfan = General(extension, "mobile__lvfan", "wu", 3)
 local mobile__diaodu = fk.CreateTriggerSkill{
   name = "mobile__diaodu",
@@ -692,6 +797,7 @@ local yanji = fk.CreateTriggerSkill{
         return player:hasSkill(self.name) and player.phase == Player.Play
       else
         return player.phase == Player.Discard and not player.dead and
+        player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 and
         table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
           return player:getMark(name) ~= 0 and table.contains(player:getMark(name), player.id) end)
       end
@@ -826,6 +932,7 @@ local zhengjun = fk.CreateTriggerSkill{
         return player:hasSkill(self.name) and player.phase == Player.Play
       else
         return player.phase == Player.Discard and not player.dead and
+        player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 and
         table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
           return player:getMark(name) ~= 0 and table.contains(player:getMark(name), player.id) end)
       end
@@ -989,6 +1096,7 @@ local houfeng_delay = fk.CreateTriggerSkill{
   mute = true,
   can_trigger = function(self, event, target, player, data)
     return target.phase == Player.Discard and not target.dead and not player.dead and
+    player:usedSkillTimes("houfeng", Player.HistoryTurn) > 0 and
     table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
       return target:getMark(name) ~= 0 and table.contains(target:getMark(name), player.id) end)
   end,

@@ -980,9 +980,9 @@ local m_ex__dangxian = fk.CreateTriggerSkill{
   name = "m_ex__dangxian",
   anim_type = "offensive",
   frequency = Skill.Compulsory,
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and data.to == Player.Start
+    return target == player and player:hasSkill(self.name)
   end,
   on_use = function(self, event, target, player, data)
     local cards = player.room:getCardsFromPileByRule("slash", 1, "discardPile")
@@ -990,6 +990,7 @@ local m_ex__dangxian = fk.CreateTriggerSkill{
       player.room:obtainCard(player, cards[1], true, fk.ReasonJustMove)
     end
     player:gainAnExtraPhase(Player.Play)
+    --FIXME：额外阶段需要延迟执行！！
   end,
 }
 
@@ -1447,7 +1448,7 @@ m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_prohibit)
 Fk:loadTranslationTable{
   ["m_ex__zhuikong"] = "惴恐",
   ["#m_ex__zhuikong_delay"] = "惴恐",
-  [":m_ex__zhuikong"] = "每轮限一次，其他角色的回合开始时，若其体力值不小于你，你可与其拼点。若你赢，其本回合无法使用牌指定除其以外的角色为目标；若你没赢，你获得其拼点的牌，然后其视为对你使用一张【杀】。",
+  [":m_ex__zhuikong"] = "每轮限一次，其他角色的准备阶段，若其体力值不小于你，你可与其拼点。若你赢，其本回合无法使用牌指定除其以外的角色为目标；若你没赢，你获得其拼点的牌，然后其视为对你使用一张【杀】。",
   ["#m_ex__zhuikong-invoke"] = "惴恐：你可以与 %dest 拼点，若赢则其本回合使用牌只能指定自己为目标",
   ["@@m_ex__zhuikong_prohibit-turn"] = "惴恐",
   ["$m_ex__zhuikong1"] = "万事必须小心为妙。",
@@ -1844,9 +1845,9 @@ Fk:loadTranslationTable{
 local m_ex__qieting = fk.CreateTriggerSkill{
   name = "m_ex__qieting",
   anim_type = "control",
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name) and player ~= target and data.to == Player.NotActive then
+    if player:hasSkill(self.name) and player ~= target then
       return #player.room.logic:getEventsOfScope(GameEvent.ChangeHp, 1, function (e)
         local damage = e.data[5]
         if damage and target == damage.from and target ~= damage.to then
@@ -2145,9 +2146,9 @@ zhuhuan:addSkill("fenli")
 local m_ex__pingkou = fk.CreateTriggerSkill{
   name = "m_ex__pingkou",
   anim_type = "offensive",
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and data.to == Player.NotActive and player.skipped_phases
+    return target == player and player:hasSkill(self.name) and player.skipped_phases
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room

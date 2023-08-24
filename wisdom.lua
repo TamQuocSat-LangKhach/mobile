@@ -730,7 +730,7 @@ godxunyu:addSkill(lingce)
 local dinghan = fk.CreateTriggerSkill{
   name = "dinghan",
   anim_type = "defensive",
-  events = {fk.TargetConfirming, fk.EventPhaseChanging},
+  events = {fk.TargetConfirming, fk.TurnStart},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     if target ~= player or not player:hasSkill(self.name) then
@@ -743,11 +743,11 @@ local dinghan = fk.CreateTriggerSkill{
         data.card.name ~= "raid_and_frontal_attack" and
         not table.contains(type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}, data.card.trueName)
     else
-      return data.from == Player.RoundStart
+      return true
     end
   end,
   on_cost = function(self, event, target, player, data)
-    if event == fk.EventPhaseChanging then
+    if event == fk.TurnStart then
       local room = player.room
 
       local dinghanRecord = type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}

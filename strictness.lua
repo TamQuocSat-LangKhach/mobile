@@ -630,9 +630,9 @@ local jianyi = fk.CreateTriggerSkill{
   name = "jianyi",
   anim_type = "drawcard",
   frequency = Skill.Compulsory,
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    if target ~= player and player:hasSkill(self.name) and data.to == Player.NotActive then
+    if target ~= player and player:hasSkill(self.name) then
       local events =  player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
         for _, move in ipairs(e.data) do
           if move.moveReason == fk.ReasonDiscard then

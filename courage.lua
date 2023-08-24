@@ -349,10 +349,10 @@ huaman:addSkill(fangzong)
 local xizhan = fk.CreateTriggerSkill{
   name = "xizhan",
   frequency = Skill.Compulsory,
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnStart},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    return player ~= target and not target.dead and data.to == Player.Start and player:hasSkill(self.name)
+    return player ~= target and not target.dead and player:hasSkill(self.name)
   end,
   on_cost = function(self, event, target, player, data)
     self.cost_data = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".", "#xizhan-invoke::"..target.id, true)

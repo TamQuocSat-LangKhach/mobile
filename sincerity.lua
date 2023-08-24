@@ -1366,7 +1366,7 @@ godTaishici:addSkill(dulie)
 
 local powei = fk.CreateTriggerSkill{
   name = "powei",
-  events = {fk.GameStart, fk.EventPhaseChanging, fk.Damaged, fk.EnterDying},
+  events = {fk.GameStart, fk.TurnStart, fk.Damaged, fk.EnterDying},
   frequency = Skill.Quest,
   mute = true,
   can_trigger = function(self, event, target, player, data)
@@ -1376,8 +1376,8 @@ local powei = fk.CreateTriggerSkill{
 
     if event == fk.GameStart then
       return true
-    elseif event == fk.EventPhaseChanging then
-      return data.from == Player.RoundStart and (target == player or target:getMark("@@powei_wei") > 0)
+    elseif event == fk.TurnStart then
+      return target == player or target:getMark("@@powei_wei") > 0
     elseif event == fk.Damaged then
       return target:getMark("@@powei_wei") > 0
     else
@@ -1386,7 +1386,7 @@ local powei = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     self.cost_data = nil
-    if event == fk.EventPhaseChanging and target:getMark("@@powei_wei") > 0 then
+    if event == fk.TurnStart and target:getMark("@@powei_wei") > 0 then
       local room = player.room
 
       local choices = { "Cancel" }
@@ -1430,7 +1430,7 @@ local powei = fk.CreateTriggerSkill{
       for _, p in ipairs(room:getOtherPlayers(player)) do
         room:setPlayerMark(p, "@@powei_wei", 1)
       end
-    elseif event == fk.EventPhaseChanging then
+    elseif event == fk.TurnStart then
       if target == player then
         if table.find(room.alive_players, function(p)
           return p:getMark("@@powei_wei") > 0

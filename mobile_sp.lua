@@ -1209,7 +1209,7 @@ local wangyuanji = General(extension, "mobile__wangyuanji", "wei", 3, 3, General
 Fk:loadTranslationTable{
   ["mobile__wangyuanji"] = "王元姬",
   ["~mobile__wangyuanji"] = "世事沉浮，非是一人可逆啊……",
-  --["mobile__wangyuanji-winner"] = "苍生黎庶，都会有一个美好的未来了。",
+  --["$mobile__wangyuanji_win_audio"] = "苍生黎庶，都会有一个美好的未来了。",
 }
 
 local qianchong = fk.CreateTriggerSkill{
@@ -1346,12 +1346,12 @@ Fk:loadTranslationTable{
 
 wangyuanji:addSkill(shangjian)
 
---[[
+
 Fk:loadTranslationTable{
-  ["$weimu-mobile__wangyuanji"] = "宫闱之内，何必擅涉外事！",
-  ["$mingzhe-mobile__wangyuanji"] = "谦瑾行事，方能多吉少恙。",
+  ["$weimu_mobile__wangyuanji"] = "宫闱之内，何必擅涉外事！",
+  ["$mingzhe_mobile__wangyuanji"] = "谦瑾行事，方能多吉少恙。",
 }
-]]
+
 
 wangyuanji:addRelatedSkill("weimu")
 wangyuanji:addRelatedSkill("mingzhe")

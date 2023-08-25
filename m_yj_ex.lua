@@ -140,8 +140,8 @@ Fk:loadTranslationTable{
 wuguotai:addSkill(m_ex__ganlu)
 
 Fk:loadTranslationTable{
-  --["$m_ex__buyi1"] = "有我在，定保贤婿无虞！",
-  --["$m_ex__buyi2"] = "东吴岂容汝等儿戏！",
+  ["$buyi_m_ex__wuguotai1"] = "有我在，定保贤婿无虞！",
+  ["$buyi_m_ex__wuguotai2"] = "东吴岂容汝等儿戏！",
 }
 
 wuguotai:addSkill("buyi")
@@ -479,8 +479,8 @@ Fk:loadTranslationTable{
 }
 
 Fk:loadTranslationTable{
-  --["$m_ex__luoying1"] = "高树多悲风，海水扬其波。",
-  --["$m_ex__luoying2"] = "转蓬离本根，飘摇随长风。",
+  ["$luoying_m_ex__caozhi2"] = "转蓬离本根，飘摇随长风。",
+  ["$luoying_m_ex__caozhi1"] = "高树多悲风，海水扬其波。",
 }
 
 caozhi:addSkill("luoying")
@@ -860,8 +860,8 @@ Fk:loadTranslationTable{
 }
 
 Fk:loadTranslationTable{
-  --["$m_ex__zishou1"] = "按兵不动，徐图荆襄霸业！",
-  --["$m_ex__zishou2"] = "忍时待机，以期坐收渔利！",
+  ["$re__zishou_m_ex__liubiao1"] = "忍时待机，以期坐收渔利！",
+  ["$re__zishou_m_ex__liubiao2"] = "按兵不动，徐图荆襄霸业！",
 }
 
 liubiao:addSkill("re__zishou")
@@ -963,8 +963,8 @@ Fk:loadTranslationTable{
 bulianshi:addSkill(m_ex__anxu)
 
 Fk:loadTranslationTable{
-  --["$m_ex__zhuiyi1"] = "魂若有灵，当助夫君。",
-  --["$m_ex__zhuiyi2"] = "化作桃园只为君。",
+  ["$zhuiyi_m_ex__bulianshi1"] = "化作桃园只为君。",
+  ["$zhuiyi_m_ex__bulianshi2"] = "魂若有灵，当助夫君。",
 }
 
 bulianshi:addSkill("zhuiyi")
@@ -1241,8 +1241,8 @@ Fk:loadTranslationTable{
 manchong:addSkill(m_ex__junxing)
 
 Fk:loadTranslationTable{
-  --["$m_ex__yuce1"] = "骄之以利，示之以慑！",
-  --["$m_ex__yuce2"] = "虽举得于外，则福生于内矣。",
+  ["$yuce_m_ex__manchong1"] = "骄之以利，示之以慑！",
+  ["$yuce_m_ex__manchong2"] = "虽举得于外，则福生于内矣。",
 }
 
 manchong:addSkill("yuce")
@@ -1376,8 +1376,8 @@ Fk:loadTranslationTable{
 liru:addSkill(m_ex__mieji)
 
 Fk:loadTranslationTable{
-  --["$m_ex__fencheng1"] = "千里皇城，尽作焦土！",
-  --["$m_ex__fencheng2"] = "荣耀、权力、欲望、统统让这大火焚灭吧！",
+  ["$fencheng_m_ex__liru1"] = "千里皇城，尽作焦土！",
+  ["$fencheng_m_ex__liru2"] = "荣耀、权力、欲望、统统让这大火焚灭吧！",
 }
 liru:addSkill("fencheng")
 
@@ -1602,8 +1602,8 @@ Fk:loadTranslationTable{
 chenqun:addSkill(m_ex__dingpin)
 
 Fk:loadTranslationTable{
-  --["$m_ex__faen1"] = "法不可容之事，情或能原宥。",
-  --["$m_ex__faen2"] = "严刑峻法，万望慎行。",
+  ["$faen_m_ex__chenqun1"] = "法不可容之事，情或能原宥。",
+  ["$faen_m_ex__chenqun2"] = "严刑峻法，万望慎行。",
 }
 
 chenqun:addSkill("faen")
@@ -1904,8 +1904,8 @@ Fk:loadTranslationTable{
 caifuren:addSkill(m_ex__qieting)
 
 Fk:loadTranslationTable{
-  --["$m_ex__xianzhou1"] = "既是诸位之议，妾身复有何疑？",
-  --["$m_ex__xianzhou2"] = "我虽女流，亦知献州乃为长久之计。",
+  ["$xianzhou_m_ex__caifuren1"] = "既是诸位之议，妾身复有何疑？",
+  ["$xianzhou_m_ex__caifuren2"] = "我虽女流，亦知献州乃为长久之计。",
 }
 
 caifuren:addSkill("xianzhou")
@@ -2013,8 +2013,8 @@ Fk:loadTranslationTable{
 jvshou:addSkill(m_ex__jianying)
 
 Fk:loadTranslationTable{
-  ["$m_ex__shibei1"] = "只有杀身士，绝无降曹夫！",
-  ["$m_ex__shibei2"] = "心向袁氏，绝无背离可言！",
+  ["$shibei_m_ex__jvshou1"] = "只有杀身士，绝无降曹夫！",
+  ["$shibei_m_ex__jvshou2"] = "心向袁氏，绝无背离可言！",
 }
 
 jvshou:addSkill("shibei")
@@ -2137,8 +2137,8 @@ Fk:loadTranslationTable{
 }
 
 Fk:loadTranslationTable{
-  --["$m_ex__fenli1"] = "诸位且与我勠力一战，自可得胜。",
-  --["$m_ex__fenli2"] = "为主制客，乃百战百胜之势。",
+  ["$fenli_m_ex__zhuhuan1"] = "为主制客，乃百战百胜之势。",
+  ["$fenli_m_ex__zhuhuan2"] = "诸位且与我勠力一战，自可得胜。",
 }
 
 zhuhuan:addSkill("fenli")

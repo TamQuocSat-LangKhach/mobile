@@ -370,7 +370,7 @@ local m_ex__jinjiu_trigger = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:broadcastSkillInvoke(m_ex__jinjiu.name)
+    player:broadcastSkillInvoke(m_ex__jinjiu.name)
     player.room:notifySkillInvoked(player, m_ex__jinjiu.name, "defensive")
     data.damage = data.damage - self.cost_data
   end,
@@ -526,7 +526,7 @@ local m_ex__jiushi_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:notifySkillInvoked(player, m_ex__jiushi.name)
-    room:broadcastSkillInvoke(m_ex__jiushi.name)
+    player:broadcastSkillInvoke(m_ex__jiushi.name)
     if event == fk.Damaged then
       player:turnOver()
       if player:usedSkillTimes("m_ex__chengzhang", Player.HistoryGame) > 0 then return end
@@ -1074,12 +1074,12 @@ local m_ex__jiangchi = fk.CreateTriggerSkill{
     local room = player.room
     if #self.cost_data > 0 then
       room:notifySkillInvoked(player, self.name, "offensive")
-      room:broadcastSkillInvoke(self.name, 2)
+      player:broadcastSkillInvoke(self.name, 2)
       room:throwCard(self.cost_data, self.name, player)
       room:addPlayerMark(player, "@@m_ex__jiangchi_targetmod-phase")
     else
       room:notifySkillInvoked(player, self.name, "drawcard")
-      room:broadcastSkillInvoke(self.name, 1)
+      player:broadcastSkillInvoke(self.name, 1)
       player:drawCards(1, self.name)
       room:addPlayerMark(player, "@@m_ex__jiangchi_prohibit-phase")
     end
@@ -1150,7 +1150,7 @@ local m_ex__danshou = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke(self.name)
+    player:broadcastSkillInvoke(self.name)
     if #self.cost_data > 0 then
       room:notifySkillInvoked(player, self.name, "offensive")
       room:doIndicate(player.id, {target.id})
@@ -1971,7 +1971,7 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
     (data.extra_data or {}).m_ex__jianying_triggerable
   end,
   on_use = function(self, event, target, player, data)
-    player.room:broadcastSkillInvoke(m_ex__jianying.name)
+    player:broadcastSkillInvoke(m_ex__jianying.name)
     player.room:notifySkillInvoked(player, m_ex__jianying.name, "drawcard")
     player:drawCards(1, self.name)
   end,
@@ -2043,7 +2043,7 @@ local m_ex__benxi = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke(self.name, 1)
+    player:broadcastSkillInvoke(self.name, 1)
     room:notifySkillInvoked(player, self.name)
     room:throwCard(self.cost_data, self.name, player)
     room:addPlayerMark(player, "@m_ex__benxi-phase", #self.cost_data)
@@ -2067,7 +2067,7 @@ local m_ex__benxi_delay = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.AfterCardTargetDeclared then
-      room:broadcastSkillInvoke(m_ex__benxi.name, 2)
+      player:broadcastSkillInvoke(m_ex__benxi.name, 2)
       room:notifySkillInvoked(player, m_ex__benxi.name, "offensive")
 
       if (data.card.name == "collateral") then return end
@@ -2084,7 +2084,7 @@ local m_ex__benxi_delay = fk.CreateTriggerSkill{
       end
 
     elseif event == fk.CardUseFinished then
-      room:broadcastSkillInvoke(m_ex__benxi.name, 3)
+      player:broadcastSkillInvoke(m_ex__benxi.name, 3)
       room:notifySkillInvoked(player, m_ex__benxi.name, "drawcard")
       player:drawCards(5, m_ex__benxi.name)
     end

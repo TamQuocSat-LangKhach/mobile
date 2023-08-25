@@ -74,7 +74,7 @@ local mobileZhengsuTrigger = fk.CreateTriggerSkill{
             room:setPlayerMark(player, "zhengsu_point-turn", x)
           else
             for _, skill in ipairs(player:getMark("@zhengsu_leijin-turn")) do
-              room:broadcastSkillInvoke(skill, 3)
+              player:broadcastSkillInvoke(skill, 3)
             end
             room:setPlayerMark(player, "zhengsu_leijin-turn", 0)
             room:setPlayerMark(player, "@zhengsu_leijin-turn", "zhengsu_failure")
@@ -89,7 +89,7 @@ local mobileZhengsuTrigger = fk.CreateTriggerSkill{
             room:setPlayerMark(player, "zhengsu_suit-turn", suit)
           else
             for _, skill in ipairs(player:getMark("@zhengsu_bianzhen-turn")) do
-              room:broadcastSkillInvoke(skill, 3)
+              player:broadcastSkillInvoke(skill, 3)
             end
             room:setPlayerMark(player, "zhengsu_bianzhen-turn", 0)
             room:setPlayerMark(player, "@zhengsu_bianzhen-turn", "zhengsu_failure")
@@ -111,14 +111,14 @@ local mobileZhengsuTrigger = fk.CreateTriggerSkill{
     elseif event == fk.EventPhaseEnd then
       if player:getMark("zhengsu_leijin-turn") ~= 0 and player:getMark("zhengsu_leijin_times-turn") < 3 then
         for _, skill in ipairs(player:getMark("@zhengsu_leijin-turn")) do
-          room:broadcastSkillInvoke(skill, 3)
+          player:broadcastSkillInvoke(skill, 3)
         end
         room:setPlayerMark(player, "zhengsu_leijin-turn", 0)
         room:setPlayerMark(player, "@zhengsu_leijin-turn", "zhengsu_failure")
       end
       if player:getMark("zhengsu_bianzhen-turn") ~= 0 and player:getMark("zhengsu_bianzhen_times-turn") < 2 then
         for _, skill in ipairs(player:getMark("@zhengsu_bianzhen-turn")) do
-          room:broadcastSkillInvoke(skill, 3)
+          player:broadcastSkillInvoke(skill, 3)
         end
         room:setPlayerMark(player, "zhengsu_bianzhen-turn", 0)
         room:setPlayerMark(player, "@zhengsu_bianzhen-turn", "zhengsu_failure")
@@ -134,14 +134,14 @@ local mobileZhengsuTrigger = fk.CreateTriggerSkill{
           end
           if #suits < #discarded then
             for _, skill in ipairs(player:getMark("@zhengsu_mingzhi-turn")) do
-              room:broadcastSkillInvoke(skill, 3)
+              player:broadcastSkillInvoke(skill, 3)
             end
             room:setPlayerMark(player, "zhengsu_mingzhi-turn", 0)
             room:setPlayerMark(player, "@zhengsu_mingzhi-turn", "zhengsu_failure")
           end
         else
           for _, skill in ipairs(player:getMark("@zhengsu_mingzhi-turn")) do
-            room:broadcastSkillInvoke(skill, 3)
+            player:broadcastSkillInvoke(skill, 3)
           end
           room:setPlayerMark(player, "zhengsu_mingzhi-turn", 0)
           room:setPlayerMark(player, "@zhengsu_mingzhi-turn", "zhengsu_failure")
@@ -1084,7 +1084,7 @@ local houfeng = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:notifySkillInvoked(player, self.name)
-    room:broadcastSkillInvoke(self.name, 1)
+    player:broadcastSkillInvoke(self.name, 1)
     room:doIndicate(player.id, {target.id})
     StartZhengsu(player, target, self.name, "#houfeng-choice::"..target.id)
     room:setPlayerMark(player, "@houfeng-turn", target.general)
@@ -1106,7 +1106,7 @@ local houfeng_delay = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:notifySkillInvoked(player, "houfeng")
-    room:broadcastSkillInvoke("houfeng", 2)
+    player:broadcastSkillInvoke("houfeng", 2)
     local choices = {"draw2"}
     if player:isWounded() or (target:isWounded() and not target.dead) then
       table.insert(choices, 1, "recover")

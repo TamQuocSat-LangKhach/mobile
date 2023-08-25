@@ -226,7 +226,7 @@ local mibei_trigger = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke("mibei", 2)
+    player:broadcastSkillInvoke("mibei", 2)
     room:notifySkillInvoked(player, "mibei", "negative")
     room:changeMaxHp(player, -1)
     if not player.dead then
@@ -382,12 +382,12 @@ local qingyu_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.EventPhaseStart then
-      room:broadcastSkillInvoke("qingyu", 1)
+      player:broadcastSkillInvoke("qingyu", 1)
       room:notifySkillInvoked(player, "qingyu", "special")
       room:handleAddLoseSkills(player, "xuancun", nil, true, false)
       room:updateQuestSkillState(player, "qingyu", false)
     else
-      room:broadcastSkillInvoke("qingyu", 2)
+      player:broadcastSkillInvoke("qingyu", 2)
       room:notifySkillInvoked(player, "qingyu", "negative")
       room:changeMaxHp(player, -1)
       if not player.dead then
@@ -462,7 +462,7 @@ local xunyi = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke(self.name)
+    player:broadcastSkillInvoke(self.name)
     if event == fk.GameStart then
       room:notifySkillInvoked(player, self.name, "special")
       local targets = table.map(room:getOtherPlayers(player), function(p) return p.id end)
@@ -555,7 +555,7 @@ local chuhai = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     room:notifySkillInvoked(player, self.name)
-    room:broadcastSkillInvoke(self.name, 1)
+    player:broadcastSkillInvoke(self.name, 1)
     room:drawCards(player, 1, self.name)
     if player.dead or player:isKongcheng() or target.dead or target:isKongcheng() then return false end
     local pindian = player:pindian({target}, self.name)
@@ -626,7 +626,7 @@ local chuhai_trigger = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.AfterCardsMove then
       room:notifySkillInvoked(player, chuhai.name, "special")
-      room:broadcastSkillInvoke(chuhai.name, 2)
+      player:broadcastSkillInvoke(chuhai.name, 2)
       room:updateQuestSkillState(player, chuhai.name, false)
       if player:isWounded() then
         room:recover({
@@ -639,7 +639,7 @@ local chuhai_trigger = fk.CreateTriggerSkill{
       room:handleAddLoseSkills(player, "-xianghai|zhangming")
     elseif event == fk.PindianResultConfirmed then
       room:notifySkillInvoked(player, chuhai.name, "negative")
-      room:broadcastSkillInvoke(chuhai.name, 3)
+      player:broadcastSkillInvoke(chuhai.name, 3)
       room:updateQuestSkillState(player, chuhai.name, true)
     end
   end,
@@ -1426,7 +1426,7 @@ local powei = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.GameStart then
       room:notifySkillInvoked(player, self.name)
-      room:broadcastSkillInvoke(self.name, 1)
+      player:broadcastSkillInvoke(self.name, 1)
       for _, p in ipairs(room:getOtherPlayers(player)) do
         room:setPlayerMark(p, "@@powei_wei", 1)
       end
@@ -1436,7 +1436,7 @@ local powei = fk.CreateTriggerSkill{
           return p:getMark("@@powei_wei") > 0
         end) then
           room:notifySkillInvoked(player, self.name)
-          room:broadcastSkillInvoke(self.name, 1)
+          player:broadcastSkillInvoke(self.name, 1)
           local hasLastPlayer = false
           for _, p in ipairs(room:getAlivePlayers()) do
             if p:getMark("@@powei_wei") > (hasLastPlayer and 1 or 0) and not (#room.alive_players < 3 and p:getNextAlive() == player) then
@@ -1454,7 +1454,7 @@ local powei = fk.CreateTriggerSkill{
           end
         else
           room:notifySkillInvoked(player, self.name)
-          room:broadcastSkillInvoke(self.name, 2)
+          player:broadcastSkillInvoke(self.name, 2)
           room:updateQuestSkillState(player, self.name)
           room:handleAddLoseSkills(player, "shenzhuo")
         end
@@ -1462,7 +1462,7 @@ local powei = fk.CreateTriggerSkill{
 
       if type(self.cost_data) == "number" then
         room:notifySkillInvoked(player, self.name, "offensive")
-        room:broadcastSkillInvoke(self.name, 1)
+        player:broadcastSkillInvoke(self.name, 1)
         room:throwCard({ self.cost_data }, self.name, player, player)
         room:damage({
           from = player,
@@ -1475,7 +1475,7 @@ local powei = fk.CreateTriggerSkill{
         room:setPlayerMark(player, "powei_debuff-turn", target.id)
       elseif self.cost_data == "powei_prey" then
         room:notifySkillInvoked(player, self.name, "control")
-        room:broadcastSkillInvoke(self.name, 1)
+        player:broadcastSkillInvoke(self.name, 1)
         local cardId = room:askForCardChosen(player, target, "h", self.name)
         room:obtainCard(player, cardId, false, fk.ReasonPrey)
         room:setPlayerMark(player, "powei_debuff-turn", target.id)
@@ -1484,7 +1484,7 @@ local powei = fk.CreateTriggerSkill{
       room:setPlayerMark(target, "@@powei_wei", 0)
     else
       room:notifySkillInvoked(player, self.name, "negative")
-      room:broadcastSkillInvoke(self.name, 3)
+      player:broadcastSkillInvoke(self.name, 3)
       room:updateQuestSkillState(player, self.name, true)
       if player.hp < 1 then
         room:recover({

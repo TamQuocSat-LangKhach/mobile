@@ -366,7 +366,7 @@ local xizhan = fk.CreateTriggerSkill{
       local index = table.indexOf(suits, Fk:getCardById(self.cost_data[1]):getSuitString())
       room:notifySkillInvoked(player, self.name, anim_types[index])
       if index < 5 then
-        room:broadcastSkillInvoke(self.name, index + 1)
+        player:broadcastSkillInvoke(self.name, index + 1)
       end
       room:throwCard(self.cost_data, self.name, player, player)
       room:addPlayerMark(player, "@@fangzong_invalidity-turn")
@@ -382,7 +382,7 @@ local xizhan = fk.CreateTriggerSkill{
     else
       if player:hasSkill(fangzong.name) then
         room:notifySkillInvoked(player, self.name, "defensive")
-        room:broadcastSkillInvoke(self.name, 1)
+        player:broadcastSkillInvoke(self.name, 1)
       else
         room:notifySkillInvoked(player, self.name, "negative")
       end

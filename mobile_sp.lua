@@ -759,7 +759,7 @@ local shidi = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke(self.name, player:getSwitchSkillState(self.name) + 1)
+    player:broadcastSkillInvoke(self.name, player:getSwitchSkillState(self.name) + 1)
     room:notifySkillInvoked(player, self.name, "switch")
   end,
 
@@ -968,7 +968,7 @@ local zhaohan = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if player:usedSkillTimes(self.name, Player.HistoryGame) < 5 then
-      room:broadcastSkillInvoke(self.name, 1)
+      player:broadcastSkillInvoke(self.name, 1)
       room:notifySkillInvoked(player, self.name, "support")
 
       room:changeMaxHp(player, 1)
@@ -979,7 +979,7 @@ local zhaohan = fk.CreateTriggerSkill{
         skillName = self.name,
       })
     else
-      room:broadcastSkillInvoke(self.name, 2)
+      player:broadcastSkillInvoke(self.name, 2)
       room:notifySkillInvoked(player, self.name, "negative")
 
       room:changeMaxHp(player, -1)
@@ -1572,7 +1572,7 @@ local zhiyi = fk.CreateTriggerSkill{
       room:setPlayerMark(player, "@$zhiyi-turn", mark)
     elseif event == fk.EventPhaseStart then
       room:notifySkillInvoked(player, self.name)
-      room:broadcastSkillInvoke(self.name)
+      player:broadcastSkillInvoke(self.name)
       local mark = player:getMark("@$zhiyi-turn")
       if type(mark) ~= "table" then return false end
       if table.every(mark, function (card_name)
@@ -2175,7 +2175,7 @@ local shihe_trigger = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:broadcastSkillInvoke("shihe")
+    player:broadcastSkillInvoke("shihe")
     room:notifySkillInvoked(player, "shihe", "defensive")
     return true
   end,

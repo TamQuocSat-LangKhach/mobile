@@ -207,7 +207,6 @@ local m_ex__pojun_delay = fk.CreateTriggerSkill{
 }
 
 m_ex__pojun:addRelatedSkill(m_ex__pojun_delay)
-
 m_ex__xusheng:addSkill(m_ex__pojun)
 
 Fk:loadTranslationTable{
@@ -407,7 +406,7 @@ Fk:loadTranslationTable{
 }
 
 local m_ex__jieyue_select = fk.CreateActiveSkill{
-  name = "#m_ex__jieyue_select",
+  name = "m_ex__jieyue_select",
   can_use = function() return false end,
   target_num = 0,
   card_num = function()
@@ -424,6 +423,9 @@ local m_ex__jieyue_select = fk.CreateActiveSkill{
     return #selected == 0
   end,
 }
+
+Fk:addSkill(m_ex__jieyue_select)
+
 local m_ex__jieyue = fk.CreateTriggerSkill{
   name = "m_ex__jieyue",
   anim_type = "defensive",
@@ -444,7 +446,7 @@ local m_ex__jieyue = fk.CreateTriggerSkill{
     local to = room:getPlayerById(self.cost_data[1])
     room:obtainCard(to, self.cost_data[2], false, fk.ReasonGive)
     if player.dead or to.dead then return false end
-    local _, ret = room:askForUseActiveSkill(to, "#m_ex__jieyue_select", "#m_ex__jieyue-select:" .. player.id, true)
+    local _, ret = room:askForUseActiveSkill(to, "m_ex__jieyue_select", "#m_ex__jieyue-select:" .. player.id, true)
     if ret then
       local cards = table.filter(to:getCardIds{Player.Hand, Player.Equip}, function (id)
         return not (table.contains(ret.cards, id) or to:prohibitDiscard(id))
@@ -457,11 +459,10 @@ local m_ex__jieyue = fk.CreateTriggerSkill{
     end
   end,
 }
-m_ex__jieyue:addRelatedSkill(m_ex__jieyue_select)
 
 Fk:loadTranslationTable{
   ["m_ex__jieyue"] = "节钺",
-  ["#m_ex__jieyue_select"] = "节钺",
+  ["m_ex__jieyue_select"] = "节钺",
   [":m_ex__jieyue"] = "结束阶段，你可以将一张牌交给一名其他角色，然后其选择一项：1.保留手牌和装备区内的各一张牌，然后弃置其余的牌；2.令你摸三张牌。",
   ["#m_ex__jieyue-choose"] = "节钺：可以选择一张牌交给一名其他角色",
   ["#m_ex__jieyue-select"] = "节钺：选择一张手牌和一张装备区里的牌保留，弃置其他的牌；或点取消则令%src摸三张牌",
@@ -951,6 +952,7 @@ local m_ex__anxu = fk.CreateActiveSkill{
     end
   end,
 }
+
 Fk:loadTranslationTable{
   ["m_ex__anxu"] = "安恤",
   [":m_ex__anxu"] = "出牌阶段限一次，你可以令一名其他角色获得另一名其他角色的一张牌。若其获得的不是来自装备区里的牌，你摸一张牌。当其以此法获得牌后，你可以令两者手牌较少的角色摸一张牌。",
@@ -1092,10 +1094,8 @@ local m_ex__jiangchi_targetmod = fk.CreateTargetModSkill{
       return 1
     end
   end,
-  distance_limit_func =  function(self, player, skill)
-    if skill.trueName == "slash_skill" and player:getMark("@@m_ex__jiangchi_targetmod-phase") > 0 then
-      return 999
-    end
+  bypass_distances =  function(self, player, skill, card, to)
+    return skill.trueName == "slash_skill" and player:getMark("@@m_ex__jiangchi_targetmod-phase") > 0
   end,
 }
 local m_ex__jiangchi_prohibit = fk.CreateProhibitSkill{
@@ -1379,6 +1379,7 @@ Fk:loadTranslationTable{
   ["$fencheng_m_ex__liru1"] = "千里皇城，尽作焦土！",
   ["$fencheng_m_ex__liru2"] = "荣耀、权力、欲望、统统让这大火焚灭吧！",
 }
+
 liru:addSkill("fencheng")
 
 local fuhuanghou = General(extension, "m_ex__fuhuanghou", "qun", 3, 3, General.Female)
@@ -1414,6 +1415,7 @@ local m_ex__zhuikong = fk.CreateTriggerSkill{
     end
   end
 }
+
 local m_ex__zhuikong_prohibit = fk.CreateProhibitSkill{
   name = "#m_ex__zhuikong_prohibit",
   is_prohibited = function(self, from, to, card)
@@ -1442,6 +1444,7 @@ local m_ex__zhuikong_delay = fk.CreateTriggerSkill{
     end
   end,
 }
+
 m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_delay)
 m_ex__zhuikong:addRelatedSkill(m_ex__zhuikong_prohibit)
 
@@ -2146,9 +2149,10 @@ zhuhuan:addSkill("fenli")
 local m_ex__pingkou = fk.CreateTriggerSkill{
   name = "m_ex__pingkou",
   anim_type = "offensive",
-  events = {fk.TurnEnd},
+  events = {fk.EventPhaseChanging},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.skipped_phases
+    return target == player and data.to == Player.NotActive and player:hasSkill(self.name) and player.skipped_phases
+    --FIXME:fk.TurnEnd时skipped_phases已经清理了
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
@@ -2421,6 +2425,7 @@ local m_ex__anguo = fk.CreateTriggerSkill{
     end
   end,
 }
+
 local m_ex__anguo_maxcards = fk.CreateMaxCardsSkill{
   name = "#m_ex__anguo_maxcards",
   fixed_func = function(self, player)
@@ -2429,6 +2434,7 @@ local m_ex__anguo_maxcards = fk.CreateMaxCardsSkill{
     end
   end
 }
+
 m_ex__anguo:addRelatedSkill(m_ex__anguo_maxcards)
 
 Fk:loadTranslationTable{

@@ -540,7 +540,7 @@ Fk:loadTranslationTable{
 
   ["$xunyi1"] = "古有死恩之士，今有殉义之人！",
   ["$xunyi2"] = "舍身殉义，为君效死！",
-  ["~wangfuzhaolei"] = "誓死……追随将军左右……",
+  ["~wangfuzhaolei"] = "妾命数已至，唯愿阿斗顺利归蜀……",
 }
 
 local zhouchu = General(extension, "mobile__zhouchu", "wu", 4)
@@ -588,9 +588,12 @@ local chuhai = fk.CreateActiveSkill{
     if pindian.results[target.id].winner == player then
       local cards = target.player_cards[Player.Hand]
       if #cards > 0 then
-        room:fillAG(player, cards)
-        room:delay(5000)
-        room:closeAG(player)
+        room:askForCardsChosen(player, target, 0, 0, {
+          card_data = {
+            { "$Hand", cards }
+          }
+          --TODO:需要进一步突破，自由prompt，max==0（仅观看，不选牌）时的特化优化（新开函数）
+        }, self.name)
         local types = {}
         for _, id in ipairs(cards) do
           table.insertIfNeed(types, Fk:getCardById(id):getTypeString())
@@ -1122,6 +1125,19 @@ local mobile__mingfa = fk.CreateTriggerSkill{
     player:showCards(self.cost_data[2])
     if player.dead or to:isKongcheng() then return end
     local pindian = player:pindian({to}, self.name, Fk:getCardById(self.cost_data[2]))
+    room:sendLog{
+      type = "#ShowPindianCard",
+      from = player.id,
+      card = {self.cost_data[2]},
+    }
+    room:moveCards({
+      ids = {self.cost_data[2]},
+      from = player.id,
+      toArea = Card.Processing,
+      moveReason = fk.ReasonPut,
+      skillName = self.name,
+      moveVisible = true,
+    })
     if player.dead then return end
     if pindian.results[to.id].winner == player then
       if not to.dead and not to:isNude() then
@@ -1324,6 +1340,11 @@ pinghe:addRelatedSkill(pingheBuff)
 godsunce:addSkill(yingba)
 godsunce:addSkill(fuhai)
 godsunce:addSkill(pinghe)
+
+local godsunce_win = fk.CreateActiveSkill{ name = "godsunce_win_audio" }
+godsunce_win.package = extension
+Fk:addSkill(godsunce_win)
+
 Fk:loadTranslationTable{
   ["godsunce"] = "神孙策",
   ["yingba"] = "英霸",
@@ -1345,13 +1366,23 @@ Fk:loadTranslationTable{
   ["$pinghe1"] = "不过胆小鼠辈，吾等有何惧哉！",
   ["$pinghe2"] = "只可得胜而返，岂能败战而归！",
   ["~godsunce"] = "无耻小人！竟敢暗算于我……",
+
+  ["godsunce_win_audio"] = "胜利语音",
+  ["$godsunce_win_audio"] = "平定三郡，稳据江东！",
 }
 
 local godTaishici = General(extension, "godtaishici", "god", 4)
 Fk:loadTranslationTable{
   ["godtaishici"] = "神太史慈",
   ["~godtaishici"] = "魂归……天地……",
+
+  ["godtaishici_win_audio"] = "胜利语音",
+  ["$godtaishici_win_audio"] = "执此神弓，恭行天罚！",
 }
+
+local godtaishici_win = fk.CreateActiveSkill{ name = "godtaishici_win_audio" }
+godtaishici_win.package = extension
+Fk:addSkill(godtaishici_win)
 
 local dulie = fk.CreateTriggerSkill{
   name = "dulie",

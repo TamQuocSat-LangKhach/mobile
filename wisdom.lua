@@ -370,7 +370,14 @@ local godguojia = General(extension, "godguojia", "god", 3)
 Fk:loadTranslationTable{
   ["godguojia"] = "神郭嘉",
   ["~godguojia"] = "可叹桢干命也迂……",
+
+  ["godguojia_win_audio"] = "胜利语音",
+  ["$godguojia_win_audio"] = "既为奇佐，怎可徒有虚名？",
 }
+
+local godguojia_win = fk.CreateActiveSkill{ name = "godguojia_win_audio" }
+godguojia_win.package = extension
+Fk:addSkill(godguojia_win)
 
 local godHuishi = fk.CreateActiveSkill{
   name = "mobile__god_huishi",
@@ -653,7 +660,14 @@ local godxunyu = General(extension, "godxunyu", "god", 3)
 Fk:loadTranslationTable{
   ["godxunyu"] = "神荀彧",
   ["~godxunyu"] = "宁鸣而死，不默而生……",
+
+  ["godxunyu_win_audio"] = "胜利语音",
+  ["$godxunyu_win_audio"] = "汉室复兴，指日可待！",
 }
+
+local godxunyu_win = fk.CreateActiveSkill{ name = "godxunyu_win_audio" }
+godxunyu_win.package = extension
+Fk:addSkill(godxunyu_win)
 
 local tianzuo = fk.CreateTriggerSkill{
   name = "tianzuo",

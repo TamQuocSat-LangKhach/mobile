@@ -480,8 +480,8 @@ Fk:loadTranslationTable{
 }
 
 Fk:loadTranslationTable{
-  ["$luoying_m_ex__caozhi2"] = "转蓬离本根，飘摇随长风。",
-  ["$luoying_m_ex__caozhi1"] = "高树多悲风，海水扬其波。",
+  ["$luoying_m_ex__caozhi1"] = "转蓬离本根，飘摇随长风。",
+  ["$luoying_m_ex__caozhi2"] = "高树多悲风，海水扬其波。",
 }
 
 caozhi:addSkill("luoying")
@@ -1882,10 +1882,11 @@ local m_ex__qieting = fk.CreateTriggerSkill{
       if #handcards > 0 then
         local id = handcards[1]
         if #handcards > 1 then
-          local cids = table.random(handcards, 2)
-          room:fillAG(player, cids)
-          id = room:askForAG(player, cids, false, self.name)
-          room:closeAG(player)
+          id = room:askForCardChosen(player, target, {
+            card_data = {
+              { "$Hand", table.random(handcards, 2) }
+            }
+          }, self.name)
         end
         room:obtainCard(player, id, false, fk.ReasonPrey)
       end

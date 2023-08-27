@@ -1209,8 +1209,14 @@ local wangyuanji = General(extension, "mobile__wangyuanji", "wei", 3, 3, General
 Fk:loadTranslationTable{
   ["mobile__wangyuanji"] = "王元姬",
   ["~mobile__wangyuanji"] = "世事沉浮，非是一人可逆啊……",
-  --["$mobile__wangyuanji_win_audio"] = "苍生黎庶，都会有一个美好的未来了。",
+
+  ["mobile__wangyuanji_win_audio"] = "胜利语音",
+  ["$mobile__wangyuanji_win_audio"] = "苍生黎庶，都会有一个美好的未来了。",
 }
+
+local win = fk.CreateActiveSkill{ name = "mobile__wangyuanji_win_audio" }
+win.package = extension
+Fk:addSkill(win)
 
 local qianchong = fk.CreateTriggerSkill{
   name = "qianchong",

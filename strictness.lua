@@ -404,6 +404,12 @@ Fk:loadTranslationTable{
   ["#zundi"] = "尊嫡：弃置一张手牌指定一名角色，你判定，黑色其摸三张牌，红色则其可以移动场上一张牌",
   ["yajun_top"] = "置于牌堆顶",
   ["#zundi-move"] = "尊嫡：你可以移动场上一张牌",
+
+  ["$yajun1"] = "君子如珩，缨绂有容！",
+  ["$yajun2"] = "仁声未闻，岂可先计后兵！",
+  ["$zundi1"] = "盖闻春秋之义，立子自当立长。",
+  ["$zundi2"] = "五官将才德兼备，是以宜承正统。",
+  ["~mobile__cuiyan"] = "生当如君子，死当追竹德……",
 }
 
 local jiangwan = General(extension, "jiangwan", "shu", 3)
@@ -474,6 +480,12 @@ Fk:loadTranslationTable{
   ["zhenting_discard"] = "弃置其一张牌",
   ["#zhenting-choice"] = "镇庭：选择对 %dest 执行的一项",
   ["#mobile__jincui"] = "尽瘁：你可以与一名角色交换座次，然后失去体力！",
+
+  ["$zhenting1"] = "今政事在我，更要持重慎行！",
+  ["$zhenting2"] = "国可因外敌而亡，不可因内政而损！",
+  ["$mobile__jincui1"] = "伐魏虽俯仰惟艰，臣甘愿效死于前！",
+  ["$mobile__jincui2"] = "臣敢竭股肱之力，誓死为陛下前驱！",
+  ["~jiangwan"] = "臣即将一死，辅国之事文伟可继……",
 }
 
 local liuba = General(extension, "mobile__liuba", "shu", 3)
@@ -623,6 +635,12 @@ Fk:loadTranslationTable{
   ["#duanbi-give"] = "锻币：你可以将其中至多三张牌交给一名角色",
   ["#mobile__tongdu-choose"] = "统度：你可以令一名角色重铸一张牌，根据类别获得额外效果",
   ["#mobile__tongdu-card"] = "统度：重铸一张牌，若为<font color='red'>♥</font>牌或锦囊牌则额外摸一张，若为【无中生有】则 %src 重置〖锻币〗",
+
+  ["$duanbi1"] = "收缴故币，以旧铸新，使民有余财。",
+  ["$duanbi2"] = "今，若能统一蜀地币制，则利在千秋。",
+  ["$mobile__tongdu1"] = "辎重调拨，乃国之要务，岂可儿戏！",
+  ["$mobile__tongdu2"] = "府库充盈，民有余财，主公师出有名矣。",
+  ["~mobile__liuba"] = "孔明，大汉的重担，就全系于你一人之身了……",
 }
 
 local jiangqin = General(extension, "mobile__jiangqin", "wu", 4)
@@ -728,6 +746,12 @@ Fk:loadTranslationTable{
   ["mobile__shangyi"] = "尚义",
   [":mobile__shangyi"] = "出牌阶段限一次，你可以弃置一张牌并令一名有手牌的其他角色观看你的手牌，然后你观看其手牌并获得其中一张牌。",
   ["#mobile__shangyi"] = "尚义：弃置一张牌令一名角色观看你的手牌，然后你观看其手牌并获得其中一张牌",
+
+  ["$jianyi1"] = "今虽富贵，亦不可浪费。",
+  ["$jianyi2"] = "缩衣克俭，才是兴家之道。",
+  ["$mobile__shangyi1"] = "国士，当以义为先！",
+  ["$mobile__shangyi2"] = "豪侠尚义，何拘俗礼！",
+  ["~mobile__jiangqin"] = "奋敌护主，成吾忠名……",
 }
 
 local lvfan = General(extension, "mobile__lvfan", "wu", 3)
@@ -846,6 +870,15 @@ Fk:loadTranslationTable{
   ["#yanji-invoke"] = "严纪：你可以进行“整肃”，若成功，则弃牌阶段结束后获得奖励",
   ["#yanji-choice"] = "严纪：选择你本回合“整肃”的条件",
   ["#yanji-reward"] = "严纪：“整肃”成功，选择一项整肃奖励",
+
+  ["$mobile__diaodu1"] = "三军器用，攻守之具，皆有法也！",
+  ["$mobile__diaodu2"] = "士各执其器，乃陷坚陈，败强敌！",
+  ["$mobile__diancai1"] = "资财当为公，不可为私也！",
+  ["$mobile__diancai2"] = "财用于公则政明，而后民附也！",
+  ["$yanji1"] = "范既典主财计，必律己以率之！",
+  ["$yanji2"] = "有财贵于善用，须置军资以崇国防！",
+  ["$yanji3"] = "公帑私用？待吾查清定要严惩！",
+  ["~mobile__lvfan"] = "此病来势汹汹，恕臣无力侍奉……",
 }
 
 local huangfusong = General(extension, "mobile__huangfusong", "qun", 4)

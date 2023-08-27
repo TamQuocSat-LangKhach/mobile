@@ -96,6 +96,12 @@ Fk:loadTranslationTable{
   [":tianyin"] = "锁定技，结束阶段，你从牌堆中获得你本回合未使用过类型的牌各一张。",
   ["#sheyi-invoke"] = "舍裔：你可以交给 %dest 至少%arg张牌，防止其受到的伤害",
   ["@tianyin-turn"] = "天音",
+
+  ["$sheyi1"] = "二子不可兼顾，妾身唯保其一。",
+  ["$sheyi2"] = "吾子虽弃亦可，前遗万勿有失。",
+  ["$tianyin1"] = "抚琴体清心远，方成自然之趣。",
+  ["$tianyin2"] = "心怀雅正，天音自得。",
+  ["~caizhenji"] = "世誉吾为贤妻，吾愧终不为良母……",
 }
 
 local xiangchong = General(extension, "xiangchong", "shu", 4)
@@ -258,6 +264,12 @@ Fk:loadTranslationTable{
   ["muzhen2"] = "交给两张牌，获得一张装备",
   ["#muzhen1"] = "睦阵：你可以选择一张装备牌执行效果",
   ["#muzhen2"] = "睦阵：你可以选择两张牌，选一名有装备的角色执行",
+
+  ["$guying1"] = "我军之营，犹如磐石之固！",
+  ["$guying2"] = "深壁固垒，敌军莫敢来侵！",
+  ["$muzhen1"] = "行阵和睦，方可优劣得所。",
+  ["$muzhen2"] = "识时达务，才可上和下睦。",
+  ["~xiangchong"] = "蛮夷怀异，战乱难平……",
 }
 
 local qiaogong = General(extension, "qiaogong", "wu", 3)

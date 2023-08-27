@@ -540,7 +540,7 @@ Fk:loadTranslationTable{
 
   ["$xunyi1"] = "古有死恩之士，今有殉义之人！",
   ["$xunyi2"] = "舍身殉义，为君效死！",
-  ["~wangfuzhaolei"] = "妾命数已至，唯愿阿斗顺利归蜀……",
+  ["~wangfuzhaolei"] = "誓死……追随将军左右……",
 }
 
 local zhouchu = General(extension, "mobile__zhouchu", "wu", 4)

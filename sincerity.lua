@@ -167,7 +167,7 @@ local zifu = fk.CreateTriggerSkill{
 }
 local mibei = fk.CreateTriggerSkill{
   name = "mibei",
-  anim_type = "drawcard",
+  mute = true,
   events = {fk.CardUseFinished},
   frequency = Skill.Quest,
   can_trigger = function(self, event, target, player, data)
@@ -192,6 +192,8 @@ local mibei = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    player:broadcastSkillInvoke(self.name, 1)
+    room:notifySkillInvoked(player, self.name, "drawcard")
     local types = {"basic", "trick", "equip"}
     local cards = {}
     while #types > 0 do
@@ -301,6 +303,14 @@ Fk:loadTranslationTable{
   ["#mouli-invoke"] = "谋立：移除 %src 的一个“备”，你获得牌堆中一张同名牌",
   ["#mouli"] = "谋立：令一名其他角色移除你的一个“备”，然后其获得牌堆中一张同名牌",
 
+  ["$xingqi1"] = "先谋后事者昌，先事后谋者亡！",
+  ["$xingqi2"] = "司马氏虽权尊势重，吾等徐图亦无不可！",
+  ["$zifu1"] = "有心无力，请罪愿降。",
+  ["$zifu2"] = "舆榇自缚，只求太傅开恩！",
+  ["$mibei1"] = "密为之备，不可有失。",
+  ["$mibei2"] = "事以密成，语以泄败！",
+  ["$mouli1"] = "澄汰王室，迎立宗子！",
+  ["$mouli2"] = "僣孽为害，吾岂可谋而不行？",
   ["~mobile__wangling"] = "一生尽忠事魏，不料今日晚节尽毁啊！",
 }
 
@@ -344,7 +354,7 @@ local mobile__guixiu = fk.CreateTriggerSkill{
 }
 local qingyu = fk.CreateTriggerSkill{
   name = "qingyu",
-  anim_type = "defensive",
+  mute = true,
   events = {fk.DamageInflicted},
   frequency = Skill.Quest,
   can_trigger = function(self, event, target, player, data)
@@ -359,6 +369,9 @@ local qingyu = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:broadcastSkillInvoke(self.name, 3)
+    room:notifySkillInvoked(player, self.name, "defensive")
     player.room:throwCard(self.cost_data, self.name, player, player)
     return true
   end,
@@ -431,6 +444,15 @@ Fk:loadTranslationTable{
   ["mobile__guixiu_draw"] = "摸牌至体力值",
   ["#qingyu-invoke"] = "清玉：你需弃置两张手牌，防止你受到的伤害",
   ["#xuancun-invoke"] = "悬存：你可以令 %dest 摸%arg张牌",
+
+  ["$mobile__guixiu1"] = "身陷绝境，亦须秉端庄之姿。",
+  ["$mobile__guixiu2"] = "纵吾身罹乱，焉能隳节败名。",
+  ["$qingyu1"] = "大家之韵，不可失之。",
+  ["$qingyu2"] = "朱沉玉没，桂殒兰凋。",
+  ["$qingyu3"] = "冰清玉粹，岂可有污！",
+  ["$xuancun1"] = "阿斗年幼，望子龙将军仔细！",
+  ["$xuancun2"] = "今得见将军，此儿有望生矣。",
+  ["~mobile__mifuren"] = "妾命数已至，唯愿阿斗顺利归蜀……",
 }
 
 local wangfuzhaolei = General(extension, "wangfuzhaolei", "shu", 4)
@@ -515,6 +537,10 @@ Fk:loadTranslationTable{
   "另一方弃置一张牌。<br>当你或有“义”的角色造成1点伤害后，若受伤角色不为另一方，另一方摸一张牌。<br>当有“义”的角色死亡时，你可以转移“义”标记。",
   ["@@xunyi"] = "义",
   ["#xunyi-choose"] = "殉义：选择一名角色获得“义”标记",
+
+  ["$xunyi1"] = "古有死恩之士，今有殉义之人！",
+  ["$xunyi2"] = "舍身殉义，为君效死！",
+  ["~wangfuzhaolei"] = "妾命数已至，唯愿阿斗顺利归蜀……",
 }
 
 local zhouchu = General(extension, "mobile__zhouchu", "wu", 4)
@@ -1062,6 +1088,12 @@ Fk:loadTranslationTable{
   ["@@mobile__kongrong_qian"] = "谦",
   ["#mobile__lirang-invoke"] = "礼让：你可以获得“谦”标记，令 %dest 摸牌数+2",
   ["#mobile__lirang-get"] = "礼让：你可以获得 %dest 本阶段弃置的至多两张牌",
+
+  ["$mobile__mingshi1"] = "纵有强权在侧，亦不可失吾风骨。",
+  ["$mobile__mingshi2"] = "黜邪崇正，何惧之有？",
+  ["$mobile__lirang1"] = "人之所至，礼之所及。",
+  ["$mobile__lirang2"] = "施之以礼，还之以德。",
+  ["~mobile__kongrong"] = "不遵朝仪？诬害之词也！",
 }
 
 local yanghu = General(extension, "mobile__yanghu", "qun", 3)
@@ -1190,6 +1222,12 @@ Fk:loadTranslationTable{
   [":rongbei"] = "限定技，出牌阶段，你可以选择一名装备区有空置装备栏的角色，其为每个空置的装备栏从牌堆或弃牌堆随机使用一张对应类别的装备。",
   ["#mobile__mingfa-invoke"] = "明伐：你可以展示一张手牌并用此牌拼点，若赢则获得其一张牌并摸一张牌",
   ["#rongbei"] = "戎备：令一名角色每个空置的装备栏随机使用一张装备",
+
+  ["$mobile__mingfa1"] = "明日即为交兵之时，望尔等早做准备。",
+  ["$mobile__mingfa2"] = "吾行明伐之策，不为掩袭之计。",
+  ["$rongbei1"] = "我军虽以德感民，亦不可废弛武备。",
+  ["$rongbei2"] = "缮甲训卒，广为戎备，不失伐吴之机。",
+  ["~mobile__yanghu"] = "此生所憾，唯未克东吴也……",
 }
 
 local godsunce = General(extension, "godsunce", "god", 1, 6)

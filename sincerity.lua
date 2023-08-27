@@ -1122,19 +1122,6 @@ local mobile__mingfa = fk.CreateTriggerSkill{
     player:showCards(self.cost_data[2])
     if player.dead or to:isKongcheng() then return end
     local pindian = player:pindian({to}, self.name, Fk:getCardById(self.cost_data[2]))
-    room:sendLog{
-      type = "#ShowPindianCard",
-      from = player.id,
-      card = {self.cost_data[2]},
-    }
-    room:moveCards({
-      ids = {self.cost_data[2]},
-      from = player.id,
-      toArea = Card.Processing,
-      moveReason = fk.ReasonPut,
-      skillName = self.name,
-      moveVisible = true,
-    })
     if player.dead then return end
     if pindian.results[to.id].winner == player then
       if not to.dead and not to:isNude() then

@@ -2236,4 +2236,261 @@ Fk:loadTranslationTable{
   ["@@shihe"] = "势吓",
   ["#zhenfu-choose"] = "镇抚：你可以令一名其他角色获得1点护甲",
 }
+
+Fk:loadTranslationTable{
+  ["ruanhui"] = "阮慧",
+  ["mingcha"] = "明察",
+  [":mingcha"] = "摸牌阶段开始时，你亮出牌堆顶三张牌，然后你可以放弃摸牌并获得其中点数不大于8的牌，若如此做，你可以选择一名其他角色，随机获得其一张牌。",
+  ["jingzhong"] = "敬重",
+  [":jingzhong"] = "弃牌阶段结束时，若你本阶段弃置过至少两张黑色牌，你可以选择一名其他角色；其下回合出牌阶段限三次，当其使用牌结算后，你获得之。",
+}
+
+local caosong = General(extension, "mobile__caosong", "wei", 3)
+local yijin = fk.CreateTriggerSkill{
+  name = "yijin",
+  frequency = Skill.Compulsory,
+  anim_type = "special",
+  events = {fk.GameStart, fk.TurnStart, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self.name) then
+      if event == fk.GameStart then
+        return true
+      elseif event == fk.TurnStart then
+        return target == player and (player:getMark(self.name) == 0 or #player:getMark(self.name) == 0)
+      else
+        return target == player and player.phase == Player.Play and player:getMark(self.name) ~= 0
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.GameStart then
+      local mark = {}
+      for i = 1, 6, 1 do
+        table.insert(mark, "wd_gold")
+      end
+      room:setPlayerMark(player, "@$yijin", mark)
+      room:setPlayerMark(player, self.name,
+        {"@@yijin_wushi", "@@yijin_houren", "@@yijin_guxiong", "@@yijin_yongbi", "@@yijin_tongshen", "@@yijin_jinmi"})
+    elseif event == fk.TurnStart then
+      room:killPlayer({who = player.id})
+    else
+      room:askForUseActiveSkill(player, "yijin_active", "#yijin-choose", false, nil, false)
+    end
+  end,
+}
+local yijin_active = fk.CreateActiveSkill{
+  name = "yijin_active",
+  mute = true,
+  card_num = 0,
+  target_num = 1,
+  interaction = function()
+    if Self:getMark("yijin") ~= 0 then
+      return UI.ComboBox {choices = Self:getMark("yijin")}
+    end
+  end,
+  prompt = function (self)
+    return "#"..self.interaction.data
+  end,
+  card_filter = function(self, to_select, selected, targets)
+    return false
+  end,
+  target_filter = function(self, to_select, selected, cards)
+    if #selected == 0 and to_select ~= Self.id then
+      local target = Fk:currentRoom():getPlayerById(to_select)
+      for name, _ in pairs(target.mark) do
+        if name:startsWith("@@yijin_") then
+          return false
+        end
+      end
+      return true
+    end
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    local mark = player:getMark("@$yijin")
+    if #mark == 1 then
+      mark = 0
+    else
+      table.remove(mark, 1)
+    end
+    room:setPlayerMark(player, "@$yijin", mark)
+    mark = player:getMark("yijin")
+    if #mark == 1 then
+      mark = 0
+    else
+      table.removeOne(mark, self.interaction.data)
+    end
+    room:setPlayerMark(player, "yijin", mark)
+    room:setPlayerMark(target, self.interaction.data, 1)
+  end,
+}
+local yijin_trigger = fk.CreateTriggerSkill{
+  name = "#yijin_trigger",
+  mute = true,
+  events = {fk.DrawNCards, fk.EventPhaseChanging, fk.EventPhaseStart, fk.DamageInflicted},
+  can_trigger = function(self, event, target, player, data)
+    if target == player then
+      if event == fk.DrawNCards then
+        return player:getMark("@@yijin_wushi") > 0
+      elseif event == fk.EventPhaseChanging then
+        return (data.to == Player.NotActive and player:getMark("@@yijin_houren") > 0) or
+          (data.to == Player.Draw and player:getMark("@@yijin_yongbi") > 0) or
+          ((data.to == Player.Play or data.to == Player.Discard) and player:getMark("@@yijin_jinmi") > 0)
+      elseif event == fk.EventPhaseStart then
+        return player.phase == Player.Play and player:getMark("@@yijin_guxiong") > 0
+      elseif event == fk.DamageInflicted then
+        return data.damageType ~= fk.NormalDamage and player:getMark("@@yijin_tongshen") > 0
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.DrawNCards then
+      data.n = data.n + 4
+    elseif event == fk.EventPhaseChanging then
+      if player:getMark("@@yijin_houren") > 0 then
+        if player:isWounded() then
+          room:recover({
+            who = player,
+            num = math.min(3, player:getLostHp()),
+            recoverBy = player,
+            skillName = "yijin",
+          })
+        end
+      else
+        return true
+      end
+    elseif event == fk.EventPhaseStart then
+      room:addPlayerMark(player, MarkEnum.MinusMaxCardsInTurn, 3)
+      room:loseHp(player, 1, "yijin")
+    elseif event == fk.DamageInflicted then
+      return true
+    end
+  end,
+
+  refresh_events = {fk.TurnEnd},
+  can_refresh = function(self, event, target, player, data)
+    return target == player
+  end,
+  on_refresh = function(self, event, target, player, data)
+    for name, _ in pairs(target.mark) do
+      if name:startsWith("@@yijin_") then
+        player.room:setPlayerMark(player, name, 0)
+      end
+    end
+  end,
+}
+local yijin_targetmod = fk.CreateTargetModSkill{
+  name = "#yijin_targetmod",
+  residue_func = function(self, player, skill, scope)
+    if skill.trueName == "slash_skill" and player:getMark("@@yijin_wushi") > 0 and scope == Player.HistoryPhase then
+      return 1
+    end
+  end,
+}
+local guanzong = fk.CreateActiveSkill{
+  name = "guanzong",
+  anim_type = "special",
+  card_num = 0,
+  target_num = 2,
+  prompt = "#guanzong",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return false
+  end,
+  target_filter = function(self, to_select, selected)
+    return #selected < 2 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local logic = room.logic
+    local damageStruct = {
+      from = room:getPlayerById(effect.tos[1]),
+      to = room:getPlayerById(effect.tos[2]),
+      damageType = fk.NormalDamage,
+      damage = 1,
+      skillName = self.name,
+    }
+
+    local stages = {
+      {fk.PreDamage, damageStruct.from},
+      {fk.DamageCaused, damageStruct.from},
+      {fk.DamageInflicted, damageStruct.to},
+    }
+    for _, struct in ipairs(stages) do
+      local event, player = table.unpack(struct)
+      if logic:trigger(event, player, damageStruct) or damageStruct.damage < 1 then
+        logic:breakEvent(false)
+      end
+    end
+    if damageStruct.to.dead then return false end
+    local damage_nature_table = {
+      [fk.NormalDamage] = "normal_damage",
+      [fk.FireDamage] = "fire_damage",
+      [fk.ThunderDamage] = "thunder_damage",
+      [fk.IceDamage] = "ice_damage",
+    }
+    room:sendLog{
+      type = "#Damage",
+      to = {damageStruct.from.id},
+      from = damageStruct.to.id,
+      arg = damageStruct.damage,
+      arg2 = damage_nature_table[damageStruct.damageType],
+    }
+    room:sendLogEvent("Damage", {
+      to = damageStruct.to.id,
+      damageType = damage_nature_table[damageStruct.damageType],
+      damageNum = damageStruct.damage,
+    })
+
+    stages = {
+      {fk.Damage, damageStruct.from},
+      {fk.Damaged, damageStruct.to},
+      {fk.DamageFinished, damageStruct.to},
+    }
+    for _, struct in ipairs(stages) do
+      local event, player = table.unpack(struct)
+      logic:trigger(event, player, damageStruct)
+    end
+
+    logic:trigger(fk.DamageFinished, damageStruct.to, damageStruct)
+  end,
+}
+Fk:addSkill(yijin_active)
+yijin:addRelatedSkill(yijin_trigger)
+yijin:addRelatedSkill(yijin_targetmod)
+caosong:addSkill(yijin)
+caosong:addSkill(guanzong)
+Fk:loadTranslationTable{
+  ["mobile__caosong"] = "曹嵩",
+  ["yijin"] = "亿金",
+  [":yijin"] = "锁定技，游戏开始时，你获得6枚“金”标记；回合开始时，若你没有“金”，你死亡。出牌阶段开始时，你令一名没有“金”的其他角色获得一枚“金”和"..
+  "对应的效果直到其下回合结束：<br>膴士：摸牌阶段摸牌数+4、出牌阶段使用【杀】次数上限+1；<br>厚任：回合结束时回复3点体力；<br>"..
+  "贾凶：出牌阶段开始时失去1点体力，本回合手牌上限-3；<br>拥蔽：跳过摸牌阶段；<br>通神：防止受到的非雷电伤害；<br>金迷：跳过出牌阶段和弃牌阶段。",
+  ["guanzong"] = "惯纵",
+  [":guanzong"] = "出牌阶段限一次，你可以令一名其他角色<font color='red'>视为</font>对另一名其他角色造成1点伤害。",
+  ["yijin_active"] = "亿金",
+  ["#yijin-choose"] = "亿金：将一种“金”交给一名其他角色",
+  ["@$yijin"] = "金",
+  ["@@yijin_wushi"] = "膴士",
+  ["#@@yijin_wushi"] = "膴士：摸牌阶段摸牌数+4、出牌阶段使用【杀】次数+1",
+  ["@@yijin_houren"] = "厚任",
+  ["#@@yijin_houren"] = "厚任：回合结束时回复3点体力",
+  ["@@yijin_guxiong"] = "贾凶",
+  ["#@@yijin_guxiong"] = "贾凶：出牌阶段开始时失去1点体力，手牌上限-3",
+  ["@@yijin_yongbi"] = "拥蔽",
+  ["#@@yijin_yongbi"] = "拥蔽：跳过摸牌阶段",
+  ["@@yijin_tongshen"] = "通神",
+  ["#@@yijin_tongshen"] = "通神：防止受到的非雷电伤害",
+  ["@@yijin_jinmi"] = "金迷",
+  ["#@@yijin_jinmi"] = "金迷：跳过出牌阶段和弃牌阶段",
+  ["#guanzong"] = "惯纵：选择两名角色，<font color='red'>视为</font>第一名角色对第二名角色造成1点伤害",
+}
+
 return extension

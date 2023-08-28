@@ -1882,11 +1882,10 @@ local m_ex__qieting = fk.CreateTriggerSkill{
       if #handcards > 0 then
         local id = handcards[1]
         if #handcards > 1 then
-          id = room:askForCardChosen(player, target, {
-            card_data = {
-              { "$Hand", table.random(handcards, 2) }
-            }
-          }, self.name)
+          local cids = table.random(handcards, 2)
+          room:fillAG(player, cids)
+          id = room:askForAG(player, cids, false, self.name)
+          room:closeAG(player)
         end
         room:obtainCard(player, id, false, fk.ReasonPrey)
       end

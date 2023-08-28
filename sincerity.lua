@@ -540,7 +540,7 @@ Fk:loadTranslationTable{
 
   ["$xunyi1"] = "古有死恩之士，今有殉义之人！",
   ["$xunyi2"] = "舍身殉义，为君效死！",
-  ["~wangfuzhaolei"] = "妾命数已至，唯愿阿斗顺利归蜀……",
+  ["~wangfuzhaolei"] = "誓死……追随将军左右……",
 }
 
 local zhouchu = General(extension, "mobile__zhouchu", "wu", 4)
@@ -1044,17 +1044,7 @@ local mobile__lirang = fk.CreateTriggerSkill{
       end, Player.HistoryPhase)
       ids = table.filter(ids, function(id) return room:getCardArea(id) == Card.DiscardPile end)
       if #ids == 0 then return end
-      local get = {}
-      if #ids > 1 then
-        local result = room:askForCustomDialog(player, self.name, "packages/tenyear/qml/LargeAG.qml", {ids, 1, 2})
-        if result ~= "" then
-          get = json.decode(result)
-        else
-          get = table.random(ids, 2)
-        end
-      else
-        get = ids
-      end
+      local get = room:askForCardsChosen(player, player, 1, 2, {card_data = {{self.name, ids}}}, self.name)
       if #get > 0 then
         room:moveCards({
           ids = get,
@@ -1125,19 +1115,6 @@ local mobile__mingfa = fk.CreateTriggerSkill{
     player:showCards(self.cost_data[2])
     if player.dead or to:isKongcheng() then return end
     local pindian = player:pindian({to}, self.name, Fk:getCardById(self.cost_data[2]))
-    room:sendLog{
-      type = "#ShowPindianCard",
-      from = player.id,
-      card = {self.cost_data[2]},
-    }
-    room:moveCards({
-      ids = {self.cost_data[2]},
-      from = player.id,
-      toArea = Card.Processing,
-      moveReason = fk.ReasonPut,
-      skillName = self.name,
-      moveVisible = true,
-    })
     if player.dead then return end
     if pindian.results[to.id].winner == player then
       if not to.dead and not to:isNude() then

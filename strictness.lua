@@ -678,17 +678,7 @@ local jianyi = fk.CreateTriggerSkill{
       end
     end, Player.HistoryTurn)
     if #ids == 0 then return end
-    local get = {}
-    if #ids > 1 then
-      local result = room:askForCustomDialog(player, self.name, "packages/tenyear/qml/LargeAG.qml", {ids, 1, 1})
-      if result ~= "" then
-        get = json.decode(result)
-      else
-        get = table.random(ids, 1)
-      end
-    else
-      get = ids
-    end
+    local get = room:askForCardsChosen(player, player, 1, 1, {card_data = {{self.name, ids}}}, self.name)
     if #get > 0 then
       room:moveCards({
         ids = get,

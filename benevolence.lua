@@ -578,8 +578,7 @@ local yaohu_trigger = fk.CreateTriggerSkill{
       return player:hasSkill("yaohu") and target ~= player and target.phase == Player.Play and not target.dead and
         player:getMark("@yaohu") ~= 0 and target.kingdom == player:getMark("@yaohu") and #player:getPile("liuzhang_sheng") > 0
     else
-      return target:getMark("@@yaohu-phase") ~= 0 and data.firstTarget and data.card.is_damage_card and
-        target:getMark("@@yaohu-phase") == player.id
+      return target:getMark("@@yaohu-phase") == player.id and data.to == player.id and data.card.is_damage_card
     end
   end,
   on_cost = function(self, event, target, player, data)

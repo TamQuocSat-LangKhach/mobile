@@ -1640,7 +1640,7 @@ local poxiang = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     room:obtainCard(effect.tos[1], effect.cards[1], false, fk.ReasonGive)
     local player = room:getPlayerById(effect.from)
-    room:drawCards(player, 3, self.name)
+    room:drawCards(player, 3, "poxiang_draw")
     local pile = player:getPile("jueyong_desperation")
     if #pile > 0 then
       room:moveCards({
@@ -1658,7 +1658,7 @@ local poxiang = fk.CreateActiveSkill{
 local poxiang_refresh = fk.CreateTriggerSkill{
   name = "#poxiang_refresh",
 
-  refresh_events = {fk.AfterCardsMove, fk.TurnEnd},
+  refresh_events = {fk.AfterCardsMove, fk.AfterTurnEnd},
   can_refresh = function(self, event, target, player, data)
     return true
   end,
@@ -1666,22 +1666,18 @@ local poxiang_refresh = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.AfterCardsMove then
       for _, move in ipairs(data) do
-        if move.from == player.id and (move.to ~= player.id or move.toArea ~= Card.PlayerHand) then
-          for _, info in ipairs(move.moveInfo) do
-            room:setCardMark(Fk:getCardById(info.cardId), "@@poxiang", 0)
-          end
-        elseif move.to == player.id and move.toArea == Card.PlayerHand and move.skillName == "poxiang" then
+        if move.to == player.id and move.toArea == Card.PlayerHand and move.skillName == "poxiang_draw" then
           for _, info in ipairs(move.moveInfo) do
             local id = info.cardId
             if room:getCardArea(id) == Card.PlayerHand and room:getCardOwner(id) == player then
-              room:setCardMark(Fk:getCardById(id), "@@poxiang", 1)
+              room:setCardMark(Fk:getCardById(id), "@@poxiang-inhand", 1)
             end
           end
         end
       end
-    elseif event == fk.TurnEnd then
+    elseif event == fk.AfterTurnEnd then
       for _, id in ipairs(player:getCardIds(Player.Hand)) do
-        room:setCardMark(Fk:getCardById(id), "@@poxiang", 0)
+        room:setCardMark(Fk:getCardById(id), "@@poxiang-inhand", 0)
       end
     end
   end,
@@ -1690,7 +1686,7 @@ local poxiang_refresh = fk.CreateTriggerSkill{
 local poxiang_maxcards = fk.CreateMaxCardsSkill{
   name = "#poxiang_maxcards",
   exclude_from = function(self, player, card)
-    return card:getMark("@@poxiang") > 0
+    return card:getMark("@@poxiang-inhand") > 0
   end,
 }
 
@@ -1701,7 +1697,7 @@ Fk:loadTranslationTable{
   ["poxiang"] = "破降",
   [":poxiang"] = "出牌阶段限一次，你可以交给一名其他角色一张牌，然后你摸三张牌，移去所有“绝”并失去1点体力，你以此法获得的牌本回合不计入手牌上限。",
   ["#poxiang-active"] = "发动破降，选择一张牌交给一名角色，然后摸三张牌，移去所有绝并失去1点体力",
-  ["@@poxiang"] = "破降",
+  ["@@poxiang-inhand"] = "破降",
   ["$poxiang1"] = "王瓘既然假降，吾等可将计就计。",
   ["$poxiang2"] = "佥率已降两千魏兵，便可大破魏军主力。",
 }

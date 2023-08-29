@@ -775,24 +775,32 @@ local zhangming = fk.CreateTriggerSkill{
         toArea = Player.Hand,
         moveReason = fk.ReasonPrey,
         proposer = player.id,
-        skillName = self.name,
+        skillName = "zhangming_draw",
       })
     end
-    local zhangmingcards = player:getMark("zhangming-turn") == 0 and {} or player:getMark("zhangming-turn")
-    table.insertTable(zhangmingcards, table.filter(toObtain, function (id)
-      return room:getCardArea(id) == Player.Hand and room:getCardOwner(id) == player end))
-    room:setPlayerMark(player, "zhangming-turn", zhangmingcards)
   end,
 
-  refresh_events = {fk.AfterCardsMove},
+  refresh_events = {fk.AfterCardsMove, fk.AfterTurnEnd},
   can_refresh = function(self, event, target, player, data)
     return true
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    if type(player:getMark("zhangming-turn")) == "table" then
-      room:setPlayerMark(player, "zhangming-turn", table.filter(player:getMark("zhangming-turn"), function (id)
-        return room:getCardArea(id) == Player.Hand and room:getCardOwner(id) == player end))
+    if event == fk.AfterCardsMove then
+      for _, move in ipairs(data) do
+        if move.to == player.id and move.toArea == Card.PlayerHand and move.skillName == "zhangming_draw" then
+          for _, info in ipairs(move.moveInfo) do
+            local id = info.cardId
+            if room:getCardArea(id) == Card.PlayerHand and room:getCardOwner(id) == player then
+              room:setCardMark(Fk:getCardById(id), "@@zhangming-inhand", 1)
+            end
+          end
+        end
+      end
+    elseif event == fk.AfterTurnEnd then
+      for _, id in ipairs(player:getCardIds(Player.Hand)) do
+        room:setCardMark(Fk:getCardById(id), "@@zhangming-inhand", 0)
+      end
     end
   end,
 }
@@ -815,7 +823,7 @@ local zhangming_trigger = fk.CreateTriggerSkill{
 local zhangming_maxcards = fk.CreateMaxCardsSkill{
   name = "#zhangming_maxcards",
   exclude_from = function(self, player, card)
-    return player:getMark("zhangming-turn") ~= 0 and table.contains(player:getMark("zhangming-turn"), card.id)
+    return card:getMark("@@zhangming-inhand") > 0
   end,
 }
 xianghai:addRelatedSkill(xianghai_maxcards)
@@ -844,6 +852,7 @@ Fk:loadTranslationTable{
   ["#chuhai-active"] = "发动除害，选择与你拼点的角色",
   ["@@chuhai-phase"] = "除害",
   ["#zhangming_trigger"] = "彰名",
+  ["@@zhangming-inhand"] = "彰名",
 
   ["$xianghai1"] = "快快闪开，伤到你们可就不好了，哈哈哈！",
   ["$xianghai2"] = "你自己撞上来的，这可怪不得小爷我！",

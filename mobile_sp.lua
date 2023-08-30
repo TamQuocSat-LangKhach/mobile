@@ -2489,4 +2489,235 @@ Fk:loadTranslationTable{
   ["#guanzong"] = "惯纵：选择两名角色，<font color='red'>视为</font>第一名角色对第二名角色造成1点伤害",
 }
 
+local gongsunkang = General(extension, "gongsunkang", "qun", 4)
+local juliao = fk.CreateDistanceSkill{
+  name = "juliao",
+  frequency = Skill.Compulsory,
+  correct_func = function(self, from, to)
+    if to:hasSkill(self.name) then
+      local kingdoms = {}
+      for _, p in ipairs(Fk:currentRoom().alive_players) do
+        table.insertIfNeed(kingdoms, p.kingdom)
+      end
+      return #kingdoms - 1
+    end
+    return 0
+  end,
+}
+local taomie = fk.CreateTriggerSkill{
+  name = "taomie",
+  anim_type = "offensive",
+  events = {fk.Damage, fk.Damaged, fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self.name) then
+      if event == fk.DamageCaused then
+        return data.to:getMark("@@taomie") > 0
+      elseif event == fk.Damage then
+        return not data.to.dead and data.to:getMark("@@taomie") == 0
+      elseif event == fk.Damaged then
+        return data.from and not data.from.dead and data.to:getMark("@@taomie") == 0 and not data.taomie
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.DamageCaused then
+      return true
+    else
+      local prompt
+      if event == fk.Damage then
+        prompt = "#taomie-invoke::"..data.to.id
+      else
+        prompt = "#taomie-invoke::"..data.from.id
+      end
+      return player.room:askForSkillInvoke(player, self.name, nil, prompt)
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.DamageCaused then
+      local all_choices = {"taomie_damage", "taomie_prey", "taomie_beishui"}
+      local choices = table.clone(all_choices)
+      if data.to:isNude() then
+        choices = {"taomie_damage"}
+      end
+      local choice = room:askForChoice(player, choices, self.name, nil, false, all_choices)
+      if choice ~= "taomie_prey" then
+        data.damage = data.damage + 1
+      end
+      if choice ~= "taomie_damage" then
+        if choice == "taomie_beishui" then
+          room:setPlayerMark(data.to, "@@taomie", 0)
+          data.taomie = true
+        end
+        if data.to:isNude() then return end
+        room:doIndicate(player.id, {data.to.id})
+        local id = room:askForCardChosen(player, data.to, "hej", self.name)
+        room:obtainCard(player.id, id, false, fk.ReasonPrey)
+        if player.dead then return end
+        local targets = table.map(room:getOtherPlayers(data.to), function(p) return p.id end)
+        if #targets == 0 or room:getCardOwner(id) ~= player or room:getCardArea(id) ~= Card.PlayerHand then return end
+        local to = room:askForChoosePlayers(player, targets, 1, 1, "#taomie-choose:::"..Fk:getCardById(id):toLogString(), self.name, true)
+        if #to > 0 then
+          to = to[1]
+        else
+          to = player.id
+        end
+        if to ~= player.id then
+          room:obtainCard(to, id, false, fk.ReasonGive)
+        end
+      end
+    else
+      for _, p in ipairs(room.alive_players) do
+        room:setPlayerMark(p, "@@taomie", 0)
+      end
+      if event == fk.Damage then
+        room:doIndicate(player.id, {data.to.id})
+        room:setPlayerMark(data.to, "@@taomie", 1)
+      else
+        room:doIndicate(player.id, {data.from.id})
+        room:setPlayerMark(data.from, "@@taomie", 1)
+      end
+    end
+  end
+}
+local taomie_attackrange = fk.CreateAttackRangeSkill{
+  name = "#taomie_attackrange",
+  main_skill = taomie,
+  within_func = function (self, from, to)
+    if from:hasSkill("taomie") then
+      return to:getMark("@@taomie") > 0
+    end
+    if to:hasSkill("taomie") then
+      return from:getMark("@@taomie") > 0
+    end
+  end,
+}
+taomie:addRelatedSkill(taomie_attackrange)
+gongsunkang:addSkill(juliao)
+gongsunkang:addSkill(taomie)
+Fk:loadTranslationTable{
+  ["gongsunkang"] = "公孙康",
+  ["juliao"] = "据辽",
+  [":juliao"] = "锁定技，其他角色计算与你的距离+X（X为场上势力数-1）。",
+  ["taomie"] = "讨灭",
+  [":taomie"] = "当你受到伤害后或当你造成伤害后，你可以令伤害来源或受伤角色获得“讨灭”标记（如场上已有标记则转移给该角色），"..
+  "你和拥有“讨灭”标记的角色互相视为在对方的攻击范围内；当你对有“讨灭”标记的角色造成伤害时，你选择一项：1.令此伤害+1；"..
+  "2.你获得其区域里的一张牌并可将此牌交给另一名角色；背水：弃置其“讨灭”标记，本次伤害不令其获得“讨灭”标记。",
+  ["#taomie-invoke"] = "讨灭：是否令 %dest 获得“讨灭”标记？",
+  ["@@taomie"] = "讨灭",
+  ["taomie_damage"] = "此伤害+1",
+  ["taomie_prey"] = "获得其区域内一张牌，且可以交给另一名角色",
+  ["taomie_beishui"] = "背水：弃置其“讨灭”标记，且本次伤害不令其获得标记",
+  ["#taomie-choose"] = "讨灭：你可以将此%arg交给另一名角色",
+}
+
+local weiyan = General(extension, "mxing__weiyan", "qun", 4)
+weiyan.shield = 1
+local guli = fk.CreateViewAsSkill{
+  name = "guli",
+  prompt = "#guli",
+  card_filter = function()
+    return false
+  end,
+  view_as = function(self, cards)
+    local card = Fk:cloneCard("slash")
+    card:addSubcards(Self:getCardIds("h"))
+    card.skillName = self.name
+    return card
+  end,
+  enabled_at_play = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
+  end,
+}
+local guili_record = fk.CreateTriggerSkill{
+  name = "#guili_record",
+  mute = true,
+  events = {fk.TargetSpecified},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and table.contains(data.card.skillNames, "guli")
+  end,
+  on_cost = function(self, event, target, player, data)
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
+    data.extra_data = data.extra_data or {}
+    data.extra_data.guli = data.extra_data.guli or {}
+    data.extra_data.guli[tostring(data.to)] = (data.extra_data.guli[tostring(data.to)] or 0) + 1
+  end,
+
+  refresh_events = {fk.CardUseFinished},
+  can_refresh = function(self, event, target, player, data)
+    return data.extra_data and data.extra_data.guli
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    for key, num in pairs(data.extra_data.guli) do
+      local p = room:getPlayerById(tonumber(key))
+      if p:getMark(fk.MarkArmorNullified) > 0 then
+        room:removePlayerMark(p, fk.MarkArmorNullified, num)
+      end
+    end
+    data.extra_data.guli = nil
+  end,
+}
+local guli_trigger = fk.CreateTriggerSkill{
+  name = "#guli_trigger",
+  mute = true,
+  main_skill = guli,
+  events = {fk.CardUseFinished},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill("guli") and table.contains(data.card.skillNames, "guli") and data.damageDealt
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, "guli", nil, "#guli-invoke")
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:loseHp(player, 1, "guli")
+    if player.dead or player:getHandcardNum() >= player.maxHp then return end
+    player:drawCards(player.maxHp - player:getHandcardNum(), "guli")
+  end,
+}
+local aosi = fk.CreateTriggerSkill{
+  name = "aosi",
+  frequency = Skill.Compulsory,
+  anim_type = "offensive",
+  events = {fk.Damage},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Play and
+      not data.to.dead and player:inMyAttackRange(data.to)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(player.id, {data.to.id})
+    room:setPlayerMark(data.to, "@@aosi-phase", 1)
+  end,
+}
+local aosi_targetmod = fk.CreateTargetModSkill{
+  name = "#aosi_targetmod",
+  frequency = Skill.Compulsory,
+  bypass_times = function(self, player, skill, scope, card, to)
+    return player:hasSkill("aosi") and scope == Player.HistoryPhase and to:getMark("@@aosi-phase") > 0
+  end,
+}
+guli:addRelatedSkill(guili_record)
+guli:addRelatedSkill(guli_trigger)
+aosi:addRelatedSkill(aosi_targetmod)
+weiyan:addSkill(guli)
+weiyan:addSkill(aosi)
+Fk:loadTranslationTable{
+  ["mxing__weiyan"] = "星魏延",
+  ["guli"] = "孤厉",
+  [":guli"] = "出牌阶段限一次，你可以将所有手牌当一张无视防具的【杀】使用。此牌结算后，若此牌造成过伤害，你可以失去1点体力，然后将手牌摸至体力上限。",
+  ["aosi"] = "骜肆",
+  [":aosi"] = "锁定技，当你于出牌阶段对一名在你攻击范围内的其他角色造成伤害后，你于此阶段对其使用牌无次数限制。",
+  ["#guli"] = "孤厉：你可以将所有手牌当一张无视防具的【杀】使用",
+  ["#guli-invoke"] = "孤厉：你可以失去1点体力，将手牌补至体力上限",
+  ["@@aosi-phase"] = "骜肆",
+
+  ["~mxing__weiyan"] = "使君为何弃我而去……呃啊！",
+}
+
 return extension

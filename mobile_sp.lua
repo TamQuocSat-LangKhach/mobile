@@ -2102,10 +2102,7 @@ local hannan = fk.CreateActiveSkill{
     elseif pindian.results[target.id].winner == target then
       from, to = target, player
     end
-    if to.dead then
-      to = nil
-    end
-    if to then
+    if to and not to.dead then
       room:damage{
         from = from,
         to = to,
@@ -2629,8 +2626,8 @@ local guli = fk.CreateViewAsSkill{
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
   end,
 }
-local guili_record = fk.CreateTriggerSkill{
-  name = "#guili_record",
+local guli_record = fk.CreateTriggerSkill{
+  name = "#guli_record",
   mute = true,
   events = {fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
@@ -2702,7 +2699,7 @@ local aosi_targetmod = fk.CreateTargetModSkill{
     return player:hasSkill("aosi") and scope == Player.HistoryPhase and to:getMark("@@aosi-phase") > 0
   end,
 }
-guli:addRelatedSkill(guili_record)
+guli:addRelatedSkill(guli_record)
 guli:addRelatedSkill(guli_trigger)
 aosi:addRelatedSkill(aosi_targetmod)
 weiyan:addSkill(guli)
@@ -2718,6 +2715,219 @@ Fk:loadTranslationTable{
   ["@@aosi-phase"] = "骜肆",
 
   ["~mxing__weiyan"] = "使君为何弃我而去……呃啊！",
+}
+
+local guonvwang = General(extension, "mobile__guozhao", "wei", 3, 3, General.Female)
+
+local yichong = fk.CreateTriggerSkill{
+  name = "yichong",
+  anim_type = "control",
+  events = {fk.EventPhaseStart, fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) then return false end
+    if event == fk.EventPhaseStart then
+      return target == player and player.phase == Player.Start
+    elseif event == fk.AfterCardsMove then
+      local mark = player:getMark("@yichong")
+      if type(mark) ~= "table" or mark[1] > 4 then return false end
+      mark = player:getMark("yichong_target")
+      if type(mark) ~= "table" then return false end
+      local room = player.room
+      local to = room:getPlayerById(mark[1])
+      if to == nil or to.dead then return false end
+      for _, move in ipairs(data) do
+        if move.to == mark[1] and move.toArea == Card.PlayerHand then
+          for _, info in ipairs(move.moveInfo) do
+            local id = info.cardId
+            if room:getCardArea(id) == Card.PlayerHand and room:getCardOwner(id) == to and
+            Fk:getCardById(id):getSuitString(true) == mark[2] then
+              return true
+            end
+          end
+        end
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.EventPhaseStart then
+      local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), function (p)
+        return p.id end), 1, 1, "#yichong-choose", self.name, true)
+      if #to > 0 then
+        self.cost_data = to[1]
+        return true
+      end
+    elseif event == fk.AfterCardsMove then
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      local to = room:getPlayerById(self.cost_data)
+      local suits = {"log_spade", "log_club", "log_heart", "log_diamond"}
+      local choice = room:askForChoice(player, suits, self.name)
+      local cards = table.filter(to:getCardIds({Player.Hand, Player.Equip}), function (id)
+        return Fk:getCardById(id):getSuitString(true) == choice
+      end)
+      if #cards > 0 then
+        room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
+      end
+      if not (player.dead or to.dead) then
+        local mark = player:getMark("yichong_target")
+        if type(mark) == "table" then
+          local orig_to = room:getPlayerById(mark[1])
+          local mark2 = orig_to:getMark("@yichong_que")
+          if type(mark2) == "table" then
+            table.removeOne(mark2, mark[2])
+            room:setPlayerMark(orig_to, "@yichong_que", #mark2 > 0 and mark2 or 0)
+          end
+        end
+        local mark2 = type(to:getMark("@yichong_que")) == "table" and to:getMark("@yichong_que") or {}
+        table.insert(mark2, choice)
+        room:setPlayerMark(to, "@yichong_que", mark2)
+        room:setPlayerMark(player, "yichong_target", {self.cost_data, choice})
+        room:setPlayerMark(player, "@yichong", {0})
+      end
+    else
+      local mark = player:getMark("@yichong")
+      if type(mark) ~= "table" or mark[1] > 4 then return false end
+      local x = 5 - mark[1]
+      mark = player:getMark("yichong_target")
+      if type(mark) ~= "table" then return false end
+      local to = room:getPlayerById(mark[1])
+      if to == nil or to.dead then return false end
+      local cards = {}
+      for _, move in ipairs(data) do
+        if move.to == mark[1] and move.toArea == Card.PlayerHand then
+          for _, info in ipairs(move.moveInfo) do
+            local id = info.cardId
+            if room:getCardArea(id) == Card.PlayerHand and room:getCardOwner(id) == to and
+                Fk:getCardById(id):getSuitString(true) == mark[2] then
+              table.insert(cards, id)
+            end
+          end
+        end
+      end
+      if #cards == 0 then
+        return false
+      elseif #cards > x then
+        cards = table.random(cards, x)
+      end
+      room:setPlayerMark(player, "@yichong", {5-x+#cards})
+      room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
+    end
+  end,
+
+  refresh_events = {fk.TurnStart, fk.EventLoseSkill, fk.BuryVictim},
+  can_refresh = function(self, event, target, player, data)
+    if event == fk.EventLoseSkill and data ~= self then return false end
+    return player == target and type(player:getMark("yichong_target")) == "table"
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    local mark = player:getMark("yichong_target")
+    local to = room:getPlayerById(mark[1])
+    local mark2 = to:getMark("@yichong_que")
+    if type(mark2) == "table" then
+      table.removeOne(mark2, mark[2])
+      room:setPlayerMark(to, "@yichong_que", #mark2 > 0 and mark2 or 0)
+    end
+    room:setPlayerMark(player, "yichong_target", 0)
+    room:setPlayerMark(player, "@yichong", 0)
+  end,
+}
+
+local wufei = fk.CreateTriggerSkill{
+  name = "wufei",
+  events = {fk.TargetSpecified, fk.Damaged},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self.name) or player ~= target then return false end
+    local mark = player:getMark("yichong_target")
+    if type(mark) ~= "table" then return false end
+    local to = player.room:getPlayerById(mark[1])
+    if to == nil or to.dead then return false end
+    if event == fk.TargetSpecified then
+      return data.firstTarget and (data.card.trueName == "slash" or (data.card:isCommonTrick() and data.card.is_damage_card))
+    elseif event == fk.Damaged then
+      return to.hp > player.hp and to.hp > 1
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.TargetSpecified then
+      return true
+    end
+    local mark = player:getMark("yichong_target")
+    if type(mark) ~= "table" then return false end
+    local room = player.room
+    if room:askForSkillInvoke(player, self.name, nil, "#wufei-invoke::"..mark[1]) then
+      room:doIndicate(player.id, {mark[1]})
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local mark = player:getMark("yichong_target")
+    if type(mark) ~= "table" then return false end
+    local to = player.room:getPlayerById(mark[1])
+    if to == nil or to.dead then return false end
+    player:broadcastSkillInvoke(self.name)
+    if event == fk.TargetSpecified then
+      player.room:notifySkillInvoked(player, self.name, "control")
+      data.extra_data = data.extra_data or {}
+      data.extra_data.wufei = mark[1]
+    else
+      player.room:notifySkillInvoked(player, self.name, "masochism")
+      player.room:damage{
+        from = player,
+        to = to,
+        damage = 1,
+        skillName = self.name,
+      }
+    end
+  end,
+
+  refresh_events = {fk.PreDamage},
+  can_refresh = function(self, event, target, player, data)
+    if data.card then
+      local e = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+      if e then
+        local use = e.data[1]
+        return use.extra_data and use.extra_data.wufei
+      end
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    local e = room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+    if e then
+      local use = e.data[1]
+      data.from = room:getPlayerById(use.extra_data.wufei)
+    end
+  end,
+}
+
+guonvwang:addSkill(yichong)
+guonvwang:addSkill(wufei)
+
+Fk:loadTranslationTable{
+  ["mobile__guozhao"] = "郭女王",
+  ["yichong"] = "易宠",
+  [":yichong"] = "准备阶段，你可以选择一名其他角色并指定一种花色，获得其所有该花色的牌，并令其获得“雀”标记直到你下个回合开始"..
+  "（若场上已有“雀”标记则转移给该角色）。拥有“雀”标记的角色获得你指定花色的牌时，你获得此牌（你至多因此“雀”标记获得五张牌）。",
+  ["wufei"] = "诬诽",
+  [":wufei"] = "你使用【杀】或伤害类普通锦囊指定目标后，令拥有“雀”标记的其他角色代替你成为伤害来源。"..
+  "你受到伤害后，若拥有“雀”标记的角色体力值大于1且大于你，你可以令其受到1点伤害。",
+
+  ["#yichong-choose"] = "你可以发动 易宠，选择一名其他角色，获得其一种花色的所有牌",
+  ["@yichong_que"] = "雀",
+  ["@yichong"] = "易宠",
+  ["#wufei-invoke"] = "你可发动 诬诽，令%dest受到1点伤害",
+
+  ["$yichong1"] = "处椒房之尊，得陛下隆宠！",
+  ["$yichong2"] = "三千宠爱？当聚于我一身！",
+  ["$wufei1"] = "巫蛊实乃凶邪之术，陛下不可不察！",
+  ["$wufei2"] = "妾不该多言，只怕陛下为其所害。",
+  ["~mobile__guozhao"] = "不觉泪下……沾衣裳……",
 }
 
 return extension

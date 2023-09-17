@@ -33,17 +33,18 @@ local mobile__yinju = fk.CreateActiveSkill{
     end
   end,
 }
-local mobile__yinju_trigger = fk.CreateTriggerSkill{
-  name = "#mobile__yinju_trigger",
-
-  refresh_events = {fk.TurnStart},
-  can_refresh = function(self, event, target, player, data)
-    return target:getMark("@@mobile__yinju") > 0
+local mobile__yinju_delay = fk.CreateTriggerSkill{
+  name = "#mobile__yinju_delay",
+  events = {fk.EventPhaseStart},
+  anim_type = "negative",
+  can_trigger = function(self, event, target, player, data)
+    return player == target and player.phase == Player.Start and player:getMark("@@mobile__yinju") > 0
   end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:setPlayerMark(target, "@@mobile__yinju", 0)
-    target:skip(Player.Play)
-    target:skip(Player.Discard)
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "@@mobile__yinju", 0)
+    player:skip(Player.Play)
+    player:skip(Player.Discard)
   end,
 }
 local mobile__chijie = fk.CreateTriggerSkill{
@@ -70,7 +71,7 @@ local mobile__chijie = fk.CreateTriggerSkill{
     end
   end,
 }
-mobile__yinju:addRelatedSkill(mobile__yinju_trigger)
+mobile__yinju:addRelatedSkill(mobile__yinju_delay)
 xinpi:addSkill(mobile__yinju)
 xinpi:addSkill(mobile__chijie)
 Fk:loadTranslationTable{
@@ -82,6 +83,7 @@ Fk:loadTranslationTable{
   ["#mobile__yinju"] = "引裾：令一名其他角色选择对你使用【杀】，或跳过其下回合出牌阶段和弃牌阶段",
   ["@@mobile__yinju"] = "引裾",
   ["#mobile__yinju-slash"] = "引裾：你需对 %src 使用【杀】，否则跳过你下回合出牌阶段和弃牌阶段",
+  ["#mobile__yinju_delay"] = "引裾",
   ["#mobile__chijie-invoke"] = "持节：你可以判定，若点数大于6，则取消此%arg",
 
   ["$mobile__yinju1"] = "伐吴者，兴师劳民，徒而无功，万望陛下三思！",

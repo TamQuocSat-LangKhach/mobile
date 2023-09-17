@@ -515,7 +515,7 @@ local m_ex__jiushi_trigger = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(m_ex__jiushi.name) then
       if event == fk.Damaged then
-        return not player.faceup and not (data.extra_data or {}).m_ex__jiushicheak
+        return not player.faceup and not (data.extra_data or {}).m_ex__jiushicheck
       elseif event == fk.TurnedOver then
         return player:usedSkillTimes("m_ex__chengzhang", Player.HistoryGame) > 0
       end
@@ -546,7 +546,7 @@ local m_ex__jiushi_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     data.extra_data = data.extra_data or {}
-    data.extra_data.m_ex__jiushicheak = true
+    data.extra_data.m_ex__jiushicheck = true
   end,
 }
 m_ex__jiushi:addRelatedSkill(m_ex__jiushi_trigger)

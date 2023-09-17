@@ -659,6 +659,7 @@ Fk:loadTranslationTable{
   ["#jutu-put"] = "据土：请将%arg张牌置为“生”",
   ["#yaohu-choice"] = "邀虎：选择你要“邀虎”的势力",
   ["@yaohu"] = "邀虎",
+  ["#yaohu_trigger"] = "邀虎",
   ["@@yaohu-phase"] = "邀虎",
   ["#yaohu-choose"] = "邀虎：选择令 %dest 使用【杀】的目标",
   ["#yaohu-slash"] = "邀虎：你需对 %dest 使用一张【杀】，否则本阶段使用伤害牌指定 %src 为目标时需交给其牌",

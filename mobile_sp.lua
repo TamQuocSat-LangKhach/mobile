@@ -938,7 +938,7 @@ Fk:loadTranslationTable{
 }
 
 local xingZhiyanProhibit = fk.CreateProhibitSkill{
-  name = "#xingZhiyan-prohibit",
+  name = "#mxing__zhiyan_prohibit",
   is_prohibited = function(self, from, to)
     return from:getMark("mxing__zhiyan_draw-phase") > 0 and from ~= to
   end,

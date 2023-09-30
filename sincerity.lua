@@ -1623,7 +1623,7 @@ local shenzhuoBuff = fk.CreateTargetModSkill{
 }
 
 local shenzhuoDebuff = fk.CreateProhibitSkill{
-  name = "#shenzhuo-debuff",
+  name = "#shenzhuo_prohibit",
   prohibit_use = function(self, player, card)
     return player:getMark("@shenzhuo_debuff-turn") ~= 0 and card.trueName == "slash"
   end,

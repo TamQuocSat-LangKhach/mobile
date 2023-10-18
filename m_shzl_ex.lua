@@ -4,6 +4,50 @@ extension.extensionName = "mobile"
 Fk:loadTranslationTable{
   ["m_shzl_ex"] = "手杀界神话再临",
 }
+local xunyu = General(extension, "m_ex__xunyu", "wei", 3)
+local m_ex__jieming = fk.CreateTriggerSkill{
+  name = "m_ex__jieming",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  on_trigger = function(self, event, target, player, data)
+    self.cancel_cost = false
+    for i = 1, data.damage do
+      if self.cancel_cost then break end
+      self:doCost(event, target, player, data)
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local to = player.room:askForChoosePlayers(player, table.map(player.room:getAlivePlayers(), function (p)
+      return p.id end), 1, 1, "#m_ex__jieming-choose", self.name, true)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+    self.cancel_cost = true
+  end,
+  on_use = function(self, event, target, player, data)
+    local to = player.room:getPlayerById(self.cost_data)
+    to:drawCards(2, self.name)
+    if to:getHandcardNum() < to.maxHp then
+      player:drawCards(1, self.name)
+    end
+  end,
+}
+xunyu:addSkill("quhu")
+xunyu:addSkill(m_ex__jieming)
+Fk:loadTranslationTable{
+  ["m_ex__xunyu"] = "界荀彧",
+  ["m_ex__jieming"] = "节命",
+  [":m_ex__jieming"] = "当你受到1点伤害后，你可以令一名角色摸两张牌，然后若其手牌数小于其体力上限，你摸一张牌。",
+
+  ["#m_ex__jieming-choose"] = "节命：你可以令一名角色摸两张牌，然后若其手牌数小于其体力上限，你摸一张牌",
+
+  ["$m_ex__jieming1"] = "因势利导，是为良计。",
+  ["$m_ex__jieming2"] = "杀身成仁，不负皇恩。",
+  ["$quhu_m_ex__xunyu1"] = "驱虎伤敌，保我无虞。",
+  ["$quhu_m_ex__xunyu2"] = "无需费我一兵一卒。",
+  ["~m_ex__xunyu"] = "命不由人，徒叹奈何……",
+}
 
 local caopi = General(extension, "m_ex__caopi", "wei", 3)
 local xingshang = fk.CreateTriggerSkill{
@@ -82,13 +126,140 @@ Fk:loadTranslationTable{
   ["#m_ex__fangzhu-choose"] = "放逐：你可令一名其他角色选择摸%arg张牌并翻面，或弃置%arg张牌并失去1点体力",
   ["#m_ex__fangzhu-ask"] = "放逐：弃置%arg张牌并失去1点体力，或点击“取消”，摸%arg张牌并翻面",
 
-  ["$m_ex__xingshang1"] = "群燕辞归鹄南翔，念君客游思断肠",
+  ["$m_ex__xingshang1"] = "群燕辞归鹄南翔，念君客游思断肠。",
   ["$m_ex__xingshang2"] = "霜露纷兮文下，木叶落兮凄凄。",
   ["$m_ex__fangzhu1"] = "国法不可废耳，汝先退去。",
   ["$m_ex__fangzhu2"] = "将军征战辛苦，孤当赠以良宅。",
   ["$songwei_m_ex__caopi1"] = "藩屏大宗，御侮厌难。",
   ["$songwei_m_ex__caopi2"] = "朕承符运，终受革命。",
   ["~m_ex__caopi"] = "建平所言八十，谓昼夜也，吾其决矣……",
+}
+
+local xuhuang = General(extension, "m_ex__xuhuang", "wei", 4)
+local m_ex__duanliang = fk.CreateViewAsSkill{
+  name = "m_ex__duanliang",
+  anim_type = "control",
+  pattern = "supply_shortage",
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:getCardById(to_select).color == Card.Black and Fk:getCardById(to_select).type ~= Card.TypeTrick
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then
+      return nil
+    end
+    local c = Fk:cloneCard("supply_shortage")
+    c.skillName = self.name
+    c:addSubcard(cards[1])
+    return c
+  end,
+}
+local m_ex__duanliang_targetmod = fk.CreateTargetModSkill{
+  name = "#m_ex__duanliang_targetmod",
+  bypass_distances =  function(self, player, skill, card, to)
+    return player:hasSkill(m_ex__duanliang.name) and skill.name == "supply_shortage_skill" and to:getHandcardNum() >= player:getHandcardNum()
+  end,
+}
+m_ex__duanliang:addRelatedSkill(m_ex__duanliang_targetmod)
+
+local m_ex__jiezi = fk.CreateTriggerSkill{
+  name = "m_ex__jiezi",
+  anim_type = "support",
+  events = {fk.EventPhaseChanging},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self.name) and player ~= target and target and target.skipped_phases[Player.Draw] and
+        player:usedSkillTimes(self.name, Player.HistoryTurn) < 1 then
+      return data.to == Player.Play or data.to == Player.Discard or data.to == Player.Finish
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:doIndicate(player.id, {target.id})
+    player:drawCards(1, self.name)
+  end,
+}
+
+xuhuang:addSkill(m_ex__duanliang)
+xuhuang:addSkill(m_ex__jiezi)
+Fk:loadTranslationTable{
+  ["m_ex__xuhuang"] = "界徐晃",
+  ["m_ex__duanliang"] = "断粮",
+  [":m_ex__duanliang"] = "①你可将一张不为锦囊牌的黑色牌转化为【兵粮寸断】使用。②你对手牌数不小于你的角色使用【兵粮寸断】无距离关系的限制。",
+  ["m_ex__jiezi"] = "截辎",
+  [":m_ex__jiezi"] = "其他角色的出牌阶段、弃牌阶段或结束阶段开始前，若其跳过过摸牌阶段且你于此回合内未发动过此技能，你摸一张牌。",
+
+  ["$m_ex__duanliang1"] = "粮不三载，敌军已犯行军大忌。",
+  ["$m_ex__duanliang2"] = "断敌粮秣，此战可胜。",
+  ["$m_ex__jiezi1"] = "因粮于敌，敌军食可足也。	",
+  ["$m_ex__jiezi2"] = "食敌一钟，当吾二十钟。",
+  ["~m_ex__xuhuang"] = "敌军防备周全，是吾轻敌……",
+}	
+
+local dengai = General(extension, "m_ex__dengai", "wei", 4)
+local tuntian = fk.CreateTriggerSkill{
+  name = "m_ex__tuntian",
+  anim_type = "special",
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self.name) and player.phase == Player.NotActive then
+      for _, move in ipairs(data) do
+        if move.from == player.id then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              return true
+            end
+          end
+        end
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local judge = {
+      who = player,
+      reason = self.name,
+      pattern = ".",
+    }
+    room:judge(judge)
+  end,
+
+  refresh_events = {fk.FinishJudge},
+  can_refresh = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and data.reason == self.name and player.room:getCardArea(data.card) == Card.Processing
+  end,
+  on_refresh = function(self, event, target, player, data)
+    if data.card.suit == Card.Heart then
+      player.room:obtainCard(player, data.card, true, fk.ReasonJustMove)
+    else
+      player:addToPile("dengai_field", data.card, true, self.name)
+    end
+  end,
+}
+local tuntian_distance = fk.CreateDistanceSkill{
+  name = "#m_ex__tuntian_distance",
+  correct_func = function(self, from, to)
+    if from:hasSkill(self.name) then
+      return -#from:getPile("dengai_field")
+    end
+  end,
+}
+tuntian:addRelatedSkill(tuntian_distance)
+
+dengai:addSkill(tuntian)
+dengai:addSkill("zaoxian")
+dengai:addRelatedSkill("jixi")
+
+Fk:loadTranslationTable{
+  ["m_ex__dengai"] = "界邓艾",
+  ["m_ex__tuntian"] = "屯田",
+  [":m_ex__tuntian"] = "当你于回合外失去牌后，你可以进行判定：若结果为红桃，则你获得此判定牌；否则你将生效后的判定牌置于你的武将牌上，称为“田”；你计算与其他角色的距离-X（X为“田”的数量）。",
+
+  ["$m_ex__tuntian1"] = "休养生息，是为以备不虞。",
+  ["$m_ex__tuntian2"] = "战损难免，应以军务减之。",
+  ["$zaoxian_m_ex__dengai1"] = "用兵以险，则战之以胜！",
+  ["$zaoxian_m_ex__dengai2"] = "已至马阁山，宜速进军破蜀！",
+  ["$jixi_m_ex__dengai1"] = "攻敌之不备，斩将夺辎！",
+  ["$jixi_m_ex__dengai2"] = "奇兵正攻，敌何能为？",
+  ["~m_ex__dengai"] = "一片忠心，换来这般田地。",
 }
 
 local jiangwei = General(extension, "m_ex__jiangwei", "shu", 4)
@@ -168,6 +339,72 @@ Fk:loadTranslationTable{
   ["$ex__guanxing_m_ex__jiangwei1"] = "知天易则观之，逆天难亦行之。",
   ["$ex__guanxing_m_ex__jiangwei2"] = "欲尽人事，亦先听天命。",
   ["~m_ex__jiangwei"] = "可惜大计未成，吾已身陨。",
+}
+
+local caiwenji = General(extension, "m_ex__caiwenji", "qun", 3, 3, General.Female)
+local beige = fk.CreateTriggerSkill{
+  name = "m_ex__beige",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and data.card and data.card.trueName == "slash" and not data.to.dead and not player:isNude()
+  end,
+  on_cost = function(self, event, target, player, data)
+    local card = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".", "#beige-invoke::"..target.id, true)
+    if #card > 0 then
+      self.cost_data = card
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:throwCard(self.cost_data, self.name, player, player)
+    local judge = {
+      who = target,
+      reason = self.name,
+      pattern = ".",
+    }
+    room:judge(judge)
+    if judge.card.suit == Card.Heart then
+      if target:isWounded() then
+        room:recover{
+          who = target,
+          num = data.damage,
+          recoverBy = player,
+          skillName = self.name
+        }
+      end
+    elseif judge.card.suit == Card.Diamond then
+      target:drawCards(3, self.name)
+    elseif judge.card.suit == Card.Club then
+      if data.from and not data.from.dead then
+        if #data.from:getCardIds{Player.Hand, Player.Equip} < 3 then
+          data.from:throwAllCards("he")
+        else
+          room:askForDiscard(data.from, 2, 2, true, self.name, false, ".")
+        end
+      end
+    elseif judge.card.suit == Card.Spade then
+      if data.from and not data.from.dead then
+        data.from:turnOver()
+      end
+    end
+  end,
+}
+
+caiwenji:addSkill(beige)
+caiwenji:addSkill("duanchang")
+
+Fk:loadTranslationTable{
+  ["m_ex__caiwenji"] = "界蔡文姬",
+  ["m_ex__beige"] = "悲歌",
+  [":m_ex__beige"] = "当一名角色受到【杀】造成的伤害后，你可以弃置一张牌，令其进行判定，若结果为：<font color='red'>♥</font>，其回复X点体力（X为其本次受到的伤害值）；<font color='red'>♦</font>，其摸三张牌；♣，伤害来源弃置两张牌；♠，伤害来源翻面。",
+
+  ["$m_ex__beige1"] = "人多暴猛兮如虺蛇，控弦披甲兮为骄奢。",
+  ["$m_ex__beige2"] = "两拍张弦兮弦欲绝，志摧心折兮自悲嗟。",
+  ["$duanchang_m_ex__caiwenji1"] = "雁高飞兮邈难寻，空断肠兮思愔愔。",
+  ["$duanchang_m_ex__caiwenji2"] = "为天有眼兮，为何使我独飘流？",
+  ["~m_ex__caiwenji"] = "今别子兮归故乡，旧怨平兮新怨长！",
 }
 
 return extension

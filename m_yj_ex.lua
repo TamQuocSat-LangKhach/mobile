@@ -1345,7 +1345,7 @@ local m_ex__mieji = fk.CreateActiveSkill{
       table.insert(choices, "m_ex__mieji_handovertrick")
     end
     if table.find(target:getCardIds({Player.Hand, Player.Equip}), function(cid)
-    return Fk:getCardById(cid).type ~= Card.TypeTrick and not target:prohibitDiscard(card) end) then
+    return Fk:getCardById(cid).type ~= Card.TypeTrick and not target:prohibitDiscard(Fk:getCardById(cid)) end) then
       table.insert(choices, "m_ex__mieji_dis2card")
     end
     if #choices == 0 then return end

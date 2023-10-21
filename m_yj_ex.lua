@@ -1099,7 +1099,7 @@ local m_ex__jiangchi_targetmod = fk.CreateTargetModSkill{
   end,
 }
 local m_ex__jiangchi_prohibit = fk.CreateProhibitSkill{
-  name = "#local m_ex__jiangchi_prohibit",
+  name = "#m_ex__jiangchi_prohibit",
   prohibit_use = function(self, player, card)
     return player:getMark("@@m_ex__jiangchi_prohibit-phase") > 0 and card.trueName == "slash"
   end,

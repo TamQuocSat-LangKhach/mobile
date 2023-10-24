@@ -449,7 +449,7 @@ local m_ex__jieyue = fk.CreateTriggerSkill{
     local _, ret = room:askForUseActiveSkill(to, "m_ex__jieyue_select", "#m_ex__jieyue-select:" .. player.id, true)
     if ret then
       local cards = table.filter(to:getCardIds{Player.Hand, Player.Equip}, function (id)
-        return not (table.contains(ret.cards, id) or to:prohibitDiscard(id))
+        return not (table.contains(ret.cards, id) or to:prohibitDiscard(Fk:getCardById(id)))
       end)
       if #cards > 0 then
         room:throwCard(cards, self.name, to)

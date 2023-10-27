@@ -2930,4 +2930,120 @@ Fk:loadTranslationTable{
   ["~mobile__guozhao"] = "不觉泪下……沾衣裳……",
 }
 
+local mobile__sufei = General(extension, "mobile__sufei", "wu", 4)
+local zhengjian = fk.CreateTriggerSkill{
+  name = "zhengjian",
+  anim_type = "support",
+  frequency = Skill.Compulsory,
+  events = {fk.TurnStart, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self.name) then
+      if event == fk.EventPhaseStart then
+        return player.phase == Player.Finish and table.find(player.room.alive_players, function(p) return type(p:getMark("@zhengjian")) == "number" and p:getMark("@zhengjian") == 0 end)
+      else
+        return table.find(player.room.alive_players, function(p) return not (type(p:getMark("@zhengjian")) == "number" and p:getMark("@zhengjian") == 0) end)
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      local targets = table.filter(player.room.alive_players, function(p) return type(p:getMark("@zhengjian")) == "number" and p:getMark("@zhengjian") == 0 end)
+      local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#zhengjian-choose", self.name, false)
+      local to = room:getPlayerById(tos[1])
+      room:setPlayerMark(to, "@zhengjian", "0")
+    else
+      for _, p in ipairs(room.alive_players) do
+        local mark = type(p:getMark("@zhengjian")) == "number" and p:getMark("@zhengjian") or 0
+        room:setPlayerMark(p, "@zhengjian", 0)
+        if mark > 0 then
+          local x = math.min(mark, p.maxHp, 5)
+          p:drawCards(x, self.name)
+        end
+      end
+    end
+  end,
+  refresh_events = {fk.CardUsing, fk.CardResponding, fk.Deathed},
+  can_refresh = function (self, event, target, player, data)
+    if event == fk.Deathed then
+      return not table.find(player.room.alive_players, function(p) return p:hasSkill(self.name,true) end)
+    else
+      return target == player and not (type(player:getMark("@zhengjian")) == "number" and player:getMark("@zhengjian") == 0)
+    end
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local room = player.room
+    if event == fk.Deathed then
+      for _, p in ipairs(room.alive_players) do
+        room:setPlayerMark(p, "@zhengjian", 0)
+      end
+    else
+      local mark = type(player:getMark("@zhengjian")) == "number" and player:getMark("@zhengjian") or 0
+      room:setPlayerMark(player, "@zhengjian", math.min(5,mark+1))
+    end
+  end,
+}
+mobile__sufei:addSkill(zhengjian)
+local gaoyuan = fk.CreateTriggerSkill{
+  name = "gaoyuan",
+  anim_type = "defensive",
+  events = {fk.TargetConfirming},
+  can_trigger = function(self, event, target, player, data)
+    local room = player.room
+    if target == player and player:hasSkill(self.name) and data.card.trueName == "slash" then
+      return table.find(room:getOtherPlayers(player), function (p)
+        return p.id ~= data.from and not room:getPlayerById(data.from):isProhibited(p, data.card) and not (type(p:getMark("@zhengjian")) == "number" and p:getMark("@zhengjian") == 0)
+      end)
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(room:getOtherPlayers(player), function (p)
+      return p.id ~= data.from and not room:getPlayerById(data.from):isProhibited(p, data.card) and not (type(p:getMark("@zhengjian")) == "number" and p:getMark("@zhengjian") == 0)
+    end)
+    if #targets == 0 then
+      return false
+    elseif #targets == 1 then
+      local card = room:askForDiscard(player, 1, 1, true, self.name, true, ".", "#gaoyuan-invoke:"..targets[1].id)
+      if #card > 0 then
+        self.cost_data = {targets[1].id, card[1]}
+        return true
+      end
+    else
+      local tos, cid = room:askForChooseCardAndPlayers(player, targets, 1, 1, nil, "#gaoyuan-choose", self.name, true, true)
+      if #tos > 0 then
+        self.cost_data = {tos[1], cid}
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = self.cost_data[1]
+    room:doIndicate(player.id, { to })
+    room:throwCard(self.cost_data[2], self.name, player, player)
+    TargetGroup:removeTarget(data.targetGroup, player.id)
+    TargetGroup:pushTargets(data.targetGroup, to)
+  end,
+}
+mobile__sufei:addSkill(gaoyuan)
+Fk:loadTranslationTable{
+  ["mobile__sufei"] = "苏飞",
+  ["zhengjian"] = "诤荐",
+  [":zhengjian"] = "锁定技，结束阶段，你令一名角色获得“诤荐”标记，然后其于你的下个回合开始时摸X张牌并移去“诤荐”标记（X为其此期间使用或打出牌的数量且至多为其体力上限且至多为5）。",
+  ["@zhengjian"] = "诤荐",
+  ["#zhengjian-choose"] = "选择“诤荐”的目标",
+  ["gaoyuan"] = "告援",
+  [":gaoyuan"] = "当你成为一名角色使用【杀】的目标时，你可以弃置一张牌，将此【杀】转移给另一名有“诤荐”标记的其他角色。",
+  ["#gaoyuan-choose"] = "告援：你可以弃置一张牌，将此【杀】转移给一名有“诤荐”标记的其他角色",
+  ["#gaoyuan-invoke"] = "告援：你可以弃置一张牌，将此【杀】转移给%src",
+
+
+  ["$zhengjian1"] = "此人有雄猛逸才，还请明公观之。",
+  ["$zhengjian2"] = "若明公得此人才，定当如虎添翼。",
+  ["$gaoyuan1"] = "烦请告知兴霸，请他务必相助。",
+  ["$gaoyuan2"] = "如今事急，唯有兴霸可救。",
+  ["~mobile__sufei"] = "本可共图大业，奈何主公量狭器小啊……",
+}
+
 return extension

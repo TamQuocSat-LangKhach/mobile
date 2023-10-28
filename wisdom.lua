@@ -823,4 +823,91 @@ Fk:loadTranslationTable{
 
 godxunyu:addSkill(dinghan)
 
+
+local mobile__bianfuren = General(extension, "mobile__bianfuren", "wei", 3, 3, General.Female)
+local mobile__wanwei = fk.CreateActiveSkill{
+  name = "mobile__wanwei",
+  anim_type = "support",
+  prompt = "#mobile__wanwei-promot",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  card_num = 0,
+  card_filter = Util.FalseFunc,
+  target_num = 1,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    local x = player.hp
+    room:recover({ who = target, num = x+1, recoverBy = player, skillName = self.name })
+    room:loseHp(player, x, self.name)
+  end
+}
+local mobile__wanwei_trigger = fk.CreateTriggerSkill{
+  name = "#mobile__wanwei_trigger",
+  anim_type = "support",
+  events = {fk.EnterDying},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target ~= player and player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  on_cost = function (self, event, target, player, data)
+    local n = math.max(1-target.hp,player.hp+1)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#mobile__wanwei-invoke::"..target.id..":"..n..":"..player.hp)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local n = math.max(1-target.hp,player.hp+1)
+    room:recover({ who = target, num = n, recoverBy = player, skillName = self.name })
+    room:loseHp(player, player.hp, self.name)
+  end,
+}
+mobile__wanwei:addRelatedSkill(mobile__wanwei_trigger)
+mobile__bianfuren:addSkill(mobile__wanwei)
+local mobile__yuejian = fk.CreateTriggerSkill{
+  name = "mobile__yuejian",
+  anim_type = "defensive",
+  events = {fk.EnterDying},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self.name) and target == player and #player:getCardIds("he") > 1
+  end,
+  on_cost = function (self, event, target, player, data)
+    return #player.room:askForDiscard(player, 2, 2, true,self.name,true,".","#mobile__yuejian-invoke") == 2
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:recover({ who = target, num = 1, recoverBy = player, skillName = self.name })
+  end,
+}
+local mobile__yuejian_maxcards = fk.CreateMaxCardsSkill{
+  name = "#mobile__yuejian_maxcards",
+  fixed_func = function(self, player)
+    if player:hasSkill(self.name) then
+      return player.maxHp
+    end
+  end
+}
+mobile__yuejian:addRelatedSkill(mobile__yuejian_maxcards)
+mobile__bianfuren:addSkill(mobile__yuejian)
+Fk:loadTranslationTable{
+  ["mobile__bianfuren"] = "卞夫人",
+
+  ["mobile__wanwei"] = "挽危",
+  [":mobile__wanwei"] = "每轮限一次，当一名其他角色进入濒死状态时，或出牌阶段内你可以选择一名其他角色，你可以令其回复X+1点体力（若不足使其脱离濒死，改为回复至1点体力），然后你失去X点体力（X为你的体力值）。",
+  ["#mobile__wanwei-invoke"] = "挽危：你可以令%dest回复%arg点体力，然后你失去%arg2点体力",
+  ["#mobile__wanwei_trigger"] = "挽危",
+  ["#mobile__wanwei-promot"] = "挽危：令一名其他角色回复X+1点体力，然后你失去X点体力（X为你的体力值）",
+  ["mobile__yuejian"] = "约俭",
+  [":mobile__yuejian"] = "①你的手牌上限等于体力上限；②当你进入濒死状态时，你可以弃置两张牌，回复1点体力。",
+  ["#mobile__yuejian-invoke"] = "约俭：你可以弃两张牌，回复1点体力",
+  
+  ["$mobile__wanwei1"] = "事已至此，当思后策。",
+  ["$mobile__wanwei2"] = "休养生息，无碍徐图天下。",
+  ["$mobile__yuejian1"] = "后宫节用，可树德于外。",
+  ["$mobile__yuejian2"] = "减损之益，不亚多得。",
+  ["~mobile__bianfuren"] = "孟德大人，妾身可以再伴你身边了……",
+}
+
+
 return extension

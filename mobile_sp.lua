@@ -1982,17 +1982,18 @@ local xunde = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local judge = {
+    local judge = { 
       who = player,
       reason = self.name,
       pattern = ".",
       skipDrop = true,
-    }
+    } ---@type JudgeStruct
     room:judge(judge)
-    if data.card.number >= 6 and target ~= player and not target.dead and room:getCardArea(data.card:getEffectiveId()) == Card.Processing then
+    if judge.card.number >= 6 and target ~= player and not target.dead and room:getCardArea(judge.card:getEffectiveId()) == Card.Processing then
       room:doIndicate(player.id, {target.id})
-      room:obtainCard(target, data.card, true, fk.ReasonJustMove)
-    elseif data.card.number <= 6 and data.from and not data.from.dead and not data.from:isKongcheng() then
+      room:obtainCard(target, judge.card, true, fk.ReasonJustMove)
+    end
+    if judge.card.number <= 6 and data.from and not data.from.dead and not data.from:isKongcheng() then
       room:doIndicate(player.id, {data.from.id})
       room:askForDiscard(data.from, 1, 1, false, self.name, false)
     end
@@ -2007,7 +2008,7 @@ local chenjie = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local card = player.room:askForResponse(player, "", ".|.|"..data.card:getSuitString(),
-      "#chenjie-invoke::"..target.id..":"..data.card:getSuitString(), true)
+      "#chenjie-invoke::"..target.id..":"..data.card:getSuitString(true)..":"..data.reason, true)
     if card then
       self.cost_data = card
       return true
@@ -2028,7 +2029,7 @@ Fk:loadTranslationTable{
   ["chenjie"] = "臣节",
   [":chenjie"] = "当一名角色的判定牌生效前，你可以打出一张与判定牌相同花色的牌代替之，然后你摸两张牌。",
   ["#xunde-invoke"] = "勋德：%dest 受到伤害，你可以判定，根据点数执行效果",
-  ["#chenjie-invoke"] = "臣节：你可以打出一张%arg牌修改 %dest 的判定并摸两张牌",
+  ["#chenjie-invoke"] = "臣节：你可以打出一张%arg牌修改 %dest 的 %arg2 判定并摸两张牌",
 
   ["$xunde1"] = "陛下所托，臣必尽心尽力！",
   ["$xunde2"] = "纵吾荏弱难持，亦不推诿君命！",

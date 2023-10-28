@@ -39,7 +39,7 @@ local qingjue = fk.CreateTriggerSkill{
     if pindian.results[target.id].winner == player then
       --do nothing
     else
-      if data.card.skill:targetFilter(player.id, {}, {}, data.card) then
+      if player and data.card.skill:targetFilter(player.id, {}, {}, data.card) then
         if data.card.trueName == "collateral" then
           if target.dead then return end
           local victim = room:askForChoosePlayers(target, table.map(table.filter(room:getOtherPlayers(player), function(p)

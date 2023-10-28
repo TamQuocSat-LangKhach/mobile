@@ -489,7 +489,7 @@ local xunyi = fk.CreateTriggerSkill{
     player:broadcastSkillInvoke(self.name)
     if event == fk.GameStart then
       room:notifySkillInvoked(player, self.name, "special")
-      local targets = table.map(room:getOtherPlayers(player), function(p) return p.id end)
+      local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
       local tos = room:askForChoosePlayers(player, targets, 1, 1, "#xunyi-choose", self.name, false, false)
       local to
       if #tos > 0 then
@@ -522,7 +522,7 @@ local xunyi = fk.CreateTriggerSkill{
     elseif event == fk.Death then
       room:notifySkillInvoked(player, self.name, "special")
       room:setPlayerMark(player, self.name, 0)
-      local targets = table.map(room:getOtherPlayers(player), function(p) return p.id end)
+      local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
       local to = room:askForChoosePlayers(player, targets, 1, 1, "#xunyi-choose", self.name, true, false)
       if #to > 0 then
         room:setPlayerMark(room:getPlayerById(to[1]), "@@xunyi", 1)
@@ -616,7 +616,7 @@ local chuhai = fk.CreateActiveSkill{
           player.room:moveCards({
             ids = toObtain,
             to = player.id,
-            toArea = Player.Hand,
+            toArea = Card.PlayerHand,
             moveReason = fk.ReasonPrey,
             proposer = player.id,
             skillName = self.name,
@@ -774,7 +774,7 @@ local zhangming = fk.CreateTriggerSkill{
       player.room:moveCards({
         ids = toObtain,
         to = player.id,
-        toArea = Player.Hand,
+        toArea = Card.PlayerHand,
         moveReason = fk.ReasonPrey,
         proposer = player.id,
         skillName = "zhangming_draw",
@@ -1113,7 +1113,7 @@ local mobile__mingfa = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-      return not p:isKongcheng() end), function(p) return p.id end)
+      return not p:isKongcheng() end), Util.IdMapper)
     local to, card =  room:askForChooseCardAndPlayers(player, targets, 1, 1, ".|.|.|hand", "#mobile__mingfa-invoke", self.name, true)
     if #to > 0 and card then
       self.cost_data = {to[1], card}

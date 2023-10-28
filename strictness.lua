@@ -41,7 +41,7 @@ local function RewardZhengsu(player, target, reward, skillName)
       room:recover({
         who = target,
         num = 1,
-        recoverBy = target.id,
+        recoverBy = target,
         skillName = skillName
       })
     end

@@ -667,7 +667,7 @@ local m_ex__xuanfeng = fk.CreateTriggerSkill{
     if self.cost_data == "m_ex__xuanfeng_discard" then
       for i = 1, 2, 1 do
         local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-          return not p:isNude() end), function (p) return p.id end)
+          return not p:isNude() end), Util.IdMapper)
         if #targets == 0 then return end
         local tos = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__xuanfeng-discard", self.name, true)
         if #tos == 0 then return end

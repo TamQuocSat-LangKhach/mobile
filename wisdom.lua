@@ -213,7 +213,7 @@ local qinzheng = fk.CreateTriggerSkill{
       player.room:moveCards({
         ids = toObtain,
         to = player.id,
-        toArea = Player.Hand,
+        toArea = Card.PlayerHand,
         moveReason = fk.ReasonPrey,
         proposer = player.id,
         skillName = self.name,

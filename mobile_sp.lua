@@ -3334,6 +3334,8 @@ local qiaosi = fk.CreateActiveSkill{
       end
     end
 
+    if #cards == 0 then return end
+
     room:sendLog {
       type = "#qiaosi_log",
       card = cards,

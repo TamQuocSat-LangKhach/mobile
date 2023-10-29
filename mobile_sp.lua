@@ -3209,6 +3209,187 @@ Fk:loadTranslationTable{
   ["~pengyang"] = "招祸自咎，无不自己……",
 }
 
+local majun = General(extension, "majun", "wei", 3)
+local majunwin = fk.CreateActiveSkill{ name = "majun_win_audio" }
+majunwin.package = extension
+Fk:addSkill(majunwin)
 
+local jingxie_list = { "crossbow", "eight_diagram", "nioh_shield", "silver_lion", "vine" }
+local jingxie = fk.CreateActiveSkill{
+  name = "jingxie",
+  anim_type = "support",
+  card_filter = function(self, to_select, selected, targets)
+    if #selected == 1 then return false end
+    return table.contains(jingxie_list, Fk:getCardById(to_select).name)
+  end,
+  card_num = 1,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    local card = Fk:getCardById(effect.cards[1])
+    local ex_card = room:printCard("ex_" .. card.name, card.suit, card.number)
+
+    from:showCards(card)
+    room:moveCardTo(card, Card.Void, nil, nil, self.name, nil, true, effect.from)
+    room:obtainCard(from, ex_card.id, true)
+  end,
+}
+local jingxie_trig = fk.CreateTriggerSkill{
+  name = "#jingxie_trig",
+  main_skill = jingxie,
+  events = {fk.AskForPeaches},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill("jingxie") and player.dying
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local cards = room:askForCard(player, 1, 1, true, "jingxie", true,
+      ".|.|.|.|.|armor", "#jingxie-recast")
+
+    if cards[1] then
+      self.cost_data = cards
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:broadcastSkillInvoke("jingxie")
+    room:notifySkillInvoked(player, "jingxie")
+    room:recastCard(self.cost_data, player, "jingxie")
+    room:recover{
+      who = player,
+      num = 1 - player.hp,
+      recoverBy = player,
+      skillName = self.name,
+    }
+  end,
+}
+jingxie:addRelatedSkill(jingxie_trig)
+majun:addSkill(jingxie)
+local qiaosi_choices = {
+  "qiaosi_figure1",
+  "qiaosi_figure2",
+  "qiaosi_figure3",
+  "qiaosi_figure4",
+  "qiaosi_figure5",
+  "qiaosi_figure6",
+  "qiaosi_abort",
+}
+local qiaosi = fk.CreateActiveSkill{
+  name = "qiaosi",
+  anim_type = "drawcard",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    local choices = table.simpleClone(qiaosi_choices)
+    local choosed = {}
+    while #choosed < 3 do
+      local choice = room:askForChoice(from, choices, "qiaosi_baixitu", nil, false, qiaosi_choices)
+      table.removeOne(choices, choice)
+      if choice == "qiaosi_abort" then
+        break
+      else
+        table.insert(choosed, choice)
+      end
+    end
+
+    local cards = {}
+    for _, choice in ipairs(choosed) do
+      local id_neg = "^(" .. table.concat(cards, ",") .. ")"
+      if choice:endsWith("1") then
+        table.insertTable(cards, room:getCardsFromPileByRule(
+          ".|.|.|.|.|equip|" .. id_neg, 2, "allPiles"))
+
+      elseif choice:endsWith("2") then
+        if table.contains(choosed, "qiaosi_figure6") or math.random() > 0.75 then
+          local name = math.random() < 0.75 and "analeptic" or "slash"
+          table.insertTable(cards, room:getCardsFromPileByRule(
+            name .. "|.|.|.|.|.|" .. id_neg, 1, "allPiles"))
+
+        else
+          table.insertTable(cards, room:getCardsFromPileByRule(
+            ".|.|.|.|.|equip|" .. id_neg, 1, "allPiles"))
+        end
+      elseif choice:endsWith("3") then
+        local name = math.random() > 0.75 and "analeptic" or "slash"
+        table.insertTable(cards, room:getCardsFromPileByRule(name .. "|.|.|.|.|.|" .. id_neg, 1, "allPiles"))
+      elseif choice:endsWith("4") then
+        local name = math.random() > 0.75 and "peach" or "jink"
+        table.insertTable(cards, room:getCardsFromPileByRule(name .. "|.|.|.|.|.|" .. id_neg, 1, "allPiles"))
+      elseif choice:endsWith("5") then
+        if table.contains(choosed, "qiaosi_figure1") or math.random() > 0.75 then
+          local name = math.random() < 0.75 and "peach" or "jink"
+          table.insertTable(cards, room:getCardsFromPileByRule(
+            name .. "|.|.|.|.|.|" .. id_neg, 1, "allPiles"))
+
+        else
+          table.insertTable(cards, room:getCardsFromPileByRule(
+            ".|.|.|.|.|trick|" .. id_neg, 1, "allPiles"))
+        end
+      elseif choice:endsWith("6") then
+        table.insertTable(cards, room:getCardsFromPileByRule(".|.|.|.|.|trick|" .. id_neg, 2, "allPiles"))
+      end
+    end
+
+    room:sendLog {
+      type = "#qiaosi_log",
+      card = cards,
+    }
+
+    local tmp = Fk:cloneCard("slash")
+    tmp:addSubcards(cards)
+    room:obtainCard(from, tmp, true)
+    local choice = room:askForChoice(from, { "qiaosi_give", "qiaosi_discard" }, self.name)
+    if choice == "qiaosi_discard" then
+      room:askForDiscard(from, #cards, #cards, true, self.name, false)
+    else
+      local all = from:getCardIds("he")
+      local to_give = #all > #cards and room:askForCard(from, #cards, #cards, true, self.name, false, nil, "#qiaosi-give:::" .. #cards) or all
+      local tgt = room:askForChoosePlayers(from, table.map(
+        room:getOtherPlayers(from), Util.IdMapper), 1, 1, "#qiaosi-give-choose", self.name, false)[1]
+
+      tmp = Fk:cloneCard("slash")
+      tmp:addSubcards(to_give)
+      room:obtainCard(room:getPlayerById(tgt), tmp, false, fk.ReasonGive)
+    end
+  end,
+}
+majun:addSkill(qiaosi)
+
+Fk:loadTranslationTable{
+  ["majun"] = "马钧",
+  ["jingxie"] = "精械",
+  [":jingxie"] = "①出牌阶段，你可以展示你手牌区或装备区里的一张【诸葛连弩】或"
+    .. "【八卦阵】或【仁王盾】或【白银狮子】或【藤甲】，然后升级此牌；"
+    .. "<br>②当你进入濒死状态时，你可以重铸一张防具牌，然后将体力值回复至1点。",
+  ["#jingxie-recast"] = "精械: 你可以重铸一张防具牌然后回复至1点体力",
+  ["qiaosi"] = "巧思",
+  [":qiaosi"] = "出牌阶段限一次，你可以表演一次“水转百戏图”，获得对应的牌，"
+    .. "然后你选择一项：1.弃置等量的牌；2.将等量的牌交给一名其他角色。（不足则全给/全弃）",
+
+  ["qiaosi_baixitu"] = "百戏图",
+  ["qiaosi_figure1"] = "王：两张锦囊",
+  ["qiaosi_figure2"] = "商：75%装备，25%杀/酒；选中“将”则必出杀/酒",
+  ["qiaosi_figure3"] = "工：75%杀，25%酒",
+  ["qiaosi_figure4"] = "农：75%闪，25%桃",
+  ["qiaosi_figure5"] = "士：75%锦囊，25%闪/桃；选中“王”则必出闪/桃",
+  ["qiaosi_figure6"] = "将：两张装备",
+  ["qiaosi_abort"] = "不转了",
+  ["#qiaosi_log"] = "巧思转出来的结果是：%card",
+  ["qiaosi_give"] = "交出等量张牌",
+  ["qiaosi_discard"] = "弃置等量张牌",
+  ["#qiaosi-give"] = "巧思：请选择要交出的 %arg 张牌",
+  ["#qiaosi-give-choose"] = "巧思：请选择要交给的目标",
+
+  ["$jingxie1"] = "军具精巧，方保无虞。",
+  ["$jingxie2"] = "巧则巧矣，未尽善也。",
+  ["$qiaosi1"] = "待我稍作思量，更益其巧。",
+  ["$qiaosi2"] = "虚争空言，不如思而试之。",
+  ["~majun"] = "衡石不用，美玉见诬啊！",
+  ["$majun_win_audio"] = "吾巧益于世间，真乃幸事！",
+}
 
 return extension

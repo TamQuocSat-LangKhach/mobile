@@ -3470,6 +3470,92 @@ Fk:loadTranslationTable{
   ["~dingyuan"] = "奉先何故心变，啊！",
 }
 
+local mobile__dengzhi = General(extension, "mobile__dengzhi", "shu", 3)
+local mobile__jimeng = fk.CreateTriggerSkill{
+  name = "mobile__jimeng",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Play and
+      table.find(player.room:getOtherPlayers(player), function(p) return not p:isNude() end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(room:getOtherPlayers(player), function (p) return not p:isNude() end)
+    if #targets > 0 then
+      local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#mobile__jimeng-choose:::"..player.hp, self.name, true)
+      if #tos > 0 then
+        self.cost_data = tos[1]
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    local id = room:askForCardChosen(player, to, "he", self.name)
+    room:obtainCard(player, id, false, fk.ReasonPrey)
+
+    if player.dead or player:isNude() or player.hp < 1 then return false end
+    local cards = room:askForCard(player, player.hp, player.hp, true, self.name, false, ".", "#mobile__jimeng-give::" .. to.id..":"..player.hp)
+    local dummy = Fk:cloneCard("slash")
+    dummy:addSubcards(cards)
+    room:obtainCard(to, dummy, false, fk.ReasonGive)
+  end,
+}
+local mobile__shuaiyan = fk.CreateTriggerSkill{
+  name = "mobile__shuaiyan",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and player.phase == Player.Discard and
+      table.find(player.room:getOtherPlayers(player), function(p) return not p:isNude() end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(room:getOtherPlayers(player), function (p) return not p:isNude() end)
+    if #targets > 0 then
+      local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#mobile__shuaiyan-choose", self.name, true)
+      if #tos > 0 then
+        self.cost_data = tos[1]
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:showCards(player:getCardIds(Player.Hand))
+    local to = room:getPlayerById(self.cost_data)
+    if not player.dead and not to:isNude() then
+      local c = room:askForCard(to, 1, 1, true, self.name, false, ".", "#mobile__shuaiyan-give::"..player.id)[1]
+      room:moveCardTo(c, Player.Hand, player, fk.ReasonGive, self.name, nil, false)
+    end
+  end,
+}
+mobile__dengzhi:addSkill(mobile__jimeng)
+mobile__dengzhi:addSkill(mobile__shuaiyan)
+
+Fk:loadTranslationTable{
+  ["mobile__dengzhi"] = "邓芝",
+  ["mobile__jimeng"] = "急盟",
+  [":mobile__jimeng"] = "出牌阶段开始时，你可以获得一名其他角色的一张牌，然后你交给该角色X张牌（X为你的体力值）。",
+  ["mobile__shuaiyan"] = "率言",
+  [":mobile__shuaiyan"] = "弃牌阶段开始时，若你的手牌数大于1，你可以展示所有手牌，令一名其他角色交给你一张牌。",
+
+  ["#mobile__jimeng-choose"] = "急盟：你可以获得一名其他角色的一张牌，然后交给其 %arg 张牌",
+  ["#mobile__jimeng-give"] = "急盟：交给 %dest %arg张牌",
+  ["#mobile__shuaiyan-choose"] = "率言：你可展示所有手牌，令一名其他角色交给你一张牌",
+  ["#mobile__shuaiyan-give"] = "率言：交给 %dest 一张牌",
+
+  ["$mobile__jimeng1"] = "曹魏已成鲸吞之势，还望连横抗之。",
+  ["$mobile__jimeng2"] = "主上幼弱，吾愿往重修吴好。",
+  ["$mobile__shuaiyan1"] = "天无二日，士无二主。",
+  ["$mobile__shuaiyan2"] = "吾言意欲为吴，非但为蜀也。",
+  ["~mobile__dengzhi"] = "一生为国，已然无憾矣。",
+}
+
+
+
 
 
 

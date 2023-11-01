@@ -3394,4 +3394,84 @@ Fk:loadTranslationTable{
   ["$majun_win_audio"] = "吾巧益于世间，真乃幸事！",
 }
 
+local dingyuan = General(extension, "dingyuan", "qun", 4)
+local beizhu = fk.CreateActiveSkill{
+  name = "beizhu",
+  mute = true,
+  card_num = 0,
+  card_filter = Util.FalseFunc,
+  target_num = 1,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    room:notifySkillInvoked(player, self.name, "control")
+    player:broadcastSkillInvoke(self.name, 1)
+    local ids = table.filter(target:getCardIds("h"), function(id) return Fk:getCardById(id).trueName == "slash" end)
+    if #ids > 0 then
+      room:askForCardsChosen(player, target, 0, 0, { card_data = { { "WatchHand", target:getCardIds("h") } } }, self.name)
+      player:broadcastSkillInvoke(self.name, 3)
+      room:setPlayerMark(player, "beizhu_slash", ids)
+      for _, id in ipairs(ids) do
+        local card = Fk:getCardById(id)
+        if room:getCardOwner(id) == target and room:getCardArea(id) == Card.PlayerHand and card.trueName == "slash" and not player.dead and not target:isProhibited(player, card) then
+          room:useCard({
+            from = target.id,
+            tos = {{player.id}},
+            card = card,
+          })
+        end
+      end
+    else
+      local card_data = {}
+      table.insert(card_data, { "$Hand", target:getCardIds("h") })
+      if #target:getCardIds("e") > 0 then
+        table.insert(card_data, { "$Equip", target:getCardIds("e") })
+      end
+      local throw = room:askForCardChosen(player, target, { card_data = card_data }, self.name)
+      room:throwCard({throw}, self.name, target, player)
+      player:broadcastSkillInvoke(self.name, 2)
+      local slash = room:getCardsFromPileByRule("slash")
+      if #slash > 0 and not target.dead and not player.dead and room:askForSkillInvoke(player, self.name, nil, "#beizhu-draw:"..target.id) then
+        room:obtainCard(target, slash[1], true, fk.ReasonDraw)
+      end
+    end
+  end,
+}
+local beizhu_trigger = fk.CreateTriggerSkill{
+  name = "#beizhu_trigger",
+  mute = true,
+  events = {fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill("beizhu") and data.card and type(player:getMark("beizhu_slash")) == "table" and table.contains(player:getMark("beizhu_slash"), data.card:getEffectiveId())
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, _, player, data)
+    player:drawCards(1, "beizhu")
+  end,
+}
+beizhu:addRelatedSkill(beizhu_trigger)
+dingyuan:addSkill(beizhu)
+Fk:loadTranslationTable{
+  ["dingyuan"] = "丁原",
+  ["beizhu"] = "备诛",
+  [":beizhu"] = "出牌阶段限一次，你可以观看一名其他角色的手牌。若其中有【杀】，则其对你依次使用这些【杀】（当你受到因此使用的【杀】造成的伤害后，你摸一张牌），否则你弃置其一张牌并可以令其从牌堆中获得一张【杀】。",
+  ["WatchHand"] = "观看手牌",
+  ["#beizhu-draw"] = "备诛：你可令 %src 从牌堆中获得一张【杀】",
+
+  ["$beizhu1"] = "检阅士卒，备将行之役。",
+  ["$beizhu2"] = "点选将校，讨乱汉之贼。",
+  ["$beizhu3"] = "敌贼势大，且暂勿力战。",
+  ["~dingyuan"] = "奉先何故心变，啊！",
+}
+
+
+
+
+
 return extension

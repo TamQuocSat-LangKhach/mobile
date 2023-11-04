@@ -65,7 +65,7 @@ local wisdomShanxi = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.EventPhaseStart, fk.HpRecover},
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self.name) then
+    if not player:hasSkill(self) then
       return false
     end
 
@@ -185,7 +185,7 @@ local qinzheng = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return
       target == player and
-      player:hasSkill(self.name) and
+      player:hasSkill(self) and
       not table.every({ 3, 5, 8 }, function(num)
         return player:getMark("@" .. self.name) % num ~= 0
       end)
@@ -223,7 +223,7 @@ local qinzheng = fk.CreateTriggerSkill{
 
   refresh_events = {fk.PreCardUse, fk.PreCardRespond},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and target == player
+    return player:hasSkill(self) and target == player
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "@" .. self.name, 1)
@@ -254,7 +254,7 @@ local wuku = fk.CreateTriggerSkill{
   events = {fk.CardUsing},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and player:getMark("@wuku") < 3 and data.card.type == Card.TypeEquip
+    return player:hasSkill(self) and player:getMark("@wuku") < 3 and data.card.type == Card.TypeEquip
   end,
   on_use = function(self, event, target, player)
     player.room:addPlayerMark(player, "@wuku")
@@ -276,7 +276,7 @@ local mobile__sanchen = fk.CreateTriggerSkill{
   frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.phase == Player.Finish and
+    return target == player and player:hasSkill(self) and player.phase == Player.Finish and
       player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   can_wake = function(self, event, target, player, data)
@@ -482,7 +482,7 @@ local tianyi = fk.CreateTriggerSkill{
     return 
       target == player and
       player.phase == Player.Start and
-      player:hasSkill(self.name) and
+      player:hasSkill(self) and
       player:usedSkillTimes(self.name, Player.HistoryGame) < 1
   end,
   can_wake = function(self, event, target, player, data)
@@ -675,7 +675,7 @@ local tianzuo = fk.CreateTriggerSkill{
   events = {fk.GameStart, fk.PreCardEffect},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self.name) then
+    if not player:hasSkill(self) then
       return false
     end
 
@@ -720,7 +720,7 @@ local lingce = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return
-      player:hasSkill(self.name) and
+      player:hasSkill(self) and
       not data.card:isVirtual() and
       (
         table.contains(zhinang, data.card.trueName) or
@@ -747,7 +747,7 @@ local dinghan = fk.CreateTriggerSkill{
   events = {fk.TargetConfirming, fk.TurnStart},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if target ~= player or not player:hasSkill(self.name) then
+    if target ~= player or not player:hasSkill(self) then
       return false
     end
 
@@ -851,7 +851,7 @@ local mobile__wanwei_trigger = fk.CreateTriggerSkill{
   anim_type = "support",
   events = {fk.EnterDying},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and target ~= player and player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+    return player:hasSkill(self) and target ~= player and player:usedSkillTimes(self.name, Player.HistoryRound) == 0
   end,
   on_cost = function (self, event, target, player, data)
     local n = math.max(1-target.hp,player.hp+1)
@@ -871,7 +871,7 @@ local mobile__yuejian = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.EnterDying},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and target == player and #player:getCardIds("he") > 1
+    return player:hasSkill(self) and target == player and #player:getCardIds("he") > 1
   end,
   on_cost = function (self, event, target, player, data)
     return #player.room:askForDiscard(player, 2, 2, true,self.name,true,".","#mobile__yuejian-invoke") == 2
@@ -883,7 +883,7 @@ local mobile__yuejian = fk.CreateTriggerSkill{
 local mobile__yuejian_maxcards = fk.CreateMaxCardsSkill{
   name = "#mobile__yuejian_maxcards",
   fixed_func = function(self, player)
-    if player:hasSkill(self.name) then
+    if player:hasSkill(self) then
       return player.maxHp
     end
   end

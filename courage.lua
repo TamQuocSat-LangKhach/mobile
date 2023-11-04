@@ -21,7 +21,7 @@ local qingjue = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.TargetSpecifying},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and target ~= player and #AimGroup:getAllTargets(data.tos) == 1 and
+    return player:hasSkill(self) and target ~= player and #AimGroup:getAllTargets(data.tos) == 1 and
       data.to ~= player.id and target.hp > player.room:getPlayerById(data.to).hp and
       not table.find(player.room.alive_players, function(p) return p.dying end) and
       player:usedSkillTimes(self.name, Player.HistoryRound) == 0
@@ -65,7 +65,7 @@ local fengjie = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name) then
+    if player:hasSkill(self) then
       if player.phase == Player.Start then
         return true
       elseif target.phase == Player.Finish then
@@ -189,7 +189,7 @@ local jungongNullified = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return
       target == player and
-      player:hasSkill(self.name) and
+      player:hasSkill(self) and
       table.contains(data.card.skillNames, "jungong") and
       not data.chain
   end,
@@ -204,10 +204,10 @@ local jungongNullified = fk.CreateTriggerSkill{
 local jungongBuff = fk.CreateTargetModSkill{
   name = "#jungong-buff",
   residue_func = function(self, player, skill, scope, card)
-    return (player:hasSkill(self.name) and card and table.contains(card.skillNames, jungong.name)) and 999 or 0
+    return (player:hasSkill(self) and card and table.contains(card.skillNames, jungong.name)) and 999 or 0
   end,
   distance_limit_func = function(self, player, skill, card)
-    return (player:hasSkill(self.name) and card and table.contains(card.skillNames, jungong.name)) and 999 or 0
+    return (player:hasSkill(self) and card and table.contains(card.skillNames, jungong.name)) and 999 or 0
   end,
 }
 
@@ -223,7 +223,7 @@ local dengli = fk.CreateTriggerSkill{
     return
       target == player and
       data.card.trueName == "slash" and
-      player:hasSkill(self.name) and
+      player:hasSkill(self) and
       (
         event == fk.TargetSpecified and
         (data.to ~= player.id and player.hp == player.room:getPlayerById(data.to).hp) or
@@ -255,7 +255,7 @@ local xiangzhen = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.PreCardEffect, fk.CardUseFinished},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name) and data.card.trueName == "savage_assault" then
+    if player:hasSkill(self) and data.card.trueName == "savage_assault" then
       if event == fk.PreCardEffect then
         return data.to == player.id
       else
@@ -311,7 +311,7 @@ local fangzong = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name)
+    return target == player and player:hasSkill(self)
       and player.phase == Player.Finish and player:getHandcardNum() < #player.room.alive_players
   end,
   on_use = function(self, event, target, player, data)
@@ -352,7 +352,7 @@ local xizhan = fk.CreateTriggerSkill{
   events = {fk.TurnStart},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    return player ~= target and not target.dead and player:hasSkill(self.name)
+    return player ~= target and not target.dead and player:hasSkill(self)
   end,
   on_cost = function(self, event, target, player, data)
     self.cost_data = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".", "#xizhan-invoke::"..target.id, true)
@@ -422,7 +422,7 @@ local quedi = fk.CreateTriggerSkill{
     return
       data.firstTarget and
       target == player and
-      player:hasSkill(self.name) and
+      player:hasSkill(self) and
       player:usedSkillTimes(self.name, Player.HistoryTurn) < (1 + player:getMark("choujue_buff-turn")) and
       table.contains({ "slash", "duel" }, data.card.trueName) and
       player.room:getPlayerById(data.to):isAlive()
@@ -513,7 +513,7 @@ local chuifengDefence = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and data.card and table.contains(data.card.skillNames, chuifeng.name)
+    return target == player and player:hasSkill(self) and data.card and table.contains(data.card.skillNames, chuifeng.name)
   end,
   on_cost = function(self, event, target, player, data)
     return true
@@ -559,7 +559,7 @@ local chongjian = fk.CreateViewAsSkill{
     useData.extra_data.chongjianUser = player.id
   end,
   enabled_at_response = function(self, player, cardResponsing)
-    return player:hasSkill(self.name) and not cardResponsing
+    return player:hasSkill(self) and not cardResponsing
   end,
 }
 Fk:loadTranslationTable{
@@ -638,7 +638,7 @@ local mobileChoujue = fk.CreateTriggerSkill{
   events = {fk.Deathed},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and data.damage and data.damage.from == player
+    return player:hasSkill(self) and data.damage and data.damage.from == player
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room

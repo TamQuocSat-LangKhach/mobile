@@ -93,7 +93,7 @@ local crossbowAudio = fk.CreateTriggerSkill{
   name = "#ex_crossbowAudio",
   refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and player.phase == Player.Play and
+    return target == player and player:hasSkill(self) and player.phase == Player.Play and
       data.card.trueName == "slash" and player:usedCardTimes("slash", Player.HistoryPhase) > 1
   end,
   on_refresh = function(self, event, target, player, data)
@@ -106,7 +106,7 @@ local crossbowSkill = fk.CreateTargetModSkill{
   name = "#ex_crossbow_skill",
   attached_equip = "ex_crossbow",
   bypass_times = function(self, player, skill, scope)
-    if player:hasSkill(self.name) and skill.trueName == "slash_skill"
+    if player:hasSkill(self) and skill.trueName == "slash_skill"
       and scope == Player.HistoryPhase then
       return true
     end
@@ -128,7 +128,7 @@ local eightDiagramSkill = fk.CreateTriggerSkill{
   attached_equip = "ex_eight_diagram",
   events = {fk.AskForCardUse, fk.AskForCardResponse},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and
+    return target == player and player:hasSkill(self) and
       (data.cardName == "jink" or (data.pattern and Exppattern:Parse(data.pattern):matchExp("jink|0|nosuit|none")))
   end,
   on_use = function(self, event, target, player, data)
@@ -177,7 +177,7 @@ local niohShieldSkill = fk.CreateTriggerSkill{
   events = {fk.PreCardEffect},
   can_trigger = function(self, event, target, player, data)
     local effect = data ---@type CardEffectEvent
-    return player.id == effect.to and player:hasSkill(self.name) and
+    return player.id == effect.to and player:hasSkill(self) and
       effect.card.trueName == "slash" and (effect.card.color == Card.Black or effect.card.suit == Card.Heart)
   end,
   on_use = function(_, _, _, player)
@@ -202,13 +202,13 @@ local vineSkill = fk.CreateTriggerSkill{
   events = {fk.PreCardEffect, fk.DamageInflicted, fk.BeforeChainStateChange},
   can_trigger = function(self, event, target, player, data)
     if event == fk.DamageInflicted then
-      return target == player and player:hasSkill(self.name) and
+      return target == player and player:hasSkill(self) and
         data.damageType == fk.FireDamage
     elseif event == fk.BeforeChainStateChange then
-      return target == player and player:hasSkill(self.name) and not player.chained
+      return target == player and player:hasSkill(self) and not player.chained
     end
     local effect = data ---@type CardEffectEvent
-    return player.id == effect.to and player:hasSkill(self.name) and
+    return player.id == effect.to and player:hasSkill(self) and
       (effect.card.name == "slash" or effect.card.name == "savage_assault" or
       effect.card.name == "archery_attack")
   end,
@@ -239,7 +239,7 @@ local silverLionSkill = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and data.damage > 1
+    return target == player and player:hasSkill(self) and data.damage > 1
   end,
   on_use = function(_, _, player, _, data)
     player.room:setEmotion(player, "./packages/maneuvering/image/anim/silver_lion")

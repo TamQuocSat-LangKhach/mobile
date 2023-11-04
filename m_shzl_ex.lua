@@ -55,7 +55,7 @@ local xingshang = fk.CreateTriggerSkill{
   anim_type = "drawcard",
   events = {fk.Death},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and not (target:isNude() and not player:isWounded())
+    return player:hasSkill(self) and not (target:isNude() and not player:isWounded())
   end,
   on_cost = function(self, event, target, player, data)
     local all_choices = {"m_ex__xingshang_obtain::" .. target.id, "recover", "Cancel"}
@@ -91,7 +91,7 @@ local fangzhu = fk.CreateTriggerSkill{
   anim_type = "masochism",
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name)
+    return target == player and player:hasSkill(self)
   end,
   on_cost = function(self, event, target, player, data)
     local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, 1, "#m_ex__fangzhu-choose:::"..player:getLostHp(), self.name, true)
@@ -167,7 +167,7 @@ local m_ex__jiezi = fk.CreateTriggerSkill{
   events = {fk.EventPhaseChanging},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name) and player ~= target and target and target.skipped_phases[Player.Draw] and
+    if player:hasSkill(self) and player ~= target and target and target.skipped_phases[Player.Draw] and
         player:usedSkillTimes(self.name, Player.HistoryTurn) < 1 then
       return data.to == Player.Play or data.to == Player.Discard or data.to == Player.Finish
     end
@@ -200,7 +200,7 @@ local tuntian = fk.CreateTriggerSkill{
   anim_type = "special",
   events = {fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name) and player.phase == Player.NotActive then
+    if player:hasSkill(self) and player.phase == Player.NotActive then
       for _, move in ipairs(data) do
         if move.from == player.id then
           for _, info in ipairs(move.moveInfo) do
@@ -224,7 +224,7 @@ local tuntian = fk.CreateTriggerSkill{
 
   refresh_events = {fk.FinishJudge},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and data.reason == self.name and player.room:getCardArea(data.card) == Card.Processing
+    return player:hasSkill(self) and data.reason == self.name and player.room:getCardArea(data.card) == Card.Processing
   end,
   on_refresh = function(self, event, target, player, data)
     if data.card.suit == Card.Heart then
@@ -237,7 +237,7 @@ local tuntian = fk.CreateTriggerSkill{
 local tuntian_distance = fk.CreateDistanceSkill{
   name = "#m_ex__tuntian_distance",
   correct_func = function(self, from, to)
-    if from:hasSkill(self.name) then
+    if from:hasSkill(self) then
       return -#from:getPile("dengai_field")
     end
   end,
@@ -294,7 +294,7 @@ local zhiji = fk.CreateTriggerSkill{
   frequency = Skill.Wake,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and
+    return target == player and player:hasSkill(self) and
       player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
       player.phase == Player.Start
   end,
@@ -347,7 +347,7 @@ local beige = fk.CreateTriggerSkill{
   anim_type = "masochism",
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self.name) and data.card and data.card.trueName == "slash" and not data.to.dead and not player:isNude()
+    return player:hasSkill(self) and data.card and data.card.trueName == "slash" and not data.to.dead and not player:isNude()
   end,
   on_cost = function(self, event, target, player, data)
     local card = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".", "#beige-invoke::"..target.id, true)

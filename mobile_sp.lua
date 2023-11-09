@@ -3554,7 +3554,79 @@ Fk:loadTranslationTable{
   ["~mobile__dengzhi"] = "一生为国，已然无憾矣。",
 }
 
-
+local mobile__dongcheng = General(extension, "mobile__dongcheng", "qun", 4)
+local chengzhao = fk.CreateTriggerSkill{
+  name = "chengzhao",
+  anim_type = "offensive",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) and target.phase == Player.Finish and not player:isKongcheng() and table.find(player.room:getOtherPlayers(player), function(p) return not p:isKongcheng() end) then
+      local n = 0
+      player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+        for _, move in ipairs(e.data) do
+          if move.toArea == Card.PlayerHand and move.to == player.id then
+            n = n + #move.moveInfo
+          end
+        end
+      end, Player.HistoryTurn)
+      return n >= 2
+    end
+  end,
+  on_cost = function (self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(player.room:getOtherPlayers(player), function(p) return not p:isKongcheng() end)
+    local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#chengzhao-choose", self.name, true)
+    if #tos > 0 then
+      self.cost_data = tos[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    local pindian = player:pindian({to}, self.name)
+    local winner = pindian.results[to.id].winner
+    if winner and winner == player then
+      room:useVirtualCard("slash", nil, player, to, self.name, true)
+    end
+  end,
+  refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
+  can_refresh = function(self, event, target, player, data)
+    if event == fk.TargetSpecified then
+      return target == player and data.card and table.contains(data.card.skillNames, self.name)
+    else
+      return data.extra_data and data.extra_data.chengzhaoNullified
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TargetSpecified then
+      room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
+      data.extra_data = data.extra_data or {}
+      data.extra_data.chengzhaoNullified = data.extra_data.chengzhaoNullified or {}
+      data.extra_data.chengzhaoNullified[tostring(data.to)] = (data.extra_data.chengzhaoNullified[tostring(data.to)] or 0) + 1
+    else
+      for key, num in pairs(data.extra_data.chengzhaoNullified) do
+        local p = room:getPlayerById(tonumber(key))
+        if p:getMark(fk.MarkArmorNullified) > 0 then
+          room:removePlayerMark(p, fk.MarkArmorNullified, num)
+        end
+      end
+      data.chengzhaoNullified = nil
+    end
+  end,
+}
+mobile__dongcheng:addSkill(chengzhao)
+Fk:loadTranslationTable{
+  ["mobile__dongcheng"] = "董承",
+  ["chengzhao"] = "承诏",
+  [":chengzhao"] = "一名角色的结束阶段，若你本回合获得过至少两张牌，你可以与一名其他角色拼点，若你赢，视为你对其使用一张无视防具的【杀】。",
+  ["#chengzhao-choose"] = "承诏：你可以与一名其他角色拼点，若你赢，视为你对其使用一张无视防具的【杀】",
+  
+  ["$chengzhao1"] = "定当为皇上诛杀首害！",
+  ["$chengzhao2"] = "此诏字字诛心，岂能不斩曹贼！",
+  ["~mobile__dongcheng"] = "九泉之下，我等着你曹贼到来！",
+}
 
 
 

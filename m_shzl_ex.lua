@@ -407,4 +407,145 @@ Fk:loadTranslationTable{
   ["~m_ex__caiwenji"] = "今别子兮归故乡，旧怨平兮新怨长！",
 }
 
+local m_ex__pangtong = General:new(extension, "m_ex__pangtong", "shu", 3)
+local m_ex__lianhuan = fk.CreateActiveSkill{
+  name = "m_ex__lianhuan",
+  mute = true,
+  card_num = 1,
+  min_target_num = 0,
+  prompt = "#m_ex__lianhuan",
+  can_use = function(self, player)
+    return not player:isKongcheng()
+  end,
+  card_filter = function(self, to_select, selected, selected_targets)
+    return #selected == 0 and Fk:getCardById(to_select).suit == Card.Club and Fk:currentRoom():getCardArea(to_select) ~= Player.Equip
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    if #selected_cards == 1 then
+      local card = Fk:cloneCard("iron_chain")
+      card:addSubcard(selected_cards[1])
+      return card.skill:canUse(Self, card) and card.skill:targetFilter(to_select, selected, selected_cards, card) and
+        not Self:isProhibited(Fk:currentRoom():getPlayerById(to_select), card)
+    end
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    player:broadcastSkillInvoke(self.name)
+    if #effect.tos == 0 then
+      room:notifySkillInvoked(player, self.name, "drawcard")
+      room:recastCard(effect.cards, player, self.name)
+    else
+      room:notifySkillInvoked(player, self.name, "control")
+      room:sortPlayersByAction(effect.tos)
+      room:useVirtualCard("iron_chain", effect.cards, player, table.map(effect.tos, Util.Id2PlayerMapper), self.name)
+    end
+  end,
+}
+local m_ex__lianhuan_trigger = fk.CreateTriggerSkill{
+  name = "#m_ex__lianhuan_trigger",
+  mute = true,
+  events = {fk.AfterCardTargetDeclared},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and data.card.name == "iron_chain" then
+      local current_targets = TargetGroup:getRealTargets(data.tos)
+      for _, p in ipairs(player.room.alive_players) do
+        if not table.contains(current_targets, p.id) and not player:isProhibited(p, data.card) and
+            data.card.skill:modTargetFilter(p.id, current_targets, data.from, data.card, true) then
+          return true
+        end
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local current_targets = TargetGroup:getRealTargets(data.tos)
+    local targets = {}
+    for _, p in ipairs(room.alive_players) do
+      if not table.contains(current_targets, p.id) and not player:isProhibited(p, data.card) and
+          data.card.skill:modTargetFilter(p.id, current_targets, data.from, data.card, true) then
+        table.insert(targets, p.id)
+      end
+    end
+    local tos = room:askForChoosePlayers(player, targets, 1, 1,
+    "#m_ex__lianhuan-choose:::"..data.card:toLogString(), self.name, true)
+    if #tos > 0 then
+      self.cost_data = tos[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    player:broadcastSkillInvoke(m_ex__lianhuan.name)
+    player.room:notifySkillInvoked(player, m_ex__lianhuan.name, "control")
+    TargetGroup:pushTargets(data.tos, self.cost_data)
+  end,
+}
+m_ex__lianhuan:addRelatedSkill(m_ex__lianhuan_trigger)
+m_ex__pangtong:addSkill(m_ex__lianhuan)
+local doNiepan = function (room, player)
+  player:throwAllCards("hej")
+  if player.dead then return end
+  player:drawCards(3, "m_ex__niepan")
+  if not player.dead and player:isWounded() then
+    room:recover({
+      who = player,
+      num = math.min(3, player.maxHp) - player.hp,
+      recoverBy = player,
+      skillName = "m_ex__niepan",
+    })
+  end
+  if not player.dead then
+    player:reset()
+  end
+end
+local m_ex__niepan = fk.CreateActiveSkill{
+  name = "m_ex__niepan",
+  anim_type = "defensive",
+  frequency = Skill.Limited,
+  target_num = 0,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  card_num = 0,
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    doNiepan (room, player)
+  end,
+}
+local m_ex__niepan_trigger = fk.CreateTriggerSkill{
+  name = "#m_ex__niepan_trigger",
+  mute = true,
+  main_skill = m_ex__niepan,
+  frequency = Skill.Limited,
+  events = {fk.AskForPeaches},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.dying and player:usedSkillTimes(m_ex__niepan.name, Player.HistoryGame) == 0
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:broadcastSkillInvoke(m_ex__niepan.name)
+    room:notifySkillInvoked(player, m_ex__niepan.name)
+    doNiepan (room, player)
+  end,
+}
+m_ex__niepan:addRelatedSkill(m_ex__niepan_trigger)
+m_ex__pangtong:addSkill(m_ex__niepan)
+Fk:loadTranslationTable{
+  ["m_ex__pangtong"] = "界庞统",
+  ["m_ex__lianhuan"] = "连环",
+  [":m_ex__lianhuan"] = "你可以将一张梅花手牌当【铁索连环】使用或重铸，你使用【铁索连环】时可以额外指定一个目标。",
+  ["#m_ex__lianhuan"] = "连环：你可以将一张梅花手牌当【铁索连环】使用或重铸",
+  ["#m_ex__lianhuan_trigger"] = "连环",
+  ["#m_ex__lianhuan-choose"] = "连环：你可以为 %arg 额外指定一个目标",
+  ["m_ex__niepan"] = "涅槃",
+  [":m_ex__niepan"] = "限定技，出牌阶段，或当你处于濒死状态时，你可以弃置你区域里所有的牌，摸三张牌，将体力值回复至3点，复原武将牌。",
+  ["#m_ex__niepan_trigger"] = "涅槃",
+  
+  ["$m_ex__lianhuan1"] = "将多兵众，不可以敌，使其自累，以杀其势。",
+  ["$m_ex__lianhuan2"] = "善用兵者，运巧必防损，立谋虑中变。",
+  ["$m_ex__niepan1"] = "凤凰折翅，涅槃再生。",
+  ["$m_ex__niepan2"] = "九天之志，展翅翱翔。",
+  ["~m_ex__pangtong"] = "落……凤……坡……",
+}
+
 return extension

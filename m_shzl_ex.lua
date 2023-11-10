@@ -2,8 +2,9 @@ local extension = Package("m_shzl_ex")
 extension.extensionName = "mobile"
 
 Fk:loadTranslationTable{
-  ["m_shzl_ex"] = "手杀界神话再临",
+  ["m_shzl_ex"] = "手杀-界神话再临",
 }
+
 local xunyu = General(extension, "m_ex__xunyu", "wei", 3)
 local m_ex__jieming = fk.CreateTriggerSkill{
   name = "m_ex__jieming",

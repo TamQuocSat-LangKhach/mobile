@@ -1,4 +1,5 @@
-local mobileSP = require "packages/mobile/mobile_sp"
+local mobile_rare = require "packages/mobile/mobile_rare"
+local mobile_sp = require "packages/mobile/mobile_sp"
 local wisdom = require "packages/mobile/wisdom"
 local sincerity = require "packages/mobile/sincerity"
 local benevolence = require "packages/mobile/benevolence"
@@ -9,7 +10,8 @@ local mYjEx = require "packages/mobile/m_yj_ex"
 local mobileDerived = require "packages/mobile/mobile_derived"
 
 return {
-  mobileSP,
+  mobile_rare,
+  mobile_sp,
   wisdom,
   sincerity,
   benevolence,

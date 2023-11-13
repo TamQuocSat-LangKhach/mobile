@@ -81,6 +81,104 @@ Fk:loadTranslationTable{
 }
 
 --SP7：陶谦 杨仪
+local taoqian = General(extension, "taoqian", "qun", 3)
+local zhaohuo = fk.CreateTriggerSkill{
+  name = "zhaohuo",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.EnterDying},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target ~= player and player.maxHp > 1
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local n = player.maxHp - 1
+    room:changeMaxHp(player, -n)
+    if not player.dead then
+      player:drawCards(n, self.name)
+    end
+  end,
+}
+taoqian:addSkill(zhaohuo)
+local yixiang = fk.CreateTriggerSkill{
+  name = "yixiang",
+  anim_type = "drawcard",
+  events = {fk.TargetConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target == player and player:usedSkillTimes(self.name, Player.HistoryTurn) < 1
+    and player.room:getPlayerById(data.from).hp > player.hp
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local names = {}
+    for _, id in ipairs(player:getCardIds("h")) do
+      table.insertIfNeed(names, Fk:getCardById(id).trueName)
+    end
+    local ids = table.filter(room.draw_pile, function (id) -- wait for fixing Exppattern
+      return Fk:getCardById(id).type == Card.TypeBasic and not table.contains(names, Fk:getCardById(id).trueName)
+    end)
+    if #ids > 0 then
+      room:obtainCard(player, table.random(ids), false, fk.ReasonPrey)
+    end
+  end,
+}
+taoqian:addSkill(yixiang)
+local yirang = fk.CreateTriggerSkill{
+  name = "yirang",
+  anim_type = "support",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target == player and player.phase == Player.Play
+  end,
+  on_cost = function (self, event, target, player, data)
+    local room = player.room
+    local ids,types = {},{}
+    for _, id in ipairs(player:getCardIds("he")) do
+      if Fk:getCardById(id).type ~= Card.TypeBasic then
+        table.insertIfNeed(types, Fk:getCardById(id).type)
+        table.insert(ids, id)
+      end
+    end
+    if #ids == 0 then return false end
+    local targets = table.filter(room.alive_players, function (p) return p.maxHp > player.maxHp end)
+    if #targets == 0 then return false end
+    local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#yirang-choose:::"..#types, self.name, true)
+    if #tos > 0 then
+      self.cost_data = {ids, tos[1], #types}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data[2])
+    local dummy = Fk:cloneCard("dilu")
+    dummy:addSubcards(self.cost_data[1])
+    room:obtainCard(to, dummy, false, fk.ReasonGive)
+    room:changeMaxHp(player, to.maxHp-player.maxHp)
+    if not player.dead and player:isWounded() then
+      room:recover { num = self.cost_data[3], skillName = self.name, who = player , recoverBy = player}
+    end
+  end,
+}
+taoqian:addSkill(yirang)
+Fk:loadTranslationTable{
+  ["taoqian"] = "陶谦",
+  ["zhaohuo"] = "招祸",
+  [":zhaohuo"] = "锁定技，当其他角色进入濒死状态时，若你的体力上限大于1，你将体力上限减至1点，然后你摸等同于体力上限减少数张牌。",
+  ["yixiang"] = "义襄",
+  [":yixiang"] = "每回合限一次，当你成为一名体力值大于你的角色使用牌的目标后，你可以从牌堆中随机获得一张你没有的基本牌。",
+  ["yirang"] = "揖让",
+  [":yirang"] = "出牌阶段开始时，你可以将所有非基本牌（至少一张）交给一名体力上限大于你的其他角色，然后你将体力上限增至与该角色相同并回复X点体力（X为你以此法交给其的牌中包含的类别数）。",
+  ["#yirang-choose"] = "揖让：可以将所有非基本牌交给一名体力上限大于你的角色，将体力上限增至与其相同并回复%arg体力",
+  
+  ["$zhaohuo1"] = "我获罪于天，致使徐州之民，受此大难！",
+  ["$zhaohuo2"] = "如此一来，徐州危矣……",
+  ["$yixiang1"] = "一方有难，八方应援。",
+  ["$yixiang2"] = "昔日有恩，还望此时来报。",
+  ["$yirang1"] = "明公切勿推辞！",
+  ["$yirang2"] = "万望明公可怜汉家城池为重！",
+  ["~taoqian"] = "悔不该差使小人，招此祸患。",
+}
 -- local yangyi = General(extension, "yangyi", "shu", 3)
 -- Fk:loadTranslationTable{
 --   ["yangyi"] = "杨仪",

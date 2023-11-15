@@ -1146,9 +1146,9 @@ local mobile__mingfa = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     if player == data.from then
-      data.fromCard.number = data.fromCard.number + 2
+      data.fromCard.number = math.min(13, data.fromCard.number + 2)
     elseif data.results[player.id] then
-      data.results[player.id].toCard.number = data.results[player.id].toCard.number + 2
+      data.results[player.id].toCard.number = math.min(13, data.results[player.id].toCard.number + 2)
     end
   end,
 }

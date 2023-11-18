@@ -317,8 +317,170 @@ Fk:loadTranslationTable{
 }
 
 --将星独具：星张辽 星张郃 星徐晃 星甘宁 星黄忠 星魏延 星周不疑
-local xingxuhuang = General(extension, "mxing__xuhuang", "qun", 4)
-local xingZhiyan = fk.CreateActiveSkill{
+--local zhangliao = General(extension, "mxing__zhangliao", "qun", 4)
+Fk:loadTranslationTable{
+  ["mxing__zhangliao"] = "星张辽",
+  ["weifeng"] = "威风",
+  [":weifeng"] = "锁定技，你于出牌阶段第一次使用【杀】或伤害类锦囊牌结算后，你选择其中一名没有“惧”的其他目标角色，令其获得此牌名的“惧”标记。"..
+  "有“惧”的角色受到伤害时，移除“惧”并执行效果：若造成伤害的牌名与“惧”相同，则此伤害+1；若不同，你获得其一张牌。准备阶段或你死亡时，移除所有“惧”。",
+}
+
+local zhanghe = General(extension, "mxing__zhanghe", "qun", 4)
+local zhilve = fk.CreateActiveSkill{
+  name = "zhilve",
+  anim_type = "offensive",
+  card_num = 0,
+  min_target_num = 1,
+  max_target_num = 2,
+  prompt = function (self, selected_cards, selected_targets)
+    return "#"..self.interaction.data
+  end,
+  interaction = function(self)
+    return UI.ComboBox {choices = {"zhilve1", "zhilve2"}}
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    local target = Fk:currentRoom():getPlayerById(to_select)
+    if self.interaction.data == "zhilve1" then
+      if #selected == 0 then
+        return #target:getCardIds("ej") > 0
+      elseif #selected == 1 then
+        local target1 = Fk:currentRoom():getPlayerById(selected[1])
+        return table.find((target1):getCardIds("ej"), function(id) return target1:canMoveCardInBoardTo(target, id) end)
+      else
+        return false
+      end
+    else
+      return #selected == 0 and to_select ~= Self.id and not Self:isProhibited(target, Fk:cloneCard("slash"))
+    end
+  end,
+  feasible = function (self, selected, selected_cards)
+    if self.interaction.data == "zhilve1" then
+      return #selected == 2
+    elseif self.interaction.data == "zhilve2" then
+      return #selected == 1
+    end
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    if self.interaction.data == "zhilve1" then
+      local targetOne = room:getPlayerById(effect.tos[1])
+      local targetTwo = room:getPlayerById(effect.tos[2])
+      local cards = {}
+      local cardsPosition = {}
+
+      for _, equipId in ipairs(targetOne:getCardIds(Player.Equip)) do
+        if targetOne:canMoveCardInBoardTo(targetTwo, equipId) then
+          table.insert(cards, equipId)
+        end
+      end
+      for _, equipId in ipairs(targetTwo:getCardIds(Player.Equip)) do
+        if targetTwo:canMoveCardInBoardTo(targetOne, equipId) then
+          table.insert(cards, equipId)
+        end
+      end
+
+      if #cards > 0 then
+        table.sort(cards, function(prev, next)
+          local prevSubType = Fk:getCardById(prev).sub_type
+          local nextSubType = Fk:getCardById(next).sub_type
+
+          return prevSubType < nextSubType
+        end)
+
+        for _, id in ipairs(cards) do
+          table.insert(cardsPosition, room:getCardOwner(id) == targetOne and 0 or 1)
+        end
+      end
+
+      for _, trickId in ipairs(targetOne:getCardIds(Player.Judge)) do
+        if targetOne:canMoveCardInBoardTo(targetTwo, trickId) then
+          table.insert(cards, trickId)
+          table.insert(cardsPosition, 0)
+        end
+      end
+      for _, trickId in ipairs(targetTwo:getCardIds(Player.Judge)) do
+        if targetTwo:canMoveCardInBoardTo(targetOne, trickId) then
+          table.insert(cards, trickId)
+          table.insert(cardsPosition, 1)
+        end
+      end
+
+      if #cards == 0 then return end
+
+      local firstGeneralName = targetOne.general + (targetOne.deputyGeneral ~= "" and ("/" .. targetOne.deputyGeneral) or "")
+      local secGeneralName = targetTwo.general + (targetTwo.deputyGeneral ~= "" and ("/" .. targetTwo.deputyGeneral) or "")
+
+      local data = {
+        cards = cards,
+        cardsPosition = cardsPosition,
+        generalNames = { firstGeneralName, secGeneralName },
+        playerIds = { targetOne.id, targetTwo.id }
+      }
+      local command = "AskForMoveCardInBoard"
+      room:notifyMoveFocus(player, command)
+      local result = room:doRequest(player, command, json.encode(data))
+
+      if result == "" then
+        local randomIndex = math.random(1, #cards)
+        result = { cardId = cards[randomIndex], pos = cardsPosition[randomIndex] }
+      else
+        result = json.decode(result)
+      end
+
+      local from, to
+      if result.pos == 0 then
+        from, to = targetOne, targetTwo
+      else
+        from, to = targetTwo, targetOne
+      end
+
+      room:loseHp(player, 1, self.name)
+      if not player.dead then
+        room:addPlayerMark(player, MarkEnum.AddMaxCardsInTurn, 1)
+      end
+
+      local cardToMove = room:getCardOwner(result.cardId):getVirualEquip(result.cardId) or Fk:getCardById(result.cardId)
+      room:moveCardTo(
+        cardToMove,
+        cardToMove.type == Card.TypeEquip and Player.Equip or Player.Judge,
+        to,
+        fk.ReasonPut,
+        self.name,
+        nil,
+        true,
+        player.id
+      )
+    else
+      room:loseHp(player, 1, self.name)
+      if not player.dead then
+        room:addPlayerMark(player, MarkEnum.AddMaxCardsInTurn, 1)
+        player:drawCards(1, self.name)
+      end
+      room:useVirtualCard("slash", nil, player, {room:getPlayerById(effect.tos[1])}, self.name, true)
+    end
+  end,
+}
+zhanghe:addSkill(zhilve)
+Fk:loadTranslationTable{
+  ["mxing__zhanghe"] = "星张郃",
+  ["zhilve"] = "知略",
+  [":zhilve"] = "出牌阶段限一次，你可以失去1点体力令你本回合手牌上限+1，并选择一项：1.移动场上一张牌；2.摸一张牌并视为使用一张无距离次数限制的【杀】。",
+  ["#zhilve1"] = "知略：选择移动牌的来源和目标",
+  ["#zhilve2"] = "知略：选择使用【杀】的目标",
+  ["zhilve1"] = "移动场上一张牌",
+  ["zhilve2"] = "摸一张牌并视为使用杀",
+
+  ["$zhilve1"] = "将者，上不制天，下不制地，中不制人。",
+  ["$zhilve2"] = "料敌之计，明敌之意，因况反制。",
+  ["~mxing__zhanghe"] = "若非小人作梗，何至官渡之败……",
+}
+
+local xuhuang = General(extension, "mxing__xuhuang", "qun", 4)
+local mxing__zhiyan = fk.CreateActiveSkill{
   name = "mxing__zhiyan",
   anim_type = "support",
   interaction = function(self)
@@ -367,18 +529,18 @@ local xingZhiyan = fk.CreateActiveSkill{
     end
   end,
 }
-local xingZhiyanProhibit = fk.CreateProhibitSkill{
+local mxing__zhiyanProhibit = fk.CreateProhibitSkill{
   name = "#mxing__zhiyan_prohibit",
   is_prohibited = function(self, from, to)
     return from:getMark("mxing__zhiyan_draw-phase") > 0 and from ~= to
   end,
 }
-xingZhiyan:addRelatedSkill(xingZhiyanProhibit)
-xingxuhuang:addSkill(xingZhiyan)
+mxing__zhiyan:addRelatedSkill(mxing__zhiyanProhibit)
+xuhuang:addSkill(mxing__zhiyan)
 Fk:loadTranslationTable{
   ["mxing__xuhuang"] = "星徐晃",
   ["mxing__zhiyan"] = "治严",
-  [":mxing__zhiyan"] = "出牌阶段每项各限一次，你可以：1.将手牌摸至体力上限，然后你于此阶段内不能对其他角色使用牌；2.将多于体力值数量的手牌交给一名其他角色。",
+  [":mxing__zhiyan"] = "出牌阶段每项各限一次，你可以：1.将手牌摸至体力上限，然后你于此阶段内不能对其他角色使用牌；2.将多于体力值的手牌交给一名其他角色。",
   ["mxing__zhiyan_draw"] = "将手牌摸至体力上限",
   ["mxing__zhiyan_give"] = "交给其他角色多于体力值的牌",
 
@@ -387,7 +549,17 @@ Fk:loadTranslationTable{
   ["~mxing__xuhuang"] = "唉，明主未遇，大功未成……",
 }
 
-local xinghuangzhong = General(extension, "mxing__huangzhong", "qun", 4)
+--local ganning = General(extension, "mxing__ganning", "qun", 4)
+Fk:loadTranslationTable{
+  ["mxing__ganning"] = "星甘宁",
+  ["jinfan"] = "锦帆",
+  [":jinfan"] = "弃牌阶段开始时，你可以将任意张手牌置于武将牌上，称为“铃”（每种花色限一张），你可以将“铃”如手牌般使用或打出；当“铃”离开你的武将牌时，"..
+  "你从牌堆获得一张同花色的牌。",
+  ["sheque"] = "射却",
+  [":sheque"] = "一名其他角色的准备阶段，若其装备区有牌，你可以对其使用一张无距离限制的【杀】，此【杀】无视防具。",
+}
+
+local huangzhong = General(extension, "mxing__huangzhong", "qun", 4)
 local shidi = fk.CreateTriggerSkill{
   name = "shidi",
   events = {fk.EventPhaseStart},
@@ -483,13 +655,14 @@ local qisheBuff = fk.CreateMaxCardsSkill{
 }
 shidi:addRelatedSkill(shidiBuff)
 qishe:addRelatedSkill(qisheBuff)
-xinghuangzhong:addSkill(shidi)
-xinghuangzhong:addSkill(yishi)
-xinghuangzhong:addSkill(qishe)
+huangzhong:addSkill(shidi)
+huangzhong:addSkill(yishi)
+huangzhong:addSkill(qishe)
 Fk:loadTranslationTable{
   ["mxing__huangzhong"] = "星黄忠",
   ["shidi"] = "势敌",
-  [":shidi"] = "锁定技，准备阶段开始时，转换为阳；结束阶段开始时，转换为阴；阳：你计算与其他角色的距离-1，且你使用的黑色【杀】不可被响应；阴：其他角色计算与你的距离+1，且你不可响应其他角色对你使用的红色【杀】。",
+  [":shidi"] = "锁定技，准备阶段开始时，转换为阳；结束阶段开始时，转换为阴；阳：你计算与其他角色的距离-1，且你使用的黑色【杀】不可被响应；"..
+  "阴：其他角色计算与你的距离+1，且你不可响应其他角色对你使用的红色【杀】。",
   ["xing__yishi"] = "义释",
   [":xing__yishi"] = "当你对其他角色造成伤害时，你可以令此伤害-1并获得其装备区里的一张牌。",
   ["qishe"] = "骑射",
@@ -611,6 +784,157 @@ Fk:loadTranslationTable{
   ["@@aosi-phase"] = "骜肆",
 
   ["~mxing__weiyan"] = "使君为何弃我而去……呃啊！",
+}
+
+local zhoubuyi = General(extension, "mxing__zhoubuyi", "wei", 3)
+local huiyao = fk.CreateActiveSkill{
+  name = "huiyao",
+  anim_type = "masochism",
+  card_num = 0,
+  target_num = 1,
+  prompt = "#huiyao",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    room:damage{
+      from = nil,
+      to = player,
+      damage = 1,
+      skillName = self.name,
+    }
+    if player.dead then return end
+    local targets = table.map(room:getOtherPlayers(target), Util.IdMapper)
+    local to = room:askForChoosePlayers(player, targets, 1, 1, "#huiyao-choose::"..target.id, self.name, false, true)
+    if #to > 0 then
+      to = to[1]
+    else
+      to = table.random(targets)
+    end
+    room:doIndicate(target.id, {to})
+
+    local logic = room.logic
+    local damageStruct = {
+      from = target,
+      to = room:getPlayerById(to),
+      damageType = fk.NormalDamage,
+      damage = 1,
+      skillName = self.name,
+    }
+
+    local stages = {
+      {fk.PreDamage, damageStruct.from},
+      {fk.DamageCaused, damageStruct.from},
+      {fk.DamageInflicted, damageStruct.to},
+    }
+    for _, struct in ipairs(stages) do
+      local event, p = table.unpack(struct)
+      if logic:trigger(event, p, damageStruct) or damageStruct.damage < 1 then
+        logic:breakEvent(false)
+      end
+    end
+    if damageStruct.to.dead then return false end
+    local damage_nature_table = {
+      [fk.NormalDamage] = "normal_damage",
+      [fk.FireDamage] = "fire_damage",
+      [fk.ThunderDamage] = "thunder_damage",
+      [fk.IceDamage] = "ice_damage",
+    }
+    room:sendLog{
+      type = "#Damage",
+      to = {damageStruct.from.id},
+      from = damageStruct.to.id,
+      arg = damageStruct.damage,
+      arg2 = damage_nature_table[damageStruct.damageType],
+    }
+    room:sendLogEvent("Damage", {
+      to = damageStruct.to.id,
+      damageType = damage_nature_table[damageStruct.damageType],
+      damageNum = damageStruct.damage,
+    })
+
+    stages = {
+      {fk.Damage, damageStruct.from},
+      {fk.Damaged, damageStruct.to},
+      {fk.DamageFinished, damageStruct.to},
+    }
+    for _, struct in ipairs(stages) do
+      local event, p = table.unpack(struct)
+      logic:trigger(event, p, damageStruct)
+    end
+
+    logic:trigger(fk.DamageFinished, damageStruct.to, damageStruct)
+
+    --[[local event = GameEvent:new(GameEvent.Damage)
+    event.parent = logic:getCurrentEvent()
+    logic.current_event_id = logic.current_event_id + 1
+    event.id = logic.current_event_id
+    event.data = event.data or {}
+    event.data[1] = damageStruct
+    logic.all_game_events[event.id] = event
+    logic.event_recorder[event.event] = logic.event_recorder[event.event] or {}
+    table.insert(logic.event_recorder[event.event], event)]]--
+  end,
+}
+local quesong = fk.CreateTriggerSkill{
+  name = "quesong",
+  anim_type = "support",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) and target.phase == Player.Finish then
+      return #player.room.logic:getEventsOfScope(GameEvent.ChangeHp, 1, function(e)
+        local damage = e.data[5]
+        return damage and player == damage.to
+      end, Player.HistoryTurn) > 0
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.map(room.alive_players, Util.IdMapper)
+    local to = room:askForChoosePlayers(player, targets, 1, 1, "#quesong-choose", self.name, true)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    local choices = {"yl_draw"}
+    if to:isWounded() then
+      table.insert(choices, "recover")
+    end
+    local choice = room:askForChoice(to, choices, self.name)
+    if choice == "yl_draw" then
+      to:drawCards(math.max(#to:getAvailableEquipSlots() - #to:getCardIds("e"), 1), self.name)
+    else
+      room:recover({
+        who = to,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
+  end,
+}
+zhoubuyi:addSkill(huiyao)
+zhoubuyi:addSkill(quesong)
+Fk:loadTranslationTable{
+  ["mxing__zhoubuyi"] = "星周不疑",
+  ["huiyao"] = "慧夭",
+  [":huiyao"] = "出牌阶段限一次，你可以受到1点无来源伤害并选择一名其他角色，<font color='red'>视为</font>其对你选择的另一名角色造成1点伤害。",
+  ["quesong"] = "雀颂",
+  [":quesong"] = "一名角色结束阶段，若你本回合受到过伤害，你可以令一名角色选择一项：1.摸X张牌并复原武将牌（X为其装备区空置栏位数，至少为1）"..
+  "回复1点体力。",
+  ["#huiyao"] = "慧夭：你可以受到1点无来源伤害，选择一名其他角色，令其<font color='red'>视为</font>造成伤害",
+  ["#huiyao-choose"] = "慧夭：选择一名角色，视为 %dest 对其造成1点伤害",
+  ["#quesong-choose"] = "雀颂：你可以令一名角色选择摸牌或回复体力",
 }
 
 return extension

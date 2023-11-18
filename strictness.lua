@@ -1,6 +1,8 @@
 local extension = Package("strictness")
 extension.extensionName = "mobile"
 
+local U = require "packages/utility/utility"
+
 Fk:loadTranslationTable{
   ["strictness"] = "手杀-始计篇·严",
 }
@@ -717,9 +719,7 @@ local mobile__shangyi = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     room:throwCard(effect.cards, self.name, player, player)
     if player.dead or target.dead or player:isKongcheng() or target:isKongcheng() then return end
-    room:fillAG(target, player:getCardIds("h"))
-    room:delay(3000)
-    room:closeAG(target)
+    U.viewCards(target, player:getCardIds("h"), self.name)
     local cards = table.simpleClone(target:getCardIds("h"))
     room:fillAG(player, cards)
     local id = room:askForAG(player, cards, false, self.name)

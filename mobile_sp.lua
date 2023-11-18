@@ -1258,9 +1258,7 @@ local zhujian = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return #Fk:currentRoom():getPlayerById(to_select):getCardIds(Player.Equip) > 0
   end,
@@ -1946,9 +1944,7 @@ local mobileYizheng = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
     return
@@ -2166,9 +2162,7 @@ local guanzong = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     return #selected < 2 and to_select ~= Self.id
   end,
@@ -2395,9 +2389,7 @@ local hannan = fk.CreateActiveSkill{
   can_use = function(self, player)
     return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
   end,
@@ -2449,9 +2441,7 @@ local shihe = fk.CreateActiveSkill{
   can_use = function(self, player)
     return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
   end,
@@ -2982,6 +2972,21 @@ Fk:loadTranslationTable{
   ["$chenjie1"] = "臣心怀二心，不可事君也。",
   ["$chenjie2"] = "竭力致身，以尽臣节。",
   ["~simafu"] = "身辅六公，亦难报此恩……",
+}
+
+Fk:loadTranslationTable{
+  ["mobile__liwei"] = "李遗",
+  ["mobile__jiaohua"] = "教化",
+  [":mobile__jiaohua"] = "出牌阶段限三次，你可以令一名角色从牌堆获得一张未以此法选择过的类别的牌；所有类别均被选择后，重置选择过的类别。",
+}
+
+Fk:loadTranslationTable{
+  ["laimin"] = "来敏",
+  ["laishou"] = "来寿",
+  [":laishou"] = "锁定技，当你受到致命伤害时，若你的体力上限小于9，防止此伤害并增加等量的体力上限。准备阶段，若你的体力上限不小于9，你死亡。",
+  ["luanqun"] = "乱群",
+  [":luanqun"] = "出牌阶段限一次，若你有手牌，你可以令所有角色同时展示一张手牌，然后你可以获得其中一张与你展示牌颜色相同的牌。令所有与你"..
+  "展示牌颜色不同的角色下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
 }
 
 return extension

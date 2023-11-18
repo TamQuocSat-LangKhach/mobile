@@ -503,8 +503,10 @@ local tianyi = fk.CreateTriggerSkill{
     local alivePlayerIds = table.map(room.alive_players, function(p)
       return p.id
     end)
-    local target = room:askForChoosePlayers(player, alivePlayerIds, 1, 1, "#mobile__tianyi-choose", self.name, true)[1]
-    room:handleAddLoseSkills(room:getPlayerById(target), "zuoxing")
+    local target = room:askForChoosePlayers(player, alivePlayerIds, 1, 1, "#mobile__tianyi-choose", self.name, true)
+    if #target > 0 then
+      room:handleAddLoseSkills(room:getPlayerById(target[1]), "zuoxing")
+    end
   end,
 
   refresh_events = {fk.Damage},

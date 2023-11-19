@@ -1387,6 +1387,114 @@ Fk:loadTranslationTable{
   ["#yizan2"] = "翊赞：你可以将一张基本牌当任意基本牌使用或打出",
 }
 
+local liuye = General(extension, "mobile__liuye", "wei", 3)
+local polu = fk.CreateTriggerSkill{
+  name = "polu",
+  anim_type = "control",
+  frequency = Skill.Compulsory,
+  events = {fk.TurnStart, fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.TurnStart then
+      if player:hasSkill(self) and target == player and #player:getAvailableEquipSlots(Card.SubtypeWeapon) > 0 then
+        return table.find(player.room.void, function(id) return Fk:getCardById(id).name == "mobile__catapult" end)
+      end
+    else
+      return player:hasSkill(self) and target == player and not table.find(player:getEquipments(Card.SubtypeWeapon), function(id) return Fk:getCardById(id).name == "mobile__catapult" end)
+    end
+  end,
+  on_trigger = function(self, event, target, player, data)
+    local n = (event == fk.TurnStart) and 1 or data.damage
+    for _ = 1, n do
+      if not player:hasSkill(self) then break end
+      self:doCost(event, target, player, data)
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TurnStart then
+      local id = table.find(player.room.void, function(id) return Fk:getCardById(id).name == "mobile__catapult" end)
+      if not id then return end
+      room:obtainCard(player, id, false, fk.ReasonPrey)
+      local card = Fk:getCardById(id)
+      if table.contains(player:getCardIds("h"), id) and U.canUseCardTo(room, player, player, card) then
+        room:useCard({from = player.id, tos = {{player.id}}, card = card})
+      end
+    else
+      player:drawCards(1, self.name)
+      if player.dead then return end
+      local ids = {}
+      for _, id in ipairs(room.draw_pile) do
+        if Fk:getCardById(id).sub_type == Card.SubtypeWeapon then table.insert(ids, id) end
+      end
+      if #ids == 0 then return end
+      local id = table.random(ids)
+      room:obtainCard(player, id, false, fk.ReasonPrey)
+      local card = Fk:getCardById(id)
+      if table.contains(player:getCardIds("h"), id) and U.canUseCardTo(room, player, player, card) then
+        room:useCard({from = player.id, tos = {{player.id}}, card = card})
+      end
+    end
+  end,
+}
+liuye:addSkill(polu)
+local choulue = fk.CreateTriggerSkill{
+  name = "choulue",
+  events = {fk.EventPhaseStart},
+  can_trigger = function (self, event, target, player, data)
+    return player:hasSkill(self) and target == player and player.phase == Player.Play
+  end,
+  on_cost = function (self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(room:getOtherPlayers(player), function (p) return not p:isNude() end)
+    if #targets > 0 then
+      local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#choulue-choose", self.name, true)
+      if #tos > 0 then
+        self.cost_data = tos[1]
+        return true
+      end
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    local cards = room:askForCard(to, 1, 1, true, self.name, true, ".", "#choulue-ask::"..player.id)
+    if #cards > 0 then
+      room:obtainCard(player, cards[1], false, fk.ReasonGive)
+      local name = player:getMark("@choulue")
+      if name ~= 0 then
+        U.askForUseVirtualCard(room, player, name, nil, self.name, nil, false)
+      end
+    end
+  end,
+
+  refresh_events = {fk.Damaged},
+  can_refresh = function(self, event, target, player, data)
+    return player:hasSkill(self,true) and target == player and data.card and data.card.subtype ~= Card.SubtypeDelayedTrick
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "@choulue", data.card.trueName)
+  end,
+}
+liuye:addSkill(choulue)
+
+Fk:loadTranslationTable{
+  ["mobile__liuye"] = "刘晔",
+  ["polu"] = "破橹",
+  [":polu"] = "锁定技，①回合开始时，你获得游戏外的【霹雳车】并使用之；②当你受到1点伤害后，若你的装备区里没有【霹雳车】，你摸一张牌，然后随机从牌堆中获得一张武器牌并使用之。。<br>"..
+  "<font color='grey'>【霹雳车】装备牌·武器<br /><b>攻击范围</b>：9<br /><b>武器技能</b>：当你对其他角色造成伤害后，你可以弃置其装备区内的所有牌。",
+  ["choulue"] = "筹略",
+  [":choulue"] = "出牌阶段开始时，你可以令一名其他角色选择是否交给你一张牌，若其执行，你可视为使用上一张除延时锦囊牌以外对你造成伤害的牌。",
+  ["#choulue-choose"] = "筹略：令一名其他角色选择是否交给你一张牌",
+  ["#choulue-ask"] = "筹略：你可以交给 %dest 一张牌，若交给，其可以转化牌",
+  ["@choulue"] = "筹略",
+
+  ["$polu1"] = "砲石飞空，坚垣难存。",
+  ["$polu2"] = "声若霹雳，人马俱摧。",
+  ["$choulue1"] = "筹画所料，无有不中。",
+  ["$choulue2"] = "献策破敌，所谋皆应。",
+  ["~mobile__liuye"] = "功名富贵，到头来，不过黄土一抔……",
+}
+
 local lifeng = General(extension, "lifeng", "shu", 3)
 local tunchu = fk.CreateTriggerSkill{
   name = "tunchu",

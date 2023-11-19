@@ -295,4 +295,35 @@ Fk:loadTranslationTable{
   [":ex_silver_lion"] = "装备牌·防具<br /><b>防具技能</b>：锁定技。每当你受到伤害时，若此伤害大于1点，防止多余的伤害。每当你失去装备区里的【照月狮子盔】后，你回复1点体力并摸两张牌。",
 }
 
+local mobile__catapult_skill = fk.CreateTriggerSkill{
+  name = "#mobile__catapult_skill",
+  attached_equip = "mobile__catapult",
+  events = {fk.Damage},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target == player and data.to ~= player and #data.to:getCardIds("e") > 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#mobile__catapult-invoke::"..data.to.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:throwCard(data.to:getCardIds("e"), self.name, data.to, player)
+  end,
+}
+Fk:addSkill(mobile__catapult_skill)
+local mobile__catapult = fk.CreateWeapon{
+  name = "&mobile__catapult",
+  suit = Card.Diamond,
+  number = 9,
+  attack_range = 9,
+  equip_skill = mobile__catapult_skill,
+}
+extension:addCard(mobile__catapult)
+Fk:loadTranslationTable{
+  ["mobile__catapult"] = "霹雳车",
+  [":mobile__catapult"] = "装备牌·武器<br /><b>攻击范围</b>：9<br /><b>武器技能</b>：当你对其他角色造成伤害后，你可以弃置其装备区内的所有牌。",
+  ["#mobile__catapult_skill"] = "霹雳车",
+  ["#mobile__catapult-invoke"] = "霹雳车：你可以弃置 %dest 装备区内的所有牌",
+}
+
 return extension

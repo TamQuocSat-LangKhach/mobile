@@ -707,9 +707,9 @@ local taomie = fk.CreateTriggerSkill{
       if event == fk.DamageCaused then
         return data.to:getMark("@@taomie") > 0
       elseif event == fk.Damage then
-        return not data.to.dead and data.to:getMark("@@taomie") == 0
+        return not data.to.dead and data.to:getMark("@@taomie") == 0 and not data.taomie
       elseif event == fk.Damaged then
-        return data.from and not data.from.dead and data.to:getMark("@@taomie") == 0 and not data.taomie
+        return data.from and not data.from.dead and data.from:getMark("@@taomie") == 0
       end
     end
   end,
@@ -2955,7 +2955,7 @@ local yichong = fk.CreateTriggerSkill{
       return target == player and player.phase == Player.Start
     elseif event == fk.AfterCardsMove then
       local mark = player:getMark("@yichong")
-      if type(mark) ~= "table" or mark[1] > 4 then return false end
+      if type(mark) ~= "table" or mark[1] > 0 then return false end
       mark = player:getMark("yichong_target")
       if type(mark) ~= "table" then return false end
       local room = player.room
@@ -2992,9 +2992,16 @@ local yichong = fk.CreateTriggerSkill{
       local to = room:getPlayerById(self.cost_data)
       local suits = {"log_spade", "log_club", "log_heart", "log_diamond"}
       local choice = room:askForChoice(player, suits, self.name)
-      local cards = table.filter(to:getCardIds({Player.Hand, Player.Equip}), function (id)
+      local cards = table.filter(to:getCardIds({Player.Equip}), function (id)
         return Fk:getCardById(id):getSuitString(true) == choice
       end)
+      local hand = to:getCardIds("h")
+      for _, id in ipairs(hand) do
+        if Fk:getCardById(id):getSuitString(true) == choice then
+          table.insert(cards, id)
+          break
+        end
+      end
       if #cards > 0 then
         room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
       end
@@ -3016,8 +3023,8 @@ local yichong = fk.CreateTriggerSkill{
       end
     else
       local mark = player:getMark("@yichong")
-      if type(mark) ~= "table" or mark[1] > 4 then return false end
-      local x = 5 - mark[1]
+      if type(mark) ~= "table" or mark[1] > 0 then return false end
+      local x = 1 - mark[1]
       mark = player:getMark("yichong_target")
       if type(mark) ~= "table" then return false end
       local to = room:getPlayerById(mark[1])
@@ -3039,7 +3046,7 @@ local yichong = fk.CreateTriggerSkill{
       elseif #cards > x then
         cards = table.random(cards, x)
       end
-      room:setPlayerMark(player, "@yichong", {5-x+#cards})
+      room:setPlayerMark(player, "@yichong", {1-x+#cards})
       room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
     end
   end,
@@ -3075,7 +3082,7 @@ local wufei = fk.CreateTriggerSkill{
     if event == fk.TargetSpecified then
       return data.firstTarget and (data.card.trueName == "slash" or (data.card:isCommonTrick() and data.card.is_damage_card))
     elseif event == fk.Damaged then
-      return to.hp > player.hp and to.hp > 1
+      return to.hp > 3
     end
   end,
   on_cost = function(self, event, target, player, data)
@@ -3135,11 +3142,11 @@ guonvwang:addSkill(wufei)
 Fk:loadTranslationTable{
   ["mobile__guozhao"] = "郭女王",
   ["yichong"] = "易宠",
-  [":yichong"] = "准备阶段，你可以选择一名其他角色并指定一种花色，获得其所有该花色的牌，并令其获得“雀”标记直到你下个回合开始"..
-  "（若场上已有“雀”标记则转移给该角色）。拥有“雀”标记的角色获得你指定花色的牌时，你获得此牌（你至多因此“雀”标记获得五张牌）。",
+  [":yichong"] = "准备阶段，你可以选择一名其他角色并指定一种花色，获得其所有该花色的装备和一张该花色的手牌，并令其获得“雀”标记直到你下个回合开始"..
+  "（若场上已有“雀”标记则转移给该角色）。拥有“雀”标记的角色获得你指定花色的牌时，你获得此牌（你至多因此“雀”标记获得一张牌）。",
   ["wufei"] = "诬诽",
   [":wufei"] = "你使用【杀】或伤害类普通锦囊指定目标后，令拥有“雀”标记的其他角色代替你成为伤害来源。"..
-  "你受到伤害后，若拥有“雀”标记的角色体力值大于1且大于你，你可以令其受到1点伤害。",
+  "你受到伤害后，若拥有“雀”标记的角色体力值大于3，你可以令其受到1点伤害。",
 
   ["#yichong-choose"] = "你可以发动 易宠，选择一名其他角色，获得其一种花色的所有牌",
   ["@yichong_que"] = "雀",

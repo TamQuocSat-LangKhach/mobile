@@ -62,10 +62,16 @@ sunru:addSkill(shixin)
 Fk:loadTranslationTable{
   ["sunru"] = "孙茹",
   ["yingjian"] = "影箭",
-  ["#yingjian-choose"] = "影箭: 你现在可以视为使用无视距离的【杀】",
+  ["#yingjian-choose"] = "影箭：你可以视为使用无视距离的【杀】",
   [":yingjian"] = "准备阶段，你可以视为使用一张无距离限制的【杀】。",
   ["shixin"] = "释衅",
   [":shixin"] = "锁定技，防止你受到的火属性伤害。",
+
+  ["$yingjian1"] = "翩翩逸云端，仿若桃花仙。",
+  ["$yingjian2"] = "没牌，又有何不可能的？",  -- -_-||
+  ["$shixin1"] = "释怀之戾气，化君之不悦。",
+  ["$shixin2"] = "星星之火，安能伤我？",
+  ["~sunru"] = "佑我江东，虽死无怨。",
 }
 
 local dujin = fk.CreateTriggerSkill{
@@ -317,12 +323,117 @@ Fk:loadTranslationTable{
 }
 
 --将星独具：星张辽 星张郃 星徐晃 星甘宁 星黄忠 星魏延 星周不疑
---local zhangliao = General(extension, "mxing__zhangliao", "qun", 4)
+local zhangliao = General(extension, "mxing__zhangliao", "qun", 4)
+local weifeng = fk.CreateTriggerSkill{
+  name = "weifeng",
+  anim_type = "control",
+  frequency = Skill.Compulsory,
+  events = {fk.CardUseFinished},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Play and data.card.is_damage_card and data.tos and
+      table.find(TargetGroup:getRealTargets(data.tos), function(id)
+        local p = player.room:getPlayerById(id)
+        return id ~= player.id and not p.dead and p:getMark(self.name) == 0
+      end) and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0  --偷懒
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(TargetGroup:getRealTargets(data.tos), function(id)
+      local p = player.room:getPlayerById(id)
+      return id ~= player.id and not p.dead and p:getMark("@weifeng") == 0
+    end)
+    local to
+    if #targets == 1 then
+      to = targets[1]
+      room:doIndicate(player.id, {to})
+    else
+      to = room:askForChoosePlayers(player, targets, 1, 1, "#weifeng-choose", self.name, false)
+      if #to > 0 then
+        to = to[1]
+      else
+        to = table.random(targets)
+      end
+    end
+    to = room:getPlayerById(to)
+    room:setPlayerMark(to, "@weifeng", data.card.trueName)
+    local mark = to:getMark(self.name)
+    if mark == 0 then mark = {} end
+    table.insert(mark, {player.id, data.card.trueName})
+    room:setPlayerMark(to, self.name, mark)
+  end,
+
+  refresh_events = {fk.EventPhaseStart, fk.BuryVictim},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and (event == fk.EventPhaseStart and player.phase == Player.Start or event == fk.BuryVictim) and
+      table.find(player.room.alive_players, function(p)
+        return p:getMark(self.name) ~= 0 and table.find(p:getMark(self.name), function(e)
+          return e[1] == player.id
+        end)
+      end)
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if p:getMark(self.name) ~= 0 and table.find(p:getMark(self.name), function(e) return e[1] == player.id end) then
+        room:setPlayerMark(p, "@weifeng", 0)
+        local mark = p:getMark(self.name)
+        for i = #mark, 1, -1 do
+          if mark[i][1] == player.id then
+            table.removeOne(mark, mark[i])
+          end
+        end
+        if #mark == 0 then mark = 0 end
+        room:setPlayerMark(p, self.name, mark)
+      end
+    end
+  end,
+}
+local weifeng_trigger = fk.CreateTriggerSkill{
+  name = "#weifeng_trigger",
+  mute = true,
+  events = {fk.DamageInflicted},
+  can_trigger = function (self, event, target, player, data)
+    return target == player and player:getMark("weifeng") ~= 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    local mark = player:getMark("weifeng")
+    for i = #mark, 1, -1 do
+      if player.dead then return end
+      local p = room:getPlayerById(mark[i][1])
+      p:broadcastSkillInvoke("weifeng")
+      room:doIndicate(p.id, {player.id})
+      if data.card and data.card.trueName == mark[i][2] then
+        room:notifySkillInvoked(p, "weifeng", "offensive")
+        data.damage = data.damage + 1
+      else
+        room:notifySkillInvoked(p, "weifeng", "control")
+        if not p.dead and not player:isNude() then
+          local id = room:askForCardChosen(p, player, "he", "weifeng", "#weifeng-prey::"..player.id)
+          room:obtainCard(p.id, id, false, fk.ReasonPrey)
+        end
+      end
+    end
+    room:setPlayerMark(player, "@weifeng", 0)
+    room:setPlayerMark(player, "weifeng", 0)
+  end,
+}
+weifeng:addRelatedSkill(weifeng_trigger)
+zhangliao:addSkill(weifeng)
 Fk:loadTranslationTable{
   ["mxing__zhangliao"] = "星张辽",
   ["weifeng"] = "威风",
   [":weifeng"] = "锁定技，你于出牌阶段第一次使用【杀】或伤害类锦囊牌结算后，你选择其中一名没有“惧”的其他目标角色，令其获得此牌名的“惧”标记。"..
   "有“惧”的角色受到伤害时，移除“惧”并执行效果：若造成伤害的牌名与“惧”相同，则此伤害+1；若不同，你获得其一张牌。准备阶段或你死亡时，移除所有“惧”。",
+  ["#weifeng-choose"] = "威风：令一名角色获得“惧”标记",
+  ["@weifeng"] = "惧",
+  ["#weifeng-prey"] = "威风：获得 %dest 一张牌",
+
+  ["$weifeng1"] = "广散惧义，尽泄敌之斗志。",
+  ["$weifeng2"] = "若尔等惧我，自当卷甲以降。",
+  ["~mxing__zhangliao"] = "惑于女子而尽失战机，庸主误我啊。",
+  ["$mxing__zhangliao_win_audio"] = "并州雄骑，自当扫清六合！",
 }
 
 local zhanghe = General(extension, "mxing__zhanghe", "qun", 4)
@@ -549,7 +660,130 @@ Fk:loadTranslationTable{
   ["~mxing__xuhuang"] = "唉，明主未遇，大功未成……",
 }
 
---local ganning = General(extension, "mxing__ganning", "qun", 4)
+local ganning = General(extension, "mxing__ganning", "qun", 4)
+local jinfan = fk.CreateTriggerSkill{
+  name = "jinfan",
+  anim_type = "drawcard",
+  expand_pile = "jinfan&",
+  events = {fk.EventPhaseStart, fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) then
+      if event == fk.EventPhaseStart then
+        return target == player and player.phase == Player.Discard and not player:isKongcheng()
+      else
+        for _, move in ipairs(data) do
+          if move.from == player.id then
+            for _, info in ipairs(move.moveInfo) do
+              if info.fromSpecialName == "jinfan&" then
+                return true
+              end
+            end
+          end
+        end
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.EventPhaseStart then
+      local success, dat = player.room:askForUseActiveSkill(target, "jinfan_active", "#jinfan-invoke", true)
+      if success then
+        self.cost_data = dat.cards
+        return true
+      end
+    else
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if event == fk.EventPhaseStart then
+      player:addToPile("jinfan&", self.cost_data, true, self.name)
+    else
+      local room = player.room
+      local suits = {}
+      for _, move in ipairs(data) do
+        if move.from == player.id then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerSpecial and info.fromSpecialName == "jinfan&" then
+              table.insertIfNeed(suits, Fk:getCardById(info.cardId):getSuitString())
+            end
+          end
+        end
+      end
+      for _, suit in ipairs(suits) do
+        if player.dead then return end
+        local cards = room:getCardsFromPileByRule(".|.|"..suit)
+        if #cards > 0 then
+          room:obtainCard(player, cards[1], false, fk.ReasonJustMove)
+        end
+      end
+    end
+  end,
+}
+local jinfan_active = fk.CreateActiveSkill{
+  name = "jinfan_active",
+  mute = true,
+  min_card_num = 1,
+  target_num = 0,
+  card_filter = function(self, to_select, selected)
+    if Fk:currentRoom():getCardArea(to_select) == Player.Equip or table.find(Self:getPile("jinfan&"), function(id)
+      return Fk:getCardById(to_select).suit == Fk:getCardById(id).suit end) then return end
+    if #selected == 0 then
+      return true
+    else
+      return table.every(selected, function(id) return Fk:getCardById(to_select).suit ~= Fk:getCardById(id).suit end)
+    end
+  end,
+}
+local sheque = fk.CreateTriggerSkill{
+  name = "sheque",
+  events = {fk.EventPhaseStart},
+  anim_type = "offensive",
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and player ~= target and target.phase == Player.Start and #target:getCardIds("e") > 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local use = player.room:askForUseCard(player, "slash", "slash", "#sheque-invoke::"..target.id, true,
+      {must_targets = {target.id}, bypass_distances = true})
+    if use then
+      self.cost_data = use
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local dat = self.cost_data
+    dat.extra_data = dat.extra_data or {}
+    dat.extra_data.sheque = true
+    player.room:useCard(self.cost_data)
+  end,
+
+  refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
+  can_refresh = function (self, event, target, player, data)
+    if event == fk.TargetSpecified then
+      return target == player and data.extra_data and data.extra_data.sheque
+    else
+      return data.extra_data and data.extra_data.shequeNullified
+    end
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local room = player.room
+    if event == fk.TargetSpecified then
+      room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
+      data.extra_data.shequeNullified = data.extra_data.shequeNullified or {}
+      data.extra_data.shequeNullified[tostring(data.to)] = (data.extra_data.shequeNullified[tostring(data.to)] or 0) + 1
+    else
+      for key, num in pairs(data.extra_data.shequeNullified) do
+        local p = room:getPlayerById(tonumber(key))
+        if p:getMark(fk.MarkArmorNullified) > 0 then
+          room:removePlayerMark(p, fk.MarkArmorNullified, num)
+        end
+      end
+      data.shequeNullified = nil
+    end
+  end,
+}
+Fk:addSkill(jinfan_active)
+ganning:addSkill(jinfan)
+ganning:addSkill(sheque)
 Fk:loadTranslationTable{
   ["mxing__ganning"] = "星甘宁",
   ["jinfan"] = "锦帆",
@@ -557,6 +791,17 @@ Fk:loadTranslationTable{
   "你从牌堆获得一张同花色的牌。",
   ["sheque"] = "射却",
   [":sheque"] = "一名其他角色的准备阶段，若其装备区有牌，你可以对其使用一张无距离限制的【杀】，此【杀】无视防具。",
+  ["jinfan&"] = "铃",
+  ["jinfan_active"] = "锦帆",
+  ["#jinfan-invoke"] = "锦帆：你可以将任意张手牌置为“铃”",
+  ["#sheque-invoke"] = "射却：你可以对 %dest 使用一张无距离限制且无视防具的【杀】",
+
+  ["$jinfan1"] = "扬锦帆，劫四方，快意逍遥！",
+  ["$jinfan2"] = "铃声所至之处，再无安宁！",
+  ["$sheque1"] = "看我此箭，取那轻舟冒进之人性命！",
+  ["$sheque2"] = "纵有劲甲良盾，也难挡我神射之威！",
+  ["~mxing__ganning"] = "铜铃声……怕是听不到了……",
+  ["$mxing__ganning_win_audio"] = "又是大丰收啊！弟兄们，扬帆起航！",
 }
 
 local huangzhong = General(extension, "mxing__huangzhong", "qun", 4)

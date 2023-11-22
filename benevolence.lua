@@ -153,6 +153,134 @@ Fk:loadTranslationTable{
   ["$RenPile"] = "仁区",
 }
 
+local nos__huaxin = General(extension, "nos__huaxin", "wei", 3)
+local renshih = fk.CreateActiveSkill{
+  name = "renshih",
+  anim_type = "support",
+  card_num = 1,
+  target_num = 1,
+  prompt = "#renshih",
+  can_use = function(self, player)
+    return not player:isKongcheng()
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and to_select ~= Self.id and Fk:currentRoom():getPlayerById(to_select):getMark("renshih-phase") == 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    room:setPlayerMark(target, "renshih-phase", 1)
+    room:moveCardTo(effect.cards[1], Card.PlayerHand, target, fk.ReasonGive, self.name, nil, false, player.id)
+  end,
+}
+local debao = fk.CreateTriggerSkill{
+  name = "debao",
+  anim_type = "special",
+  frequency = Skill.Compulsory,
+  events = {fk.AfterCardsMove, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) then
+      if event == fk.AfterCardsMove and #player:getPile("huaxin_ren") < player.maxHp then
+        for _, move in ipairs(data) do
+          if move.from == player.id and move.to and move.to ~= player.id and move.toArea == Card.PlayerHand then
+            return true
+          end
+        end
+      elseif event == fk.EventPhaseStart then
+        return target == player and player.phase == Player.Start and #player:getPile("huaxin_ren") > 0
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterCardsMove then
+      player:addToPile("huaxin_ren", room:getNCards(1)[1], false, self.name)
+    else
+      local dummy = Fk:cloneCard("dilu")
+      dummy:addSubcards(player:getPile("huaxin_ren"))
+      room:obtainCard(player.id, dummy, false, fk.ReasonJustMove)
+    end
+  end,
+}
+local buqi = fk.CreateTriggerSkill{
+  name = "buqi",
+  mute = true,
+  frequency = Skill.Compulsory,
+  events = {fk.EnterDying, fk.Deathed},
+  expand_pile = "huaxin_ren",
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) then
+      if event == fk.EnterDying then
+        return #player:getPile("huaxin_ren") > 1
+      else
+        return #player:getPile("huaxin_ren") > 0
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EnterDying then
+      local cards = room:askForCard(player, 2, 2, false, self.name, false, ".|.|.|huaxin_ren", "#buqi-invoke", "huaxin_ren")
+      player:broadcastSkillInvoke(self.name)
+      room:notifySkillInvoked(player, self.name, "support")
+      room:moveCards({
+        from = player.id,
+        ids = cards,
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+        specialName = "huaxin_ren",
+      })
+      room:doIndicate(player.id, {target.id})
+      if not target.dead and target:isWounded() then
+        room:recover{
+          who = target,
+          num = 1,
+          recoverBy = player,
+          skillName = self.name
+        }
+      end
+    else
+      player:broadcastSkillInvoke(self.name)
+      room:notifySkillInvoked(player, self.name, "negative")
+      room:moveCards({
+        from = player.id,
+        ids = player:getPile("huaxin_ren"),
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+        specialName = self.name,
+      })
+    end
+  end,
+}
+nos__huaxin:addSkill(renshih)
+nos__huaxin:addSkill(debao)
+nos__huaxin:addSkill(buqi)
+Fk:loadTranslationTable{
+  ["nos__huaxin"] = "华歆",
+  ["renshih"] = "仁仕",
+  [":renshih"] = "出牌阶段每名角色限一次，你可以将一张手牌交给一名其他角色。",
+  ["debao"] = "德报",
+  [":debao"] = "锁定技，当其他角色获得你的牌后，若“仁”数小于你的体力上限，你将牌堆顶一张牌置为“仁”。准备阶段，你获得所有“仁”。",
+  ["buqi"] = "不弃",
+  [":buqi"] = "锁定技，一名角色进入濒死状态时，你移去两张“仁”，令其回复1点体力。当一名角色死亡后，你移去所有“仁”。",
+  ["#renshih"] = "仁仕：你可以将一张手牌交给一名其他角色",
+  ["huaxin_ren"] = "仁",
+  ["#buqi-invoke"] = "不弃：请移去两张“仁”",
+
+  ["$renshih1"] = "吾既从大魏之仕，必当行君子之仁。",
+  ["$renshih2"] = "君子之仕，无外乎行其仁也。",
+  ["$debao1"] = "举手而为之事，何禁诸君盛赞。",
+  ["$debao2"] = "仁仕做之不止，德报随之即来。",
+  ["$buqi1"] = "吾等既已纳其自托，宁可以急相弃邪？",
+  ["$buqi2"] = "吾等既纳之，便不可怀弃人之心也。",
+  ["~nos__huaxin"] = "年老多病，上疏乞身……",
+}
+
 local huaxin = General(extension, "mobile__huaxin", "wei", 3)
 local yuanqing = fk.CreateTriggerSkill{
   name = "yuanqing",
@@ -979,7 +1107,7 @@ Fk:loadTranslationTable{
   ["$jishi2"] = "博采众方，不随趋势之徒。",
   ["$liaoyi1"] = "麻黄之汤，或可疗伤寒之疫。",
   ["$liaoyi2"] = "望闻问切，因病施治。",
-  ["$binglun1"] = "受病有深浅，使药有轻重。",
+  ["$binglun1"] = "受病有深浅，使药有重轻。",
   ["$binglun2"] = "三分需外治，七分靠内养。",
   ["~zhangzhongjing"] = "得人不传，恐成坠绪……",
 }

@@ -828,9 +828,9 @@ local shidi = fk.CreateTriggerSkill{
   refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
     if player:hasSkill(self) and data.card.trueName == "slash" then
-      if player:getSwitchSkillState(self.name) == fk.SwitchYin then
+      if player:getSwitchSkillState(self.name) == fk.SwitchYang then
         return data.card.color == Card.Black and data.from == player.id
-      elseif player:getSwitchSkillState(self.name) == fk.SwitchYang then
+      elseif player:getSwitchSkillState(self.name) == fk.SwitchYin then
         return data.card.color == Card.Red and data.from ~= player.id and table.contains(TargetGroup:getRealTargets(data.tos), player.id)
       end
     end

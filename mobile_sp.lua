@@ -184,130 +184,107 @@ Fk:loadTranslationTable{
   ["$yirang2"] = "万望明公可怜汉家城池为重！",
   ["~taoqian"] = "悔不该差使小人，招此祸患。",
 }
--- local yangyi = General(extension, "yangyi", "shu", 3)
--- Fk:loadTranslationTable{
---   ["yangyi"] = "杨仪",
---   ["~yangyi"] = "废立大事，公不可不慎……",
--- }
 
--- local duoduan = fk.CreateTriggerSkill{
---   name = "duoduan",
---   events = {fk.TargetConfirmed},
---   anim_type = "defensive",
---   can_trigger = function(self, event, target, player, data)
---     return
---       target == player and
---       player:hasSkill(self) and
---       player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and
---       not player:isNude() and
---       data.card.trueName == "slash"
---   end,
---   on_cost = function(self, event, target, player, data)
---     local cardIds = player.room:askForCard(player, 1, 1, true, self.name, false, nil, "#duoduan-recast::" .. data.from)
---     if #cardIds > 0 then
---       self.cost_data = cardIds[1]
---       return true
---     end
+local mobile__yangyi = General(extension, "mobile__yangyi", "shu", 3)
 
---     return false
---   end,
---   on_use = function(self, event, target, player, data)
---     local room = player.room
---     room:recastCard({ self.cost_data }, player, self.name)
+local mobile__gongsun = fk.CreateTriggerSkill{
+  name = "mobile__gongsun",
+  events = {fk.EventPhaseStart},
+  anim_type = "negative",
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Play
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local _, dat = room:askForUseActiveSkill(player, "mobile__gongsun_vs", "#mobile__gongsun-choose")
+    if dat then
+      self.cost_data = {dat.cards, dat.targets[1]}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:throwCard(self.cost_data[1], self.name, player, player)
+    local names = {}
+    for _, id in ipairs(Fk:getAllCardIds()) do
+      local card = Fk:getCardById(id)
+      if (card:isCommonTrick() or card.type == Card.TypeBasic) and not card.is_derived then
+        table.insertIfNeed(names, card.trueName)
+      end
+    end
+    if player.dead or #names == 0 then return end
+    local to = room:getPlayerById(self.cost_data[2])
+    local choice = room:askForChoice(player, names, self.name, "#mobile__gongsun-name:" .. to.id)
+    local tos = U.getMark(player, "_mobile__gongsun")
+    table.insertIfNeed(tos, to.id)
+    room:setPlayerMark(player, "_mobile__gongsun", tos)
+    for _, p in ipairs({player, to}) do
+      local record = U.getMark(p, "@mobile__gongsun")
+      table.insert(record, choice)
+      room:setPlayerMark(p, "@mobile__gongsun", record)
+    end
+  end,
 
---     local user = room:getPlayerById(data.from)
---     if not user:isAlive() then
---       return false
---     end
+  refresh_events = {fk.EventPhaseChanging, fk.Death},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:getMark("_mobile__gongsun") ~= 0 and (event == fk.Death or data.from == Player.NotActive)
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    room:setPlayerMark(player, "@mobile__gongsun", 0)
+    table.forEach(table.map(player:getMark("_mobile__gongsun"), function(pid)
+      return room:getPlayerById(pid)
+    end), function(p)
+      room:setPlayerMark(p, "@mobile__gongsun", 0)
+    end)
+  end,
+}
+local mobile__gongsun_prohibit = fk.CreateProhibitSkill{
+  name = "#mobile__gongsun_prohibit",
+  prohibit_use = function(self, player, card)
+    local mark = U.getMark(player, "@mobile__gongsun")
+    return table.contains(mark, card.trueName) and table.contains(player.player_cards[Player.Hand], card.id)
+  end,
+  prohibit_response = function(self, player, card)
+    local mark = U.getMark(player, "@mobile__gongsun")
+    return table.contains(mark, card.trueName) and table.contains(player.player_cards[Player.Hand], card.id)
+  end,
+  prohibit_discard = function(self, player, card)
+    local mark = U.getMark(player, "@mobile__gongsun")
+    return table.contains(mark, card.trueName) and table.contains(player.player_cards[Player.Hand], card.id)
+  end,
+}
+mobile__gongsun:addRelatedSkill(mobile__gongsun_prohibit)
+mobile__yangyi:addSkill("os__duoduan")
+mobile__yangyi:addSkill(mobile__gongsun)
+local mobile__gongsun_vs = fk.CreateActiveSkill{
+  name = "mobile__gongsun_vs",
+  card_num = 2,
+  card_filter = function (self, to_select, selected)
+    return #selected < 2 and not Self:prohibitDiscard(Fk:getCardById(to_select))
+  end,
+  target_num = 1,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+}
+Fk:addSkill(mobile__gongsun_vs)
+Fk:loadTranslationTable{
+  ["mobile__yangyi"] = "杨仪",
+  ["mobile__gongsun"] = "共损",
+  [":mobile__gongsun"] = "出牌阶段开始时，你可以弃置两张牌并选择一名其他角色，然后你声明一种基本牌或普通锦囊牌的牌名。若如此做，直到你的下个回合开始或你死亡时，你与其均不能使用、打出或弃置此牌名的手牌。",
+  ["#mobile__gongsun-choose"] = "共损：弃置两张牌并选择一名其他角色",
+  ["#mobile__gongsun-name"] = "共损：选择一种基本牌或普通锦囊牌的牌名，直至你下个回合开始前，你和 %src 无法使用、打出或弃置该牌名的手牌。",
+  ["@mobile__gongsun"] = "共损",
+  ["mobile__gongsun_vs"] = "共损",
 
---     local choices = { "duoduan_drawCards" }
---     if not player:isNude() then
---       table.insert(choices, "duoduan_discard")
---     end
-
---     local choice = room:askForChoice(player, choices, self.name, "#duoduan-choose::" .. data.from)
---     local parentUseEvent = GameEvent:findParent(GameEvent.UseCard)
---     if choice == "duoduan_drawCards" then
---       user:drawCards(2, self.name)
---       if parentUseEvent then
---         parentUseEvent.nullifiedTargets = room.players
---       end
---     else
---       local toThrow = room:askForDiscard(user, 1, 1, true, self.name, true)
---       if #toThrow > 0 and parentUseEvent then
---         parentUseEvent.disresponsiveList = room.players
---       end
---     end
---   end,
--- }
--- Fk:loadTranslationTable{
---   ["duoduan"] = "度断",
---   [":duoduan"] = "每回合限一次，当你成为【杀】的目标后，你可以重铸一张牌，然后你选择一项令使用者执行：1.摸两张牌然后此【杀】对所有目标无效；2.弃置一张牌然后此【杀】不可被响应。",
---   ["#duoduan-recast"] = "度断：你可以重铸一张牌令%dest执行一项效果",
---   ["#duoduan-choose"] = "度断：令%dest摸牌此杀无效或弃牌此杀不能被响应",
---   ["$duoduan1"] = "制图之体有六，缺一不可言精。",
---   ["$duoduan2"] = "图设分率，则宇内地域皆可绘于一尺。",
--- }
-
--- yangyi:addSkill(duoduan)
-
--- local gongsun = fk.CreateTriggerSkill{
---   name = "gongsun",
---   events = {fk.EventPhaseStart},
---   anim_type = "control",
---   can_trigger = function(self, event, target, player, data)
---     return
---       target == player and
---       player:hasSkill(self) and
---       player.phase == Player.Play and
---       #player:getCardIds({ Player.Hand, Player.Equip }) > 1
---   end,
---   on_cost = function(self, event, target, player, data)
---     local cardIds = player.room:askForCard(player, 1, 1, true, self.name, false, nil, "#duoduan-recast::" .. data.from)
---     if #cardIds > 0 then
---       self.cost_data = cardIds[1]
---       return true
---     end
-
---     return false
---   end,
---   on_use = function(self, event, target, player, data)
---     local room = player.room
---     room:recastCard({ self.cost_data }, player, self.name)
-
---     local user = room:getPlayerById(data.from)
---     if not user:isAlive() then
---       return false
---     end
-
---     local choices = { "duoduan_drawCards" }
---     if not player:isNude() then
---       table.insert(choices, "duoduan_discard")
---     end
-
---     local choice = room:askForChoice(player, choices, self.name, "#duoduan-choose::" .. data.from)
---     local parentUseEvent = GameEvent:findParent(GameEvent.UseCard)
---     if choice == "duoduan_drawCards" then
---       user:drawCards(2, self.name)
---       if parentUseEvent then
---         parentUseEvent.nullifiedTargets = room.players
---       end
---     else
---       local toThrow = room:askForDiscard(user, 1, 1, true, self.name, true)
---       if #toThrow > 0 and parentUseEvent then
---         parentUseEvent.disresponsiveList = room.players
---       end
---     end
---   end,
--- }
--- Fk:loadTranslationTable{
---   ["duoduan"] = "度断",
---   [":duoduan"] = "每回合限一次，当你成为【杀】的目标后，你可以重铸一张牌，然后你选择一项令使用者执行：1.摸两张牌然后此【杀】对所有目标无效；2.弃置一张牌然后此【杀】不可被响应。",
---   ["#duoduan-recast"] = "度断：你可以重铸一张牌令%dest执行一项效果",
---   ["#duoduan-choose"] = "度断：令%dest摸牌此杀无效或弃牌此杀不能被响应",
---   ["$duoduan1"] = "制图之体有六，缺一不可言精。",
---   ["$duoduan2"] = "图设分率，则宇内地域皆可绘于一尺。",
--- }
+  ["$os__duoduan_mobile__yangyi1"] = "度势而谋，断计求胜。",
+  ["$os__duoduan_mobile__yangyi2"] = "逢敌先虑，定策后图。",
+  ["$mobile__gongsun1"] = "胸怀大才者，岂能与庸人共处？",
+  ["$mobile__gongsun2"] = "满朝文武，半数庶子而已。",
+  ["~mobile__yangyi"] = "如今追悔，亦不可复及矣……",
+}
 
 --SP8：审配
 --SP9：苏飞 贾逵 许贡
@@ -1791,7 +1768,7 @@ local choulue = fk.CreateTriggerSkill{
       room:obtainCard(player, cards[1], false, fk.ReasonGive)
       local name = player:getMark("@choulue")
       if name ~= 0 then
-        U.askForUseVirtualCard(room, player, name, nil, self.name, nil, false)
+        U.askForUseVirtualCard(room, player, name, nil, self.name)
       end
     end
   end,

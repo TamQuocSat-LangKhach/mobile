@@ -18,8 +18,7 @@ local m_ex__jieming = fk.CreateTriggerSkill{
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local to = player.room:askForChoosePlayers(player, table.map(player.room:getAlivePlayers(), function (p)
-      return p.id end), 1, 1, "#m_ex__jieming-choose", self.name, true)
+    local to = player.room:askForChoosePlayers(player, table.map(player.room.alive_players, Util.IdMapper), 1, 1, "#m_ex__jieming-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true
@@ -29,7 +28,7 @@ local m_ex__jieming = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local to = player.room:getPlayerById(self.cost_data)
     to:drawCards(2, self.name)
-    if to:getHandcardNum() < to.maxHp then
+    if to:getHandcardNum() < to.maxHp and not player.dead then
       player:drawCards(1, self.name)
     end
   end,
@@ -41,7 +40,7 @@ Fk:loadTranslationTable{
   ["m_ex__jieming"] = "节命",
   [":m_ex__jieming"] = "当你受到1点伤害后，你可以令一名角色摸两张牌，然后若其手牌数小于其体力上限，你摸一张牌。",
 
-  ["#m_ex__jieming-choose"] = "节命：你可以令一名角色摸两张牌，然后若其手牌数小于其体力上限，你摸一张牌",
+  ["#m_ex__jieming-choose"] = "节命：令一名角色摸两张牌，然后若其手牌数小于其体力上限，你摸一张牌",
 
   ["$m_ex__jieming1"] = "因势利导，是为良计。",
   ["$m_ex__jieming2"] = "杀身成仁，不负皇恩。",
@@ -59,11 +58,10 @@ local xingshang = fk.CreateTriggerSkill{
     return player:hasSkill(self) and not (target:isNude() and not player:isWounded())
   end,
   on_cost = function(self, event, target, player, data)
-    local all_choices = {"m_ex__xingshang_obtain::" .. target.id, "recover", "Cancel"}
-    local choices = table.clone(all_choices)
-    if not target:isNude() then table.remove(choices, 1) end
-    if player:isWounded() then table.removeOne(choices, "recover") end
-    local choice = player.room:askForChoice(player, choices, self.name, nil, false, all_choices)
+    local choices = {"Cancel"}
+    if player:isWounded() then table.insert(choices, 1, "recover") end
+    if not target:isNude() then table.insert(choices, 1, "m_ex__xingshang_obtain::" .. target.id) end
+    local choice = player.room:askForChoice(player, choices, self.name)
     if choice ~= "Cancel" then
       self.cost_data = choice
       return true
@@ -83,7 +81,7 @@ local xingshang = fk.CreateTriggerSkill{
       local cards_id = target:getCardIds{Player.Hand, Player.Equip}
       local dummy = Fk:cloneCard'slash'
       dummy:addSubcards(cards_id)
-      room:obtainCard(player.id, dummy, false, fk.Discard)
+      room:obtainCard(player.id, dummy, false, fk.ReasonPrey)
     end
   end,
 }
@@ -91,9 +89,6 @@ local fangzhu = fk.CreateTriggerSkill{
   name = "m_ex__fangzhu",
   anim_type = "masochism",
   events = {fk.Damaged},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self)
-  end,
   on_cost = function(self, event, target, player, data)
     local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, 1, "#m_ex__fangzhu-choose:::"..player:getLostHp(), self.name, true)
     if #to > 0 then
@@ -379,11 +374,7 @@ local beige = fk.CreateTriggerSkill{
       target:drawCards(3, self.name)
     elseif judge.card.suit == Card.Club then
       if data.from and not data.from.dead then
-        if #data.from:getCardIds{Player.Hand, Player.Equip} < 3 then
-          data.from:throwAllCards("he")
-        else
-          room:askForDiscard(data.from, 2, 2, true, self.name, false, ".")
-        end
+        room:askForDiscard(data.from, 2, 2, true, self.name, false)
       end
     elseif judge.card.suit == Card.Spade then
       if data.from and not data.from.dead then

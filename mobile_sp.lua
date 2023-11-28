@@ -287,6 +287,121 @@ Fk:loadTranslationTable{
 }
 
 --SP8：审配
+local mobile__shenpei = General(extension, "mobile__shenpei", "qun", 2, 3)
+local shouye = fk.CreateTriggerSkill{
+  name = "shouye",
+  anim_type = "defensive",
+  events = {fk.TargetConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target == player and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and data.from ~= player.id and #AimGroup:getAllTargets(data.tos) == 1
+  end,
+  on_cost = function (self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#shouye-invoke::"..data.from)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local from = room:getPlayerById(data.from)
+    local choices = U.doStrategy(room, player, from, {"shouye_choice1","shouye_choice2"}, {"shouye_choice3","shouye_choice4"}, self.name, 2)
+    if (choices[1] == "shouye_choice1" and choices[2] == "shouye_choice3") or (choices[1] == "shouye_choice2" and choices[2] == "shouye_choice4") then
+      table.insertIfNeed(data.nullifiedTargets, player.id)
+      data.extra_data = data.extra_data or {}
+      data.extra_data.shouye = player.id
+      if data.card.sub_type == Card.SubtypeDelayedTrick then
+        AimGroup:cancelTarget(data, player.id)
+      end
+    end
+  end,
+}
+local shouye_delay = fk.CreateTriggerSkill{
+  name = "#shouye_delay",
+  mute = true,
+  events = {fk.CardUseFinished},
+  can_trigger = function(self, event, target, player, data)
+    return not player.dead and data.extra_data and data.extra_data.shouye and data.extra_data.shouye == player.id
+    and #player.room:getSubcardsByRule(data.card, {Card.Processing}) > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local ids = room:getSubcardsByRule(data.card, {Card.Processing})
+    local dummy = Fk:cloneCard("dilu")
+    dummy:addSubcards(ids)
+    room:obtainCard(player, dummy, true, fk.ReasonJustMove)
+  end,
+}
+shouye:addRelatedSkill(shouye_delay)
+mobile__shenpei:addSkill(shouye)
+local liezhi = fk.CreateTriggerSkill{
+  name = "liezhi",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target == player and player.phase == Player.Start and player:getMark("@@liezhi_failed") == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(room:getOtherPlayers(player), function (p) return not p:isAllNude() end)
+    if #targets == 0 then return false end
+    local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 2, "#liezhi-choose", self.name, true)
+    if #tos > 0 then
+      room:sortPlayersByAction(tos)
+      self.cost_data = tos
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    for _, pid in ipairs(self.cost_data) do
+      if player.dead then break end
+      local to = room:getPlayerById(pid)
+      if not to:isAllNude() then
+        local id = room:askForCardChosen(player, to, "hej", self.name)
+        room:throwCard({id}, self.name, to, player)
+      end
+    end
+  end,
+  refresh_events = {fk.Damaged, fk.EventPhaseStart},
+  can_refresh = function (self, event, target, player, data)
+    if event == fk.Damaged then
+      return player == target and player:hasSkill(self,true) and player:getMark("@@liezhi_failed") == 0
+    else
+      return player == target and player:hasSkill(self,true) and player.phase == Player.Finish
+    end
+  end,
+  on_refresh = function (self, event, target, player, data)
+    if event == fk.Damaged then
+      player:broadcastSkillInvoke(self.name)
+      player.room:setPlayerMark(player, "@@liezhi_failed", 1)
+    else
+      player.room:setPlayerMark(player, "@@liezhi_failed", 0)
+    end
+  end,
+}
+mobile__shenpei:addSkill(liezhi)
+Fk:loadTranslationTable{
+  ["mobile__shenpei"] = "审配",
+  ["shouye"] = "守邺",
+  [":shouye"] = "每回合限一次，当你成为其他角色使用牌的唯一目标后，你可以与其对策，若你对策成功，此牌对你无效，且此牌结算结束后，你获得之。",
+  ["#shouye-invoke"] = "守邺：你可以与 %dest 对策",
+  ["shouye_choice1"] = "开门诱敌",
+  ["shouye_choice2"] = "奇袭粮道",
+  ["shouye_choice3"] = "全力攻城",
+  ["shouye_choice4"] = "分兵围城",
+  [":shouye_choice1"] = "开门诱敌！",
+  [":shouye_choice2"] = "奇袭粮道！",
+  [":shouye_choice3"] = "全力攻城？",
+  [":shouye_choice4"] = "分兵围城？",
+  ["liezhi"] = "烈直",
+  [":liezhi"] = "①准备阶段，你可以依次弃置至多两名其他角色区域内的各一张牌；②当你受到伤害后，〖烈直〗失效直到你的下个结束阶段。",
+  ["#liezhi-choose"] = "烈直：弃置至多两名其他角色区域内一张牌",
+  ["@@liezhi_failed"] = "烈直失效",
+  ["$shouye1"] = "敌军攻势渐怠，还望诸位依策坚守。",
+  ["$shouye2"] = "袁幽州不日便至，当行策建功以报之。",
+  ["$liezhi1"] = "只恨箭支太少，不能射杀汝等！",
+  ["$liezhi2"] = "身陨事小，秉节事大。",
+  ["~mobile__shenpei"] = "吾君在北，但求面北而亡！",
+}
+
 --SP9：苏飞 贾逵 许贡
 local mobile__sufei = General(extension, "mobile__sufei", "wu", 4)
 local zhengjian = fk.CreateTriggerSkill{
@@ -555,6 +670,103 @@ Fk:loadTranslationTable{
   ["$wanlan1"] = "石亭既败，断不可再失大司马！",
   ["$wanlan2"] = "大司马怀托孤之重，岂容半点有失？",
   ["~tongqu__jiakui"] = "生怀死忠之心，死必为报国之鬼！",
+}
+
+local xugong = General(extension, "mobile__xugong", "wu", 3)
+local mobile__biaozhao = fk.CreateTriggerSkill{
+  name = "mobile__biaozhao",
+  mute = true,
+  events = {fk.EventPhaseStart, fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) then return false end
+    if event == fk.EventPhaseStart then
+      return (player.phase == Player.Finish and not player:isNude()) or
+      (player.phase == Player.Start and #player:getPile("mobile__biaozhao_message") > 0)
+    elseif #player:getPile("mobile__biaozhao_message") > 0 then
+      local numbers = {}
+      for _, id in ipairs(player:getPile("mobile__biaozhao_message")) do
+        table.insertIfNeed(numbers, Fk:getCardById(id).number)
+      end
+      for _, move in ipairs(data) do
+        if move.toArea == Card.DiscardPile then
+          for _, info in ipairs(move.moveInfo) do
+            local card = Fk:getCardById(info.cardId)
+            if table.contains(numbers, card.number) then
+              return true
+            end
+          end
+        end
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart and player.phase == Player.Finish then
+      local cards = room:askForCard(player, 1, 1, true, self.name, true, ".", "#mobile__biaozhao-cost")
+      if #cards > 0 then
+        self.cost_data = cards[1]
+        return true
+      end
+      return false
+    end
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:broadcastSkillInvoke(self.name)
+    if event == fk.EventPhaseStart then
+      room:notifySkillInvoked(player, self.name, "support")
+      if player.phase == Player.Finish then
+        player:addToPile("mobile__biaozhao_message", self.cost_data, false, self.name)
+      else
+        room:moveCards({
+          from = player.id,
+          ids = player:getPile("mobile__biaozhao_message"),
+          toArea = Card.DiscardPile,
+          moveReason = fk.ReasonPutIntoDiscardPile,
+          skillName = self.name,
+        })
+        local targets = room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper), 1, 1, "#mobile__biaozhao-choose", self.name, false)
+        if #targets > 0 then
+          local to = room:getPlayerById(targets[1])
+          if to:isWounded() then
+            room:recover{  who = to, num = 1, recoverBy = player, skillName = self.name }
+          end
+          if not to.dead then
+            to:drawCards(3, self.name)
+          end
+        end
+      end
+    elseif event == fk.AfterCardsMove then
+      room:notifySkillInvoked(player, self.name, "negative")
+      room:moveCards({
+        from = player.id,
+        ids = player:getPile("mobile__biaozhao_message"),
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+      })
+      if not player.dead then
+        room:loseHp(player, 1, self.name)
+      end
+    end
+  end,
+}
+xugong:addSkill(mobile__biaozhao)
+xugong:addSkill("yechou")
+Fk:loadTranslationTable{
+  ["mobile__xugong"] = "许贡",
+  ["mobile__biaozhao"] = "表召",
+  [":mobile__biaozhao"] = "结束阶段，你可以将一张牌扣置于武将牌上，称为“表”。当一张与“表”点数相同的牌进入弃牌堆时，你移去“表”并失去1点体力。准备阶段，你移去“表”，然后令一名角色回复1点体力并摸三张牌。",
+  ["mobile__biaozhao_message"] = "表",
+  ["#mobile__biaozhao-cost"] = "表召：可以将一张牌作为表置于武将牌上",
+  ["#mobile__biaozhao-choose"] = "表召：令一名角色回复1点体力并摸三张牌",
+
+  ["$mobile__biaozhao1"] = "孙策如秦末之项籍，如得时势，必有异志！",
+  ["$mobile__biaozhao2"] = "贡谨奉此表，以使君明孙策之异！",
+  ["$yechou_mobile__xugong1"] = "孙策小儿，你必还恶报！",
+  ["$yechou_mobile__xugong2"] = "吾命丧黄泉，你也休想得安!",
+  ["~mobile__xugong"] = "此表非我所写，岂可污我！",
 }
 
 --SP10：丁原 傅肜 邓芝 陈登 张翼 胡车儿 公孙康 周群
@@ -3494,6 +3706,76 @@ Fk:loadTranslationTable{
   ["$wufei1"] = "巫蛊实乃凶邪之术，陛下不可不察！",
   ["$wufei2"] = "妾不该多言，只怕陛下为其所害。",
   ["~mobile__guozhao"] = "不觉泪下……沾衣裳……",
+}
+
+local hansui = General(extension, "mobile__hansui", "qun", 4)
+local mobile__niluan = fk.CreateTriggerSkill{
+  name = "mobile__niluan",
+  anim_type = "offensive",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) and target.phase == Player.Finish and not target.dead and target ~= player then
+      return #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+        local use = e.data[1]
+        if use.from == target.id then
+          for _, pid in ipairs(TargetGroup:getRealTargets(use.tos)) do
+            if pid ~= target.id then
+              return true
+            end
+          end
+        end
+      end, Player.HistoryTurn) > 0
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local use = player.room:askForUseCard(player, "slash", "slash", "#mobile__niluan-slash:"..target.id, true,
+     {exclusive_targets = {target.id} , bypass_distances = true})
+    if use then
+      self.cost_data = use
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local use = self.cost_data
+    use.extraUse = true
+    room:useCard(use)
+    if use.damageDealt and use.damageDealt[target.id] and not player.dead and not target:isNude() then
+      local cid = room:askForCardChosen(player, target, "he", self.name)
+      room:throwCard({cid}, self.name, target, player)
+    end
+  end,
+}
+hansui:addSkill(mobile__niluan)
+local mobile__xiaoxi = fk.CreateViewAsSkill{
+  name = "mobile__xiaoxi",
+  anim_type = "offensive",
+  pattern = "slash",
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:getCardById(to_select).color == Card.Black
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then return nil end
+    local c = Fk:cloneCard("slash")
+    c.skillName = self.name
+    c:addSubcard(cards[1])
+    return c
+  end,
+}
+hansui:addSkill(mobile__xiaoxi)
+Fk:loadTranslationTable{
+  ["mobile__hansui"] = "韩遂",
+  ["mobile__niluan"] = "逆乱",
+  [":mobile__niluan"] = "其他角色的结束阶段，若其本回合对除其以外的角色使用过牌，你可以对其使用一张【杀】（无距离限制），然后此【杀】结算结束后，若此【杀】对其造成了伤害，你弃置其一张牌。",
+  ["mobile__xiaoxi"] = "骁袭",
+  [":mobile__xiaoxi"] = "你可以将一张黑色牌当【杀】使用或打出。",
+  ["#mobile__niluan-slash"] = "逆乱：你可以对 %src 使用一张【杀】",
+
+  ["$mobile__niluan1"] = "不是你死，便是我亡！",
+  ["$mobile__niluan2"] = "后无退路，只有一搏！",
+  ["$mobile__xiaoxi1"] = "看你如何躲过！",
+  ["$mobile__xiaoxi2"] = "小贼受死！",
+  ["~mobile__hansui"] = "称雄三十载，一败化为尘……",
 }
 
 --其他：司马孚 来敏 李遗

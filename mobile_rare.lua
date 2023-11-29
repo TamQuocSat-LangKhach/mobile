@@ -1161,7 +1161,7 @@ local quesong = fk.CreateTriggerSkill{
     end
     local choice = room:askForChoice(to, choices, self.name)
     if choice == "yl_draw" then
-      to:drawCards(math.max(#to:getAvailableEquipSlots() - #to:getCardIds("e"), 1), self.name)
+      to:drawCards(math.max(4 - #to:getCardIds("e")//2, 1), self.name)
     else
       room:recover({
         who = to,
@@ -1179,7 +1179,7 @@ Fk:loadTranslationTable{
   ["huiyao"] = "慧夭",
   [":huiyao"] = "出牌阶段限一次，你可以受到1点无来源伤害并选择一名其他角色，<font color='red'>视为</font>其对你选择的另一名角色造成1点伤害。",
   ["quesong"] = "雀颂",
-  [":quesong"] = "一名角色结束阶段，若你本回合受到过伤害，你可以令一名角色选择一项：1.摸X张牌并复原武将牌（X为其装备区空置栏位数，至少为1）"..
+  [":quesong"] = "一名角色结束阶段，若你本回合受到过伤害，你可以令一名角色选择一项：1.摸X张牌并复原武将牌（X为4-其装备数的一半，至少为1）"..
   "回复1点体力。",
   ["#huiyao"] = "慧夭：你可以受到1点无来源伤害，选择一名其他角色，令其<font color='red'>视为</font>造成伤害",
   ["#huiyao-choose"] = "慧夭：选择一名角色，视为 %dest 对其造成1点伤害",

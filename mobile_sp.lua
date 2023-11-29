@@ -1288,6 +1288,114 @@ Fk:loadTranslationTable{
 }
 
 --SP11：阎圃 马元义 毛玠 傅佥 阮慧 马日磾 王濬
+local yanpu = General(extension, "yanpu", "qun", 3)
+local huantu = fk.CreateTriggerSkill{
+  name = "huantu",
+  anim_type = "support",
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and player:inMyAttackRange(target) and data.to == Player.Draw and not player:isNude() and
+      player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local card = player.room:askForCard(player, 1, 1, true, self.name, true, ".", "#huantu-invoke::"..target.id)
+    if #card > 0 then
+      self.cost_data = card[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:moveCardTo(Fk:getCardById(self.cost_data), Card.PlayerHand, target, fk.ReasonGive, self.name, nil, false, player.id)
+    return true
+  end,
+}
+local huantu_trigger = fk.CreateTriggerSkill{
+  name = "#huantu_trigger",
+  mute = true,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:usedSkillTimes("huantu", Player.HistoryTurn) > 0 and target.phase == Player.Finish and not target.dead
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(player.id, {target.id})
+    player:broadcastSkillInvoke("huantu")
+    room:notifySkillInvoked(player, "huantu")
+    local choices = {"huantu1::"..target.id, "huantu2::"..target.id}
+    local choice = room:askForChoice(player, choices, "huantu")
+    if choice[7] == "1" then
+      if target:isWounded() then
+        room:recover({
+          who = target,
+          num = 1,
+          recoverBy = player,
+          skillName = "huantu"
+        })
+      end
+      if not target.dead then
+        target:drawCards(2, "huantu")
+      end
+    else
+      player:drawCards(3, "huantu")
+      if not player:isKongcheng() and not target.dead then
+        local cards = room:askForCard(player, 2, 2, false, "huantu", false, ".", "#huantu-give::"..target.id)
+        local dummy = Fk:cloneCard("dilu")
+        dummy:addSubcards(cards)
+        room:moveCardTo(dummy, Card.PlayerHand, target, fk.ReasonGive, "huantu", nil, false, player.id)
+      end
+    end
+  end,
+}
+local bihuoy = fk.CreateTriggerSkill{
+  name = "bihuoy",
+  anim_type = "support",
+  frequency = Skill.Limited,
+  events = {fk.AfterDying},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#bihuoy-invoke::"..target.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(player.id, {target.id})
+    room:setPlayerMark(target, "@bihuoy-round", #room.players)
+    target:drawCards(3, self.name)
+  end,
+}
+local bihuoy_distance = fk.CreateDistanceSkill{
+  name = "#bihuoy_distance",
+  correct_func = function(self, from, to)
+    return to:getMark("@bihuoy-round")
+  end,
+}
+huantu:addRelatedSkill(huantu_trigger)
+bihuoy:addRelatedSkill(bihuoy_distance)
+yanpu:addSkill(huantu)
+yanpu:addSkill(bihuoy)
+Fk:loadTranslationTable{
+  ["yanpu"] = "阎圃",
+  ["huantu"] = "缓图",
+  [":huantu"] = "每轮限一次，你攻击范围内一名其他角色摸牌阶段开始前，你可以交给其一张牌，令其跳过摸牌阶段，若如此做，本回合结束阶段你选择一项："..
+  "1.令其回复1点体力并摸两张牌；2.你摸三张牌并交给其两张手牌。",
+  ["bihuoy"] = "避祸",
+  [":bihuoy"] = "限定技，一名角色脱离濒死状态时，你可以令其摸三张牌，然后除其以外的角色本轮计算与其的距离时+X（X为场上角色数）。",
+  ["#huantu-invoke"] = "缓图：你可以交给 %dest 一张牌令其跳过摸牌阶段，本回合结束阶段其摸牌",
+  ["huantu1"] = "%dest回复1点体力并摸两张牌",
+  ["huantu2"] = "你摸三张牌，然后交给%dest两张手牌",
+  ["#huantu-give"] = "缓图：交给 %dest 两张手牌",
+  ["#bihuoy-invoke"] = "避祸：你可以令 %dest 摸三张牌且本轮所有角色至其距离增加",
+  ["@bihuoy-round"] = "避祸",
+
+  ["$huantu1"] = "今群雄蜂起，主公宜外收内敛，勿为祸先。",
+  ["$huantu2"] = "昔陈胜之事，足为今日之师，望主公熟虑。",
+  ["$bihuoy1"] = "公以败兵之身投之，功轻且恐难保身也。",
+  ["$bihuoy2"] = "公不若附之他人与相拒，然后委质，功必多。",
+  ["~yanpu"] = "公皆听吾计，圃岂敢不专……",
+}
+
 local maojie = General(extension, "maojie", "wei", 3)
 local bingqing = fk.CreateTriggerSkill{
   name = "bingqing",
@@ -1890,13 +1998,15 @@ mobile__mamidi:addSkill(buxu)
 Fk:loadTranslationTable{
   ["mobile__mamidi"] = "马日磾",
   ["chengye"] = "承业",
-  [":chengye"] = "锁定技，①当其他角色使用一张非转化牌结算结束后，或一张其他角色区域内的装备牌或延时锦囊牌进入弃牌堆后，若你有对应的“六经”处于缺失状态，你将此牌置于你的武将牌上，称为“典”；"..
+  [":chengye"] = "锁定技，①当其他角色使用一张非转化牌结算结束后，或一张其他角色区域内的装备牌或延时锦囊牌进入弃牌堆后，若你有对应的“六经”处于缺失状态，"..
+  "你将此牌置于你的武将牌上，称为“典”；"..
   "<br>②出牌阶段开始时，若你的“六经”均未处于缺失状态，你获得所有“典”。"..
   "<br><font color='grey'>“六经”即：诗-伤害类锦囊牌；书-基本牌；礼-【无懈可击】；易-【无中生有】；乐-【乐不思蜀】；春秋-装备牌。",
   ["chengye_classic"] = "典",
   ["#chengye-put"] = "承业：将其中一张牌作为“典”",
   ["buxu"] = "补续",
-  [":buxu"] = "出牌阶段，若你拥有技能“承业”，你可以弃置X张牌并选择一种你缺失的“六经”，然后从牌堆或弃牌堆中随机获得一张对应此“六经”的牌加入“典”中（X为你本阶段此前成功发动过此技能的次数+1）。",
+  [":buxu"] = "出牌阶段，若你拥有技能〖承业〗，你可以弃置X张牌并选择一种你缺失的“六经”，然后从牌堆或弃牌堆中随机获得一张对应此“六经”的牌加入“典”中"..
+  "（X为你本阶段此前成功发动过此技能的次数+1）。",
   ["#buxu-choice"] = "补续：选择一种你缺失的“六经”获得",
   ["cy_classic_nullification"] = "礼",
   ["cy_classic_ex_nihilo"] = "易",

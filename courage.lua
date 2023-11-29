@@ -1,18 +1,111 @@
 local extension = Package("courage")
 extension.extensionName = "mobile"
 
+local U = require "packages/utility/utility"
+
 Fk:loadTranslationTable{
   ["courage"] = "手杀-始计篇·勇",
 }
 
+local wangshuang = General(extension, "mobile__wangshuang", "wei", 4)
+local yiyongw = fk.CreateTriggerSkill{
+  name = "yiyongw",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and data.card and data.card.trueName == "slash" and
+      data.from and data.from ~= player and not data.from.dead and player:getEquipment(Card.SubtypeWeapon) then
+      local subcards = data.card:isVirtual() and data.card.subcards or {data.card.id}
+      return #subcards>0 and table.every(subcards, function(id) return player.room:getCardArea(id) == Card.Processing end)
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#yiyongw-invoke::"..data.from.id..":"..data.card:toLogString())
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:obtainCard(player.id, data.card, true, fk.ReasonJustMove)
+    local subcards = data.card:isVirtual() and data.card.subcards or {data.card.id}
+    if player.dead or data.from.dead then return end
+    if table.every(subcards, function(id) return table.contains(player:getCardIds("h"), id) end) then
+      local card = Fk:cloneCard("slash")
+      card:addSubcards(subcards)
+      card.skillName = self.name
+      if U.canUseCardTo(room, player, data.from, card, false, false) then
+        local use = {
+          from = player.id,
+          tos = {{data.from.id}},
+          card = card,
+          extraUse = true,
+        }
+        if not data.from:getEquipment(Card.SubtypeWeapon) then
+          use.additionalDamage = (use.additionalDamage or 0) + 1
+        end
+        room:useCard(use)
+      end
+    end
+  end,
+}
+local shanxie = fk.CreateActiveSkill{
+  name = "shanxie",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 0,
+  prompt = "#shanxie",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, use)
+    local player = room:getPlayerById(use.from)
+    local card = room:getCardsFromPileByRule(".|.|.|.|.|weapon")
+    if #card == 0 then
+      local ids = {}
+      for _, p in ipairs(room:getOtherPlayers(player)) do
+        if p:getEquipment(Card.SubtypeWeapon) then
+          table.insertIfNeed(ids, p:getEquipment(Card.SubtypeWeapon))
+        end
+      end
+      card = {table.random(ids)}
+    end
+    if #card > 0 then
+      room:obtainCard(player.id, card[1], true, fk.ReasonPrey)
+    end
+  end,
+}
+local shanxie_trigger = fk.CreateTriggerSkill{
+  name = "#shanxie_trigger",
+  main_skill = shanxie,
+  mute = true,
+  events = {fk.PreCardEffect},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and data.responseToEvent and data.card.name == "jink" then
+      local src = player.room:getPlayerById(data.responseToEvent.from)
+      return src:hasSkill(self) and data.card.number <= 2 * src:getAttackRange()
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = Util.TrueFunc,
+}
+shanxie:addRelatedSkill(shanxie_trigger)
+wangshuang:addSkill(yiyongw)
+wangshuang:addSkill(shanxie)
 Fk:loadTranslationTable{
   ["mobile__wangshuang"] = "王双",
   ["yiyongw"] = "异勇",
   [":yiyongw"] = "当你受到其他角色使用【杀】造成的伤害后，若你装备区内有武器牌，你可以获得此【杀】，然后将之当无距离和次数限制的普通【杀】对其"..
-  "使用；若目标装备区内没有武器牌，此【杀】伤害+1。",
+  "使用；若其装备区内没有武器牌，此【杀】伤害+1。",
   ["shanxie"] = "擅械",
   [":shanxie"] = "出牌阶段限一次，你可以从牌堆中获得一张武器牌（若没有，则随机获得一名其他角色装备区内的武器牌）。其他角色使用【闪】响应你使用的【杀】"..
-  "时，若此【闪】点数不大于你攻击范围的两倍，则此【闪】无效。",
+  "时，若此【闪】没有点数或点数不大于你攻击范围的两倍，则此【闪】无效。",
+  ["#yiyongw-invoke"] = "异勇：你可以获得此%arg，将之当【杀】对 %dest 使用",
+  ["#shanxie"] = "擅械：你可以从牌堆获得一张武器牌（若没有则随机获得一名其他角色的武器）",
+
+  ["$yiyongw1"] = "这么着急回营？哼！那我就送你一程！",
+  ["$yiyongw2"] = "你的兵器，本大爷还给你！哈哈哈哈！",
+  ["$shanxie1"] = "快快取我兵器，我上阵杀敌！",
+  ["$shanxie2"] = "哈哈！还是自己的兵器用着趁手！",
+  ["~mobile__wangshuang"] = "啊？速回主营！啊！",
 }
 
 local yuanhuan = General(extension, "yuanhuan", "wei", 3)

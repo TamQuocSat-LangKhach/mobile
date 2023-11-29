@@ -244,11 +244,15 @@ local mobile__gongsun_prohibit = fk.CreateProhibitSkill{
   name = "#mobile__gongsun_prohibit",
   prohibit_use = function(self, player, card)
     local mark = U.getMark(player, "@mobile__gongsun")
-    return table.contains(mark, card.trueName) and table.contains(player.player_cards[Player.Hand], card.id)
+    local cards = card:isVirtual() and card.subcards or {card.id}
+    return table.contains(mark, card.trueName) and
+    table.find(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
   end,
   prohibit_response = function(self, player, card)
     local mark = U.getMark(player, "@mobile__gongsun")
-    return table.contains(mark, card.trueName) and table.contains(player.player_cards[Player.Hand], card.id)
+    local cards = card:isVirtual() and card.subcards or {card.id}
+    return table.contains(mark, card.trueName) and
+    table.find(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
   end,
   prohibit_discard = function(self, player, card)
     local mark = U.getMark(player, "@mobile__gongsun")

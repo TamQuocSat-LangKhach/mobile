@@ -288,7 +288,7 @@ local shameng = fk.CreateActiveSkill{
     if Fk:currentRoom():getCardArea(to_select) ~= Player.Hand or Self:prohibitDiscard(Fk:getCardById(to_select)) then
       return false
     end
-    return #selected == 0 or Fk:getCardById(selected[1]):compareColorWith(Fk:getCardById(to_select), true)
+    return #selected == 0 or Fk:getCardById(selected[1]):compareColorWith(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id

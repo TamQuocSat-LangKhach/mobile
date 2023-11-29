@@ -1758,6 +1758,167 @@ Fk:loadTranslationTable{
   ["~ruanhui"] = "贱妾茕茕守空房，忧来思君不敢忘……",
 }
 
+local mobile__mamidi = General(extension, "mobile__mamidi", "qun", 3)
+local getClassicsType = function (cardId)
+  local card = Fk:getCardById(cardId,true)
+  if card.type == Card.TypeBasic then
+    return "cy_classic_basic"
+  elseif card.type == Card.TypeEquip then
+    return "cy_classic_equip"
+  elseif card.name == "nullification" or card.name == "ex_nihilo" or card.name == "indulgence" then
+    return "cy_classic_"..card.name
+  elseif card.is_damage_card then
+    return "cy_classic_damage"
+  end
+  return ""
+end
+local getLackClassics = function (player)
+  local classic = {"cy_classic_basic","cy_classic_equip","cy_classic_damage","cy_classic_nullification","cy_classic_ex_nihilo","cy_classic_indulgence"}
+  for _, id in ipairs(player:getPile("chengye_classic")) do
+    local c = getClassicsType(id)
+    table.removeOne(classic, c)
+  end
+  return classic
+end
+local chengye = fk.CreateTriggerSkill{
+  name = "chengye",
+  events = {fk.CardUseFinished , fk.AfterCardsMove, fk.EventPhaseStart},
+  mute = true,
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.CardUseFinished then
+      if player:hasSkill(self) and target ~= player and not data.card:isVirtual() then
+        local id = data.card:getEffectiveId()
+        if player.room:getCardArea(id) == Card.Processing and table.contains(getLackClassics(player), getClassicsType(id)) then
+          self.cost_data = {id}
+          return true
+        end
+      end
+    elseif event == fk.AfterCardsMove then
+      if player:hasSkill(self) then
+        local ids = {}
+        for _, move in ipairs(data) do
+          if move.toArea == Card.DiscardPile and move.from ~= player.id then
+            for _, info in ipairs(move.moveInfo) do
+              if info.fromArea == Card.PlayerEquip or info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerJudge then
+                if player.room:getCardArea(info.cardId) == Card.DiscardPile and table.contains(getLackClassics(player), getClassicsType(info.cardId))then
+                  table.insertIfNeed(ids, info.cardId)
+                end
+              end
+            end
+          end
+        end
+        if #ids > 0 then
+          self.cost_data = ids
+          return true
+        end
+      end
+    elseif event == fk.EventPhaseStart then
+      return player:hasSkill(self) and target == player and player.phase == Player.Play and #player:getPile("chengye_classic") == 6
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:notifySkillInvoked(player, self.name, "drawcard")
+    if event == fk.EventPhaseStart then
+      player:broadcastSkillInvoke(self.name, 3)
+      local dummy = Fk:cloneCard("dilu")
+      dummy:addSubcards(player:getPile("chengye_classic"))
+      room:obtainCard(player, dummy, true, fk.ReasonPrey)
+    else
+      player:broadcastSkillInvoke(self.name, math.random(2))
+      local ids = {}
+      local moves = {}
+      local moveMap = {}
+      for _, id in ipairs(self.cost_data) do
+        local ctype = getClassicsType(id)
+        moveMap[ctype] = moveMap[ctype] or {}
+        table.insert(moveMap[ctype], id)
+      end
+      for _, v in pairs(moveMap) do
+        local put = #v == 1 and v[1] or
+        room:askForCardChosen(player, player, { card_data = { { "AskForCardChosen", v } } }, self.name, "#chengye-put")
+        table.insert(moves, {
+          ids = { put },
+          from = room.owner_map[put],
+          to = player.id,
+          toArea = Card.PlayerSpecial,
+          moveReason = fk.ReasonPut,
+          skillName = self.name,
+          specialName = "chengye_classic",
+          proposer = player.id,
+        })
+      end
+      room:moveCards(table.unpack(moves))
+    end
+  end,
+}
+mobile__mamidi:addSkill(chengye)
+local buxu = fk.CreateActiveSkill{
+  name = "buxu",
+  anim_type = "drawcard",
+  can_use = function(self, player)
+    return #player:getPile("chengye_classic") < 6
+  end,
+  card_num = function ()
+    return 1 + Self:getMark("buxu-phase")
+  end,
+  card_filter = function (self, to_select, selected)
+    return not Self:prohibitDiscard(Fk:getCardById(to_select)) and #selected < (1 + Self:getMark("buxu-phase"))
+  end,
+  target_num = 0,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:throwCard(effect.cards, self.name, player, player)
+    local choice = room:askForChoice(player, getLackClassics(player), self.name, "#buxu-choice", true)
+    local cards = table.simpleClone(room.draw_pile)
+    table.insertTable(cards, room.discard_pile)
+    for i = #cards, 1, -1 do
+      if getClassicsType (cards[i]) ~= choice then
+        table.remove(cards, i)
+      end
+    end
+    if #cards > 0 then
+      player:addToPile("chengye_classic", table.random(cards), true, self.name)
+      room:addPlayerMark(player, "buxu-phase")
+    else
+      room:sendLog{ type = "#BuXuFalid", from = player.id, arg = self.name, arg2 = ":"..choice }
+    end
+  end,
+}
+mobile__mamidi:addSkill(buxu)
+Fk:loadTranslationTable{
+  ["mobile__mamidi"] = "马日磾",
+  ["chengye"] = "承业",
+  [":chengye"] = "锁定技，①当其他角色使用一张非转化牌结算结束后，或一张其他角色区域内的装备牌或延时锦囊牌进入弃牌堆后，若你有对应的“六经”处于缺失状态，你将此牌置于你的武将牌上，称为“典”；"..
+  "<br>②出牌阶段开始时，若你的“六经”均未处于缺失状态，你获得所有“典”。"..
+  "<br><font color='grey'>“六经”即：诗-伤害类锦囊牌；书-基本牌；礼-【无懈可击】；易-【无中生有】；乐-【乐不思蜀】；春秋-装备牌。",
+  ["chengye_classic"] = "典",
+  ["#chengye-put"] = "承业：将其中一张牌作为“典”",
+  ["buxu"] = "补续",
+  [":buxu"] = "出牌阶段，若你拥有技能“承业”，你可以弃置X张牌并选择一种你缺失的“六经”，然后从牌堆或弃牌堆中随机获得一张对应此“六经”的牌加入“典”中（X为你本阶段此前成功发动过此技能的次数+1）。",
+  ["#buxu-choice"] = "补续：选择一种你缺失的“六经”获得",
+  ["cy_classic_nullification"] = "礼",
+  ["cy_classic_ex_nihilo"] = "易",
+  ["cy_classic_indulgence"] = "乐",
+  ["cy_classic_basic"] = "书",
+  ["cy_classic_equip"] = "春秋",
+  ["cy_classic_damage"] = "诗",
+  [":cy_classic_nullification"] = "无懈可击",
+  [":cy_classic_ex_nihilo"] = "无中生有",
+  [":cy_classic_indulgence"] = "乐不思蜀",
+  [":cy_classic_basic"] = "基本牌",
+  [":cy_classic_equip"] = "装备牌",
+  [":cy_classic_damage"] = "伤害类锦囊牌",
+  ["#BuXuFalid"] = "%from 发动 %arg 失败，无法检索到 %arg2",
+  ["$chengye1"] = "勤学于未长，立志于未壮。",
+  ["$chengye2"] = "志在坚且行，学在勤且久。",
+  ["$chengye3"] = "承继族贤之业，弘彰孔儒之学。",
+  ["$buxu1"] = "今世俗儒穿凿，不加补续，恐疑误后学。",
+  ["$buxu2"] = "经籍去圣久远，文字多谬，当正定《六经》。",
+  ["~mobile__mamidi"] = "袁公路！汝怎可欺我！",
+}
+
 local wangjun = General(extension, "wangjun", "qun", 4)
 wangjun.subkingdom = "jin"
 local zhujian = fk.CreateActiveSkill{

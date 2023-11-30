@@ -6,7 +6,7 @@ Fk:loadTranslationTable{
   ["mxing"] = "手杀星",
 }
 
---袖里乾坤：孙茹 凌操 留赞 祢衡 曹纯 庞德公 马钧 司马师 郑玄 南华老仙 十常侍
+--袖里乾坤：孙茹 凌操 留赞 祢衡 曹纯 庞德公 马钧 郑玄 十常侍
 local sunru = General(extension, "sunru", "wu", 3, 3, General.Female)
 local yingjian = fk.CreateTriggerSkill{
   name = "yingjian",
@@ -137,6 +137,163 @@ Fk:loadTranslationTable{
   ["$fenyin1"] = "吾军杀声震天，则敌心必乱！",
   ["$fenyin2"] = "阵前亢歌，以振军心！",
   ["~liuzan"] = "贼子们，来吧！啊…………",
+}
+
+local pangdegong = General(extension, "pangdegong", "qun", 3)
+local pingcai = fk.CreateActiveSkill{
+  name = "pingcai",
+  mute = true,
+  card_num = 0,
+  target_num = 0,
+  prompt = "#pingcai",
+  interaction = function()
+    return UI.ComboBox {choices = {"pingcai_wolong", "pingcai_pangtong", "pingcai_simahui", "pingcai_xushu"}}
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:notifySkillInvoked(player, self.name, "control")
+    player:broadcastSkillInvoke(self.name, 1)
+    if math.random() < 0.03 then  --看看哪个倒霉蛋失败
+      room:doBroadcastNotify("ShowToast", Fk:translate("pingcai_fail"))
+      return
+    end
+    room:doBroadcastNotify("ShowToast", Fk:translate("pingcai_success"))
+    if self.interaction.data == "pingcai_wolong" then
+      local n = table.find(room.alive_players, function(p)
+        return string.find(p.general, "wolong") or string.find(p.deputyGeneral, "wolong")
+      end) and 2 or 1
+      local targets = table.map(room.alive_players, Util.IdMapper)
+      local tos = room:askForChoosePlayers(player, targets, 1, n, "#pingcai_wolong:::"..n, self.name, false)
+      if #tos > 0 then
+        player:broadcastSkillInvoke(self.name, 2)
+        for _, id in ipairs(tos) do
+          local p = room:getPlayerById(id)
+          if not p.dead then
+            room:damage{
+              from = player,
+              to = p,
+              damage = 1,
+              damageType = fk.FireDamage,
+              skillName = self.name,
+            }
+          end
+        end
+      end
+    elseif self.interaction.data == "pingcai_pangtong" then
+      local n = table.find(room.alive_players, function(p)
+        return p.general:endsWith("pangtong") or p.deputyGeneral:endsWith("pangtong") or
+          p.general == "wolongfengchu" or p.deputyGeneral == "wolongfengchu"
+      end) and 4 or 3
+      local targets = table.map(table.filter(room.alive_players, function(p) return not p.chained end), Util.IdMapper)
+      if #targets == 0 then return end
+      local tos = room:askForChoosePlayers(player, targets, 3, n, "#pingcai_pangtong:::"..n, self.name, false)
+      if #tos > 0 then
+        player:broadcastSkillInvoke(self.name, 3)
+        for _, id in ipairs(tos) do
+          local p = room:getPlayerById(id)
+          if not p.dead then
+            p:setChainState(true)
+          end
+        end
+      end
+    elseif self.interaction.data == "pingcai_simahui" then
+      local pattern = "armor"
+      if table.find(room.alive_players, function(p)
+        return p.general:endsWith("simahui") or p.deputyGeneral:endsWith("simahui")
+      end) then
+        pattern = "equip"
+      end
+      local excludeIds = {}
+      if pattern == "armor" then
+        for _, p in ipairs(room.alive_players) do
+          for _, id in ipairs(p:getCardIds("e")) do
+            if Fk:getCardById(id).sub_type ~= Card.SubtypeArmor then
+              table.insert(excludeIds, id)
+            end
+          end
+        end
+      end
+      local targets = room:askForChooseToMoveCardInBoard(player, "#pingcai_simahui:::"..pattern, self.name, true, "e", false, excludeIds)
+      if #targets == 0 then return end
+      player:broadcastSkillInvoke(self.name, 4)
+      room:askForMoveCardInBoard(player, room:getPlayerById(targets[1]), room:getPlayerById(targets[2]), self.name)
+    elseif self.interaction.data == "pingcai_xushu" then
+      local targets = table.map(room.alive_players, Util.IdMapper)
+      local to = room:askForChoosePlayers(player, targets, 1, 1, "#pingcai_xushu", self.name, false)
+      if #to > 0 then
+        player:broadcastSkillInvoke(self.name, 5)
+        to = room:getPlayerById(to[1])
+        to:drawCards(1, self.name)
+        if not to.dead and to:isWounded() then
+          room:recover({
+            who = player,
+            num = 1,
+            recoverBy = to,
+            skillName = self.name
+          })
+        end
+        if not player.dead and
+        table.find(room.alive_players, function(p)
+          return p.general:endsWith("xushu") or p.deputyGeneral:endsWith("xushu")
+        end) then
+          player:drawCards(1, self.name)
+        end
+      end
+    end
+  end,
+}
+local yinship = fk.CreateTriggerSkill{
+  name = "yinship",
+  anim_type = "defensive",
+  frequency = Skill.Compulsory,
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and table.contains({2, 3, 7}, data.to)
+  end,
+  on_use = Util.TrueFunc,
+}
+local yinship_prohibit = fk.CreateProhibitSkill{
+  name = "#yinship_prohibit",
+  frequency = Skill.Compulsory,
+  is_prohibited = function(self, from, to, card)
+    return to:hasSkill(self) and card.sub_type == Card.SubtypeDelayedTrick
+  end,
+}
+yinship:addRelatedSkill(yinship_prohibit)
+pangdegong:addSkill(pingcai)
+pangdegong:addSkill(yinship)
+Fk:loadTranslationTable{
+  ["pangdegong"] = "庞德公",
+  ["pingcai"] = "评才",
+  [":pingcai"] = "出牌阶段限一次，你可以挑选一个宝物，擦拭掉上面的灰尘。如果擦拭成功，你可以根据宝物类型执行对应的效果："..
+  "卧龙：对一名角色造成1点火焰伤害。若场上有存活的卧龙诸葛亮，则改为对至多两名角色各造成1点火焰伤害。<br>"..
+  "凤雏：横置至多三名角色的武将牌。若场上有存活的庞统，则改为横置至多四名角色的武将牌。<br>"..
+  "水镜：移动场上的一张防具牌。若场上有存活的司马徽，则改为移动场上的一张装备牌。<br>"..
+  "玄剑：令一名角色摸一张牌并回复1点体力。若场上有存活的徐庶，则改为令一名角色摸一张牌并回复1点体力，然后你摸一张牌。",
+  ["yinship"] = "隐世",
+  [":yinship"] = "锁定技，你只有摸牌、出牌和弃牌阶段；你不能被选择为延时锦囊牌的目标。",
+  ["#pingcai"] = "评才：选择一个宝物擦拭灰尘！",
+  ["pingcai_success"] = "擦拭成功！",
+  ["pingcai_fail"] = "擦拭失败！",
+  ["pingcai_wolong"] = "卧龙",
+  ["pingcai_pangtong"] = "凤雏",
+  ["pingcai_simahui"] = "水镜",
+  ["pingcai_xushu"] = "玄剑",
+  ["#pingcai_wolong"] = "卧龙：对至多%arg名角色造成1点火焰伤害",
+  ["#pingcai_pangtong"] = "凤雏：横置至多%arg名角色的武将牌",
+  ["#pingcai_simahui"] = "水镜：移动场上的一张%arg",
+  ["#pingcai_xushu"] = "玄剑：令一名角色摸一张牌并回复1点体力",
+
+  ["$pingcai1"] = "吾有众好友，分为卧龙、凤雏、水镜、元直。",
+  ["$pingcai2"] = "孔明能借天火之势。",
+  ["$pingcai3"] = "士元虑事环环相扣。",
+  ["$pingcai4"] = "德操深谙处世之道。",
+  ["$pingcai5"] = "元直侠客惩恶扬善。",
+  ["~pangdegong"] = "吾知人而不自知，何等荒唐。",
 }
 
 local majun = General(extension, "majun", "wei", 3)
@@ -320,6 +477,162 @@ Fk:loadTranslationTable{
   ["$qiaosi2"] = "虚争空言，不如思而试之。",
   ["~majun"] = "衡石不用，美玉见诬啊！",
   ["$majun_win_audio"] = "吾巧益于世间，真乃幸事！",
+}
+
+local zhengxuan = General(extension, "zhengxuan", "qun", 3)
+local zhengjing = fk.CreateActiveSkill{
+  name = "zhengjing",
+  mute = true,
+  card_num = 0,
+  target_num = 0,
+  prompt = "#zhengjing",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:notifySkillInvoked(player, self.name, "drawcard")
+    player:broadcastSkillInvoke(self.name, math.random(1, 2))
+    local basics = {}
+    local equips = {}
+    for _, id in ipairs(room.draw_pile) do
+      local card = Fk:getCardById(id)
+      if card.type == Card.TypeEquip then
+        table.insertIfNeed(equips, card.name)
+      else
+        table.insertIfNeed(basics, card.name)
+      end
+    end
+    local random = math.random()
+    local n = 5
+    if random < 0.3 then
+      n = 4
+      if random < 0.1 then
+        n = 3
+      end
+    end
+    if #basics == 0 and #equips == 0 then return end
+    local all_choices = {}
+    if #equips > 0 and math.random() < 0.5 then  --至多只出现一个装备
+      all_choices = {table.random(equips)}
+    end
+    table.insertTable(all_choices, table.random(basics, n - #all_choices))
+    table.insert(all_choices, "bomb")
+    room:delay(3000)
+    local patterns = {}
+    local audio = table.random({{3, 4, 5, 6}, {7, 8, 9, 10}, {11, 12, 13, 14}})
+    for i = 1, math.random(n, 2 * n), 1 do
+      player:broadcastSkillInvoke(self.name, i % 4 == 0 and audio[4] or audio[i % 4])
+      local choices = table.random(all_choices, math.random(math.min(3, #all_choices), #all_choices))
+      table.shuffle(choices)
+      local choice = room:askForChoice(player, choices, self.name, "#zhengjing_choice")
+      room:doBroadcastNotify("ShowToast", Fk:translate(player.general)..Fk:translate("zhengjing_choice")..Fk:translate(choice))
+      table.insertIfNeed(patterns, choice)
+      if choice == "bomb" then
+        break
+      end
+    end
+    if #patterns == 0 or table.contains(patterns, "bomb") then return end
+    local cards = {}
+    for _, pattern in ipairs(patterns) do
+      table.insertTable(cards, room:getCardsFromPileByRule(pattern))
+    end
+    room:moveCards({
+      ids = cards,
+      toArea = Card.Processing,
+      moveReason = fk.ReasonJustMove,
+      proposer = player.id,
+      skillName = self.name,
+    })
+    player.special_cards["zhengjing"] = table.simpleClone(cards)
+    player:doNotify("ChangeSelf", json.encode {
+      id = player.id,
+      handcards = player:getCardIds("h"),
+      special_cards = player.special_cards,
+    })
+    local success, dat = room:askForUseActiveSkill(player, "zhengjing_active", "#zhengjing-give", true)
+    if success then
+      local to = room:getPlayerById(dat.targets[1])
+      local dummy = Fk:cloneCard("dilu")
+      dummy:addSubcards(dat.cards)
+      to:addToPile("zhengxuan_jing", dummy, true, self.name)
+    end
+    player.special_cards["zhengjing"] = {}
+    player:doNotify("ChangeSelf", json.encode {
+      id = player.id,
+      handcards = player:getCardIds("h"),
+      special_cards = player.special_cards,
+    })
+    cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
+    if #cards > 0 then
+      local dummy = Fk:cloneCard("dilu")
+      dummy:addSubcards(cards)
+      room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonJudge, self.name, nil, true, player.id)
+    end
+  end,
+}
+local zhengjing_active = fk.CreateActiveSkill{
+  name = "zhengjing_active",
+  mute = true,
+  min_card_num = 1,
+  target_num = 1,
+  expand_pile = "zhengjing",
+  card_filter = function(self, to_select, selected)
+    return Self:getPileNameOfId(to_select) == "zhengjing"
+  end,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0
+  end,
+}
+local zhengjing_trigger = fk.CreateTriggerSkill{
+  name = "#zhengjing_trigger",
+  mute = true,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player.phase == Player.Start and #player:getPile("zhengxuan_jing") > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:skip(Player.Judge)
+    player:skip(Player.Draw)
+    local dummy = Fk:cloneCard("dilu")
+    dummy:addSubcards(player:getPile("zhengxuan_jing"))
+    room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonJudge, "zhengjing", nil, true, player.id)
+  end,
+}
+Fk:addSkill(zhengjing_active)
+zhengjing:addRelatedSkill(zhengjing_trigger)
+zhengxuan:addSkill(zhengjing)
+Fk:loadTranslationTable{
+  ["zhengxuan"] = "郑玄",
+  ["zhengjing"] = "整经",
+  [":zhengjing"] = "出牌阶段限一次，你可以整理一次经典，并将你整理出的任意牌置于一名角色的武将牌上，称为“经”，然后你获得剩余的牌。"..
+  "武将牌上有“经”的角色准备阶段，其获得所有“经”，然后跳过本回合的判定阶段和摸牌阶段。",
+  ["#zhengjing"] = "整经：开始整理经典！",
+  ["bomb"] = "炸弹",
+  ["#zhengjing_choice"] = "整理经典！",
+  ["zhengjing_choice"] = "整理出了：",
+  ["zhengjing_active"] = "整经",
+  ["#zhengjing-give"] = "整经：你可以将整理出的牌置为一名角色的“经”",
+  ["zhengxuan_jing"] = "经",
+
+  ["$zhengjing1"] = "兼采今古，博学并蓄，择善以教之。",
+  ["$zhengjing2"] = "君子需通六艺，亦当识明三礼。",
+  ["$zhengjing3"] = "关关雎鸠，在河之洲",
+  ["$zhengjing4"] = "窈窕淑女，君子好逑",
+  ["$zhengjing5"] = "参差荇菜，左右流之",
+  ["$zhengjing6"] = "窈窕淑女，寤寐求之",
+  ["$zhengjing7"] = "蒹葭苍苍，白露为霜",
+  ["$zhengjing8"] = "所谓伊人，在水一方",
+  ["$zhengjing9"] = "溯游从之，道阻且长",
+  ["$zhengjing10"] = "溯洄从之，宛在水中央",
+  ["$zhengjing11"] = "淇则有岸，隰则有泮",
+  ["$zhengjing12"] = "总角之宴，言笑晏晏",
+  ["$zhengjing13"] = "信誓旦旦，不思其反",
+  ["$zhengjing14"] = "反是不思，亦已焉哉",  --选的三首诗离谱
+  ["~zhengxuan"] = "注易未毕，奈何寿数将近……",
 }
 
 --将星独具：星张辽 星张郃 星徐晃 星甘宁 星黄忠 星魏延 星周不疑

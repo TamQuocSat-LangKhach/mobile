@@ -417,7 +417,7 @@ local m_ex__lianhuan = fk.CreateActiveSkill{
       local card = Fk:cloneCard("iron_chain")
       card:addSubcard(selected_cards[1])
       return card.skill:canUse(Self, card) and card.skill:targetFilter(to_select, selected, selected_cards, card) and
-        not Self:isProhibited(Fk:currentRoom():getPlayerById(to_select), card)
+        not Self:prohibitUse(card) and not Self:isProhibited(Fk:currentRoom():getPlayerById(to_select), card)
     end
   end,
   on_use = function(self, room, effect)
@@ -469,6 +469,7 @@ local m_ex__lianhuan_trigger = fk.CreateTriggerSkill{
     player:broadcastSkillInvoke(m_ex__lianhuan.name)
     player.room:notifySkillInvoked(player, m_ex__lianhuan.name, "control")
     TargetGroup:pushTargets(data.tos, self.cost_data)
+    player.room:sendLog{ type = "#AddTargetsBySkill", from = player.id, to = {self.cost_data}, arg = m_ex__lianhuan.name, arg2 = data.card:toLogString() }
   end,
 }
 m_ex__lianhuan:addRelatedSkill(m_ex__lianhuan_trigger)
@@ -477,7 +478,7 @@ local doNiepan = function (room, player)
   player:throwAllCards("hej")
   if player.dead then return end
   player:drawCards(3, "m_ex__niepan")
-  if not player.dead and player:isWounded() then
+  if not player.dead and math.min(3, player.maxHp) > player.hp then
     room:recover({
       who = player,
       num = math.min(3, player.maxHp) - player.hp,

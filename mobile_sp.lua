@@ -3984,6 +3984,7 @@ Fk:loadTranslationTable{
 }
 
 local hansui = General(extension, "mobile__hansui", "qun", 4)
+hansui.shield = 1
 local mobile__niluan = fk.CreateTriggerSkill{
   name = "mobile__niluan",
   anim_type = "offensive",

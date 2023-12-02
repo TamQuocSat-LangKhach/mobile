@@ -568,7 +568,7 @@ local zhengjing = fk.CreateActiveSkill{
     if #cards > 0 then
       local dummy = Fk:cloneCard("dilu")
       dummy:addSubcards(cards)
-      room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonJudge, self.name, nil, true, player.id)
+      room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonJustMove, self.name, nil, true, player.id)
     end
   end,
 }

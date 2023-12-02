@@ -12,7 +12,7 @@ local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
   end,
   target_num = 1,
   on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), "slash,jink", nil, "#RFA-response:" .. effect.from, false, nil, effect)
+    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), "raid_and_frontal_attack", "slash,jink", "#RFA-response:" .. effect.from, false, nil, effect)
 
     if cardResponded then
       room:responseCard({
@@ -71,6 +71,7 @@ local raidAndFrontalAttack = fk.CreateTrickCard{
 Fk:loadTranslationTable{
   ["raid_and_frontal_attack"] = "奇正相生",
   [":raid_and_frontal_attack"] = "出牌阶段，对一名其他角色使用。当此牌指定目标后，你为其指定“奇兵”或“正兵”。目标角色可以打出一张【杀】或【闪】，然后若其为：“正兵”目标且未打出【杀】，你对其造成1点伤害；“奇兵”目标且未打出【闪】，你获得其一张牌。",
+  ["raid_and_frontal_attack_skill"] = "奇正相生",
   ["RFA_raid"] = "奇兵",
   ["RFA_frontal"] = "正兵",
   ["#RFA-response"] = "正兵：未出闪，%src获得你牌；奇兵：未出杀，你受到其伤害",

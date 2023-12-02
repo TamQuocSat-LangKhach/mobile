@@ -1700,6 +1700,8 @@ local jibing_trigger = fk.CreateTriggerSkill{
     return player.room:askForSkillInvoke(player, "jibing", nil, "#jibing-invoke")
   end,
   on_use = function(self, event, target, player, data)
+    player:broadcastSkillInvoke("jibing")
+    player.room:notifySkillInvoked(player, "jibing", "special")
     local dummy = Fk:cloneCard("dilu")
     dummy:addSubcards(player.room:getNCards(2))
     player:addToPile("mayuanyi_bing", dummy, false, "jibing")
@@ -1772,7 +1774,7 @@ local binghuo = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and target.phase == Player.Finish then
-      if #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e) 
+      if #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
         local use = e.data[1]
         return use.from == player.id and table.contains(use.card.skillNames, "jibing")
       end, Player.HistoryTurn) > 0 then
@@ -4634,13 +4636,159 @@ Fk:loadTranslationTable{
   ["#mobile__jiaohua"] = "教化：令一名角色获得你选择的类别的牌",
 }
 
+local laimin = General(extension, "laimin", "shu", 3)
+local laishou = fk.CreateTriggerSkill{
+  name = "laishou",
+  mute = true,
+  frequency = Skill.Compulsory,
+  events = {fk.DamageInflicted, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) then
+      if event == fk.DamageInflicted then
+        return data.damage >= player.hp and player.maxHp < 9
+      elseif event == fk.EventPhaseStart then
+        return player.phase == Player.Start and player.maxHp > 8
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.DamageInflicted then
+      player:broadcastSkillInvoke(self.name)
+      room:notifySkillInvoked(player, self.name, "defensive")
+      room:changeMaxHp(player, data.damage)
+      return true
+    elseif event == fk.EventPhaseStart then
+      player:broadcastSkillInvoke(self.name)
+      room:notifySkillInvoked(player, self.name, "negative")
+      room:killPlayer({who = player.id})
+    end
+  end,
+}
+local luanqun = fk.CreateActiveSkill{
+  name = "luanqun",
+  anim_type = "control",
+  card_num = 0,
+  target_num = 0,
+  prompt = "#luanqun",
+  can_use = function(self, player)
+    return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:doIndicate(player.id, table.map(room.alive_players, Util.IdMapper))
+    local targets = table.filter(room.alive_players, function(p) return not p:isKongcheng() end)
+    local extraData = {
+      num = 1,
+      min_num = 1,
+      include_equip = false,
+      pattern = ".",
+      reason = self.name,
+    }
+    for _, p in ipairs(targets) do
+      p.request_data = json.encode({"choose_cards_skill", "#luanqun-card", true, json.encode(extraData)})
+    end
+    room:notifyMoveFocus(room.alive_players, self.name)
+    room:doBroadcastRequest("AskForUseActiveSkill", targets)
+    for _, p in ipairs(targets) do
+      local id
+      if p.reply_ready then
+        local replyCard = json.decode(p.client_reply).card
+        id = json.decode(replyCard).subcards[1]
+      else
+        id = table.random(p:getCardIds("h"))
+      end
+      room:setPlayerMark(p, "luanqun-tmp", id)
+    end
+
+    local all_cards = {}
+    for _, p in ipairs(targets) do
+      if not p.dead then
+        local id = p:getMark("luanqun-tmp")
+        p:showCards({id})
+        if table.contains(p:getCardIds("h"), id) then
+          table.insertIfNeed(all_cards, id)
+        end
+      end
+    end
+    if player.dead or #all_cards == 0 then return end
+    local my_card = Fk:getCardById(player:getMark("luanqun-tmp"))
+    local available_cards = table.filter(all_cards, function(id) return Fk:getCardById(id).color == my_card.color end)
+    table.removeOne(available_cards, my_card.id)
+    local cards, choice = U.askforChooseCardsAndChoice(player, available_cards, {"OK"}, self.name, "#luanqun-get", {"Cancel"}, 1, 1, all_cards)
+    if choice ~= "Cancel" then
+      room:moveCardTo(Fk:getCardById(cards[1]), Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
+    end
+    local mark = U.getMark(player, self.name)
+    for _, p in ipairs(targets) do
+      if not p.dead and p:getMark("luanqun-tmp") ~= 0 then
+        local card = Fk:getCardById(p:getMark("luanqun-tmp"))
+        room:setPlayerMark(p, "luanqun-tmp", 0)
+        if card.color ~= my_card.color then
+          table.insert(mark, p.id)
+        end
+      end
+    end
+    if not player.dead and #mark > 0 then
+      room:setPlayerMark(player, self.name, mark)
+    end
+  end,
+}
+local luanqun_trigger = fk.CreateTriggerSkill{
+  name = "luanqun_trigger",
+  mute = true,
+  events = {fk.TurnStart, fk.TargetConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.TurnStart then
+      return player:getMark("luanqun") ~= 0 and table.contains(player:getMark("luanqun"), target.id)
+    elseif event == fk.TargetConfirmed then
+      return target == player and data.card.trueName == "slash" and
+        player.room:getPlayerById(data.from):getMark("luanqun"..player.id.."-turn") > 0
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TurnStart then
+      local mark = U.getMark(player, "luanqun")
+      table.removeOne(mark, target.id)
+      room:setPlayerMark(player, "luanqun", mark)
+      room:setPlayerMark(target, "luanqun"..player.id.."-turn", 1)
+      room:setPlayerMark(target, "luanqun_target"..player.id.."-turn", 1)
+    else
+      local src = room:getPlayerById(data.from)
+      room:setPlayerMark(src, "luanqun_target"..player.id.."-turn", 0)
+      data.disresponsiveList = data.disresponsiveList or {}
+      table.insertIfNeed(data.disresponsiveList, player.id)
+    end
+  end,
+}
+local luanqun_prohibit = fk.CreateProhibitSkill{
+  name = "#luanqun_prohibit",
+  is_prohibited = function(self, from, to, card)
+    if card.trueName == "slash" and from.phase == Player.Play then
+      local targets = table.filter(Fk:currentRoom().alive_players, function(p)
+        return from:getMark("luanqun_target"..p.id.."-turn") > 0
+      end)
+      return #targets > 0 and not table.contains(targets, to)
+    end
+  end,
+}
+luanqun:addRelatedSkill(luanqun_trigger)
+luanqun:addRelatedSkill(luanqun_prohibit)
+laimin:addSkill(laishou)
+laimin:addSkill(luanqun)
 Fk:loadTranslationTable{
   ["laimin"] = "来敏",
   ["laishou"] = "来寿",
   [":laishou"] = "锁定技，当你受到致命伤害时，若你的体力上限小于9，防止此伤害并增加等量的体力上限。准备阶段，若你的体力上限不小于9，你死亡。",
   ["luanqun"] = "乱群",
   [":luanqun"] = "出牌阶段限一次，若你有手牌，你可以令所有角色同时展示一张手牌，然后你可以获得其中一张与你展示牌颜色相同的牌。令所有与你"..
-  "展示牌颜色不同的角色下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
+  "展示牌颜色不同的角色于其下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
+  ["#luanqun"] = "乱群：令所有角色展示一张手牌，你可以获得其中一张与你展示颜色相同的牌",
+  ["#luanqun-card"] = "乱群：请展示一张手牌",
+  ["#luanqun-get"] = "乱群：你可以获得其中一张牌",
 }
 
 return extension

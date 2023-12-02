@@ -1,5 +1,8 @@
 local extension = Package("mobile_rare")
 extension.extensionName = "mobile"
+
+local U = require "packages/utility/utility"
+
 Fk:loadTranslationTable{
   ["mobile_rare"] = "手杀-稀有专属",
   ["mobile"] = "手杀",
@@ -137,6 +140,87 @@ Fk:loadTranslationTable{
   ["$fenyin1"] = "吾军杀声震天，则敌心必乱！",
   ["$fenyin2"] = "阵前亢歌，以振军心！",
   ["~liuzan"] = "贼子们，来吧！啊…………",
+}
+
+local caochun = General(extension, "caochun", "wei", 4)
+local shanjia = fk.CreateTriggerSkill{
+  name = "shanjia",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and player.phase == Player.Play then
+      if #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
+        local use = e.data[1]
+        return use.from == player.id and use.card.type == Card.TypeEquip
+      end, Player.HistoryGame) > 0 then
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 7, function(e)
+      local use = e.data[1]
+      return use.from == player.id and use.card.type == Card.TypeEquip
+    end, Player.HistoryGame)
+    n = math.min(n, 7)
+    player:drawCards(n, self.name)
+    if player.dead or player:isNude() then return end
+    local yes = false
+    if #player:getCardIds("he") < n then
+      if #player:getCardIds("e") > 0 then
+        yes = true
+      end
+      player:throwAllCards("he")
+    else
+      local cards = room:askForDiscard(player, n, n, true, self.name, false, ".", nil, true)
+      if table.find(cards, function(id) return table.contains(player:getCardIds("e"), id) end) then
+        yes = true
+      end
+      room:throwCard(cards, self.name, player, player)
+    end
+    if not player.dead and yes then
+      U.askForUseVirtualCard(room, player, "slash", nil, self.name, nil, true, true, true)
+    end
+  end,
+
+  refresh_events = {fk.CardUsing, fk.EventAcquireSkill, fk.EventLoseSkill},
+  can_refresh = function (self, event, target, player, data)
+    if target == player then
+      if event == fk.CardUsing then
+        return player:hasSkill(self, true) and data.card.type == Card.TypeEquip and player:getMark("@shanjia") < 7
+      else
+        return data == self and player.room:getTag("RoundCount")
+      end
+    end
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local room = player.room
+    if event == fk.CardUsing then
+      room:addPlayerMark(player, "@shanjia", 1)
+    elseif event == fk.EventAcquireSkill then
+      local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 7, function(e)
+        local use = e.data[1]
+        return use.from == player.id and use.card.type == Card.TypeEquip
+      end, Player.HistoryGame)
+      n = math.min(n, 7)
+      room:setPlayerMark(player, "@shanjia", n)
+    elseif event == fk.EventLoseSkill then
+      room:addPlayerMark(player, "@shanjia", 0)
+    end
+  end,
+}
+caochun:addSkill(shanjia)
+Fk:loadTranslationTable{
+  ["caochun"] = "曹纯",
+  ["shanjia"] = "缮甲",
+  [":shanjia"] = "出牌阶段开始时，你可以摸X张牌，然后弃置等量的牌（X为你于本局游戏内使用过的装备牌数且至多为7）。若你以此法弃置了装备区内的牌，"..
+  "视为你使用一张无距离次数限制的【杀】。",
+  ["@shanjia"] = "缮甲",
+
+  ["$shanjia1"] = "缮甲厉兵，伺机而行。",
+  ["$shanjia2"] = "战，当取精锐之兵，而弃驽钝也。",
+  ["~caochun"] = "银甲在身，竟败于你手！",
 }
 
 local pangdegong = General(extension, "pangdegong", "qun", 3)

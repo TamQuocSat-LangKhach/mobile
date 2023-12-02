@@ -849,7 +849,7 @@ Fk:loadTranslationTable{
 
   ["$beizhu1"] = "检阅士卒，备将行之役。",
   ["$beizhu2"] = "点选将校，讨乱汉之贼。",
-  ["$beizhu3"] = "敌贼势大，且暂勿力战。",
+  ["$beizhu3"] = "乱贼势大，且暂勿力战。",
   ["~dingyuan"] = "奉先何故心变，啊！",
 }
 
@@ -2545,7 +2545,7 @@ Fk:loadTranslationTable{
   ["~wangjun"] = "问鼎金瓯碎，临江铁索寒……",
 }
 
---SP12：赵统赵广 刘晔 朱灵 李丰 诸葛果 胡金定 王元姬 羊徽瑜 杨彪 司马昭
+--SP12：赵统赵广 刘晔 李丰 诸葛果 胡金定 王元姬 羊徽瑜 杨彪 司马昭
 local zhaotongzhaoguang = General(extension, "zhaotongzhaoguang", "shu", 4)
 local yizan = fk.CreateViewAsSkill{
   name = "yizan",
@@ -2728,11 +2728,11 @@ Fk:loadTranslationTable{
   ["#choulue-ask"] = "筹略：你可以交给 %dest 一张牌，若交给，其可以转化牌",
   ["@choulue"] = "筹略",
 
-  ["$polu1"] = "砲石飞空，坚垣难存。",
-  ["$polu2"] = "声若霹雳，人马俱摧。",
-  ["$choulue1"] = "筹画所料，无有不中。",
-  ["$choulue2"] = "献策破敌，所谋皆应。",
-  ["~mobile__liuye"] = "功名富贵，到头来，不过黄土一抔……",
+  ["$polu1"] = "设此发石车，可破袁军高橹。",
+  ["$polu2"] = "霹雳之声，震丧敌胆。",
+  ["$choulue1"] = "依此计行，可安军心。",
+  ["$choulue2"] = "破袁之策，吾已有计。",
+  ["~mobile__liuye"] = "唉，于上不能佐君主，于下不能亲同僚，吾愧为佐世人臣。",	
 }
 
 local lifeng = General(extension, "lifeng", "shu", 3)

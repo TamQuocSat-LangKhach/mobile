@@ -4736,7 +4736,7 @@ local luanqun = fk.CreateActiveSkill{
   end,
 }
 local luanqun_trigger = fk.CreateTriggerSkill{
-  name = "luanqun_trigger",
+  name = "#luanqun_trigger",
   mute = true,
   events = {fk.TurnStart, fk.TargetConfirmed},
   can_trigger = function(self, event, target, player, data)

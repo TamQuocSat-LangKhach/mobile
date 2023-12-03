@@ -381,6 +381,180 @@ Fk:loadTranslationTable{
   ["~luotong"] = "臣统之大愿，足以死而不朽矣。",
 }
 
+local sunshao = General:new(extension, "mobile__sunshao", "wu", 3)
+local dingyi = fk.CreateTriggerSkill{
+  name = "dingyi",
+  events = {fk.GameStart},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self)
+  end,
+  on_use = function(self, event, target, player)
+    local room = player.room
+    local choice = room:askForChoice(player, {"dingyi1", "dingyi2", "dingyi3", "dingyi4"}, self.name, "#dingyi-choice")
+    for _, p in ipairs(room.alive_players) do
+      room:setPlayerMark(p, "@dingyi", choice)
+    end
+  end,
+}
+local dingyi_trigger = fk.CreateTriggerSkill{
+  name = "#dingyi_trigger",
+  mute = true,
+  events = {fk.DrawNCards, fk.AfterDying},
+  can_trigger = function(self, event, target, player, data)
+    if target == player then
+      if event == fk.DrawNCards then
+        return player:getMark("@dingyi") == "dingyi1"
+      elseif event == fk.AfterDying then
+        return player:getMark("@dingyi") == "dingyi4"
+      end
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    if event == fk.DrawNCards then
+      data.n = data.n + (2 ^ player:getMark("fubi"))
+    elseif event == fk.AfterDying then
+      player.room:recover({
+        who = player,
+        num = math.min(player:getLostHp(), (2 ^ player:getMark("fubi"))),
+        recoverBy = player,
+        skillName = "dingyi",
+      })
+    end
+  end,
+}
+local dingyi_maxcards = fk.CreateMaxCardsSkill{
+  name = "#dingyi_maxcards",
+  correct_func = function(self, player)
+    if player:getMark("@dingyi") == "dingyi2" then
+      return 2 * (2 ^ player:getMark("fubi"))
+    end
+  end,
+}
+local dingyi_attackrange = fk.CreateAttackRangeSkill{
+  name = "#dingyi_attackrange",
+  correct_func = function(self, from, to)
+    if from:getMark("@dingyi") == "dingyi3" then
+      return (2 ^ from:getMark("fubi"))
+    end
+    return 0
+  end,
+}
+local zuici = fk.CreateTriggerSkill{
+  name = "zuici",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self.name) and data.from and not data.from.dead and data.from:getMark("@dingyi") ~= 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local choice = player.room:askForChoice(player, {"Cancel", "dismantlement", "ex_nihilo", "nullification"}, self.name,
+      "#zuici-invoke::"..data.from.id)
+    if choice ~= "Cancel" then
+      self.cost_data = choice
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(player.id, {data.from.id})
+    room:setPlayerMark(data.from, "@dingyi", 0)
+    local cards = room:getCardsFromPileByRule(self.cost_data)
+    if #cards > 0 then
+      room:moveCards({
+        ids = cards,
+        to = data.from.id,
+        toArea = Card.PlayerHand,
+        moveReason = fk.ReasonJustMove,
+        proposer = player.id,
+        skillName = self.name,
+      })
+    end
+  end,
+}
+local fubi = fk.CreateActiveSkill{
+  name = "fubi",
+  anim_type = "support",
+  min_card_num = 0,
+  max_card_num = 1,
+  target_num = 1,
+  prompt = "#fubi",
+  can_use = function (self, player, card)
+    return player:usedSkillTimes(self.name, Player.HistoryRound) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
+  end,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:currentRoom():getPlayerById(to_select):getMark("@dingyi") ~= 0
+  end,
+  on_use = function (self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    if #effect.cards == 0 then
+      local all_choices = {"dingyi1", "dingyi2", "dingyi3", "dingyi4"}
+      local choices = table.simpleClone(all_choices)
+      table.removeOne(choices, target:getMark("@dingyi"))
+      local choice = room:askForChoice(player, choices, self.name, "#fubi-choice::"..target.id, nil, all_choices)
+      room:setPlayerMark(target, "@dingyi", choice)
+    else
+      room:throwCard(effect.cards, self.name, player, player)
+      room:addPlayerMark(target, self.name, 1)
+      room:setPlayerMark(player, "fubi_using", target.id)
+    end
+  end,
+}
+local fubi_trigger = fk.CreateTriggerSkill{
+  name = "#fubi_trigger",
+
+  refresh_events = {fk.TurnStart},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:getMark("fubi_using") ~= 0
+  end,
+  on_refresh = function(self, event, target, player)
+    local room = player.room
+    local p = room:getPlayerById(player:getMark("fubi_using"))
+    room:setPlayerMark(player, "fubi_using", 0)
+    if not p.dead then
+      room:removePlayerMark(p, "fubi", 1)
+    end
+  end,
+}
+dingyi:addRelatedSkill(dingyi_trigger)
+dingyi:addRelatedSkill(dingyi_maxcards)
+dingyi:addRelatedSkill(dingyi_attackrange)
+fubi:addRelatedSkill(fubi_trigger)
+sunshao:addSkill(dingyi)
+sunshao:addSkill(zuici)
+sunshao:addSkill(fubi)
+Fk:loadTranslationTable{
+  ["mobile__sunshao"] = "孙邵",
+  ["dingyi"] = "定仪",
+  [":dingyi"] = "锁定技，游戏开始时，你选择一项对全场角色生效：1.摸牌阶段摸牌数+1；2.手牌上限+2；3.攻击范围+1；4.脱离濒死状态时回复1点体力。",
+  ["zuici"] = "罪辞",
+  [":zuici"] = "当你受到有〖定仪〗效果的角色造成的伤害后，你可以令其失去〖定仪〗效果，然后其从牌堆中获得你选择的一张智囊牌。",
+  ["fubi"] = "辅弼",
+  [":fubi"] = "出牌阶段限一次，你可以选择一名有〖定仪〗效果的角色并选择一项：1.更换其〖定仪〗效果；2.弃置一张牌，直到你下回合开始，其〖定仪〗效果加倍。",
+  ["#dingyi-choice"] = "定仪：选择一项对所有角色生效",
+  ["@dingyi"] = "定仪",
+  ["dingyi1"] = "额外摸牌",
+  ["dingyi2"] = "手牌上限",
+  ["dingyi3"] = "攻击范围",
+  ["dingyi4"] = "额外回复",
+  ["#zuici-invoke"] = "罪辞：你可以令 %dest 失去“定仪”效果并获得你指定的一种智囊",
+  ["#fubi-choice"] = "辅弼：选择为 %dest 更换的“定仪”效果",
+  ["#fubi"] = "辅弼：更换一名角色“定仪”效果，或弃一张牌令一名角色“定仪”效果加倍直到你下回合开始",
+
+  ["$dingyi1"] = "经国序民，还需制礼定仪。",
+  ["$dingyi2"] = "无礼而治世，欲使国泰，安可得哉？",
+  ["$zuici1"] = "既为朝堂宁定，吾请辞便是。",
+  ["$zuici2"] = "国事为先，何惧清名有损！",
+  ["$fubi1"] = "辅君弼主，士之所志也。",
+  ["$fubi2"] = "献策思计，佐定江山。",
+  ["~mobile__sunshao"] = "江东将相各有所能，奈何心向不一……",
+}
+
 local duyu = General(extension, "mobile__duyu", "qun", 4)
 duyu.subkingdom = "jin"
 local wuku = fk.CreateTriggerSkill{

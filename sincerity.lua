@@ -316,6 +316,94 @@ Fk:loadTranslationTable{
   ["~mobile__wangling"] = "一生尽忠事魏，不料今日晚节尽毁啊！",
 }
 
+local nos__mifuren = General(extension, "nos__mifuren", "shu", 3, 3, General.Female)
+local nos__cunsi = fk.CreateActiveSkill{
+  name = "nos__cunsi",
+  anim_type = "support",
+  card_num = 0,
+  target_num = 1,
+  prompt = "#nos__cunsi",
+  can_use = function (self, player, card)
+    return player.faceup and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0
+  end,
+  on_use = function (self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    player:turnOver()
+    if not target.dead then
+      room:addPlayerMark(target, "@@nos__cunsi", 1)
+      local cards = room:getCardsFromPileByRule("slash", 1, "allPiles")
+      if #cards > 0 then
+        room:moveCards({
+          ids = cards,
+          to = target.id,
+          toArea = Card.PlayerHand,
+          moveReason = fk.ReasonJustMove,
+          proposer = player.id,
+          skillName = self.name,
+        })
+      end
+    end
+  end,
+}
+local nos__cunsi_trigger = fk.CreateTriggerSkill{
+  name = "#nos__cunsi_trigger",
+  mute = true,
+  events = {fk.AfterCardUseDeclared},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:getMark("@@nos__cunsi") > 0 and data.card.trueName == "slash"
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    data.additionalDamage = (data.additionalDamage or 0) + player:getMark("@@nos__cunsi")
+    player.room:setPlayerMark(player, "@@nos__cunsi", 0)
+  end,
+}
+local nos__guixiu = fk.CreateTriggerSkill{
+  name = "nos__guixiu",
+  anim_type = "defensive",
+  frequency = Skill.Compulsory,
+  events = {fk.Damaged, fk.TurnedOver},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) then
+      if event == fk.Damaged then
+        return not player.faceup
+      else
+        return player.faceup
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if event == fk.Damaged then
+      player:turnOver()
+    else
+      player:drawCards(1, self.name)
+    end
+  end,
+}
+nos__cunsi:addRelatedSkill(nos__cunsi_trigger)
+nos__mifuren:addSkill(nos__cunsi)
+nos__mifuren:addSkill(nos__guixiu)
+Fk:loadTranslationTable{
+  ["nos__mifuren"] = "糜夫人",
+  ["nos__cunsi"] = "存嗣",
+  [":nos__cunsi"] = "出牌阶段限一次，你可以将武将牌翻至背面朝上，令一名角色获得一张【杀】，其使用下一张【杀】造成的伤害+1。",
+  ["nos__guixiu"] = "闺秀",
+  [":nos__guixiu"] = "锁定技，当你受到伤害后，你将武将牌翻至正面朝上；当你的武将牌翻至正面朝上后，你摸一张牌。",
+  ["#nos__cunsi"] = "存嗣：你可以翻面，令一名角色获得一张【杀】，且其使用下一张【杀】伤害+1",
+  ["@@nos__cunsi"] = "存嗣",
+
+  ["$nos__cunsi1"] = "存亡之际，将军休要迟疑。",
+  ["$nos__cunsi2"] = "为保汉嗣，死而后已！",
+  ["$nos__guixiu1"] = "坐秀闺中，亦明正理。",
+  ["$nos__guixiu2"] = "夜依闺楼月，复影自相怜。",
+  ["~nos__mifuren"] = "子龙将军，请保重……",
+}
+
 local mifuren = General(extension, "mobile__mifuren", "shu", 3, 3, General.Female)
 local mobile__guixiu = fk.CreateTriggerSkill{
   name = "mobile__guixiu",

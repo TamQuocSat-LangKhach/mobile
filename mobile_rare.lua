@@ -142,6 +142,122 @@ Fk:loadTranslationTable{
   ["~liuzan"] = "贼子们，来吧！啊…………",
 }
 
+local miheng = General(extension, "miheng", "qun", 3)
+miheng.hidden = true
+local mobile__kuangcai = fk.CreateTriggerSkill{
+  name = "mobile__kuangcai",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Play
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local original_timeout = room.timeout
+    local phase = room.logic:getCurrentEvent():findParent(GameEvent.Phase)
+    if phase ~= nil then
+      phase:addCleaner(function()
+        room.timeout = original_timeout
+      end)
+    end
+    room:setPlayerMark(player, "mobile__kuangcai_timeout-phase", 5)
+    room.timeout = 5
+  end,
+
+  refresh_events = {fk.StartPlayCard},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and player:usedSkillTimes(self.name, Player.HistoryPhase) > 0
+  end,
+  on_refresh = function (self, event, target, player, data)
+    player.room.timeout = player:getMark("mobile__kuangcai_timeout-phase")
+  end,
+}
+local mobile__kuangcai_targetmod = fk.CreateTargetModSkill{
+  name = "#mobile__kuangcai_targetmod",
+  bypass_times = function(self, player, skill, scope, card, to)
+    return player:usedSkillTimes("mobile__kuangcai", Player.HistoryPhase) > 0
+  end,
+  bypass_distances = function(self, player, skill, card, to)
+    return player:usedSkillTimes("mobile__kuangcai", Player.HistoryPhase) > 0
+  end,
+}
+local mobile__kuangcai_trigger = fk.CreateTriggerSkill{
+  name = "#mobile__kuangcai_trigger",
+  mute = true,
+  events = {fk.CardUsing},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:usedSkillTimes("mobile__kuangcai", Player.HistoryPhase) > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:drawCards(1, "mobile__kuangcai")
+    room:removePlayerMark(player, "mobile__kuangcai_timeout-phase", 1)
+    room.timeout = player:getMark("mobile__kuangcai_timeout-phase")
+  end,
+}
+local mobile__shejian = fk.CreateTriggerSkill{
+  name = "mobile__shejian",
+  anim_type = "control",
+  events = {fk.EventPhaseEnd},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and player.phase == Player.Discard then
+      local yes = true
+      local suits = {}
+      local events = player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+        for _, move in ipairs(e.data) do
+          if move.from == player.id and move.moveReason == fk.ReasonDiscard then
+            for _, info in ipairs(move.moveInfo) do
+              local suit = Fk:getCardById(info.cardId).suit
+              if suit ~= Card.NoSuit and not table.contains(suits, suit) then
+                table.insert(suits, suit)
+              else
+                yes = false
+                break
+              end
+            end
+          end
+        end
+      end, Player.HistoryPhase)
+      return yes and #suits > 1 and table.find(player.room:getOtherPlayers(player), function(p) return not p:isNude() end)
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local targets = table.map(table.filter(player.room:getOtherPlayers(player), function(p)
+      return not p:isNude() end), Util.IdMapper)
+    local to = player.room:askForChoosePlayers(player, targets, 1, 1, "#mobile__shejian-choose", self.name, true)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    local card = room:askForCardChosen(player, to, "he", self.name)
+    room:throwCard({card}, self.name, to, player)
+  end,
+}
+mobile__kuangcai:addRelatedSkill(mobile__kuangcai_targetmod)
+mobile__kuangcai:addRelatedSkill(mobile__kuangcai_trigger)
+miheng:addSkill(mobile__kuangcai)
+miheng:addSkill(mobile__shejian)
+Fk:loadTranslationTable{
+  ["miheng"] = "祢衡",
+  ["mobile__kuangcai"] = "狂才",
+  [":mobile__kuangcai"] = "出牌阶段开始时，你可以令你此阶段内的主动出牌时间变为5秒，响应出牌时间也变为5秒。若如此做，本阶段你使用牌无距离次数限制，"..
+  "且当你使用牌时，你摸一张牌且主动出牌时间-1秒（每阶段至多以此法摸五张牌）。",
+  ["mobile__shejian"] = "舌剑",
+  [":mobile__shejian"] = "弃牌阶段结束时，若你本阶段弃置过至少两张牌且花色均不相同，你可以弃置一名其他角色一张牌。",
+  ["#mobile__shejian-choose"] = "舌剑：你可以弃置一名其他角色一张牌",
+
+  ["$mobile__kuangcai1"] = "博古揽今，信手拈来。",
+  ["$mobile__kuangcai2"] = "功名为尘，光阴为金。",
+  ["$mobile__shejian1"] = "尔等竖子，不堪为伍！",
+  ["$mobile__shejian2"] = "请君洗耳，听我之言。",
+  ["~miheng"] = "呵呵呵呵……这天地都容不下我！……",
+}
+
 local caochun = General(extension, "caochun", "wei", 4)
 local shanjia = fk.CreateTriggerSkill{
   name = "shanjia",

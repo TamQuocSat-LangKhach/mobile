@@ -830,6 +830,31 @@ Fk:loadTranslationTable{
 
 zhonghui:addRelatedSkill(m_ex__paiyi)
 
+local gongsunzan = General(extension, "m_ex__gongsunzan", "qun", 4)
+gongsunzan:addSkill("qiaomeng")
+local m_ex__yicong = fk.CreateDistanceSkill{
+  name = "m_ex__yicong",
+  correct_func = function(self, from, to)
+    if from:hasSkill(self) then
+      return - math.max(0, from.hp - 1)
+    end
+    if to:hasSkill(self) then
+      return math.max(0, to:getLostHp() - 1)
+    end
+    return 0
+  end,
+}
+gongsunzan:addSkill(m_ex__yicong)
+Fk:loadTranslationTable{
+  ["m_ex__gongsunzan"] = "公孙瓒",
+  ["m_ex__yicong"] = "义从",
+  [":m_ex__yicong"] = "锁定技，你计算与其他角色的距离-X（X为你的体力值-1）；其他角色计算与你的距离+Y（Y为你已损失的体力值-1）。",
+
+  ["$qiaomeng_m_ex__gongsunzan1"] = "夺汝兵刃战马，尔等必败无疑。",
+  ["$qiaomeng_m_ex__gongsunzan2"] = "摧敌思折枯，荡寇如反掌。",
+  ["~m_ex__gongsunzan"] = "啊！（马叫声）",
+}
+
 local liubiao = General(extension, "m_ex__liubiao", "qun", 3)
 
 Fk:loadTranslationTable{
@@ -1170,6 +1195,60 @@ Fk:loadTranslationTable{
 }
 
 zhuran:addSkill(m_ex__danshou)
+
+local m_ex__panzhangmazhong = General(extension, "m_ex__panzhangmazhong", "wu", 4)
+local m_ex__duodao = fk.CreateTriggerSkill{
+  name = "m_ex__duodao",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.from and #data.from:getEquipments(Card.SubtypeWeapon) > 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#m_ex__duodao-invoke::"..data.from.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    local dummy = Fk:cloneCard("dilu")
+    dummy:addSubcards(data.from:getEquipments(Card.SubtypeWeapon))
+    player.room:obtainCard(player, dummy, false, fk.ReasonPrey)
+  end
+}
+m_ex__panzhangmazhong:addSkill(m_ex__duodao)
+local m_ex__anjian = fk.CreateTriggerSkill{
+  name = "m_ex__anjian",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  events = {fk.TargetSpecified},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.card.trueName == "slash"
+    and not player.room:getPlayerById(data.to):inMyAttackRange(player)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if room:askForChoice(player, {"disresponsive", "m_ex__anjian_damage"}, self.name, "#m_ex__anjian-choice:"..data.to) == "disresponsive" then
+      data.disresponsive = true
+    else
+      data.additionalDamage = (data.additionalDamage or 0) + 1
+    end
+  end,
+}
+m_ex__panzhangmazhong:addSkill(m_ex__anjian)
+Fk:loadTranslationTable{
+  ["m_ex__panzhangmazhong"] = "潘璋马忠",
+  ["m_ex__duodao"] = "夺刀",
+  [":m_ex__duodao"] = "当你受到伤害后，你可以获得伤害来源装备区里的武器牌。",
+  ["m_ex__anjian"] = "暗箭",
+  [":m_ex__anjian"] = "锁定技，当你使用【杀】指定一名角色为目标后，若你不在其攻击范围内，你选择一项：1.令其不能响应此【杀】；2.此【杀】对其造成的基础伤害值+1。",
+  ["#m_ex__duodao-invoke"] = "夺刀：你可以获得 %dest 装备区的武器牌",
+  ["#m_ex__anjian-choice"] = "暗箭：令 %src 不能响应此【杀】或受到此【杀】伤害+1",
+  ["m_ex__anjian_damage"] = "伤害+1",
+
+  ["$m_ex__duodao1"] = "避其锋芒，夺其兵刃！",
+  ["$m_ex__duodao2"] = "好兵器啊！哈哈哈！",
+  ["$m_ex__anjian1"] = "看我一箭索命！",
+  ["$m_ex__anjian2"] = "明枪易躲，暗箭难防！",
+  ["~m_ex__panzhangmazhong"] = "埋伏得这么好，怎会……",
+}
 
 local manchong = General(extension, "m_ex__manchong", "wei", 3)
 

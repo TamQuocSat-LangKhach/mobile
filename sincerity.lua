@@ -502,9 +502,9 @@ local qingyu_trigger = fk.CreateTriggerSkill{
 local xuancun = fk.CreateTriggerSkill{
   name = "xuancun",
   anim_type = "support",
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.to == player.NotActive and player.hp > player:getHandcardNum()
+    return player:hasSkill(self) and target ~= player and not target.dead and player.hp > player:getHandcardNum()
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, nil,

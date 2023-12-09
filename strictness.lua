@@ -259,10 +259,10 @@ local mobile__yanjiao = fk.CreateActiveSkill{
 local mobile__yanjiao_delay = fk.CreateTriggerSkill{
   name = "#mobile__yanjiao_delay",
   anim_type = "control",
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnStart},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    return target == player and data.to == Player.Start and not player.dead and player:getMark("@mobile__yanjiao") > 0
+    return target == player and not player.dead and player:getMark("@mobile__yanjiao") > 0
   end,
   on_cost = function() return true end,
   on_use = function(self, event, target, player, data)

@@ -226,9 +226,9 @@ local mobile__gongsun = fk.CreateTriggerSkill{
     end
   end,
 
-  refresh_events = {fk.EventPhaseChanging, fk.Death},
+  refresh_events = {fk.TurnStart, fk.Death},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:getMark("_mobile__gongsun") ~= 0 and (event == fk.Death or data.from == Player.NotActive)
+    return target == player and player:getMark("_mobile__gongsun") ~= 0
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
@@ -1859,13 +1859,13 @@ local bingqing = fk.CreateTriggerSkill{
       player:hasSkill(self) and
       player.phase == Player.Play and
       (data.extra_data or {}).firstCardSuitUseFinished and
-      type(player:getMark("@bingqing")) == "table" and
-      #player:getMark("@bingqing") > 1 and
-      #player:getMark("@bingqing") < 5
+      type(player:getMark("@bingqing-phase")) == "table" and
+      #player:getMark("@bingqing-phase") > 1 and
+      #player:getMark("@bingqing-phase") < 5
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local suitsNum = #player:getMark("@bingqing")
+    local suitsNum = #player:getMark("@bingqing-phase")
     local targets = {}
     local prompt = "#bingqing-draw"
     if suitsNum == 2 then
@@ -1895,7 +1895,7 @@ local bingqing = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local suitsNum = #player:getMark("@bingqing")
+    local suitsNum = #player:getMark("@bingqing-phase")
     local to = room:getPlayerById(self.cost_data)
     if suitsNum == 2 then
       to:drawCards(2, self.name)
@@ -1913,30 +1913,21 @@ local bingqing = fk.CreateTriggerSkill{
     end
   end,
 
-  refresh_events = {fk.EventPhaseChanging, fk.CardUseFinished},
+  refresh_events = {fk.CardUseFinished},
   can_refresh = function(self, event, target, player, data)
-    if target ~= player then return end
-    if event == fk.EventPhaseChanging then
-      return data.from == Player.Play and type(player:getMark("@bingqing")) == "table"
-    else
-      return player:hasSkill(self, true) and
-        player.phase == Player.Play and
-        (type(player:getMark("@bingqing")) ~= "table" or
-        not table.contains(player:getMark("@bingqing"), "log_" .. data.card:getSuitString()))
-    end
+    return player:hasSkill(self, true) and target == player and
+      player.phase == Player.Play and
+      (type(player:getMark("@bingqing-phase")) ~= "table" or
+      not table.contains(player:getMark("@bingqing-phase"), "log_" .. data.card:getSuitString()))
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.EventPhaseChanging then
-      room:setPlayerMark(player, "@bingqing", 0)
-    else
-      local typesRecorded = type(player:getMark("@bingqing")) == "table" and player:getMark("@bingqing") or {}
-      table.insert(typesRecorded, "log_" .. data.card:getSuitString())
-      room:setPlayerMark(player, "@bingqing", typesRecorded)
+    local typesRecorded = type(player:getMark("@bingqing-phase")) == "table" and player:getMark("@bingqing-phase") or {}
+    table.insert(typesRecorded, "log_" .. data.card:getSuitString())
+    room:setPlayerMark(player, "@bingqing-phase", typesRecorded)
 
-      data.extra_data = data.extra_data or {}
-      data.extra_data.firstCardSuitUseFinished = true
-    end
+    data.extra_data = data.extra_data or {}
+    data.extra_data.firstCardSuitUseFinished = true
   end,
 }
 maojie:addSkill(bingqing)
@@ -1945,7 +1936,7 @@ Fk:loadTranslationTable{
   ["bingqing"] = "秉清",
   [":bingqing"] = "当你于出牌阶段内使用牌结算结束后，若此牌的花色与你于此阶段内使用并结算结束的牌花色均不相同，则你记录此牌花色直到此阶段结束，"..
   "然后你根据记录的花色数，你可以执行对应效果：<br>两种，令一名角色摸两张牌；<br>三种，弃置一名角色区域内的一张牌；<br>四种，对一名角色造成1点伤害。",
-  ["@bingqing"] = "秉清",
+  ["@bingqing-phase"] = "秉清",
   ["#bingqing-draw"] = "秉清：你可以令一名角色摸两张牌",
   ["#bingqing-discard"] = "秉清：你可以弃置一名角色区域里的一张牌",
   ["#bingqing-damage"] = "秉清：你可以对一名其他角色造成1点伤害",
@@ -3109,9 +3100,8 @@ local hongyi_delay = fk.CreateTriggerSkill{
     end
   end,
 
-  refresh_events = {fk.EventPhaseChanging, fk.Death},
+  refresh_events = {fk.TurnStart, fk.Death},
   can_refresh = function(self, event, target, player, data)
-    if event == fk.EventPhaseChanging and data.from ~= Player.NotActive then return false end
     return player == target and type(player:getMark("hongyi_targets")) == "table"
   end,
   on_refresh = function(self, event, target, player, data)
@@ -3318,9 +3308,9 @@ local mobileYizhengDebuff = fk.CreateTriggerSkill{
   name = "#yizheng-debuff",
   mute = true,
   priority = 3,
-  refresh_events = {fk.EventPhaseChanging},
+  refresh_events = {fk.EventPhaseStart},
   can_refresh = function(self, event, target, player, data)
-    return target:getMark("@@mobile__yizheng") == true and data.from == Player.RoundStart
+    return player == target and player.phase == Player.Start and target:getMark("@@mobile__yizheng") == true
   end,
   on_refresh = function(self, event, target, player, data)
     target.room:setPlayerMark(target, "@@mobile__yizheng", 0)
@@ -3570,14 +3560,15 @@ local yijin_active = fk.CreateActiveSkill{
 local yijin_trigger = fk.CreateTriggerSkill{
   name = "#yijin_trigger",
   mute = true,
-  events = {fk.DrawNCards, fk.EventPhaseChanging, fk.EventPhaseStart, fk.DamageInflicted},
+  events = {fk.DrawNCards, fk.EventPhaseChanging, fk.TurnEnd, fk.EventPhaseStart, fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
     if target == player then
       if event == fk.DrawNCards then
         return player:getMark("@@yijin_wushi") > 0
+      elseif event == fk.TurnEnd then
+        return player:getMark("@@yijin_houren") > 0 and player:isWounded()
       elseif event == fk.EventPhaseChanging then
-        return (data.to == Player.NotActive and player:getMark("@@yijin_houren") > 0) or
-          (data.to == Player.Draw and player:getMark("@@yijin_yongbi") > 0) or
+        return (data.to == Player.Draw and player:getMark("@@yijin_yongbi") > 0) or
           ((data.to == Player.Play or data.to == Player.Discard) and player:getMark("@@yijin_jinmi") > 0)
       elseif event == fk.EventPhaseStart then
         return player.phase == Player.Play and player:getMark("@@yijin_guxiong") > 0
@@ -3596,27 +3587,25 @@ local yijin_trigger = fk.CreateTriggerSkill{
         room:notifySkillInvoked(src, "yijin", "support")
       end
       data.n = data.n + 4
-    elseif event == fk.EventPhaseChanging then
-      if player:getMark("@@yijin_houren") > 0 then
-        if player:isWounded() then
-          if src then
-            src:broadcastSkillInvoke("yijin", 1)
-            room:notifySkillInvoked(src, "yijin", "support")
-          end
-          room:recover({
-            who = player,
-            num = math.min(3, player:getLostHp()),
-            recoverBy = player,
-            skillName = "yijin",
-          })
-        end
-      else
+    elseif event == fk.TurnEnd then
+      if player:isWounded() then
         if src then
-          src:broadcastSkillInvoke("yijin", 2)
-          room:notifySkillInvoked(src, "yijin", "control")
+          src:broadcastSkillInvoke("yijin", 1)
+          room:notifySkillInvoked(src, "yijin", "support")
         end
-        return true
+        room:recover({
+          who = player,
+          num = math.min(3, player:getLostHp()),
+          recoverBy = player,
+          skillName = "yijin",
+        })
       end
+    elseif event == fk.EventPhaseChanging then
+      if src then
+        src:broadcastSkillInvoke("yijin", 2)
+        room:notifySkillInvoked(src, "yijin", "control")
+      end
+      return true
     elseif event == fk.EventPhaseStart then
       if src then
         src:broadcastSkillInvoke("yijin", 2)

@@ -199,7 +199,7 @@ Fk:loadTranslationTable{
   ["~mobile__bianfuren"] = "孟德大人，妾身可以再伴你身边了……",
 }
 
-local feiyi = General(extension, "nos__feiyi", "shu", 3)
+local feiyi = General(extension, "mobile__feiyi", "shu", 3)
 local jianyu = fk.CreateActiveSkill{
   name = "jianyu",
   anim_type = "control",
@@ -259,9 +259,9 @@ local jianyu_trigger = fk.CreateTriggerSkill{
 }
 jianyu:addRelatedSkill(jianyu_trigger)
 feiyi:addSkill(jianyu)
-feiyi:addSkill("ld__shengxi")
+feiyi:addSkill("os__shengxi")
 Fk:loadTranslationTable{
-  ["nos__feiyi"] = "费祎",
+  ["mobile__feiyi"] = "费祎",
   ["jianyu"] = "谏喻",
   [":jianyu"] = "每轮限一次，出牌阶段，你可以选择两名角色，直到你下回合开始，当这些角色于其出牌阶段使用牌指定对方为目标后，你令目标摸一张牌。",
   ["#jianyu"] = "谏喻：指定两名角色，直到你下回合开始，这些角色互相使用牌时，目标摸一张牌",
@@ -269,9 +269,9 @@ Fk:loadTranslationTable{
 
   ["$jianyu1"] = "斟酌损益，进尽忠言，此臣等之任也。",
   ["$jianyu2"] = "两相匡护，以各安其分，兼尽其用。",
-  ["$ld__shengxi_nos__feiyi1"] = "承葛公遗托，富国安民。",
-  ["$ld__shengxi_nos__feiyi2"] = "保国治民，敬守社稷。",
-  ["~nos__feiyi"] = "吾何惜一死，惜不见大汉中兴矣。",
+  ["$os__shengxi_mobile__feiyi1"] = "承葛公遗托，富国安民。",
+  ["$os__shengxi_mobile__feiyi2"] = "保国治民，敬守社稷。",
+  ["~mobile__feiyi"] = "吾何惜一死，惜不见大汉中兴矣。",
 }
 
 local chenzhen = General(extension, "chenzhen", "shu", 3)

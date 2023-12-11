@@ -638,12 +638,10 @@ local xianghai = fk.CreateFilterSkill{
   name = "xianghai",
   card_filter = function(self, to_select, player)
     return player:hasSkill(self) and to_select.type == Card.TypeEquip and
-      not table.contains(player:getCardIds("ej"), to_select.id)
+    table.contains(player.player_cards[Player.Hand], to_select.id)
   end,
   view_as = function(self, to_select)
-    local card = Fk:cloneCard("analeptic", to_select.suit, to_select.number)
-    card.skillName = self.name
-    return card
+    return Fk:cloneCard("analeptic", to_select.suit, to_select.number)
   end,
 }
 local xianghai_maxcards = fk.CreateMaxCardsSkill{

@@ -1697,6 +1697,12 @@ Fk:loadTranslationTable{
   ["#huiyao"] = "慧夭：你可以受到1点无来源伤害，选择一名其他角色，令其<font color='red'>视为</font>造成伤害",
   ["#huiyao-choose"] = "慧夭：选择一名角色，视为 %dest 对其造成1点伤害",
   ["#quesong-choose"] = "雀颂：你可以令一名角色选择摸牌或回复体力",
+
+  ["$huiyao1"] = "幸有仓舒为伴，吾不至居高寡寒。",
+  ["$huiyao2"] = "通悟而无笃学之念，则必盈天下之叹也。",
+  ["$quesong1"] = "承白雀之瑞，显周公之德。",
+  ["$quesong2"] = "挽汉室于危亡，继光武之中兴。",
+  ["~mxing__zhoubuyi"] = "慧童亡，天下伤……",
 }
 
 return extension

@@ -320,8 +320,9 @@ local m_ex__jinjiu = fk.CreateFilterSkill{
   name = "m_ex__jinjiu",
   anim_type = "offensive",
   frequency = Skill.Compulsory,
-  card_filter = function(self, card, player)
-    return player:hasSkill(self) and card.name == "analeptic"
+  card_filter = function(self, card, player, isJudgeEvent)
+    return player:hasSkill(self) and card.name == "analeptic" and
+    (table.contains(player.player_cards[Player.Hand], card.id) or isJudgeEvent)
   end,
   view_as = function(self, to_select)
     return Fk:cloneCard("slash", to_select.suit, to_select.number)

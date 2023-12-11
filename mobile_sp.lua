@@ -4643,12 +4643,12 @@ local laishou = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.DamageInflicted then
-      player:broadcastSkillInvoke(self.name)
+      player:broadcastSkillInvoke(self.name, math.random(1, 2))
       room:notifySkillInvoked(player, self.name, "defensive")
       room:changeMaxHp(player, data.damage)
       return true
     elseif event == fk.EventPhaseStart then
-      player:broadcastSkillInvoke(self.name)
+      player:broadcastSkillInvoke(self.name, 3)
       room:notifySkillInvoked(player, self.name, "negative")
       room:killPlayer({who = player.id})
     end
@@ -4778,6 +4778,13 @@ Fk:loadTranslationTable{
   ["#luanqun"] = "乱群：令所有角色展示一张手牌，你可以获得其中一张与你展示颜色相同的牌",
   ["#luanqun-card"] = "乱群：请展示一张手牌",
   ["#luanqun-get"] = "乱群：你可以获得其中一张牌",
+  
+  ["$laishou1"] = "黄耇鲐背，谓之永年。",
+  ["$laishou2"] = "养怡和之福，得乔松之寿。",
+  ["$laishou3"] = "福寿将终，竟未得期颐！",
+  ["$luanqun1"] = "位居执慎，博涉多闻，更应秉性而论！",
+  ["$luanqun2"] = "年过杖朝，自是从心所欲，何来逾矩之理？",
+  ["~laimin"] = "狂嚣之言，一言十过啊……",
 }
 
 return extension

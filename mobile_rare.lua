@@ -2548,6 +2548,7 @@ local mowang = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.BeforeGameOverJudge then
+      player._splayer:setDied(false)
       room:setPlayerRest(player, 1)
     else
       room:killPlayer({ who = player.id })

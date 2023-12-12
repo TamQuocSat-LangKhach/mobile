@@ -2482,11 +2482,26 @@ local danggu = fk.CreateTriggerSkill{
     else
       local generals = player.tag['jiedang_before_generals']
 
+      local hasDangGu = player:hasSkill(self.name, true, true)
+      local hasMoWang = player:hasSkill("mowang", true, true)
+
       if #generals > 1 then
         room:changeHero(player, generals[2], false, true, false, false)
       end
       if generals[1] ~= "" then
         room:changeHero(player, generals[1], false, false, false, false)
+      end
+
+      local toObtain = {}
+      if hasDangGu and not player:hasSkill(self.name) then
+        table.insert(toObtain, self.name)
+      end
+      if hasMoWang and not player:hasSkill("mowang") then
+        table.insert(toObtain, "mowang")
+      end
+
+      if #toObtain > 0 then
+        room:handleAddLoseSkills(player, table.concat(toObtain, "|"), nil, false)
       end
     end
   end,

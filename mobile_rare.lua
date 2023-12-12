@@ -1697,12 +1697,860 @@ Fk:loadTranslationTable{
   ["#huiyao"] = "慧夭：你可以受到1点无来源伤害，选择一名其他角色，令其<font color='red'>视为</font>造成伤害",
   ["#huiyao-choose"] = "慧夭：选择一名角色，视为 %dest 对其造成1点伤害",
   ["#quesong-choose"] = "雀颂：你可以令一名角色选择摸牌或回复体力",
-
-  ["$huiyao1"] = "幸有仓舒为伴，吾不至居高寡寒。",
-  ["$huiyao2"] = "通悟而无笃学之念，则必盈天下之叹也。",
-  ["$quesong1"] = "承白雀之瑞，显周公之德。",
-  ["$quesong2"] = "挽汉室于危亡，继光武之中兴。",
-  ["~mxing__zhoubuyi"] = "慧童亡，天下伤……",
 }
+
+local shichangshi = General(extension, "shichangshi", "qun", 1)
+Fk:loadTranslationTable{
+  ["shichangshi"] = "十常侍",
+  ["~mxing__weiyan"] = "使君为何弃我而去……呃啊！",
+}
+
+local tenChangShiMapper = {
+  ["changshi__zhangrang"] = "changshi__taoluan",
+  ["changshi__zhaozhong"] = "changshi__chiyan",
+  ["changshi__sunzhang"] = "changshi__zimou",
+  ["changshi__bilan"] = "changshi__picai",
+  ["changshi__xiayun"] = "changshi__yaozhuo",
+  ["changshi__hankui"] = "changshi__xiaolu",
+  ["changshi__lisong"] = "changshi__kuiji",
+  ["changshi__duangui"] = "changshi__chihe",
+  ["changshi__guosheng"] = "changshi__niqu",
+  ["changshi__gaowang"] = "changshi__miaoyu",
+}
+
+Fk:loadTranslationTable{
+  ["changshi"] = "常侍",
+  ["changshi__zhangrang"] = "张让",
+  ["changshi__zhaozhong"] = "赵忠",
+  ["changshi__sunzhang"] = "孙璋",
+  ["changshi__bilan"] = "毕岚",
+  ["changshi__xiayun"] = "夏恽",
+  ["changshi__hankui"] = "韩悝",
+  ["changshi__lisong"] = "栗嵩",
+  ["changshi__duangui"] = "段珪",
+  ["changshi__guosheng"] = "郭胜",
+  ["changshi__gaowang"] = "高望",
+
+  [":changshi__zhangrang-specificSkillDesc"] = "滔乱：（滔乱）",
+  [":changshi__zhaozhong-specificSkillDesc"] = "鸱咽：（破军）",
+  [":changshi__sunzhang-specificSkillDesc"] = "自谋：（勤政）",
+  [":changshi__bilan-specificSkillDesc"] = "庀材：（慧识）",
+  [":changshi__xiayun-specificSkillDesc"] = "谣诼：（义争）",
+  [":changshi__hankui-specificSkillDesc"] = "宵赂：（巧思）",
+  [":changshi__lisong-specificSkillDesc"] = "窥机：（魄袭）",
+  [":changshi__duangui-specificSkillDesc"] = "叱吓：（烈弓）",
+  [":changshi__guosheng-specificSkillDesc"] = "逆取：（评才）",
+  [":changshi__gaowang-specificSkillDesc"] = "妙语：（龙魂）",
+}
+
+local hiddenChangshi = General(extension, "hiddenChangshi", "qun", 1)
+hiddenChangshi.total_hidden = true
+
+local changshiTaoluan = fk.CreateViewAsSkill{
+  name = "changshi__taoluan",
+  pattern = ".",
+  interaction = function()
+    local names = {}
+    local mark = Self:getMark("@$taoluan")
+    for _, id in ipairs(Fk:getAllCardIds()) do
+      local card = Fk:getCardById(id)
+      if (card.type == Card.TypeBasic or card:isCommonTrick()) and not card.is_derived and
+        Self:canUse(card) then
+        if mark == 0 or (not table.contains(mark, card.trueName)) then
+          table.insertIfNeed(names, card.name)
+        end
+      end
+    end
+    if #names == 0 then return end
+    return UI.ComboBox {choices = names}
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 or not self.interaction.data then return end
+    local card = Fk:cloneCard(self.interaction.data)
+    card:addSubcard(cards[1])
+    card.skillName = self.name
+    return card
+  end,
+  enabled_at_play = function(self, player)
+    return not player:isNude() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  enabled_at_response = function(self, player)
+    return false
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__taoluan"] = "滔乱",
+  [":changshi__taoluan"] = "出牌阶段限一次，你可以将一张牌当任意基本牌或普通锦囊牌使用。",
+  ["$changshi__taoluan1"] = "罗绮朱紫，皆若吾等手中傀儡。",
+}
+
+hiddenChangshi:addSkill(changshiTaoluan)
+shichangshi:addRelatedSkill("changshi__taoluan")
+
+local changshiChiyan = fk.CreateTriggerSkill{
+  name = "changshi__chiyan",
+  anim_type = "offensive",
+  events = {fk.TargetSpecified, fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and data.card and data.card.trueName == "slash" then
+      if event == fk.TargetSpecified then
+        local to = player.room:getPlayerById(data.to)
+        return not to.dead and to.hp > 0 and not to:isNude()
+      elseif event == fk.DamageCaused then
+        return not data.chain and #player:getCardIds(Player.Hand) >= #data.to:getCardIds(Player.Hand) and
+        #player:getCardIds(Player.Equip) >= #data.to:getCardIds(Player.Equip)
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.TargetSpecified then
+      if player.room:askForSkillInvoke(player, self.name, nil, "#changshi__chiyan-invoke::"..data.to) then
+        player.room:doIndicate(player.id, {data.to})
+        return true
+      end
+    elseif event == fk.DamageCaused then
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TargetSpecified then
+      local to = room:getPlayerById(data.to)
+      local cards = room:askForCardsChosen(player, to, 1, 1, "he", self.name)
+      to:addToPile(self.name, cards, false, self.name)
+    else
+      data.damage = data.damage + 1
+    end
+  end,
+}
+
+local changshiChiyanDelay = fk.CreateTriggerSkill{
+  name = "#changshi__chiyan_delay",
+  mute = true,
+  events = {fk.EventPhaseChanging},
+  can_trigger = function(self, event, target, player, data)
+    return data.to == Player.NotActive and #player:getPile("changshi__chiyan") > 0
+  end,
+  on_cost = function() return true end,
+  on_use = function(self, event, target, player, data)
+    local dummy = Fk:cloneCard("zixing")
+    dummy:addSubcards(player:getPile("changshi__chiyan"))
+    local room = player.room
+    room:obtainCard(player.id, dummy, false)
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__chiyan"] = "鸱咽",
+  [":changshi__chiyan"] = "当你使用【杀】指定目标后，你可以将其一张牌扣置于其武将牌旁，该角色于本回合结束时获得此牌；当你使用【杀】对手牌数和装备区内的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
+  ["#changshi__chiyan-invoke"] = "是否对%dest发动 鸱咽",
+  ["$cchangshi__chiyan1"] = "逆臣乱党，都要受这啄心之刑。",
+}
+
+changshiChiyan:addRelatedSkill(changshiChiyanDelay)
+hiddenChangshi:addSkill(changshiChiyan)
+shichangshi:addRelatedSkill("changshi__chiyan")
+
+local changshiZimou = fk.CreateTriggerSkill{
+  name = "changshi__zimou",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.CardUsing},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self) and
+      player.phase == player.Play and
+      not table.every({ 2, 4, 6 }, function(num)
+        return player:getMark("@" .. self.name) % num ~= 0
+      end)
+  end,
+  on_use = function(self, event, player, target, data)
+    local loopList = table.filter({ 2, 4, 6 }, function(num)
+      return player:getMark("@" .. self.name) % num == 0
+    end)
+
+    local toObtain = {}
+    for _, count in ipairs(loopList) do
+      local cardList = "analeptic"
+      if count == 4 then
+        cardList = "slash"
+      elseif count == 6 then
+        cardList = "duel"
+      end
+      local randomCard = player.room:getCardsFromPileByRule(cardList)
+      if #randomCard > 0 then
+        table.insert(toObtain, randomCard[1])
+      end
+    end
+
+    if #toObtain > 0 then
+      player.room:moveCards({
+        ids = toObtain,
+        to = player.id,
+        toArea = Card.PlayerHand,
+        moveReason = fk.ReasonPrey,
+        proposer = player.id,
+        skillName = self.name,
+      })
+    end
+  end,
+
+  refresh_events = {fk.PreCardUse},
+  can_refresh = function(self, event, target, player, data)
+    return player:hasSkill(self) and target == player
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:addPlayerMark(player, "@" .. self.name, 1)
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__zimou"] = "自谋",
+  [":changshi__zimou"] = "锁定技，当你于出牌阶段内每使用：两张牌时，你随机获得一张【酒】；四张牌时，你随机获得一张【杀】；六张牌时，你随机获得一张【决斗】。",
+  ["@changshi__zimou"] = "自谋",
+  ["$changshi__zimou1"] = "在宫里当差，还不是为这利字！",
+}
+
+hiddenChangshi:addSkill(changshiZimou)
+shichangshi:addRelatedSkill("changshi__zimou")
+
+local changshiPicai = fk.CreateActiveSkill{
+  name = "changshi__picai",
+  anim_type = "drawcard",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return false
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return false
+  end,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+
+    local cardsJudged = {}
+    while true do
+      local parsePattern = table.concat(table.map(cardsJudged, function(card)
+        return card:getSuitString()
+      end), ",")
+
+      local judge = {
+        who = from,
+        reason = self.name,
+        pattern = ".|.|" .. (parsePattern == "" and "." or "^(" .. parsePattern .. ")"),
+        skipDrop = true,
+      }
+      room:judge(judge)
+
+      table.insert(cardsJudged, judge.card)
+
+      if
+        not table.every(cardsJudged, function(card)
+          return card == judge.card or judge.card:compareSuitWith(card, true)
+        end) or
+        not room:askForSkillInvoke(from, self.name, nil, "#changshi__picai-ask")
+      then
+        break
+      end
+    end
+
+    local alivePlayerIds = table.map(room.alive_players, function(p)
+      return p.id
+    end)
+
+    cardsJudged = table.filter(cardsJudged, function(card)
+      return room:getCardArea(card.id) == Card.Processing
+    end)
+    if #cardsJudged == 0 then
+      return false
+    end
+
+    local targets = room:askForChoosePlayers(from, alivePlayerIds, 1, 1, "#changshi__picai-give", self.name, true)
+    
+    if #targets > 0 then
+      local to = targets[1]
+      local pack = Fk:cloneCard("slash")
+      pack:addSubcards(table.map(cardsJudged, function(card)
+        return card:getEffectiveId()
+      end))
+      room:obtainCard(to, pack, true, fk.ReasonGive)
+    else
+      room:moveCards({
+        ids = table.map(cardsJudged, function(card)
+          return card:getEffectiveId()
+        end),
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+        skillName = self.name,
+      })
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__picai"] = "庀材",
+  [":changshi__picai"] = "出牌阶段限一次，你可以进行判定，若结果与本次流程中的其他判定结果均不同，你可重复此流程。最后你可将本次流程中所有生效的判定牌交给一名角色。",
+  ["#changshi__picai-ask"] = "庀材：你可以重复此流程",
+  ["#changshi__picai-give"] = "庀材：你可以将这些判定牌交给一名角色",
+  ["$changshi__picai1"] = "修得广厦千万，可庇汉室不倾。",
+}
+
+hiddenChangshi:addSkill(changshiPicai)
+shichangshi:addRelatedSkill("changshi__picai")
+
+local changshiYaozhuo = fk.CreateActiveSkill{
+  name = "changshi__yaozhuo",
+  anim_type = "control",
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return false
+  end,
+  target_filter = function(self, to_select, selected)
+    local target = Fk:currentRoom():getPlayerById(to_select)
+    return
+      #selected < 1 and
+      Self.id ~= to_select and
+      target:getHandcardNum() > 0
+  end,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.tos[1])
+    local pindian = from:pindian({ to }, self.name)
+    if pindian.results[to.id].winner == from then
+      room:setPlayerMark(to, "@@changshi__yaozhuo", true)
+    else
+      room:askForDiscard(from, 2, 2, true, self.name, false)
+    end
+  end,
+}
+local changshiYaozhuoDebuff = fk.CreateTriggerSkill{
+  name = "#changshi__Yaozhuo-debuff",
+  mute = true,
+  priority = 3,
+  refresh_events = {fk.EventPhaseChanging},
+  can_refresh = function(self, event, target, player, data)
+    return target:getMark("@@changshi__yaozhuo") == true and data.from == Player.RoundStart
+  end,
+  on_refresh = function(self, event, target, player, data)
+    target.room:setPlayerMark(target, "@@changshi__yaozhuo", 0)
+    target:skip(Player.Draw)
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__yaozhuo"] = "谣诼",
+  [":changshi__yaozhuo"] = "出牌阶段限一次，你可以与一名角色拼点。若你：赢，跳过其下个摸牌阶段；没赢：你弃置两张牌。",
+  ["@@changshi__yaozhuo"] = "谣诼",
+  ["$changshi__yaozhuo1"] = "上蔽天听，下诓朝野！",
+}
+
+changshiYaozhuo:addRelatedSkill(changshiYaozhuoDebuff)
+hiddenChangshi:addSkill(changshiYaozhuo)
+shichangshi:addRelatedSkill("changshi__yaozhuo")
+
+local changshixiaolu = fk.CreateActiveSkill{
+  name = "changshi__xiaolu",
+  anim_type = "drawcard",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = function(self, to_select, selected)
+    return false
+  end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return false
+  end,
+  on_use = function(self, room, effect)
+    local from = room:getPlayerById(effect.from)
+    from:drawCards(2, self.name)
+
+    local choice = room:askForChoice(from, { "changshi__xiaolu_give", "changshi__xiaolu_discard" }, self.name)
+    if choice == "changshi__xiaolu_discard" then
+      room:askForDiscard(from, 2, 2, false, self.name, false)
+    else
+      local all = from:getCardIds("h")
+      local to_give = #all > 2 and room:askForChooseCardsAndPlayers(from, 2, 2, false, self.name, false, nil, "#changshi__xiaolu-give:::" .. 2) or all
+      local tgt = room:askForChoosePlayers(from, table.map(
+        room:getOtherPlayers(from), Util.IdMapper), 1, 1, "#changshi__xiaolu-give-choose", self.name, false)[1]
+
+      local tmp = Fk:cloneCard("slash")
+      tmp:addSubcards(to_give)
+      room:obtainCard(room:getPlayerById(tgt), tmp, false, fk.ReasonGive)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__xiaolu"] = "宵赂",
+  [":changshi__xiaolu"] = "出牌阶段限一次，你可以摸两张牌，然后选择一项：1.弃置两张手牌；2.将两张手牌交给一名其他角色。",
+  ["changshi__xiaolu_give"] = "交出两张手牌",
+  ["changshi__xiaolu_discard"] = "弃置两张手牌",
+  ["#qiaosi-give"] = "宵赂：请选择要交出的 %arg 张牌",
+  ["#qiaosi-give-choose"] = "宵赂：请选择要交给的目标",
+  ["$changshi__xiaolu1"] = "咱家上下打点，自是要费些银子。",
+}
+
+hiddenChangshi:addSkill(changshixiaolu)
+shichangshi:addRelatedSkill("changshi__xiaolu")
+
+local changshiKuiji = fk.CreateActiveSkill{
+  name = "changshi__kuiji",
+  anim_type = "control",
+  prompt = "#changshi__kuiji-prompt",
+  card_num = 0,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) < 1
+  end,
+  card_filter = function() return false end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    local player_hands = player:getCardIds("h")
+    local target_hands = target:getCardIds("h")
+    local cards = room:askForPoxi(player, "changshi__kuiji_discard", {
+      { player.general, player_hands },
+      { target.general, target_hands },
+    }, nil, true)
+    if #cards == 0 then return end
+    local cards1 = table.filter(cards, function(id) return table.contains(player_hands, id) end)
+    local cards2 = table.filter(cards, function(id) return table.contains(target_hands, id) end)
+    local moveInfos = {}
+    if #cards1 > 0 then
+      table.insert(moveInfos, {
+        from = player.id,
+        ids = cards1,
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonDiscard,
+        proposer = effect.from,
+        skillName = self.name,
+      })
+    end
+    if #cards2 > 0 then
+      table.insert(moveInfos, {
+        from = target.id,
+        ids = cards2,
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonDiscard,
+        proposer = effect.from,
+        skillName = self.name,
+      })
+    end
+    room:moveCards(table.unpack(moveInfos))
+
+    return false
+  end,
+}
+Fk:addPoxiMethod{
+  name = "changshi__kuiji_discard",
+  card_filter = function(to_select, selected, data)
+    local suit = Fk:getCardById(to_select).suit
+    if suit == Card.NoSuit then return false end
+    return not table.find(selected, function(id) return Fk:getCardById(id).suit == suit end)
+  end,
+  feasible = function(selected)
+    return #selected == 4
+  end,
+  prompt = function ()
+    return "窥机：弃置双方手里四张不同花色的牌"
+  end
+}
+Fk:loadTranslationTable{
+  ["changshi__kuiji"] = "窥机",
+  [":changshi__kuiji"] = "出牌阶段限一次，你可以观看一名其他角色的手牌并可弃置你与其手牌中共计四张花色各不相同的牌。",
+  ["#changshi__kuiji-prompt"] = "窥机：选择一名有手牌的其他角色，并可弃置你与其手牌中共计四张花色各不相同的牌",
+  ["$changshi__kuiji1"] = "同道者为忠，殊途者为奸！",
+}
+
+hiddenChangshi:addSkill(changshiKuiji)
+shichangshi:addRelatedSkill("changshi__kuiji")
+
+local changshiChihe = fk.CreateTriggerSkill{
+  name = "changshi__chihe",
+  anim_type = "offensive",
+  events = {fk.TargetSpecified},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and
+      data.card.trueName == "slash" and
+      #AimGroup:getAllTargets(data.tos) == 1
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local cardUseEvent = room.logic:getCurrentEvent().parent
+    cardUseEvent.changshiChiheUsed = true
+
+    local cards = room:getNCards(2)
+    room:moveCardTo(cards, Card.Processing)
+
+    local idsMatched = table.filter(cards, function(id)
+      local c = Fk:getCardById(id)
+      return data.card.suit == c.suit
+    end)
+
+    room:setPlayerMark(room:getPlayerById(data.to), self.name, table.map(cards, function (id) return Fk:getCardById(id).suit end))
+    if #idsMatched > 0 then
+      data.additionalDamage = (data.additionalDamage or 0) + #idsMatched
+    end
+
+    local cardsInProcessing = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
+    if #cardsInProcessing > 0 then
+      room:moveCardTo(cardsInProcessing, Card.DiscardPile)
+    end
+  end,
+
+  refresh_events = {fk.CardUseFinished},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.room.logic:getCurrentEvent().changshiChiheUsed
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    for _, p in ipairs(room:getAlivePlayers()) do
+      room:setPlayerMark(p, self.name, 0)
+    end
+  end,
+}
+
+local changshiChiheProhibit = fk.CreateProhibitSkill{
+  name = "#changshiChihe_prohibit",
+  prohibit_use = function(self, player, card)
+    -- FIXME: 确保是因为【杀】而出闪，并且指明好事件id
+    if Fk.currentResponsePattern ~= "jink" or card.name ~= "jink" or player:getMark("changshi__chihe") == 0 then
+      return false
+    end
+    if table.contains(player:getMark("changshi__chihe"), card.suit) then
+      return true
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__chihe"] = "叱吓",
+  [":changshi__chihe"] = "当你使用【杀】指定唯一目标后，你可以亮出牌堆顶两张牌，令其不能使用与亮出的牌花色相同的牌响应此【杀】，且其中每有一张牌与此【杀】花色相同，此【杀】伤害基数便+1。",
+  ["$changshi__chihe1"] = "想见圣上？哼哼，你怕是没这个福分了！",
+}
+
+changshiChihe:addRelatedSkill(changshiChiheProhibit)
+hiddenChangshi:addSkill(changshiChihe)
+shichangshi:addRelatedSkill("changshi__chihe")
+
+local changshiNiqu = fk.CreateActiveSkill{
+  name = "changshi__niqu",
+  anim_type = "control",
+  card_num = 0,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) < 1
+  end,
+  card_filter = function() return false end,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    room:damage({
+      from = room:getPlayerById(effect.from),
+      to = room:getPlayerById(effect.tos[1]),
+      damage = 1,
+      damageType = fk.FireDamage,
+      skillName = self.name
+    })
+
+    return false
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__niqu"] = "逆取",
+  [":changshi__niqu"] = "出牌阶段限一次，你可以对一名其他角色造成1点火焰伤害。",
+  ["$changshi__niqu1"] = "离心离德，为吾等所不容！",
+}
+
+hiddenChangshi:addSkill(changshiNiqu)
+shichangshi:addRelatedSkill("changshi__niqu")
+
+local changshiMiaoyu = fk.CreateViewAsSkill{
+  name = "changshi__miaoyu",
+  pattern = "peach,slash,jink,nullification",
+  card_filter = function(self, to_select, selected)
+    if #selected == 2 then
+      return false
+    elseif #selected == 1 then
+      return Fk:getCardById(to_select):compareSuitWith(Fk:getCardById(selected[1]))
+    else
+      local suit = Fk:getCardById(to_select).suit
+      local c
+      if suit == Card.Heart then
+        c = Fk:cloneCard("peach")
+      elseif suit == Card.Diamond then
+        c = Fk:cloneCard("fire__slash")
+      elseif suit == Card.Club then
+        c = Fk:cloneCard("jink")
+      elseif suit == Card.Spade then
+        c = Fk:cloneCard("nullification")
+      else
+        return false
+      end
+      return (Fk.currentResponsePattern == nil and c.skill:canUse(Self, c)) or (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(c))
+    end
+  end,
+  view_as = function(self, cards)
+    if #cards == 0 or #cards > 2 then
+      return nil
+    end
+    local suit = Fk:getCardById(cards[1]).suit
+    local c
+    if suit == Card.Heart then
+      c = Fk:cloneCard("peach")
+    elseif suit == Card.Diamond then
+      c = Fk:cloneCard("fire__slash")
+    elseif suit == Card.Club then
+      c = Fk:cloneCard("jink")
+    elseif suit == Card.Spade then
+      c = Fk:cloneCard("nullification")
+    else
+      return nil
+    end
+    c.skillName = self.name
+    c:addSubcards(cards)
+    return c
+  end,
+  before_use = function(self, player, use)
+    local num = #use.card.subcards
+    if num == 2 then
+      local suit = Fk:getCardById(use.card.subcards[1]).suit
+      if suit == Card.Diamond then
+        use.additionalDamage = (use.additionalDamage or 0) + 1
+      elseif suit == Card.Heart then
+        use.additionalRecover = (use.additionalRecover or 0) + 1
+      end
+    end
+  end,
+}
+local changshiMiaoyuDiscard = fk.CreateTriggerSkill{
+  name = "#changshi__miaoyu_discard",
+  events = {fk.CardUseFinished},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and table.contains(data.card.skillNames, "changshi__miaoyu") and #data.card.subcards == 2 and Fk:getCardById(data.card.subcards[1]).color == Card.Black
+  end,
+  on_cost = function() return true end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if not room.current:isNude() then
+      local cid = room:askForCardChosen(player, room.current, "he", self.name)
+      room:throwCard({cid}, self.name, room.current, player)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["changshi__miaoyu"] = "妙语",
+  [":changshi__miaoyu"] = "你可以将至多两张你的同花色的牌按以下规则使用或打出：红桃当【桃】，方块当火【杀】，梅花当【闪】，黑桃当【无懈可击】。若你以此法使用或打出了两张：红桃牌，此牌回复基数+1；方块牌，此牌伤害基数+1；黑色牌，你弃置当前回合角色一张牌。",
+  ["$changshi__miaoyu1"] = "小伤无碍，安心修养便可。",
+}
+
+changshiMiaoyu:addRelatedSkill(changshiMiaoyuDiscard)
+hiddenChangshi:addSkill(changshiMiaoyu)
+shichangshi:addRelatedSkill("changshi__miaoyu")
+
+local danggu = fk.CreateTriggerSkill{
+  name = "danggu",
+  frequency = Skill.Compulsory,
+  anim_type = "negative",
+  events = {fk.GameStart, fk.AfterPlayerRevived},
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.GameStart then
+      return player:hasSkill(self.name)
+    elseif event == fk.AfterPlayerRevived then
+      return
+        target == player and
+        data.reason == "rest" and
+        type(player.tag["changshi_cards"]) == "table" and
+        #player.tag["changshi_cards"] > 0
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+
+    local doJieDang = function(room, player, generals)
+      if type(generals) ~= "table" or #generals < 2 then
+        return
+      end
+
+      generals = table.simpleClone(generals)
+
+      local mainGeneral
+      local deputyGeneral
+      if #generals < 3 then
+        mainGeneral = generals[1]
+        deputyGeneral = generals[2]
+      else
+        mainGeneral = table.random(generals)
+        table.removeOne(generals, mainGeneral)
+        local deputyGenerals = table.random(generals, 4)
+
+        local haters = {
+          ["changshi__bilan"] = 'changshi__hankui',
+          ["changshi__hankui"] = 'changshi__bilan',
+          ["changshi__duangui"] = 'changshi__guosheng',
+          ["changshi__guosheng"] = 'changshi__duangui',
+        }
+
+        local disabledGeneral = ""
+        local hater = haters[mainGeneral]
+        if hater and table.contains(deputyGenerals, hater) then
+          disabledGeneral = hater
+        elseif math.random() < 0.1 then
+          disabledGeneral = table.random(deputyGenerals)
+        end
+
+        local result = room:askForCustomDialog(
+          player, "jiedang",
+          "packages/mobile/qml/JieDangBox.qml",
+          { mainGeneral, deputyGenerals, disabledGeneral }
+        )
+
+        if result ~= "" then
+          deputyGeneral = json.decode(result).general
+        else
+          deputyGeneral = table.random(deputyGenerals)
+        end
+      end
+
+      player.tag['jiedang_before_generals'] = { player.general, player.deputyGeneral }
+      table.removeOne(generals, mainGeneral)
+      table.removeOne(generals, deputyGeneral)
+      player.tag['changshi_cards'] = generals
+      room:setPlayerMark(player, "@&changshiCards", generals)
+
+      room:changeHero(player, mainGeneral, true, false, false, false)
+      room:changeHero(player, deputyGeneral, true, true, false, false)
+      room:handleAddLoseSkills(player, tenChangShiMapper[mainGeneral] .. "|" .. tenChangShiMapper[deputyGeneral], nil, false)
+    end
+    if event == fk.GameStart then
+      local tenChangShis = {}
+      for changShi, _ in pairs(tenChangShiMapper) do
+        table.insert(tenChangShis, changShi)
+      end
+      room:setPlayerMark(player, "@&changshiCards", tenChangShis)
+
+      doJieDang(room, player, tenChangShis)
+    elseif event == fk.AfterPlayerRevived then
+      doJieDang(room, player, player.tag['changshi_cards'])
+      player:drawCards(1, self.name)
+    end
+  end,
+
+  refresh_events = { fk.BeforeGameOverJudge, fk.GameFinished, fk.AfterPropertyChange },
+  can_refresh = function(self, event, target, player, data)
+    if not player.tag['jiedang_before_generals'] then
+      return false
+    end
+    
+    if event == fk.AfterPropertyChange then
+      return target == player and data.results and (data.results.generalChange or data.results.deputyChange)
+    else
+      return event == fk.GameFinished or target == player
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterPropertyChange then
+      if data.results.generalChange then
+        local beforeGeneral = data.results.generalChange[1]
+        if tenChangShiMapper[beforeGeneral] then
+          room:handleAddLoseSkills(player, "-" .. tenChangShiMapper[beforeGeneral], nil, false)
+        end
+
+        if not tenChangShiMapper[player.general] then
+          player.tag['jiedang_before_generals'][1] = player.general
+        end
+      end
+
+      if data.results.deputyChange then
+        local beforeGeneral = data.results.deputyChange[1]
+        if tenChangShiMapper[beforeGeneral] then
+          room:handleAddLoseSkills(player, "-" .. tenChangShiMapper[beforeGeneral], nil, false)
+        end
+
+        if not tenChangShiMapper[player.deputyGeneral] then
+          player.tag['jiedang_before_generals'][2] = player.deputyGeneral
+        end
+      end
+    else
+      local generals = player.tag['jiedang_before_generals']
+
+      if #generals > 1 then
+        room:changeHero(player, generals[2], false, true, false, false)
+      end
+      if generals[1] ~= "" then
+        room:changeHero(player, generals[1], false, false, false, false)
+      end
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["danggu"] = "党锢",
+  [":danggu"] = "锁定技，游戏开始时，你获得十张不同的“常侍牌”，然后你进行一次“结党”（随机展示一张“常侍”牌，然后随机展示四张“常侍”牌，你从中选择一张与最初展示的“常侍”牌互相认可的与其组成双将。）；当你因休整而返回游戏后，你进行一次“结党”并摸一张牌。",
+  ["@&changshiCards"] = "常侍",
+  ["jiedang"] = "结党",
+  ["$JieDang"] = "结党",
+
+  ["$changshi__zhangrang_taunt1"] = "吾乃当今帝父，汝岂配与我同列？",
+  ["$changshi__zhaozhong_taunt1"] = "汝此等语，何不以溺自照？",
+  ["$changshi__sunzhang_taunt1"] = "闻谤而怒，见誉而喜，汝万万不能啊！",
+  ["$changshi__bilan_taunt1"] = "吾虽鄙夫，亦远胜尔等狂叟！",
+  ["$changshi__xiayun_taunt1"] = "贪财好贿，其罪尚小，不敬不逊，却为大逆！",
+  ["$changshi__hankui_taunt1"] = "切！宁享短福，莫为汝等庸奴！",
+  ["$changshi__lisong_taunt1"] = "区区不才，可为帝之耳目，试问汝有何能？",
+  ["$changshi__duangui_taunt1"] = "哼，不过襟裾牛马，衣冠狗彘尓！",
+  ["$changshi__guosheng_taunt1"] = "此昏聩之徒，吾羞与为伍。",
+  ["$changshi__gaowang_taunt1"] = "若非吾之相助，汝安有今日？",
+}
+
+shichangshi:addSkill(danggu)
+
+local mowang = fk.CreateTriggerSkill{
+  name = "mowang",
+  frequency = Skill.Compulsory,
+  anim_type = "negative",
+  events = {fk.BeforeGameOverJudge, fk.TurnEnd},
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.BeforeGameOverJudge then
+      return
+        target == player and
+        player:hasSkill(self.name, false, true) and
+        player:hasSkill("danggu", true, true) and
+        type(player.tag["changshi_cards"]) == "table" and
+        #player.tag["changshi_cards"] > 0 and
+        player.maxHp > 0
+    else
+      return target == player and player:hasSkill(self.name)
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.BeforeGameOverJudge then
+      room:setPlayerRest(player, 1)
+    else
+      room:killPlayer({ who = player.id })
+    end
+  end,
+}
+
+shichangshi:addSkill(mowang)
+Fk:loadTranslationTable{
+  ["mowang"] = "殁亡",
+  [":mowang"] = "锁定技，当你即将死亡时，若你拥有技能“党锢”且你仍有未亮出的“常侍”牌，则改为休整一轮；回合结束时，你死亡。",
+}
+
+for generalName, _  in pairs(tenChangShiMapper) do
+  local changshi = General(extension, generalName, "qun", 0)
+  changshi.total_hidden = true
+  changshi:addSkill("danggu")
+  changshi:addSkill("mowang")
+end
 
 return extension

@@ -1846,7 +1846,7 @@ Fk:loadTranslationTable{
   ["changshi__chiyan"] = "鸱咽",
   [":changshi__chiyan"] = "当你使用【杀】指定目标后，你可以将其一张牌扣置于其武将牌旁，该角色于本回合结束时获得此牌；当你使用【杀】对手牌数和装备区内的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
   ["#changshi__chiyan-invoke"] = "是否对%dest发动 鸱咽",
-  ["$cchangshi__chiyan1"] = "逆臣乱党，都要受这啄心之刑。",
+  ["$changshi__chiyan1"] = "逆臣乱党，都要受这啄心之刑。",
 }
 
 changshiChiyan:addRelatedSkill(changshiChiyanDelay)
@@ -1862,33 +1862,22 @@ local changshiZimou = fk.CreateTriggerSkill{
     return
       target == player and
       player:hasSkill(self) and
-      player.phase == player.Play and
-      not table.every({ 2, 4, 6 }, function(num)
-        return player:getMark("@" .. self.name) % num ~= 0
-      end)
+      player.phase == Player.Play and
+      table.contains({ 2, 4, 6 }, player:getMark("@" .. self.name))
   end,
   on_use = function(self, event, player, target, data)
-    local loopList = table.filter({ 2, 4, 6 }, function(num)
-      return player:getMark("@" .. self.name) % num == 0
-    end)
+    local count = player:getMark("@" .. self.name)
 
-    local toObtain = {}
-    for _, count in ipairs(loopList) do
-      local cardList = "analeptic"
-      if count == 4 then
-        cardList = "slash"
-      elseif count == 6 then
-        cardList = "duel"
-      end
-      local randomCard = player.room:getCardsFromPileByRule(cardList)
-      if #randomCard > 0 then
-        table.insert(toObtain, randomCard[1])
-      end
+    local cardList = "analeptic"
+    if count == 4 then
+      cardList = "slash"
+    elseif count == 6 then
+      cardList = "duel"
     end
-
-    if #toObtain > 0 then
+    local randomCard = player.room:getCardsFromPileByRule(cardList)
+    if #randomCard > 0 then
       player.room:moveCards({
-        ids = toObtain,
+        ids = { randomCard[1] },
         to = player.id,
         toArea = Card.PlayerHand,
         moveReason = fk.ReasonPrey,
@@ -1900,7 +1889,7 @@ local changshiZimou = fk.CreateTriggerSkill{
 
   refresh_events = {fk.PreCardUse},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self) and target == player
+    return player:hasSkill(self) and target == player and player.phase == Player.Play
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "@" .. self.name, 1)
@@ -1908,7 +1897,7 @@ local changshiZimou = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["changshi__zimou"] = "自谋",
-  [":changshi__zimou"] = "锁定技，当你于出牌阶段内每使用：两张牌时，你随机获得一张【酒】；四张牌时，你随机获得一张【杀】；六张牌时，你随机获得一张【决斗】。",
+  [":changshi__zimou"] = "锁定技，当你于出牌阶段内使用：第二张牌时，你随机获得一张【酒】；第四张牌时，你随机获得一张【杀】；第六张牌时，你随机获得一张【决斗】。",
   ["@changshi__zimou"] = "自谋",
   ["$changshi__zimou1"] = "在宫里当差，还不是为这利字！",
 }
@@ -2164,6 +2153,7 @@ Fk:addPoxiMethod{
 Fk:loadTranslationTable{
   ["changshi__kuiji"] = "窥机",
   [":changshi__kuiji"] = "出牌阶段限一次，你可以观看一名其他角色的手牌并可弃置你与其手牌中共计四张花色各不相同的牌。",
+  ["changshi__kuiji_discard"] = "窥机观看",
   ["#changshi__kuiji-prompt"] = "窥机：选择一名有手牌的其他角色，并可弃置你与其手牌中共计四张花色各不相同的牌",
   ["$changshi__kuiji1"] = "同道者为忠，殊途者为奸！",
 }
@@ -2423,7 +2413,7 @@ local danggu = fk.CreateTriggerSkill{
       table.removeOne(generals, mainGeneral)
       table.removeOne(generals, deputyGeneral)
       player.tag['changshi_cards'] = generals
-      room:setPlayerMark(player, "@&changshiCards", generals)
+      room:setPlayerMark(player, "@&changshiCards", #generals > 0 and generals or 0)
 
       room:changeHero(player, mainGeneral, true, false, false, false)
       room:changeHero(player, deputyGeneral, true, true, false, false)

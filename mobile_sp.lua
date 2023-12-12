@@ -4676,7 +4676,7 @@ local luanqun = fk.CreateActiveSkill{
       reason = self.name,
     }
     for _, p in ipairs(targets) do
-      p.request_data = json.encode({"choose_cards_skill", "#luanqun-card", true, json.encode(extraData)})
+      p.request_data = json.encode({"choose_cards_skill", "#luanqun-card", true, extraData})
     end
     room:notifyMoveFocus(room.alive_players, self.name)
     room:doBroadcastRequest("AskForUseActiveSkill", targets)

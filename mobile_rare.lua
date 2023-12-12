@@ -2073,7 +2073,7 @@ local changshixiaolu = fk.CreateActiveSkill{
       room:askForDiscard(from, 2, 2, false, self.name, false)
     else
       local all = from:getCardIds("h")
-      local to_give = #all > 2 and room:askForChooseCardsAndPlayers(from, 2, 2, false, self.name, false, nil, "#changshi__xiaolu-give:::" .. 2) or all
+      local to_give = #all > 2 and room:askForCard(from, 2, 2, false, self.name, false, nil, "#changshi__xiaolu-give:::" .. 2) or all
       local tgt = room:askForChoosePlayers(from, table.map(
         room:getOtherPlayers(from), Util.IdMapper), 1, 1, "#changshi__xiaolu-give-choose", self.name, false)[1]
 

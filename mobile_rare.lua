@@ -296,7 +296,7 @@ local shanjia = fk.CreateTriggerSkill{
       room:throwCard(cards, self.name, player, player)
     end
     if not player.dead and yes then
-      U.askForUseVirtualCard(room, player, "slash", nil, self.name, nil, true, true, true)
+      U.askForUseVirtualCard(room, player, "slash", nil, self.name, nil, true, true, true, true)
     end
   end,
 

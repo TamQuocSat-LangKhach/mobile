@@ -773,6 +773,158 @@ Fk:loadTranslationTable{
   ["~mobile__xugong"] = "此表非我所写，岂可污我！",
 }
 
+local baosanniang = General(extension, "mobile__baosanniang", "shu", 3, 3, General.Female)
+local shuyong = fk.CreateTriggerSkill{
+  name = "shuyong",
+  anim_type = "control",
+  events = {fk.CardUsing, fk.CardResponding},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.card.trueName == "slash" and
+    table.find(player.room:getOtherPlayers(player), function(p) return not p:isAllNude() end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:askForChoosePlayers(player, table.map(table.filter(room:getOtherPlayers(player), function(p)
+      return not p:isAllNude() end), Util.IdMapper), 1, 1, "#shuyong-choose", self.name, true)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+  end,
+  on_use = function(self, event, player, target, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    local id = room:askForCardChosen(player, to, "hej", self.name)
+    room:obtainCard(player.id, id, false, fk.ReasonPrey)
+    if not to.dead then
+      to:drawCards(1, self.name)
+    end
+  end,
+}
+baosanniang:addSkill(shuyong)
+local mobile__xushen = fk.CreateActiveSkill{
+  name = "mobile__xushen",
+  card_num = 0,
+  target_num = 0,
+  card_filter = Util.FalseFunc,
+  frequency = Skill.Limited,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and player.hp > 0
+    and table.find(Fk:currentRoom().alive_players, function(p) return U.isMale(p) end)
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local n = 0
+    for _, p in ipairs(room.alive_players) do
+      if U.isMale(p) then
+        n = n + 1
+      end
+    end
+    room:loseHp(player, n, self.name)
+  end,
+}
+local mobile__xushen_delay = fk.CreateTriggerSkill{
+  name = "#mobile__xushen_delay",
+  mute = true,
+  events = {fk.AfterDying},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and not player.dead then
+      local who = data.extra_data and data.extra_data.mobile__xushen
+      if who then
+        self.cost_data = who
+        return true
+      end
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+    if room:askForSkillInvoke(player, "mobile__xushen", nil, "#mobile__xushen-invoke:"..to.id) then
+      room:handleAddLoseSkills(to, "wusheng|dangxian", nil)
+    end
+  end,
+
+  refresh_events = {fk.HpChanged},
+  can_refresh = function (self, event, target, player, data)
+    return player == target and player.hp > 0 and data.num > 0
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local room = player.room
+    local recover_event = room.logic:getCurrentEvent():findParent(GameEvent.Recover)
+    if recover_event then
+      local dat = recover_event.data[1]
+      if dat.recoverBy then
+        local hpchange_event = room.logic:getCurrentEvent():findParent(GameEvent.ChangeHp, false)
+        local skillName = hpchange_event and hpchange_event.data[4]
+        if skillName and skillName == "mobile__xushen" then
+          local dying_event = room.logic:getCurrentEvent():findParent(GameEvent.Dying)
+          if dying_event then
+            local dying = dying_event.data[1]
+            dying.extra_data = dying.extra_data or {}
+            dying.extra_data.mobile__xushen = dat.recoverBy.id
+            room.logic:dumpEventStack()
+          end
+        end
+      end
+    end
+  end,
+}
+mobile__xushen:addRelatedSkill(mobile__xushen_delay)
+baosanniang:addSkill(mobile__xushen)
+local mobile__zhennan = fk.CreateTriggerSkill{
+  name = "mobile__zhennan",
+  anim_type = "offensive",
+  events = {fk.TargetSpecified},
+  can_trigger = function(self, event, target, player, data)
+    local from = player.room:getPlayerById(data.from)
+    return player:hasSkill(self) and not player:isNude() and data.firstTarget and data.tos and #AimGroup:getAllTargets(data.tos) > 1
+    and not from.dead and table.contains(AimGroup:getAllTargets(data.tos), player.id) and #AimGroup:getAllTargets(data.tos) > from.hp
+  end,
+  on_cost = function(self, event, target, player, data)
+    local card = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".", "#mobile__zhennan-discard:"..data.from, true)
+    if #card > 0 then
+      self.cost_data = card
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local from = player.room:getPlayerById(data.from)
+    room:throwCard(self.cost_data, self.name, player, player)
+    room:damage{
+      from = player,
+      to = from,
+      damage = 1,
+      skillName = self.name,
+    }
+  end,
+}
+baosanniang:addSkill(mobile__zhennan)
+baosanniang:addRelatedSkill("wusheng")
+baosanniang:addRelatedSkill("dangxian")
+Fk:loadTranslationTable{
+  ["mobile__baosanniang"] = "鲍三娘",
+  ["shuyong"] = "姝勇",
+  [":shuyong"] = "当你使用或打出【杀】时，你可以获得一名其他角色区域内的一张牌；若如此做，其摸一张牌。",
+  ["mobile__xushen"] = "许身",
+  [":mobile__xushen"] = "限定技，出牌阶段，你可以失去等同于场上存活男性角色数的体力值；若你因此进入濒死状态，则你脱离濒死状态后，你可以令使你脱离濒死的角色获得〖武圣〗和〖当先〗。",
+  ["mobile__zhennan"] = "镇南",
+  [":mobile__zhennan"] = "当一张牌指定多个目标后，若你为此牌目标之一且此牌指定目标数大于使用者当前体力值，则你可以弃置一张牌，对此牌使用者造成1点伤害。",
+  ["#shuyong-choose"] = "武娘：你可以获得一名其他角色区域内一张牌，其摸一张牌",
+  ["#mobile__zhennan-discard"] = "镇南：你可以弃置一张牌，对 %src 造成1点伤害",
+  ["#mobile__xushen_delay"] = "许身",
+  ["#mobile__xushen-invoke"] = "许身：你可以令 %src 获得〖武圣〗和〖当先〗",
+  
+  ["$shuyong1"] = "我的武艺，可是关将军亲传哦！",
+  ["$shuyong2"] = "让你看看这招如何！",
+  ["$mobile__xushen1"] = "你我相遇于此，应当彼此珍惜。",
+  ["$mobile__xushen2"] = "携子之手，与子共闯天涯。",
+  ["$mobile__zhennan1"] = "怎可让你再兴风作浪？",
+  ["$mobile__zhennan2"] = "南中由我和夫君一起守护！",
+  ["~mobile__baosanniang"] = "夫君，来世还愿与你相伴……",
+}
+
 --SP10：丁原 傅肜 邓芝 陈登 张翼 公孙康 周群
 local dingyuan = General(extension, "dingyuan", "qun", 4)
 local beizhu = fk.CreateActiveSkill{

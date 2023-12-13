@@ -2694,7 +2694,7 @@ local choulue = fk.CreateTriggerSkill{
       room:obtainCard(player, cards[1], false, fk.ReasonGive)
       local name = player:getMark("@choulue")
       if name ~= 0 then
-        U.askForUseVirtualCard(room, player, name, nil, self.name)
+        U.askForUseVirtualCard(room, player, name, nil, self.name, nil, true, true, false, true)
       end
     end
   end,

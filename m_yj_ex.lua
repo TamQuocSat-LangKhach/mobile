@@ -2254,6 +2254,94 @@ Fk:loadTranslationTable{
 
 zhuhuan:addSkill(m_ex__pingkou)
 
+local quancong = General(extension, "m_ex__quancong", "wu", 4)
+local m_ex__yaoming = fk.CreateActiveSkill{
+  name = "m_ex__yaoming",
+  mute = true,
+  card_num = 0,
+  target_num = 1,
+  interaction = function()
+    return UI.ComboBox {choices = { "m_ex__yaoming_draw", "m_ex__yaoming_throw" } }
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected, selected_cards)
+    if #selected > 0 or not self.interaction.data then return false end
+    local to = Fk:currentRoom():getPlayerById(to_select)
+    if self.interaction.data == "m_ex__yaoming_throw" then
+      return Self.id ~= to_select and not to:isNude() and to:getHandcardNum() >= Self:getHandcardNum()
+    else
+      return to:getHandcardNum() <= Self:getHandcardNum()
+    end
+  end,
+  can_use = function(self, player)
+    return player:getMark("skill_charge") > 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local choice = self.interaction.data
+    local mark = choice.."_mark"
+    if player:getMark("@m_ex__yaoming") ~= 0 and player:getMark("@m_ex__yaoming") ~= mark then
+      room:setPlayerMark(player, "@m_ex__yaoming", 0)
+    else
+      U.skillCharged(player, -1)
+      room:setPlayerMark(player, "@m_ex__yaoming", mark)
+    end
+    local to = room:getPlayerById(effect.tos[1])
+    player:broadcastSkillInvoke(self.name)
+    if choice == "m_ex__yaoming_throw" then
+      room:notifySkillInvoked(player, self.name, "control")
+      local id = room:askForCardChosen(player, to, "he", self.name)
+      room:throwCard({id}, self.name, to, player)
+    else
+      room:notifySkillInvoked(player, self.name, "drawcard")
+      to:drawCards(1, self.name)
+    end
+  end,
+}
+local m_ex__yaoming_trigger = fk.CreateTriggerSkill{
+  name = "#m_ex__yaoming_trigger",
+  mute = true,
+  events = {fk.Damaged},
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    U.skillCharged(player, data.damage)
+    if player:getMark("skill_charge") > 0 then
+      room:askForUseActiveSkill(player, "m_ex__yaoming", "#m_ex__yaoming-invoke", true)
+    end
+  end,
+
+  refresh_events = {fk.EventAcquireSkill, fk.EventLoseSkill},
+  can_refresh = function(self, event, target, player, data)
+    return data == self and target == player
+  end,
+  on_refresh = function(self, event, target, player, data)
+    if event == fk.EventAcquireSkill then
+      U.skillCharged(player, 2, 4)
+    else
+      U.skillCharged(player, -2, -4)
+    end
+  end,
+}
+m_ex__yaoming:addRelatedSkill(m_ex__yaoming_trigger)
+quancong:addSkill(m_ex__yaoming)
+Fk:loadTranslationTable{
+  ["m_ex__quancong"] = "界全琮",
+  ["m_ex__yaoming"] = "邀名",
+  [":m_ex__yaoming"] = "蓄力技（2/4），出牌阶段或当你受到伤害后，你可以减1点“蓄力”值并选择一项：1.弃置手牌数不小于你的一名其他角色的一张牌；2.令手牌数不大于你的一名角色摸一张牌。若与你上次选择的选项不同，你获得1点“蓄力”值，并清除已记录的选项。每当你受到1点伤害后，你获得1点“蓄力”值。",
+  ["m_ex__yaoming_throw"] = "弃置手牌数不小于你的其他角色一张牌",
+  ["m_ex__yaoming_draw"] = "令手牌数不大于你的一名角色摸一张牌",
+  ["@m_ex__yaoming"] = "邀名",
+  ["m_ex__yaoming_throw_mark"] = "弃牌",
+  ["m_ex__yaoming_draw_mark"] = "摸牌",
+  ["#m_ex__yaoming-invoke"] = "你可以发动“邀名”",
+  ["#m_ex__yaoming_trigger"] = "邀名",
+
+  ["$m_ex__yaoming1"] = "山不让纤介，而成其危；海不辞丰盈，而成其邃。",
+  ["$m_ex__yaoming2"] = "取上方可得中，取下则无所得矣。",
+  ["~m_ex__quancong"] = "吾逐名如筑室道谋，而是用终不溃于成。",
+}
+
 local sunxiu = General(extension, "m_ex__sunxiu", "wu", 3)
 
 Fk:loadTranslationTable{

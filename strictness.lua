@@ -420,9 +420,10 @@ local zhenting = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.TargetConfirming},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.from and data.from ~= player.id and data.firstTarget and
+    return player:hasSkill(self) and data.from and data.from ~= player.id and
       (data.card.trueName == "slash" or data.card.sub_type == Card.SubtypeDelayedTrick) and
-      not table.contains(AimGroup:getAllTargets(data.tos), player.id) and player:inMyAttackRange(target)
+      not table.contains(AimGroup:getAllTargets(data.tos), player.id) and player:inMyAttackRange(target) and
+      U.canTransferTarget(player, data)
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, nil, "#zhenting-invoke::"..target.id..":"..data.card:toLogString())
@@ -430,8 +431,8 @@ local zhenting = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {target.id})
-    TargetGroup:removeTarget(data.targetGroup, target.id)
-    TargetGroup:pushTargets(data.targetGroup, player.id)
+    AimGroup:cancelTarget(data, target.id)
+    AimGroup:addTargets(room, data, player.id)
     local choices = {"draw1"}
     local to = room:getPlayerById(data.from)
     if not to.dead and not to:isNude() then
@@ -577,10 +578,10 @@ local duanbi_active = fk.CreateActiveSkill{
 local mobile__tongdu = fk.CreateTriggerSkill{
   name = "mobile__tongdu",
   anim_type = "support",
-  events = {fk.TargetConfirming},
+  events = {fk.TargetConfirmed},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and data.from and data.from ~= player.id and data.firstTarget and
-      #AimGroup:getAllTargets(data.tos) == 1 and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and
+    return target == player and player:hasSkill(self) and data.from and data.from ~= player.id and
+      U.isOnlyTarget(player, data, event) and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and
       table.find(player.room.alive_players, function(p) return not p:isNude() end)
   end,
   on_cost = function(self, event, target, player, data)
@@ -630,7 +631,7 @@ Fk:loadTranslationTable{
   [":duanbi"] = "限定技，出牌阶段，若所有角色的手牌数之和大于存活角色数的两倍，你可以令所有其他角色弃置X张手牌（X为其手牌数的一半，向上取整且至多为3），"..
   "然后你将以此法弃置的三张牌交给一名角色。",
   ["mobile__tongdu"] = "统度",
-  [":mobile__tongdu"] = "每回合限一次，当你成为其他角色使用牌的唯一目标时，你可以令一名角色重铸一张牌，若此牌为：<font color='red'>♥</font>牌或锦囊牌，"..
+  [":mobile__tongdu"] = "每回合限一次，当你成为其他角色使用牌的唯一目标后，你可以令一名角色重铸一张牌，若此牌为：<font color='red'>♥</font>牌或锦囊牌，"..
   "其多摸一张牌；【无中生有】，你重置〖锻币〗。",
   ["#duanbi"] = "锻币：令其他角色各弃置一半手牌（向上取整），然后你将其中三张牌交给一名角色！",
   ["duanbi_active"] = "锻币",

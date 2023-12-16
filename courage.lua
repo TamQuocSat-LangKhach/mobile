@@ -124,32 +124,24 @@ local qingjue = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    player:drawCards(1, self.name)
-    if player.dead or target.dead or target:isKongcheng() then return end
     room:doIndicate(player.id, {target.id})
+    player:drawCards(1, self.name)
+    if player.dead or target.dead or player:isKongcheng() or target:isKongcheng() then return false end
     local pindian = player:pindian({target}, self.name)
-    AimGroup:cancelTarget(data, data.to)
+    data.tos = AimGroup:initAimGroup({})
+    data.targetGroup = {}
     if pindian.results[target.id].winner == player then
       --do nothing
     else
-      if player and data.card.skill:targetFilter(player.id, {}, {}, data.card) then
-        if data.card.trueName == "collateral" then
-          if target.dead then return end
-          local victim = room:askForChoosePlayers(target, table.map(table.filter(room:getOtherPlayers(player), function(p)
-            return player:inMyAttackRange(p) end), function(p) return p.id end), 1, 1,
-            "#collateral-choose::"..player.id..":"..data.card:toLogString(), "collateral_skill", true)
-          if #victim > 0 then
-            room:doIndicate(target.id, {player.id})
-            room:delay(500)
-            room:doIndicate(player.id, {victim[1]})
-            AimGroup:addTargets(room, data, {player.id, victim[1]})
-          end
-        else
-          room:doIndicate(target.id, {player.id})
-          AimGroup:addTargets(room, data, player.id)
+      if U.canTransferTarget(player, data) then
+        local targets = {player.id}
+        if type(data.subTargets) == "table" then
+          table.insertTable(targets, data.subTargets)
         end
+        AimGroup:addTargets(room, data, targets)
       end
     end
+    return true
   end,
 }
 local fengjie = fk.CreateTriggerSkill{
@@ -566,7 +558,7 @@ local quedi = fk.CreateTriggerSkill{
         end)
       )
     then
-      room:askForDiscard(player, 1, 1, false, self.name, true, ".|.|.|.|.|basic")
+      room:askForDiscard(player, 1, 1, false, self.name, false, ".|.|.|.|.|basic")
       data.additionalDamage = (data.additionalDamage or 0) + 1
     end
   end,

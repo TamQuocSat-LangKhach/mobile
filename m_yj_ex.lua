@@ -1781,6 +1781,9 @@ local m_ex__sidi = fk.CreateTriggerSkill{
               skillName = self.name,
             }
           end
+          room:setPlayerMark(target, "@@m_ex__sidi", 0)
+          room:setPlayerMark(target, self.name, 0)
+          return true
         end
       end
       room:setPlayerMark(target, "@@m_ex__sidi", 0)

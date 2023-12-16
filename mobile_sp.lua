@@ -504,8 +504,9 @@ local gaoyuan = fk.CreateTriggerSkill{
     local to = self.cost_data[1]
     room:doIndicate(player.id, { to })
     room:throwCard(self.cost_data[2], self.name, player, player)
-    TargetGroup:removeTarget(data.targetGroup, player.id)
-    TargetGroup:pushTargets(data.targetGroup, to)
+    AimGroup:cancelTarget(data, player.id)
+    AimGroup:addTargets(room, data, to)
+    return true
   end,
 }
 mobile__sufei:addSkill(gaoyuan)
@@ -1721,7 +1722,8 @@ local huantu_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return player:usedSkillTimes("huantu", Player.HistoryTurn) > 0 and target.phase == Player.Finish and not target.dead
+    return not player.dead and player:usedSkillTimes("huantu", Player.HistoryTurn) > 0 and
+    target.phase == Player.Finish and not target.dead
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -1746,10 +1748,11 @@ local huantu_trigger = fk.CreateTriggerSkill{
     else
       player:drawCards(3, "huantu")
       if not player:isKongcheng() and not target.dead then
-        local cards = room:askForCard(player, 2, 2, false, "huantu", false, ".", "#huantu-give::"..target.id)
-        local dummy = Fk:cloneCard("dilu")
-        dummy:addSubcards(cards)
-        room:moveCardTo(dummy, Card.PlayerHand, target, fk.ReasonGive, "huantu", nil, false, player.id)
+        local cards = player:getCardIds(Player.Hand)
+        if #cards > 2 then
+          cards = room:askForCard(player, 2, 2, false, "huantu", false, ".", "#huantu-give::"..target.id)
+        end
+        room:moveCardTo(cards, Card.PlayerHand, target, fk.ReasonGive, "huantu", nil, false, player.id)
       end
     end
   end,
@@ -1768,8 +1771,8 @@ local bihuoy = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {target.id})
-    room:setPlayerMark(target, "@bihuoy-round", #room.players)
     target:drawCards(3, self.name)
+    room:setPlayerMark(target, "@bihuoy-round", #room.players)
   end,
 }
 local bihuoy_distance = fk.CreateDistanceSkill{
@@ -2172,13 +2175,9 @@ local jueyong = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if not player:hasSkill(self) or player ~= target then return false end
     if event == fk.TargetConfirming then
-      if data.card.trueName ~= "peach" and data.card.trueName ~= "analeptic" and
-      not (data.extra_data and data.extra_data.useByJueyong) and
-      not data.card:isVirtual() and data.card.trueName == Fk:getCardById(data.card.id, true).trueName then
-        if data.tos and #AimGroup:getAllTargets(data.tos) == 1 then
-          return #player:getPile("jueyong_desperation") < player.hp
-        end
-      end
+      return data.card.trueName ~= "peach" and data.card.trueName ~= "analeptic" and
+      not (data.extra_data and data.extra_data.useByJueyong) and U.isPureCard(data.card) and
+      U.isOnlyTarget(player, data, event) and #player:getPile("jueyong_desperation") < player.hp
     elseif event == fk.EventPhaseStart then
       return player.phase == Player.Finish and #player:getPile("jueyong_desperation") > 0
     end
@@ -2186,8 +2185,9 @@ local jueyong = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.TargetConfirming then
-      TargetGroup:removeTarget(data.targetGroup, player.id)
-      if room:getCardArea(data.card) ~= Card.Processing then return false end
+      data.tos = AimGroup:initAimGroup({})
+      data.targetGroup = {}
+      if room:getCardArea(data.card) ~= Card.Processing then return event end
       player:addToPile("jueyong_desperation", data.card, true, self.name)
       if table.contains(player:getPile("jueyong_desperation"), data.card.id) then
         local mark = player:getMark(self.name)
@@ -2195,6 +2195,7 @@ local jueyong = fk.CreateTriggerSkill{
         table.insert(mark, {data.card.id, data.from})
         room:setPlayerMark(player, self.name, mark)
       end
+      return true
     elseif event == fk.EventPhaseStart then
       while #player:getPile("jueyong_desperation") > 0 do
         local id = player:getPile("jueyong_desperation")[1]

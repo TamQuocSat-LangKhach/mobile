@@ -1,6 +1,8 @@
 local extension = Package("sincerity")
 extension.extensionName = "mobile"
 
+local U = require "packages/utility/utility"
+
 Fk:loadTranslationTable{
   ["sincerity"] = "手杀-始计篇·信",
 }
@@ -52,8 +54,8 @@ local mobile__chijie = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.TargetConfirming},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and #AimGroup:getAllTargets(data.tos) == 1 and data.from ~= player.id and
-      player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
+    return target == player and player:hasSkill(self) and U.isOnlyTarget(player, data, event) and
+    data.from ~= player.id and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, nil, "#mobile__chijie-invoke:::"..data.card:toLogString())
@@ -67,7 +69,9 @@ local mobile__chijie = fk.CreateTriggerSkill{
     }
     room:judge(judge)
     if judge.card.number > 6 then
-      AimGroup:cancelTarget(data, player.id)
+      data.tos = AimGroup:initAimGroup({})
+      data.targetGroup = {}
+      return true
     end
   end,
 }

@@ -1147,6 +1147,7 @@ local dinghan = fk.CreateTriggerSkill{
       table.insert(dinghanRecord, data.card.trueName)
       room:setPlayerMark(player, "@$dinghan", dinghanRecord)
       AimGroup:cancelTarget(data, player.id)
+      return true
     else
       local costData = self.cost_data
       if costData.choice == "dinghan_addRecord" then

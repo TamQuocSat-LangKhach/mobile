@@ -1209,6 +1209,7 @@ local yaohu_trigger = fk.CreateTriggerSkill{
       room:notifySkillInvoked(player, "yaohu", "defensive")
       if #target:getCardIds("he") < 2 then
         AimGroup:cancelTarget(data, player.id)
+        return true
       else
         local cards = room:askForCard(target, 2, 2, true, "yaohu", true, ".", "#yaohu-give:"..player.id.."::"..data.card:toLogString())
         if #cards == 2 then
@@ -1217,6 +1218,7 @@ local yaohu_trigger = fk.CreateTriggerSkill{
           room:obtainCard(player.id, dummy, false, fk.ReasonGive)
         else
           AimGroup:cancelTarget(data, player.id)
+          return true
         end
       end
     end

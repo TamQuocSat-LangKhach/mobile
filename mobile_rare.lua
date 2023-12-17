@@ -430,7 +430,7 @@ local pingcai = fk.CreateActiveSkill{
         to:drawCards(1, self.name)
         if not to.dead and to:isWounded() then
           room:recover({
-            who = player,
+            who = to,
             num = 1,
             recoverBy = to,
             skillName = self.name
@@ -1580,68 +1580,13 @@ local huiyao = fk.CreateActiveSkill{
       to = table.random(targets)
     end
     room:doIndicate(target.id, {to})
-
-    local logic = room.logic
-    local damageStruct = {
+    room:damage{
       from = target,
       to = room:getPlayerById(to),
-      damageType = fk.NormalDamage,
       damage = 1,
       skillName = self.name,
+      isVirtualDMG = true,
     }
-
-    local stages = {
-      {fk.PreDamage, damageStruct.from},
-      {fk.DamageCaused, damageStruct.from},
-      {fk.DamageInflicted, damageStruct.to},
-    }
-    for _, struct in ipairs(stages) do
-      local event, p = table.unpack(struct)
-      if logic:trigger(event, p, damageStruct) or damageStruct.damage < 1 then
-        logic:breakEvent(false)
-      end
-    end
-    if damageStruct.to.dead then return false end
-    local damage_nature_table = {
-      [fk.NormalDamage] = "normal_damage",
-      [fk.FireDamage] = "fire_damage",
-      [fk.ThunderDamage] = "thunder_damage",
-      [fk.IceDamage] = "ice_damage",
-    }
-    room:sendLog{
-      type = "#Damage",
-      to = {damageStruct.from.id},
-      from = damageStruct.to.id,
-      arg = damageStruct.damage,
-      arg2 = damage_nature_table[damageStruct.damageType],
-    }
-    room:sendLogEvent("Damage", {
-      to = damageStruct.to.id,
-      damageType = damage_nature_table[damageStruct.damageType],
-      damageNum = damageStruct.damage,
-    })
-
-    stages = {
-      {fk.Damage, damageStruct.from},
-      {fk.Damaged, damageStruct.to},
-      {fk.DamageFinished, damageStruct.to},
-    }
-    for _, struct in ipairs(stages) do
-      local event, p = table.unpack(struct)
-      logic:trigger(event, p, damageStruct)
-    end
-
-    logic:trigger(fk.DamageFinished, damageStruct.to, damageStruct)
-
-    --[[local event = GameEvent:new(GameEvent.Damage)
-    event.parent = logic:getCurrentEvent()
-    logic.current_event_id = logic.current_event_id + 1
-    event.id = logic.current_event_id
-    event.data = event.data or {}
-    event.data[1] = damageStruct
-    logic.all_game_events[event.id] = event
-    logic.event_recorder[event.event] = logic.event_recorder[event.event] or {}
-    table.insert(logic.event_recorder[event.event], event)]]--
   end,
 }
 local quesong = fk.CreateTriggerSkill{

@@ -3810,57 +3810,16 @@ local guanzong = fk.CreateActiveSkill{
     return #selected < 2 and to_select ~= Self.id
   end,
   on_use = function(self, room, effect)
-    local logic = room.logic
-    local damageStruct = {
-      from = room:getPlayerById(effect.tos[1]),
-      to = room:getPlayerById(effect.tos[2]),
-      damageType = fk.NormalDamage,
+    local from = room:getPlayerById(effect.tos[1])
+    local to = room:getPlayerById(effect.tos[2])
+    room:doIndicate(from.id, {to.id})
+    room:damage{
+      from = from,
+      to = to,
       damage = 1,
       skillName = self.name,
+      isVirtualDMG = true,
     }
-
-    local stages = {
-      {fk.PreDamage, damageStruct.from},
-      {fk.DamageCaused, damageStruct.from},
-      {fk.DamageInflicted, damageStruct.to},
-    }
-    for _, struct in ipairs(stages) do
-      local event, player = table.unpack(struct)
-      if logic:trigger(event, player, damageStruct) or damageStruct.damage < 1 then
-        logic:breakEvent(false)
-      end
-    end
-    if damageStruct.to.dead then return false end
-    local damage_nature_table = {
-      [fk.NormalDamage] = "normal_damage",
-      [fk.FireDamage] = "fire_damage",
-      [fk.ThunderDamage] = "thunder_damage",
-      [fk.IceDamage] = "ice_damage",
-    }
-    room:sendLog{
-      type = "#Damage",
-      to = {damageStruct.from.id},
-      from = damageStruct.to.id,
-      arg = damageStruct.damage,
-      arg2 = damage_nature_table[damageStruct.damageType],
-    }
-    room:sendLogEvent("Damage", {
-      to = damageStruct.to.id,
-      damageType = damage_nature_table[damageStruct.damageType],
-      damageNum = damageStruct.damage,
-    })
-
-    stages = {
-      {fk.Damage, damageStruct.from},
-      {fk.Damaged, damageStruct.to},
-      {fk.DamageFinished, damageStruct.to},
-    }
-    for _, struct in ipairs(stages) do
-      local event, player = table.unpack(struct)
-      logic:trigger(event, player, damageStruct)
-    end
-
-    logic:trigger(fk.DamageFinished, damageStruct.to, damageStruct)
   end,
 }
 Fk:addSkill(yijin_active)

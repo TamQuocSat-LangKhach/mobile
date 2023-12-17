@@ -173,11 +173,14 @@ local fengjie = fk.CreateTriggerSkill{
       room:setPlayerMark(player, "@fengjie", room:getPlayerById(to).general)
       room:setPlayerMark(player, self.name, to)
     else
-      local n = player:getHandcardNum() - room:getPlayerById(player:getMark(self.name)):getHandcardNum()
-      if n < 0 then
-        player:drawCards(-n, self.name)
+      local x, y = room:getPlayerById(player:getMark(self.name)):getHandcardNum(), player:getHandcardNum()
+      if x < y then
+        room:askForDiscard(player, y-x, y-x, false, self.name, false)
       else
-        room:askForDiscard(player, n, n, false, self.name, false)
+        local z = math.min(4, x) - y
+        if z > 0 then
+          player:drawCards(z, self.name)
+        end
       end
     end
   end,
@@ -507,60 +510,49 @@ local quedi = fk.CreateTriggerSkill{
   events = {fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
     return
-      data.firstTarget and
       target == player and
       player:hasSkill(self) and
       player:usedSkillTimes(self.name, Player.HistoryTurn) < (1 + player:getMark("choujue_buff-turn")) and
       table.contains({ "slash", "duel" }, data.card.trueName) and
+      U.isOnlyTarget(player.room:getPlayerById(data.to), data, event) and
       player.room:getPlayerById(data.to):isAlive()
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local choices = {}
+    local choices = {"beishui", "quedi-offense","Cancel"}
     local to = room:getPlayerById(data.to)
     if not to:isKongcheng() then
       table.insert(choices, "quedi-prey")
     end
 
-    if table.find(player:getCardIds(Player.Hand), function(id)
-      return Fk:getCardById(id).type == Card.TypeBasic and not player:prohibitDiscard(Fk:getCardById(id))
-    end) then
-      table.insert(choices, "quedi-offense")
-    end
-
-    if #choices > 0 then
-      table.insert(choices, 1, "beishui")
-      table.insert(choices, "Cancel")
-
-      local choice = room:askForChoice(player, choices, self.name)
-      if choice ~= "Cancel" then
-        self.cost_data = choice
-        return true
-      end
+    local choice = room:askForChoice(player, choices, self.name, nil, nil,
+    {"beishui", "quedi-prey", "quedi-offense", "Cancel"})
+    if choice ~= "Cancel" then
+      self.cost_data = choice
+      return true
     end
 
     return false
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if self.cost_data == "beishui" then
-      room:changeMaxHp(player, -1)
-    end
 
     local to = room:getPlayerById(data.to)
     if self.cost_data == "quedi-prey" or (self.cost_data == "beishui" and not to:isKongcheng()) then
       local cardId = room:askForCardChosen(player, to, "h", self.name)
       room:obtainCard(player, cardId, false, fk.ReasonPrey)
+      if player.dead then return false end
     end
-    if self.cost_data == "quedi-offense" or
-      (
-        self.cost_data == "beishui" and table.find(player:getCardIds(Player.Hand), function(id)
-          return Fk:getCardById(id).type == Card.TypeBasic and not player:prohibitDiscard(Fk:getCardById(id))
-        end)
-      )
-    then
-      room:askForDiscard(player, 1, 1, false, self.name, false, ".|.|.|.|.|basic")
-      data.additionalDamage = (data.additionalDamage or 0) + 1
+    if self.cost_data == "quedi-offense" or self.cost_data == "beishui" then
+      if #room:askForDiscard(player, 1, 1, false, self.name, true, ".|.|.|.|.|basic",
+        "#quedi-discard:::" .. data.card.trueName) > 0 then
+        data.additionalDamage = (data.additionalDamage or 0) + 1
+        if player.dead then return false end
+      end
+    end
+
+    if self.cost_data == "beishui" then
+      room:changeMaxHp(player, -1)
     end
   end,
 }
@@ -570,6 +562,7 @@ Fk:loadTranslationTable{
   "伤害基数+1；背水：减1点体力上限。",
   ["quedi-prey"] = "获得其手牌",
   ["quedi-offense"] = "弃基本牌令此伤害+1",
+  ["#quedi-discard"] = "却敌：可以弃置1张基本牌，令此【%arg】伤害+1",
 
   ["$quedi1"] = "力摧敌阵，如视天光破云！",
   ["$quedi2"] = "让尔等有命追，无命回！",

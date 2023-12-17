@@ -4612,7 +4612,7 @@ local xunde = fk.CreateTriggerSkill{
   anim_type = "masochism",
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and player:distanceTo(target) <= 1
+    return player:hasSkill(self) and not target.dead and (player == target or player:distanceTo(target) == 1)
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, nil, "#xunde-invoke::"..target.id)
@@ -4625,25 +4625,13 @@ local xunde = fk.CreateTriggerSkill{
       pattern = ".",
     }
     room:judge(judge)
-    if judge.card.number >= 6 then
-      room:doIndicate(player.id, {target.id})
+    if judge.card.number >= 6 and player ~= target and not target.dead
+    and room:getCardArea(judge.card.id) == Card.DiscardPile then
+      room:obtainCard(target, judge.card)
     end
-    if judge.card.number <= 6 and data.from and not data.from.dead and not data.from:isKongcheng() then
-      room:doIndicate(player.id, {data.from.id})
+    if judge.card.number <= 6 and data.from and not data.from.dead then
       room:askForDiscard(data.from, 1, 1, false, self.name, false)
     end
-  end,
-}
-local xunde_trigger = fk.CreateTriggerSkill{
-  name = "#xunde_trigger",
-  mute = true,
-  events = {fk.FinishJudge},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and data.reason == "xunde" and data.card.number >= 6
-  end,
-  on_cost = Util.TrueFunc,
-  on_use = function(self, event, target, player, data)
-    player.room:obtainCard(player.id, data.card)
   end,
 }
 local chenjie = fk.CreateTriggerSkill{
@@ -4663,17 +4651,18 @@ local chenjie = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     player.room:retrial(self.cost_data, player, data, self.name, false)
-    player:drawCards(2, self.name)
+    if not player.dead then
+      player:drawCards(2, self.name)
+    end
   end,
 }
-xunde:addRelatedSkill(xunde_trigger)
 simafu:addSkill(xunde)
 simafu:addSkill(chenjie)
 Fk:loadTranslationTable{
   ["simafu"] = "司马孚",
   ["xunde"] = "勋德",
-  [":xunde"] = "当一名角色受到伤害后，若你与其距离1以内，你可进行一次判定，若点数不小于6，则你令该角色获得此判定牌；若点数不大于6，"..
-  "你令伤害来源弃置一张手牌。",
+  [":xunde"] = "当一名角色受到伤害后，若你与其距离1以内，你可判定，若点数不小于6且该角色不为你，你令其获得此判定牌；"..
+  "若点数不大于6，你令来源弃置一张手牌。",
   ["chenjie"] = "臣节",
   [":chenjie"] = "当一名角色的判定牌生效前，你可以打出一张与判定牌相同花色的牌代替之，然后你摸两张牌。",
   ["#xunde-invoke"] = "勋德：%dest 受到伤害，你可以判定，根据点数执行效果",

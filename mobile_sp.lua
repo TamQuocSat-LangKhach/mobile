@@ -2072,6 +2072,7 @@ local bingqing = fk.CreateTriggerSkill{
   can_refresh = function(self, event, target, player, data)
     return player:hasSkill(self, true) and target == player and
       player.phase == Player.Play and
+      data.card.suit ~= Card.NoSuit and
       (type(player:getMark("@bingqing-phase")) ~= "table" or
       not table.contains(player:getMark("@bingqing-phase"), "log_" .. data.card:getSuitString()))
   end,

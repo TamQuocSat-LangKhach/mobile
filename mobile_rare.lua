@@ -432,7 +432,7 @@ local pingcai = fk.CreateActiveSkill{
           room:recover({
             who = to,
             num = 1,
-            recoverBy = to,
+            recoverBy = player,
             skillName = self.name
           })
         end
@@ -1789,7 +1789,8 @@ local changshiChiyanDelay = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["changshi__chiyan"] = "鸱咽",
-  [":changshi__chiyan"] = "当你使用【杀】指定目标后，你可以将其一张牌扣置于其武将牌旁，该角色于本回合结束时获得此牌；当你使用【杀】对手牌数和装备区内的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
+  [":changshi__chiyan"] = "当你使用【杀】指定目标后，你可以将其一张牌扣置于其武将牌旁，该角色于本回合结束时获得此牌；当你使用【杀】对手牌数和"..
+  "装备区内的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
   ["#changshi__chiyan-invoke"] = "是否对%dest发动 鸱咽",
   ["$changshi__chiyan1"] = "逆臣乱党，都要受这啄心之刑。",
 }
@@ -1842,7 +1843,8 @@ local changshiZimou = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["changshi__zimou"] = "自谋",
-  [":changshi__zimou"] = "锁定技，当你于出牌阶段内使用：第二张牌时，你随机获得一张【酒】；第四张牌时，你随机获得一张【杀】；第六张牌时，你随机获得一张【决斗】。",
+  [":changshi__zimou"] = "锁定技，当你于出牌阶段内使用：第二张牌时，你随机获得一张【酒】；第四张牌时，你随机获得一张【杀】；第六张牌时，"..
+  "你随机获得一张【决斗】。",
   ["@changshi__zimou"] = "自谋",
   ["$changshi__zimou1"] = "在宫里当差，还不是为这利字！",
 }
@@ -1925,7 +1927,8 @@ local changshiPicai = fk.CreateActiveSkill{
 }
 Fk:loadTranslationTable{
   ["changshi__picai"] = "庀材",
-  [":changshi__picai"] = "出牌阶段限一次，你可以进行判定，若结果与本次流程中的其他判定结果均不同，你可重复此流程。最后你可将本次流程中所有生效的判定牌交给一名角色。",
+  [":changshi__picai"] = "出牌阶段限一次，你可以进行判定，若结果与本次流程中的其他判定结果均不同，你可重复此流程。最后你可将本次流程中所有生效的判定牌"..
+  "交给一名角色。",
   ["#changshi__picai-ask"] = "庀材：你可以重复此流程",
   ["#changshi__picai-give"] = "庀材：你可以将这些判定牌交给一名角色",
   ["$changshi__picai1"] = "修得广厦千万，可庇汉室不倾。",
@@ -2165,7 +2168,8 @@ local changshiChiheProhibit = fk.CreateProhibitSkill{
 }
 Fk:loadTranslationTable{
   ["changshi__chihe"] = "叱吓",
-  [":changshi__chihe"] = "当你使用【杀】指定唯一目标后，你可以亮出牌堆顶两张牌，令其不能使用与亮出的牌花色相同的牌响应此【杀】，且其中每有一张牌与此【杀】花色相同，此【杀】伤害基数便+1。",
+  [":changshi__chihe"] = "当你使用【杀】指定唯一目标后，你可以亮出牌堆顶两张牌，令其不能使用与亮出的牌花色相同的牌响应此【杀】，"..
+  "且其中每有一张牌与此【杀】花色相同，此【杀】伤害基数便+1。",
   ["$changshi__chihe1"] = "想见圣上？哼哼，你怕是没这个福分了！",
 }
 
@@ -2228,7 +2232,8 @@ local changshiMiaoyu = fk.CreateViewAsSkill{
       else
         return false
       end
-      return (Fk.currentResponsePattern == nil and c.skill:canUse(Self, c)) or (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(c))
+      return (Fk.currentResponsePattern == nil and c.skill:canUse(Self, c)) or
+        (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(c))
     end
   end,
   view_as = function(self, cards)
@@ -2269,7 +2274,8 @@ local changshiMiaoyuDiscard = fk.CreateTriggerSkill{
   events = {fk.CardUseFinished},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    return target == player and table.contains(data.card.skillNames, "changshi__miaoyu") and #data.card.subcards == 2 and Fk:getCardById(data.card.subcards[1]).color == Card.Black
+    return target == player and table.contains(data.card.skillNames, "changshi__miaoyu") and #data.card.subcards == 2 and
+      Fk:getCardById(data.card.subcards[1]).color == Card.Black
   end,
   on_cost = function() return true end,
   on_use = function(self, event, target, player, data)
@@ -2282,7 +2288,8 @@ local changshiMiaoyuDiscard = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["changshi__miaoyu"] = "妙语",
-  [":changshi__miaoyu"] = "你可以将至多两张你的同花色的牌按以下规则使用或打出：红桃当【桃】，方块当火【杀】，梅花当【闪】，黑桃当【无懈可击】。若你以此法使用或打出了两张：红桃牌，此牌回复基数+1；方块牌，此牌伤害基数+1；黑色牌，你弃置当前回合角色一张牌。",
+  [":changshi__miaoyu"] = "你可以将至多两张同花色的牌按以下规则使用或打出：<font color='red'>♥</font>当【桃】，<font color='red'>♦</font>当火【杀】，"..
+  "♣当【闪】，♠当【无懈可击】。若你以此法使用或打出了两张：红桃牌，此牌回复基数+1；方块牌，此牌伤害基数+1；黑色牌，你弃置当前回合角色一张牌。",
   ["$changshi__miaoyu1"] = "小伤无碍，安心修养便可。",
 }
 
@@ -2443,7 +2450,8 @@ local danggu = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["danggu"] = "党锢",
-  [":danggu"] = "锁定技，游戏开始时，你获得十张不同的“常侍牌”，然后你进行一次“结党”（随机展示一张“常侍”牌，然后随机展示四张“常侍”牌，你从中选择一张与最初展示的“常侍”牌互相认可的与其组成双将。）；当你因休整而返回游戏后，你进行一次“结党”并摸一张牌。",
+  [":danggu"] = "锁定技，游戏开始时，你获得十张不同的“常侍牌”，然后你进行一次“结党”（随机展示一张“常侍”牌，然后随机展示四张“常侍”牌，你从中选择一张与"..
+  "最初展示的“常侍”牌互相认可的与其组成双将。）；当你因休整而返回游戏后，你进行一次“结党”并摸一张牌。",
   ["@&changshiCards"] = "常侍",
   ["jiedang"] = "结党",
   ["$JieDang"] = "结党",

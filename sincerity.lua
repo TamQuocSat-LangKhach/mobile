@@ -1445,7 +1445,6 @@ Fk:loadTranslationTable{
   ["$pinghe2"] = "只可得胜而返，岂能败战而归！",
   ["~godsunce"] = "无耻小人！竟敢暗算于我……",
 
-  ["godsunce_win_audio"] = "胜利语音",
   ["$godsunce_win_audio"] = "平定三郡，稳据江东！",
 }
 
@@ -1454,7 +1453,6 @@ Fk:loadTranslationTable{
   ["godtaishici"] = "神太史慈",
   ["~godtaishici"] = "魂归……天地……",
 
-  ["godtaishici_win_audio"] = "胜利语音",
   ["$godtaishici_win_audio"] = "执此神弓，恭行天罚！",
 }
 

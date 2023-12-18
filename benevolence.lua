@@ -1488,6 +1488,11 @@ wuling:addRelatedSkill(wuling_prohibit)
 youyi:addRelatedSkill(youyi_trigger)
 godhuatuo:addSkill(wuling)
 godhuatuo:addSkill(youyi)
+
+local godhuatuo_win = fk.CreateActiveSkill{ name = "godhuatuo_win_audio" }
+godhuatuo_win.package = extension
+Fk:addSkill(godhuatuo_win)
+
 Fk:loadTranslationTable{
   ["godhuatuo"] = "神华佗",
   ["wuling"] = "五灵",
@@ -1517,11 +1522,13 @@ Fk:loadTranslationTable{
   ["#youyi"] = "游医：你可以弃置所有“仁”区牌，令所有角色回复1点体力",
   ["#youyi-invoke"] = "游医：是否将本阶段弃置的牌置入“仁”区？",
 
-  ["$wuling1"] = "欲解万般苦，驱身仿五灵。",
-  ["$wuling2"] = "吾创五禽之戏，君可作以除疾。",
-  ["$youyi1"] = "普济众生，永免疾患之苦。",
-  ["$youyi2"] = "此身行医，志济万千百姓。",
+  ["$wuling1"] = "吾创五禽之戏，君可作以除疾。",
+  ["$wuling2"] = "欲解万般苦，驱身仿五灵。",
+  ["$youyi1"] = "此身行医，志济万千百姓。",
+  ["$youyi2"] = "普济众生，永免疾患之苦。",
   ["~godhuatuo"] = "人间诸疾未解，老夫怎入轮回……",
+
+  ["$godhuatuo_win_audio"] = "但愿世间人无病，何惜架上药生尘。",
 }
 
 return extension

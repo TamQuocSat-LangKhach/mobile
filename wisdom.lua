@@ -1026,7 +1026,6 @@ Fk:loadTranslationTable{
   ["$zuoxing2"] = "身计国谋，不可两遂。",
   ["~godguojia"] = "可叹桢干命也迂……",
 
-  ["godguojia_win_audio"] = "胜利语音",
   ["$godguojia_win_audio"] = "既为奇佐，怎可徒有虚名？",
 }
 
@@ -1183,7 +1182,6 @@ Fk:loadTranslationTable{
   ["$dinghan2"] = "益国之事，虽死弗避。",
   ["~godxunyu"] = "宁鸣而死，不默而生……",
 
-  ["godxunyu_win_audio"] = "胜利语音",
   ["$godxunyu_win_audio"] = "汉室复兴，指日可待！",
 }
 

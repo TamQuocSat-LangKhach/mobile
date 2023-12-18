@@ -3201,7 +3201,6 @@ Fk:loadTranslationTable{
   ["$weimu_mobile__wangyuanji"] = "宫闱之内，何必擅涉外事！",
   ["$mingzhe_mobile__wangyuanji"] = "谦瑾行事，方能多吉少恙。",
   ["~mobile__wangyuanji"] = "世事沉浮，非是一人可逆啊……",
-  ["mobile__wangyuanji_win_audio"] = "胜利语音",
   ["$mobile__wangyuanji_win_audio"] = "苍生黎庶，都会有一个美好的未来了。",
 }
 

@@ -934,6 +934,11 @@ local weifeng_trigger = fk.CreateTriggerSkill{
 }
 weifeng:addRelatedSkill(weifeng_trigger)
 zhangliao:addSkill(weifeng)
+
+local mxing__zhangliao_win = fk.CreateActiveSkill{ name = "mxing__zhangliao_win_audio" }
+mxing__zhangliao_win.package = extension
+Fk:addSkill(mxing__zhangliao_win)
+
 Fk:loadTranslationTable{
   ["mxing__zhangliao"] = "星张辽",
   ["weifeng"] = "威风",
@@ -1089,6 +1094,11 @@ local zhilve = fk.CreateActiveSkill{
   end,
 }
 zhanghe:addSkill(zhilve)
+
+local mxing__zhanghe_win = fk.CreateActiveSkill{ name = "mxing__zhanghe_win_audio" }
+mxing__zhanghe_win.package = extension
+Fk:addSkill(mxing__zhanghe_win)
+
 Fk:loadTranslationTable{
   ["mxing__zhanghe"] = "星张郃",
   ["zhilve"] = "知略",
@@ -1101,6 +1111,7 @@ Fk:loadTranslationTable{
   ["$zhilve1"] = "将者，上不制天，下不制地，中不制人。",
   ["$zhilve2"] = "料敌之计，明敌之意，因况反制。",
   ["~mxing__zhanghe"] = "若非小人作梗，何至官渡之败……",
+  ["$mxing__zhanghe_win_audio"] = "水因地制流，兵因敌制胜！",
 }
 
 local xuhuang = General(extension, "mxing__xuhuang", "qun", 4)
@@ -1161,6 +1172,11 @@ local mxing__zhiyanProhibit = fk.CreateProhibitSkill{
 }
 mxing__zhiyan:addRelatedSkill(mxing__zhiyanProhibit)
 xuhuang:addSkill(mxing__zhiyan)
+
+local mxing__xuhuang_win = fk.CreateActiveSkill{ name = "mxing__xuhuang_win_audio" }
+mxing__xuhuang_win.package = extension
+Fk:addSkill(mxing__xuhuang_win)
+
 Fk:loadTranslationTable{
   ["mxing__xuhuang"] = "星徐晃",
   ["mxing__zhiyan"] = "治严",
@@ -1171,6 +1187,7 @@ Fk:loadTranslationTable{
   ["$mxing__zhiyan1"] = "治军严谨，方得精锐之师。",
   ["$mxing__zhiyan2"] = "精兵当严于律己，束身自修。",
   ["~mxing__xuhuang"] = "唉，明主未遇，大功未成……",
+  ["$mxing__xuhuang_win_audio"] = "幸遇明主，更应立功报效国君。",
 }
 
 local ganning = General(extension, "mxing__ganning", "qun", 4)
@@ -1297,6 +1314,11 @@ local sheque = fk.CreateTriggerSkill{
 Fk:addSkill(jinfan_active)
 ganning:addSkill(jinfan)
 ganning:addSkill(sheque)
+
+local mxing__ganning_win = fk.CreateActiveSkill{ name = "mxing__ganning_win_audio" }
+mxing__ganning_win.package = extension
+Fk:addSkill(mxing__ganning_win)
+
 Fk:loadTranslationTable{
   ["mxing__ganning"] = "星甘宁",
   ["jinfan"] = "锦帆",
@@ -1642,12 +1664,23 @@ Fk:loadTranslationTable{
   ["#huiyao"] = "慧夭：你可以受到1点无来源伤害，选择一名其他角色，令其<font color='red'>视为</font>造成伤害",
   ["#huiyao-choose"] = "慧夭：选择一名角色，视为 %dest 对其造成1点伤害",
   ["#quesong-choose"] = "雀颂：你可以令一名角色选择摸牌或回复体力",
+
+  ["$huiyao1"] = "幸有仓舒为伴，吾不至居高寡寒。",
+  ["$huiyao2"] = "通悟而无笃学之念，则必盈天下之叹也。",
+  ["$quesong1"] = "承白雀之瑞，显周公之德。",
+  ["$quesong2"] = "挽汉室于危亡，继光武之中兴。",
+  ["~mxing__zhoubuyi"] = "慧童亡，天下伤……",
 }
 
 local shichangshi = General(extension, "shichangshi", "qun", 1)
+
+local shichangshi_win = fk.CreateActiveSkill{ name = "shichangshi_win_audio" }
+shichangshi_win.package = extension
+Fk:addSkill(shichangshi_win)
+
 Fk:loadTranslationTable{
   ["shichangshi"] = "十常侍",
-  ["~mxing__weiyan"] = "使君为何弃我而去……呃啊！",
+  ["$shichangshi_win_audio"] = "十常侍威势更甚，再无人可掣肘。",
 }
 
 local tenChangShiMapper = {

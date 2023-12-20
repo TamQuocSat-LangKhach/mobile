@@ -917,9 +917,14 @@ liubiao:addSkill(m_ex__zongshi)
 
 local bulianshi = General(extension, "m_ex__bulianshi", "wu", 3, 3, General.Female)
 
+local m_ex__bulianshi_win = fk.CreateActiveSkill{ name = "m_ex__bulianshi_win_audio" }
+m_ex__bulianshi_win.package = extension
+Fk:addSkill(m_ex__bulianshi_win)
+
 Fk:loadTranslationTable{
   ["m_ex__bulianshi"] = "界步练师",
   ["~m_ex__bulianshi"] = "今生先君逝，来世再侍君……",
+  ["$m_ex__bulianshi_win_audio"] = "壮我江东，人才济济！",
 }
 
 local m_ex__anxu = fk.CreateActiveSkill{

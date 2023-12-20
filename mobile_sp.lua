@@ -1665,6 +1665,11 @@ local tiansuan = fk.CreateActiveSkill{
 tiansuan:addRelatedSkill(tiansuanProhibit)
 tiansuan:addRelatedSkill(tiansuanTrig)
 zhouqun:addSkill(tiansuan)
+
+local zhouqun_win = fk.CreateActiveSkill{ name = "zhouqun_win_audio" }
+zhouqun_win.package = extension
+Fk:addSkill(zhouqun_win)
+
 Fk:loadTranslationTable{
   ['zhouqun'] = '周群',
   ['tiansuan'] = '天算',
@@ -1693,6 +1698,7 @@ Fk:loadTranslationTable{
   ['$tiansuan1'] = '汝既持签问卜，亦当应天授命。',
   ['$tiansuan2'] = '尔若居正体道，福寿自当天成。',
   ['~zhouqun'] = '及时止损，过犹不及…',
+  ['$zhouqun_win_audio'] = '占星问卜，莫不言精！',
 }
 
 --SP11：阎圃 马元义 毛玠 傅佥 阮慧 马日磾 王濬
@@ -2756,6 +2762,11 @@ local longyuan = fk.CreateTriggerSkill{
 }
 zhaotongzhaoguang:addSkill(yizan)
 zhaotongzhaoguang:addSkill(longyuan)
+
+local zhaotongzhaoguang_win = fk.CreateActiveSkill{ name = "zhaotongzhaoguang_win_audio" }
+zhaotongzhaoguang_win.package = extension
+Fk:addSkill(zhaotongzhaoguang_win)
+
 Fk:loadTranslationTable{
   ["zhaotongzhaoguang"] = "赵统赵广",
   ["yizan"] = "翊赞",
@@ -2770,6 +2781,7 @@ Fk:loadTranslationTable{
   ["$longyuan1"] = "金鳞岂是池中物，一遇风云便化龙。",
   ["$longyuan2"] = "忍时待机，今日终于可以建功立业。",
   ["~zhaotongzhaoguang"] = "守业死战，不愧初心。",
+  ["$zhaotongzhaoguang_win_audio"] = "身继龙魂，效捷致果！",
 }
 
 local liuye = General(extension, "mobile__liuye", "wei", 3)
@@ -3594,6 +3606,11 @@ local daigong = fk.CreateTriggerSkill{
 zhaoxin:addRelatedSkill(zhaoxin_trigger)
 simazhao:addSkill(zhaoxin)
 simazhao:addSkill(daigong)
+
+local mobile__simazhao_win = fk.CreateActiveSkill{ name = "mobile__simazhao_win_audio" }
+mobile__simazhao_win.package = extension
+Fk:addSkill(mobile__simazhao_win)
+
 Fk:loadTranslationTable{
   ["mobile__simazhao"] = "司马昭",
   ["zhaoxin"] = "昭心",
@@ -3614,6 +3631,7 @@ Fk:loadTranslationTable{
   ["$daigong1"] = "不急，只等敌军士气渐殆。",
   ["$daigong2"] = "敌谋吾已尽料，可以长策縻之。",
   ["~mobile__simazhao"] = "安世，接下来，就看你的了……",
+  ["$mobile__simazhao_win_audio"] = "天下归一之功，已近在咫尺。",
 }
 
 --SP12：曹嵩 裴秀 杨阜 彭羕 牵招 郭女王 韩遂
@@ -4618,6 +4636,7 @@ local xunde = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    room:doIndicate(player.id, {target.id})
     local judge = {
       who = player,
       reason = self.name,
@@ -4883,8 +4902,8 @@ Fk:loadTranslationTable{
   ["$laishou1"] = "黄耇鲐背，谓之永年。",
   ["$laishou2"] = "养怡和之福，得乔松之寿。",
   ["$laishou3"] = "福寿将终，竟未得期颐！",
-  ["$luanqun1"] = "位居执慎，博涉多闻，更应秉性而论！",
-  ["$luanqun2"] = "年过杖朝，自是从心所欲，何来逾矩之理？",
+  ["$luanqun1"] = "年过杖朝，自是从心所欲，何来逾矩之理？",
+  ["$luanqun2"] = "位居执慎，博涉多闻，更应秉性而论！",
   ["~laimin"] = "狂嚣之言，一言十过啊……",
 }
 

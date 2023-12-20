@@ -5,6 +5,8 @@ Fk:loadTranslationTable{
   ["wisdom"] = "手杀-始计篇·智",
 }
 
+local U = require "packages/utility/utility"
+
 local wangcan = General(extension, "mobile__wangcan", "wei", 3)
 local wisdom__qiai = fk.CreateActiveSkill{
   name = "wisdom__qiai",
@@ -1040,28 +1042,26 @@ local tianzuo = fk.CreateTriggerSkill{
   events = {fk.GameStart, fk.PreCardEffect},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self) then
-      return false
-    end
-
+    if not player:hasSkill(self) then return false end
     if event == fk.PreCardEffect then
       return data.to == player.id and data.card.name == "raid_and_frontal_attack"
     end
-
     return true
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.GameStart then
-      for i = #room.void, 1, -1 do
-        if Fk:getCardById(room.void[i]).name == "raid_and_frontal_attack" then
-          local idRemoved = table.remove(room.void, i)
-          table.insert(room.draw_pile, math.random(1, #room.draw_pile), idRemoved)
-          room:setCardArea(idRemoved, Card.DrawPile, nil)
+      local name = "raid_and_frontal_attack"
+      local tianzuo_derivecards = {{name, Card.Spade, 2}, {name, Card.Spade, 4}, {name, Card.Spade, 6}, {name, Card.Spade, 8},
+      {name, Card.Club, 3},{name, Card.Club, 5},{name, Card.Club, 7},{name, Card.Club, 9}}
+      for _, id in ipairs(U.prepareDeriveCards(room, tianzuo_derivecards, "tianzuo_derivecards")) do
+        if room:getCardArea(id) == Card.Void then
+          table.removeOne(room.void, id)
+          table.insert(room.draw_pile, math.random(1, #room.draw_pile), id)
+          room:setCardArea(id, Card.DrawPile, nil)
         end
       end
-
-      room:doBroadcastNotify("UpdateDrawPile", #room.draw_pile)
+      room:doBroadcastNotify("UpdateDrawPile", tostring(#room.draw_pile))
     else
       return true
     end
@@ -1079,7 +1079,7 @@ local lingce = fk.CreateTriggerSkill{
       not data.card:isVirtual() and
       (
         table.contains(zhinang, data.card.trueName) or
-        table.contains(type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}, data.card.trueName) or
+        table.contains(U.getMark(player, "@$dinghan"), data.card.trueName) or
         data.card.trueName == "raid_and_frontal_attack"
       )
   end,
@@ -1166,7 +1166,8 @@ Fk:loadTranslationTable{
   ["tianzuo"] = "天佐",
   [":tianzuo"] = "锁定技，游戏开始时，将8张【奇正相生】加入牌堆；【奇正相生】对你无效。",
   ["lingce"] = "灵策",
-  [":lingce"] = "锁定技，当非虚拟且非转化的锦囊牌被使用时，若此牌的牌名属于智囊牌名、“定汉”已记录的牌名或【奇正相生】时，你摸一张牌。",
+  [":lingce"] = "锁定技，当非虚拟且非转化的锦囊牌被使用时，若此牌的牌名属于智囊牌名、“定汉”已记录的牌名或【奇正相生】时，你摸一张牌。"..
+  "<br><font color='grey'>智囊牌：【过河拆桥】、【无中生有】、【无懈可击】",
   ["dinghan"] = "定汉",
   [":dinghan"] = "当你成为锦囊牌的目标时，若此牌牌名未被“定汉”记录，则“定汉”记录此牌名，然后取消此目标；回合开始时，你可以为“定汉”记录增加或移除"..
   "一种锦囊牌的牌名。",

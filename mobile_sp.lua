@@ -2785,6 +2785,7 @@ Fk:loadTranslationTable{
 }
 
 local liuye = General(extension, "mobile__liuye", "wei", 3)
+local mobile__catapult = {{"mobile__catapult", Card.Diamond, 9}}
 local polu = fk.CreateTriggerSkill{
   name = "polu",
   anim_type = "control",
@@ -2793,7 +2794,7 @@ local polu = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if event == fk.TurnStart then
       if player:hasSkill(self) and target == player and #player:getAvailableEquipSlots(Card.SubtypeWeapon) > 0 then
-        return table.find(player.room.void, function(id) return Fk:getCardById(id).name == "mobile__catapult" end)
+        return player.room:getCardArea(U.prepareDeriveCards(player.room, mobile__catapult, "mobile__catapult")[1]) == Card.Void
       end
     else
       return player:hasSkill(self) and target == player and not table.find(player:getEquipments(Card.SubtypeWeapon), function(id)
@@ -2810,7 +2811,7 @@ local polu = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.TurnStart then
-      local id = table.find(player.room.void, function(id) return Fk:getCardById(id).name == "mobile__catapult" end)
+      local id = U.prepareDeriveCards(player.room, mobile__catapult, "mobile__catapult")[1]
       if not id then return end
       room:obtainCard(player, id, false, fk.ReasonPrey)
       local card = Fk:getCardById(id)

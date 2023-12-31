@@ -224,8 +224,8 @@ local m_ex__xianzhen = fk.CreateActiveSkill{
     return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
   end,
   card_filter = function() return false end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -1464,7 +1464,7 @@ local m_ex__zhuikong = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryRound) == 0 and
     target and not target.dead and target ~= player and target.phase == Player.Start and
-    player.hp <= target.hp and not player:isKongcheng() and not target:isKongcheng()
+    player.hp <= target.hp and player:canPindian(target)
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, data, "#m_ex__zhuikong-invoke::"..target.id)

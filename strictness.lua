@@ -307,7 +307,7 @@ local yajun = fk.CreateTriggerSkill{
         return true
       else
         return player.phase == Player.Play and not player:isKongcheng() and
-          table.find(player.room:getOtherPlayers(player), function(p) return not p:isKongcheng() end)
+          table.find(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end)
       end
     end
   end,
@@ -316,7 +316,7 @@ local yajun = fk.CreateTriggerSkill{
       return true
     else
       local to = player.room:askForChoosePlayers(player, table.map(table.filter(player.room:getOtherPlayers(player), function(p)
-        return not p:isKongcheng() end), function(p) return p.id end),
+        return player:canPindian(p) end), function(p) return p.id end),
         1, 1, "#yajun-choose", self.name, true)
       if #to > 0 then
         self.cost_data = to[1]
@@ -1042,12 +1042,10 @@ local yangjie = fk.CreateActiveSkill{
   can_use = function(self, player)
     return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
-  target_filter = function(self, to_select, selected, selected_cards)
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
-    return #selected == 0 and not target:isKongcheng()
+    return #selected == 0 and Self:canPindian(target)
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)

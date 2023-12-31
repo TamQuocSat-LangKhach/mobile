@@ -16,7 +16,7 @@ local chengzhao = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and target.phase == Player.Finish and not player:isKongcheng() and
-      table.find(player.room:getOtherPlayers(player), function(p) return not p:isKongcheng() end) then
+      table.find(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end) then
       local n = 0
       player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
         for _, move in ipairs(e.data) do
@@ -30,7 +30,7 @@ local chengzhao = fk.CreateTriggerSkill{
   end,
   on_cost = function (self, event, target, player, data)
     local room = player.room
-    local targets = table.filter(player.room:getOtherPlayers(player), function(p) return not p:isKongcheng() end)
+    local targets = table.filter(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end)
     local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#chengzhao-choose", self.name, true)
     if #tos > 0 then
       self.cost_data = tos[1]
@@ -2727,8 +2727,8 @@ local yizan = fk.CreateViewAsSkill{
     local card = Fk:getCardById(to_select)
     if #selected == 0 then
       return card.type == Card.TypeBasic
-    elseif #selected == 1 then
-      return Self:usedSkillTimes("longyuan", Player.HistoryGame) > 0 and false or true
+    elseif Self:usedSkillTimes("longyuan", Player.HistoryGame) == 0 then
+      return #selected == 1
     else
       return false
     end
@@ -3448,7 +3448,7 @@ local mobileYizheng = fk.CreateActiveSkill{
   anim_type = "control",
   target_num = 1,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
@@ -3457,7 +3457,7 @@ local mobileYizheng = fk.CreateActiveSkill{
       #selected < 1 and
       Self.id ~= to_select and
       Self.hp >= target.hp and
-      target:getHandcardNum() > 0
+      Self:canPindian(target)
   end,
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
@@ -4016,8 +4016,8 @@ local hannan = fk.CreateActiveSkill{
     return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
   end,
   card_filter = Util.FalseFunc,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -4068,8 +4068,8 @@ local shihe = fk.CreateActiveSkill{
     return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
   end,
   card_filter = Util.FalseFunc,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)

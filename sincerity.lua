@@ -666,8 +666,8 @@ local chuhai = fk.CreateActiveSkill{
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:getQuestSkillState(self.name)
   end,
   card_filter = function() return false end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -675,17 +675,12 @@ local chuhai = fk.CreateActiveSkill{
     room:notifySkillInvoked(player, self.name)
     player:broadcastSkillInvoke(self.name, 1)
     room:drawCards(player, 1, self.name)
-    if player.dead or player:isKongcheng() or target.dead or target:isKongcheng() then return false end
+    if player.dead or target.dead or not player:canPindian(target) then return false end
     local pindian = player:pindian({target}, self.name)
     if pindian.results[target.id].winner == player then
       local cards = target.player_cards[Player.Hand]
       if #cards > 0 then
-        room:askForCardsChosen(player, target, 0, 0, {
-          card_data = {
-            { "$Hand", cards }
-          }
-          --TODO:需要进一步突破，自由prompt，max==0（仅观看，不选牌）时的特化优化（新开函数）
-        }, self.name)
+        U.viewCards(player, cards, self.name)
         local types = {}
         for _, id in ipairs(cards) do
           table.insertIfNeed(types, Fk:getCardById(id):getTypeString())
@@ -1198,12 +1193,12 @@ local mobile__mingfa = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player.phase == Player.Play and not player:isKongcheng() and
-      table.find(player.room:getOtherPlayers(player), function(p) return not p:isKongcheng() end)
+      table.find(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-      return not p:isKongcheng() end), Util.IdMapper)
+      return player:canPindian(p) end), Util.IdMapper)
     local to, card =  room:askForChooseCardAndPlayers(player, targets, 1, 1, ".|.|.|hand", "#mobile__mingfa-invoke", self.name, true)
     if #to > 0 and card then
       self.cost_data = {to[1], card}

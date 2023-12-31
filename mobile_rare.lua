@@ -1975,7 +1975,7 @@ local changshiYaozhuo = fk.CreateActiveSkill{
   anim_type = "control",
   target_num = 1,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
   end,
   card_filter = function(self, to_select, selected)
     return false
@@ -1985,7 +1985,7 @@ local changshiYaozhuo = fk.CreateActiveSkill{
     return
       #selected < 1 and
       Self.id ~= to_select and
-      target:getHandcardNum() > 0
+      Self:canPindian(target)
   end,
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)

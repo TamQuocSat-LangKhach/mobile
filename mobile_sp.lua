@@ -1769,7 +1769,7 @@ local bihuoy = fk.CreateTriggerSkill{
   frequency = Skill.Limited,
   events = {fk.AfterDying},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+    return target:isAlive() and player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, nil, "#bihuoy-invoke::"..target.id)

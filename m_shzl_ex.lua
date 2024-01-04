@@ -541,4 +541,132 @@ Fk:loadTranslationTable{
   ["~m_ex__pangtong"] = "落……凤……坡……",
 }
 
+local m_ex__yuji = General(extension, "m_ex__yuji", "qun", 3)
+local m_ex__guhuo = fk.CreateViewAsSkill{
+  name = "m_ex__guhuo",
+  pattern = ".",
+  interaction = function()
+    local names = {}
+    for _, id in ipairs(Fk:getAllCardIds()) do
+      local card = Fk:getCardById(id)
+      if (card.type == Card.TypeBasic or card:isCommonTrick()) and not card.is_derived and
+      ((Fk.currentResponsePattern == nil and Self:canUse(card)) or
+      (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
+        table.insertIfNeed(names, card.name)
+      end
+    end
+    if #names == 0 then return false end
+    return UI.ComboBox { choices = names }
+  end,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Card.PlayerEquip
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 or not self.interaction.data then return end
+    local card = Fk:cloneCard(self.interaction.data)
+    self.cost_data = cards
+    card.skillName = self.name
+    return card
+  end,
+  before_use = function(self, player, use)
+    local room = player.room
+    local cards = self.cost_data
+    local card_id = cards[1]
+    room:moveCardTo(cards, Card.Void, nil, fk.ReasonPut, self.name, "", false)  --暂时放到Card.Void,理论上应该是Card.Processing,只要moveVisible可以false
+    local targets = TargetGroup:getRealTargets(use.tos)
+    if targets and #targets > 0 then
+      room:sendLog{
+        type = "#guhuo_use",
+        from = player.id,
+        to = targets,
+        arg = use.card.name,
+        arg2 = self.name
+      }
+
+      room:doIndicate(player.id, targets)
+    else
+      room:sendLog{
+        type = "#guhuo_no_target",
+        from = player.id,
+        arg = use.card.name,
+        arg2 = self.name
+      }
+    end
+
+    local canuse = true
+    for _, p in ipairs(room:getOtherPlayers(player)) do
+      if not p:hasSkill("chanyuan") then
+        local choice = room:askForChoice(p, {"noquestion", "question"}, self.name, "#guhuo-ask::"..player.id..":"..use.card.name)
+        room:sendLog{
+          type = "#guhuo_query",
+          from = p.id,
+          arg = choice
+        }
+        player:showCards({card_id})
+        if choice ~= "noquestion" then
+          if use.card.name == Fk:getCardById(card_id).name then
+            room:handleAddLoseSkills(p, "chanyuan")
+          else
+            canuse = false
+          end
+          break
+        end
+      end
+    end
+	--暂时使用setCardArea,当moveVisible可以false之后,不必再移动到Card.Void,也就不必再setCardArea
+    table.removeOne(room.void, card_id)
+    table.insert(room.processing_area, card_id)
+    room:setCardArea(card_id, Card.Processing, nil)
+	--
+    if canuse then
+      use.card:addSubcard(card_id)
+    else
+      room:moveCardTo(card_id, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
+      return ""
+    end
+  end,
+  enabled_at_play = function(self, player)
+    return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
+  end,
+  enabled_at_response = function(self, player, response)
+    return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
+  end,
+}
+m_ex__yuji:addSkill(m_ex__guhuo)
+local chanyuan = fk.CreateInvaliditySkill {
+  name = "chanyuan",
+  invalidity_func = function(self, from, skill)
+    return from:hasSkill(skill, true) and from.hp == 1
+    and not (skill:isEquipmentSkill() or skill.name:endsWith("&"))
+  end
+}
+local chanyuan_audio = fk.CreateTriggerSkill{
+  name = "#chanyuan_audio",
+  refresh_events = {fk.HpChanged},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:hasSkill("chanyuan") and not player:isFakeSkill("chanyuan") and player.hp == 1 and data.num < 0
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    room:notifySkillInvoked(player, "chanyuan", "negative")
+    player:broadcastSkillInvoke("chanyuan")
+  end,
+}
+chanyuan:addRelatedSkill(chanyuan_audio)
+m_ex__yuji:addRelatedSkill(chanyuan)
+Fk:loadTranslationTable{
+  ["m_ex__yuji"] = "界于吉",
+  ["m_ex__guhuo"] = "蛊惑",
+  [":m_ex__guhuo"] = "每回合限一次，你可以扣置一张手牌当任意一张基本牌或普通锦囊牌使用或打出。使用此牌前，令所有其他角色依次选择是否质疑，若有角色质疑则翻开此牌：若为假，则此牌作废；若为真，则该色获得〖缠怨〗。",
+  ["chanyuan"] = "缠怨",
+  [":chanyuan"] = "锁定技，你不能质疑〖蛊惑〗；若你的体力值为1，你的其他技能失效。",
+
+  ["$m_ex__guhuo1"] = "道法玄机，变幻莫测。",
+  ["$m_ex__guhuo2"] = "如真似幻，扑朔迷离。",
+  ["$chanyuan1"] = "不识天数，在劫难逃。",
+  ["$chanyuan2"] = "凡人仇怨，皆由心生。",
+  ["~m_ex__yuji"] = "道法玄机，竟被参破……",
+}
+
+
 return extension

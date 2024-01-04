@@ -1312,6 +1312,126 @@ Fk:loadTranslationTable{
 
 manchong:addSkill("yuce")
 
+local jianyong = General(extension, "m_ex__jianyong", "shu", 3)
+local m_ex__qiaoshui = fk.CreateActiveSkill{
+  name = "m_ex__qiaoshui",
+  anim_type = "control",
+  can_use = function(self, player)
+    return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_num = 0,
+  card_filter = Util.FalseFunc,
+  target_num = 1,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.tos[1])
+    local pindian = player:pindian({to}, self.name)
+    if pindian.results[to.id].winner == player then
+      room:addPlayerMark(player, "@@m_ex__qiaoshui-phase", 1)
+    else
+      room:setPlayerMark(player, "m_ex__qiaoshui_fail-phase", 1)
+    end
+  end,
+}
+local m_ex__qiaoshui_delay = fk.CreateTriggerSkill{
+  name = "#m_ex__qiaoshui_delay",
+  events = {fk.AfterCardTargetDeclared},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:getMark("@@m_ex__qiaoshui-phase") > 0 and data.card.type ~= Card.TypeEquip and data.card.sub_type ~= Card.SubtypeDelayedTrick
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:setPlayerMark(player, "@@m_ex__qiaoshui-phase", 0)
+    local targets = U.getUseExtraTargets(room, data)
+    table.insertTableIfNeed(targets, TargetGroup:getRealTargets(data.tos))
+    if #targets == 0 then return false end
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__qiaoshui-choose:::"..data.card:toLogString(), self.name, true)
+    if #tos > 0 then
+      local to = tos[1]
+      if TargetGroup:includeRealTargets(data.tos, to) then
+        TargetGroup:removeTarget(data.tos, to)
+      else
+        table.insert(data.tos, {to})
+        room:sendLog{
+          type = "#AddTargetsBySkill",
+          from = player.id,
+          to = {to},
+          arg = self.name,
+          arg2 = data.card:toLogString()
+        }
+      end
+    end
+  end,
+}
+m_ex__qiaoshui:addRelatedSkill(m_ex__qiaoshui_delay)
+local m_ex__qiaoshui_prohibit = fk.CreateProhibitSkill{
+  name = "#m_ex__qiaoshui_prohibit",
+  prohibit_use = function(self, player, card)
+    return player:getMark("m_ex__qiaoshui_fail-phase") > 0 and card and card.type == Card.TypeTrick
+  end,
+}
+m_ex__qiaoshui:addRelatedSkill(m_ex__qiaoshui_prohibit)
+jianyong:addSkill(m_ex__qiaoshui)
+local m_ex__zongshij = fk.CreateTriggerSkill{
+  name = "m_ex__zongshij",
+  anim_type = "drawcard",
+  events = {fk.PindianResultConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) then
+      return data.from == player or data.to == player
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local top = room:getNCards(1)
+    local card_data = { { "Top", top } }
+    local cards = {}
+    local min_num = 999
+    for _, c in ipairs({data.fromCard, data.toCard}) do
+      if room:getCardArea(c) == Card.Processing then
+        table.insert(cards, c)
+        min_num = math.min(min_num, c.number)
+      end
+    end
+    if #cards > 0 then
+      local ids = table.map(table.filter(cards, function(c) return c.number == min_num end), function(c) return c:getEffectiveId() end)
+      table.insert(card_data, { "$PindianCard", ids })
+    end
+    local get = room:askForCardChosen(player, player, { card_data = card_data }, self.name, "#m_ex__zongshij-card")
+    if get ~= top[1] then
+      table.insert(room.draw_pile, 1, top[1])
+      room:doBroadcastNotify("UpdateDrawPile", tostring(#room.draw_pile))
+    end
+    room:obtainCard(player, get, false, fk.ReasonPrey)
+  end,
+}
+jianyong:addSkill(m_ex__zongshij)
+Fk:loadTranslationTable{
+  ["m_ex__jianyong"] = "界简雍",
+  
+  ["m_ex__qiaoshui"] = "巧说",
+  [":m_ex__qiaoshui"] = "出牌阶段限一次，你可以与一名角色拼点：若你赢，本阶段你使用下一张基本牌或普通锦囊牌可以多选择或少选择一个目标；若你没赢，本阶段你不能使用锦囊牌。",
+  ["#m_ex__qiaoshui_delay"] = "巧说",
+  ["#m_ex__qiaoshui-choose"] = "巧说：你可以为%arg增加/减少一个目标",
+  ["@@m_ex__qiaoshui-phase"] = "巧说",
+
+  ["m_ex__zongshij"] = "纵适",
+  [":m_ex__zongshij"] = "当你拼点后，你观看牌堆顶的一张牌，并可以选择一项：获得牌堆顶的这张牌，或获得两张拼点牌中点数较小的一张。",
+  ["#m_ex__zongshij-card"] = "纵适：选择一张获得",
+  ["$PindianCard"] = "拼点牌",
+
+  ["$m_ex__qiaoshui1"] = "此事听我一言，定有分明之理。",
+  ["$m_ex__qiaoshui2"] = "今日之事，听我一言便是。",
+  ["$m_ex__zongshij1"] = "空拘小节，难成大事。",
+  ["$m_ex__zongshij2"] = "繁文缛节，不过是缚人之物。",
+  ["~m_ex__jianyong"] = "行事无矩，为人所恶矣。",
+}
+
 local liru = General(extension, "m_ex__liru", "qun", 3)
 
 Fk:loadTranslationTable{

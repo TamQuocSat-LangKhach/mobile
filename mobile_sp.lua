@@ -3303,19 +3303,14 @@ local quanfeng = fk.CreateTriggerSkill{
     if event == fk.Deathed then
       room:handleAddLoseSkills(player, "-hongyi", nil, true, false)
 
-      local skills = {}
-      for _, skill_name in ipairs(Fk.generals[target.general]:getSkillNameList()) do
-        if not Fk.skills[skill_name].lordSkill then
-          table.insertIfNeed(skills, skill_name)
-        end
+      local skills = Fk.generals[target.general]:getSkillNameList()
+      if target.deputyGeneral ~= "" then
+        table.insertTableIfNeed(skills, Fk.generals[target.deputyGeneral]:getSkillNameList())
       end
-      if target.deputyGeneral and target.deputyGeneral ~= "" then
-        for _, skill_name in ipairs(Fk.generals[target.deputyGeneral]:getSkillNameList()) do
-          if not Fk.skills[skill_name].lordSkill then
-            table.insertIfNeed(skills, skill_name)
-          end
-        end
-      end
+      skills = table.filter(skills, function(skill_name)
+        local skill = Fk.skills[skill_name]
+        return not skill.lordSkill and not (#skill.attachedKingdom > 0 and not table.contains(skill.attachedKingdom, player.kingdom))
+      end)
       if #skills > 0 then
         room:handleAddLoseSkills(player, table.concat(skills, "|"), nil, true, false)
       end

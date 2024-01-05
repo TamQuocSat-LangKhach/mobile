@@ -636,7 +636,7 @@ m_ex__yuji:addSkill(m_ex__guhuo)
 local chanyuan = fk.CreateInvaliditySkill {
   name = "chanyuan",
   invalidity_func = function(self, from, skill)
-    return from:hasSkill(skill, true) and from.hp == 1
+    return from:hasSkill(self, true) and from.hp == 1
     and not (skill:isEquipmentSkill() or skill.name:endsWith("&"))
   end
 }

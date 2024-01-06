@@ -3642,9 +3642,9 @@ local yijin = fk.CreateTriggerSkill{
       if event == fk.GameStart then
         return true
       elseif event == fk.TurnStart then
-        return target == player and (player:getMark(self.name) == 0 or #player:getMark(self.name) == 0)
+        return target == player and #U.getMark(player, "@[:]yijin_owner") == 0
       else
-        return target == player and player.phase == Player.Play and player:getMark(self.name) ~= 0
+        return target == player and player.phase == Player.Play and #U.getMark(player, "@[:]yijin_owner") > 0
       end
     end
   end,
@@ -3653,28 +3653,28 @@ local yijin = fk.CreateTriggerSkill{
     if event == fk.GameStart then
       player:broadcastSkillInvoke(self.name, 1)
       room:notifySkillInvoked(player, self.name, "special")
-      local mark = {}
-      for i = 1, 6, 1 do
-        table.insert(mark, "wd_gold")
-      end
-      room:setPlayerMark(player, "@$yijin", mark)
-      room:setPlayerMark(player, self.name,
-        {"@@yijin_wushi", "@@yijin_houren", "@@yijin_guxiong", "@@yijin_yongbi", "@@yijin_tongshen", "@@yijin_jinmi"})
+      room:setPlayerMark(player, "@[:]yijin_owner",
+        {"yijin_wushi", "yijin_houren", "yijin_guxiong", "yijin_yongbi", "yijin_tongshen", "yijin_jinmi"})
     elseif event == fk.TurnStart then
       player:broadcastSkillInvoke(self.name, 3)
       room:notifySkillInvoked(player, self.name, "negative")
       room:killPlayer({who = player.id})
     else
-      local success, dat = room:askForUseActiveSkill(player, "yijin_active", "#yijin-choose", false, nil, false)
-      if success then
-        local to = room:getPlayerById(dat.targets[1])
-        if table.find({"wushi", "houren", "tongshen"}, function(mark) return to:getMark("@@yijin_"..mark) > 0 end) then
-          player:broadcastSkillInvoke(self.name, 1)
-          room:notifySkillInvoked(player, self.name, "support")
-        else
-          player:broadcastSkillInvoke(self.name, 2)
-          room:notifySkillInvoked(player, self.name, "control")
-        end
+      local targets = table.filter(room:getOtherPlayers(player), function(p) return p:getMark("@[:]yijin") == 0 end)
+      if #targets == 0 then return false end
+      local _, dat = room:askForUseActiveSkill(player, "yijin_active", "#yijin-choose", false)
+      local to = dat and room:getPlayerById(dat.targets[1]) or table.random(targets)
+      local mark = player:getMark("@[:]yijin_owner")
+      local choice = dat and dat.interaction or table.random(mark)
+      table.removeOne(mark, choice)
+      room:setPlayerMark(player, "@[:]yijin_owner", mark)
+      room:setPlayerMark(to, "@[:]yijin", choice)
+      if table.contains({"yijin_wushi", "yijin_houren", "yijin_tongshen"}, choice) then
+        player:broadcastSkillInvoke(self.name, 1)
+        room:notifySkillInvoked(player, self.name, "support")
+      else
+        player:broadcastSkillInvoke(self.name, 2)
+        room:notifySkillInvoked(player, self.name, "control")
       end
     end
   end,
@@ -3685,43 +3685,17 @@ local yijin_active = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 1,
   interaction = function()
-    if Self:getMark("yijin") ~= 0 then
-      return UI.ComboBox {choices = Self:getMark("yijin")}
-    end
+    return UI.ComboBox {choices = U.getMark(Self, "@[:]yijin_owner") }
   end,
   prompt = function (self)
-    return "#"..self.interaction.data
+    return Fk:translate(":"..self.interaction.data)
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, cards)
     if #selected == 0 and to_select ~= Self.id then
       local target = Fk:currentRoom():getPlayerById(to_select)
-      for name, _ in pairs(target.mark) do
-        if name:startsWith("@@yijin_") then
-          return false
-        end
-      end
-      return true
+      return target:getMark("@[:]yijin") == 0
     end
-  end,
-  on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.tos[1])
-    local mark = player:getMark("@$yijin")
-    if #mark == 1 then
-      mark = 0
-    else
-      table.remove(mark, 1)
-    end
-    room:setPlayerMark(player, "@$yijin", mark)
-    mark = player:getMark("yijin")
-    if #mark == 1 then
-      mark = 0
-    else
-      table.removeOne(mark, self.interaction.data)
-    end
-    room:setPlayerMark(player, "yijin", mark)
-    room:setPlayerMark(target, self.interaction.data, 1)
   end,
 }
 local yijin_trigger = fk.CreateTriggerSkill{
@@ -3729,18 +3703,19 @@ local yijin_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.DrawNCards, fk.EventPhaseChanging, fk.TurnEnd, fk.EventPhaseStart, fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
-    if target == player then
+    local mark = player:getMark("@[:]yijin")
+    if target == player and mark ~= 0 then
       if event == fk.DrawNCards then
-        return player:getMark("@@yijin_wushi") > 0
+        return mark == "yijin_wushi"
       elseif event == fk.TurnEnd then
-        return player:getMark("@@yijin_houren") > 0 and player:isWounded()
+        return player:isWounded() and mark == "yijin_houren"
       elseif event == fk.EventPhaseChanging then
-        return (data.to == Player.Draw and player:getMark("@@yijin_yongbi") > 0) or
-          ((data.to == Player.Play or data.to == Player.Discard) and player:getMark("@@yijin_jinmi") > 0)
+        return (data.to == Player.Draw and mark == "yijin_yongbi") or
+          ((data.to == Player.Play or data.to == Player.Discard) and mark == "yijin_jinmi")
       elseif event == fk.EventPhaseStart then
-        return player.phase == Player.Play and player:getMark("@@yijin_guxiong") > 0
+        return player.phase == Player.Play and mark == "yijin_guxiong"
       elseif event == fk.DamageInflicted then
-        return data.damageType ~= fk.NormalDamage and player:getMark("@@yijin_tongshen") > 0
+        return data.damageType ~= fk.NormalDamage and mark == "yijin_tongshen"
       end
     end
   end,
@@ -3755,18 +3730,16 @@ local yijin_trigger = fk.CreateTriggerSkill{
       end
       data.n = data.n + 4
     elseif event == fk.TurnEnd then
-      if player:isWounded() then
-        if src then
-          src:broadcastSkillInvoke("yijin", 1)
-          room:notifySkillInvoked(src, "yijin", "support")
-        end
-        room:recover({
-          who = player,
-          num = math.min(3, player:getLostHp()),
-          recoverBy = player,
-          skillName = "yijin",
-        })
+      if src then
+        src:broadcastSkillInvoke("yijin", 1)
+        room:notifySkillInvoked(src, "yijin", "support")
       end
+      room:recover({
+        who = player,
+        num = math.min(3, player:getLostHp()),
+        recoverBy = player,
+        skillName = "yijin",
+      })
     elseif event == fk.EventPhaseChanging then
       if src then
         src:broadcastSkillInvoke("yijin", 2)
@@ -3789,22 +3762,18 @@ local yijin_trigger = fk.CreateTriggerSkill{
     end
   end,
 
-  refresh_events = {fk.TurnEnd},
+  refresh_events = {fk.AfterTurnEnd},
   can_refresh = function(self, event, target, player, data)
     return target == player
   end,
   on_refresh = function(self, event, target, player, data)
-    for name, _ in pairs(target.mark) do
-      if name:startsWith("@@yijin_") then
-        player.room:setPlayerMark(player, name, 0)
-      end
-    end
+    player.room:setPlayerMark(player, "@[:]yijin", 0)
   end,
 }
 local yijin_targetmod = fk.CreateTargetModSkill{
   name = "#yijin_targetmod",
   residue_func = function(self, player, skill, scope)
-    if skill.trueName == "slash_skill" and player:getMark("@@yijin_wushi") > 0 and scope == Player.HistoryPhase then
+    if skill.trueName == "slash_skill" and player:getMark("@[:]yijin") == "yijin_wushi" and scope == Player.HistoryPhase then
       return 1
     end
   end,
@@ -3849,20 +3818,23 @@ Fk:loadTranslationTable{
   ["guanzong"] = "惯纵",
   [":guanzong"] = "出牌阶段限一次，你可以令一名其他角色<font color='red'>视为</font>对另一名其他角色造成1点伤害。",
   ["yijin_active"] = "亿金",
+  ["#yijin_trigger"] = "亿金",
+  ["@[:]yijin_owner"] = "亿金",
+  ["@[:]yijin"] = "",
   ["#yijin-choose"] = "亿金：将一种“金”交给一名其他角色",
   ["@$yijin"] = "金",
-  ["@@yijin_wushi"] = "膴士",
-  ["#@@yijin_wushi"] = "膴士：摸牌阶段摸牌数+4、出牌阶段使用【杀】次数+1",
-  ["@@yijin_houren"] = "厚任",
-  ["#@@yijin_houren"] = "厚任：回合结束时回复3点体力",
-  ["@@yijin_guxiong"] = "贾凶",
-  ["#@@yijin_guxiong"] = "贾凶：出牌阶段开始时失去1点体力，手牌上限-3",
-  ["@@yijin_yongbi"] = "拥蔽",
-  ["#@@yijin_yongbi"] = "拥蔽：跳过摸牌阶段",
-  ["@@yijin_tongshen"] = "通神",
-  ["#@@yijin_tongshen"] = "通神：防止受到的非雷电伤害",
-  ["@@yijin_jinmi"] = "金迷",
-  ["#@@yijin_jinmi"] = "金迷：跳过出牌阶段和弃牌阶段",
+  ["yijin_wushi"] = "膴士",
+  [":yijin_wushi"] = "摸牌阶段摸牌数+4、出牌阶段使用【杀】次数+1",
+  ["yijin_houren"] = "厚任",
+  [":yijin_houren"] = "回合结束时回复3点体力",
+  ["yijin_guxiong"] = "贾凶",
+  [":yijin_guxiong"] = "出牌阶段开始时失去1点体力，手牌上限-3",
+  ["yijin_yongbi"] = "拥蔽",
+  [":yijin_yongbi"] = "跳过摸牌阶段",
+  ["yijin_tongshen"] = "通神",
+  [":yijin_tongshen"] = "防止受到的非雷电伤害",
+  ["yijin_jinmi"] = "金迷",
+  [":yijin_jinmi"] = "跳过出牌阶段和弃牌阶段",
   ["#guanzong"] = "惯纵：选择两名角色，<font color='red'>视为</font>第一名角色对第二名角色造成1点伤害",
 
   ["$yijin1"] = "吾家资巨万，无惜此两贯三钱！",

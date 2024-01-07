@@ -265,7 +265,7 @@ local silverLion = fk.CreateArmor{
           skillName = self.name
         }
       end
-      player:drawCards(2)
+      player:drawCards(2, "ex_silver_lion")
     end
   end,
 }

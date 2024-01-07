@@ -2545,4 +2545,252 @@ for generalName, _  in pairs(tenChangShiMapper) do
   changshi:addSkill("mowang")
 end
 
+local yanxiang = General(extension, "yanxiang", "qun", 3)
+
+local kujian = fk.CreateActiveSkill{
+  name = "kujian",
+  anim_type = "support",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  max_card_num = 3,
+  min_card_num = 1,
+  card_filter = function(self, to_select, selected)
+    return Fk:currentRoom():getCardArea(to_select) == Card.PlayerHand and #selected < 2
+  end,
+  target_filter = function(self, to_select, selected)
+    return to_select ~= Self.id
+  end,
+  target_num = 1,
+  on_use = function(self, room, effect)
+    local target = room:getPlayerById(effect.tos[1])
+    table.forEach(effect.cards, function(cid)
+      room:setCardMark(Fk:getCardById(cid), "@@kujian", 1)
+    end)
+    room:moveCardTo(effect.cards, Player.Hand, target, fk.ReasonGive, self.name, nil, false)
+  end,
+}
+local kujian_judge = fk.CreateTriggerSkill{
+  name = "#kujian_judge",
+  events = {fk.CardUsing, fk.CardResponding, fk.AfterCardsMove},
+  anim_type = "drawcard",
+  mute = true,
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) then return false end
+    if event ~= fk.AfterCardsMove then
+      if player == target then return false end
+      return table.find(Card:getIdList(data.card), function(id)
+        return Fk:getCardById(id):getMark("@@kujian") > 0
+      end)
+    else
+      for _, move in ipairs(data) do
+        if move.from ~= player.id and move.moveReason ~= fk.ReasonUse and move.moveReason ~= fk.ReasonResonpse then
+          if table.find(move.moveInfo, function(info)
+            return Fk:getCardById(info.cardId):getMark("@@kujian") > 0 and info.fromArea == Card.PlayerHand
+          end) then
+            return true
+          end
+        end
+      end
+    end
+    return false
+  end,
+  on_trigger = function(self, event, target, player, data)
+    if event ~= fk.AfterCardsMove then
+      self:doCost(event, target, player, data)
+    else
+      local room = player.room
+      local targets = {}
+      for _, move in ipairs(data) do
+        if move.from ~= player.id and move.moveReason ~= fk.ReasonUse and move.moveReason ~= fk.ReasonResonpse then
+          for _, info in ipairs(move.moveInfo) do
+            if Fk:getCardById(info.cardId):getMark("@@kujian") > 0 and info.fromArea == Card.PlayerHand then
+              table.insert(targets, move.from)
+            end
+          end
+        end
+      end
+      room:sortPlayersByAction(targets)
+      for _, target_id in ipairs(targets) do
+        if not player:hasSkill(self) then break end
+        local skill_target = room:getPlayerById(target_id)
+        if skill_target and not skill_target.dead and not player.dead and not (skill_target:isNude() and player:isNude()) then
+          self:doCost(event, skill_target, player, data)
+        end
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:broadcastSkillInvoke("kujian")
+    if event ~= fk.AfterCardsMove then
+      room:notifySkillInvoked(player, "kujian", "drawcard")
+      table.forEach(Card:getIdList(data.card), function(id)
+        return room:setCardMark(Fk:getCardById(id), "@@kujian", 0)
+      end)
+      room:doIndicate(player.id, {target.id})
+      player:drawCards(2, self.name)
+      target:drawCards(2, self.name)
+    else
+      room:notifySkillInvoked(player, "kujian", "negative")
+      room:doIndicate(player.id, {target.id})
+      for _, move in ipairs(data) do
+        if move.from ~= player.id and move.moveReason ~= fk.ReasonUse and move.moveReason ~= fk.ReasonResonpse then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand then
+              room:setCardMark(Fk:getCardById(info.cardId), "@@kujian", 0)
+            end
+          end
+        end
+      end
+      room:askForDiscard(player, 1, 1, true, self.name, false, nil, "#kujian-discard")
+      room:askForDiscard(target, 1, 1, true, self.name, false, nil, "#kujian-discard")
+    end
+  end,
+  
+  --[[
+    refresh_events = {fk.AfterCardsMove},
+  can_refresh = function(self, event, target, player, data)
+    return true
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    for _, move in ipairs(data) do
+      if move.from == player.id and move.toArea ~= Card.Processing and move.toArea ~= Card.PlayerHand then
+        for _, info in ipairs(move.moveInfo) do
+          if Fk:getCardById(info.cardId):getMark("@@kujian") > 0 then
+            room:setCardMark(Fk:getCardById(info.cardId), "@@kujian", 0)
+          end
+        end
+      end
+    end
+  end,
+  --]]
+}
+kujian:addRelatedSkill(kujian_judge)
+
+local ruilian = fk.CreateTriggerSkill{
+  name = "ruilian",
+  events = {fk.RoundStart, fk.TurnEnd},
+  anim_type = "support",
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and (event == fk.RoundStart or (tonumber(target:getMark("@ruilian-turn")) > 0 and table.contains(target:getMark("_ruilianGiver"), player.id)))
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.RoundStart then
+      local target = player.room:askForChoosePlayers(player, table.map(player.room.alive_players, Util.IdMapper), 1, 1, "#ruilian-ask", self.name, true)
+      if #target > 0 then
+        self.cost_data = target[1]
+        return true
+      end
+    else
+      local cids = target:getMark("_ruilianCids-turn")
+      local cardType = {}
+      table.forEach(cids, function(cid)
+        table.insertIfNeed(cardType, Fk:getCardById(cid):getTypeString())
+      end)
+      table.insert(cardType, "Cancel")
+      local choice = player.room:askForChoice(player, cardType, self.name, "#ruilian-type:" .. target.id)
+      if choice ~= "Cancel" then
+        self.cost_data = choice
+        return true
+      end
+    end
+    return false
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.RoundStart then
+      local target = room:getPlayerById(self.cost_data)
+      room:setPlayerMark(target, "@@ruilian", 1)
+      local ruilianGiver = type(target:getMark("_ruilianGiver")) == "table" and target:getMark("_ruilianGiver") or {}
+      table.insertIfNeed(ruilianGiver, player.id)
+      room:setPlayerMark(target, "_ruilianGiver", ruilianGiver)
+    else
+      local id = room:getCardsFromPileByRule(".|.|.|.|.|" .. self.cost_data, 1, "discardPile")
+      if #id > 0 then
+        room:obtainCard(player, id[1], false, fk.ReasonPrey)
+      end
+      id = room:getCardsFromPileByRule(".|.|.|.|.|" .. self.cost_data, 1, "discardPile")
+      if #id > 0 then
+        room:obtainCard(target, id[1], false, fk.ReasonPrey)
+      end
+    end
+  end,
+
+  refresh_events = {fk.AfterCardsMove, fk.TurnStart},
+  can_refresh = function(self, event, target, player, data)
+    if player ~= player.room.current then return false end
+    if event == fk.AfterCardsMove then
+      if player:getMark("@ruilian-turn") == 0 then return false end
+      local cids = {}
+      for _, move in ipairs(data) do
+        if move.from == player.id and move.moveReason == fk.ReasonDiscard then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              table.insert(cids, info.cardId)
+            end
+          end
+        end
+      end
+      if #cids > 0 then
+        --self.cost_data = cids
+        return true
+      end
+      return false
+    else
+      return target == player and player:getMark("@@ruilian") ~= 0
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterCardsMove then
+      local cids = type(player:getMark("_ruilianCids-turn")) == "table" and player:getMark("_ruilianCids-turn") or {}
+      local otherCids = {}
+      for _, move in ipairs(data) do
+        if move.from == player.id and move.moveReason == fk.ReasonDiscard then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              table.insert(otherCids, info.cardId)
+            end
+          end
+        end
+      end
+      table.insertTable(cids, otherCids)
+      room:setPlayerMark(player, "_ruilianCids-turn", cids)
+      room:setPlayerMark(player, "@ruilian-turn", #player:getMark("_ruilianCids-turn"))
+    else
+      room:setPlayerMark(player, "@ruilian-turn", "0")
+      room:setPlayerMark(player, "@@ruilian", 0)
+    end
+  end,
+}
+
+yanxiang:addSkill(kujian)
+yanxiang:addSkill(ruilian)
+
+Fk:loadTranslationTable{
+  ["yanxiang"] = "阎象",
+  ["kujian"] = "苦谏",
+  [":kujian"] = "出牌阶段限一次，你可将至多两张手牌标记为“谏”并交给一名其他角色。当其他角色使用或打出“谏”牌时，你与其各摸两张牌。当其他角色非因使用或打出从手牌区失去“谏”牌后，你与其各弃置一张牌。",
+  ["ruilian"] = "睿敛",
+  [":ruilian"] = "每轮开始时，你可选择一名角色，其下个回合结束前，若其此回合弃置过牌，你可选择其此回合弃置过的牌中的一种类别，你与其各从弃牌堆中获得一张此类别的牌。",
+
+  ["#kujian-discard"] = "苦谏：请弃置一张牌",
+  ["#kujian_judge"] = "苦谏",
+  ["#ruilian-ask"] = "你可对一名角色发动“睿敛”",
+  ["@@ruilian"] = "睿敛",
+  ["@ruilian-turn"] = "睿敛",
+  ["#ruilian-type"] = "睿敛：你可选择 %src 此回合弃置过的牌中的一种类别，你与其各从弃牌堆中获得一张此类别的牌",
+  ["@@kujian"] = "谏",
+
+  ["$kujian1"] = "吾之所言，皆为公之大业。",
+  ["$kujian2"] = "公岂徒有纳谏之名乎！",
+  ["$kujian3"] = "明公虽奕世克昌，未若有周之盛。",
+  ["$ruilian1"] = "公若擅进庸肆，必失民心！",
+  ["$ruilian2"] = "外敛虚进之势，内减弊民之政。",
+  ["~yanxiang"] = "若遇明主，或可青史留名……",
+}
+
 return extension

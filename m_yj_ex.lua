@@ -1444,14 +1444,36 @@ local m_ex__juece = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Finish and
-      table.find(player.room:getOtherPlayers(player), function(p) return (p:getMark("m_ex__juece_lostcard-turn") > 0) end)
+    return target == player and player:hasSkill(self) and player.phase == Player.Finish
+    and #player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+      for _, move in ipairs(e.data) do
+        if move.from and move.from ~= player.id then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              return true
+            end
+          end
+        end
+      end
+    end, Player.HistoryTurn) > 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local to = room:askForChoosePlayers(player, table.map(table.filter(room:getOtherPlayers(player), function(p)
-      return (p:getMark("m_ex__juece_lostcard-turn") > 0) end), function(p) return p.id end),
-      1, 1, "#m_ex__juece-choose", self.name, true)
+    local targets = {}
+    local n = 0
+    room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+      for _, move in ipairs(e.data) do
+        if move.from and move.from ~= player.id then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              table.insertIfNeed(targets, move.from)
+            end
+          end
+        end
+      end
+    end, Player.HistoryTurn)
+    if #targets == 0 then return false end
+    local to = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__juece-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
       return true
@@ -1465,31 +1487,13 @@ local m_ex__juece = fk.CreateTriggerSkill{
       skillName = self.name,
     }
   end,
-
-  refresh_events = {fk.AfterCardsMove},
-  can_refresh = function(self, event, target, player, data)
-    for _, move in ipairs(data) do
-      if move.from and move.from == player.id and table.find(move.moveInfo, function(info)
-          return info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip
-        end) then
-          return true
-      end
-    end
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    room:addPlayerMark(player, "m_ex__juece_lostcard-turn")
-    if room.current and room.current ~= player and room.current:hasSkill(self.name, true) then
-      room:addPlayerMark(player, "@@m_ex__juece_lostcard-turn")
-    end
-  end,
 }
 
 Fk:loadTranslationTable{
   ["m_ex__juece"] = "绝策",
   [":m_ex__juece"] = "结束阶段，你可以对本回合失去过牌的一名其他角色造成1点伤害。",
   ["#m_ex__juece-choose"] = "绝策：选择一名本回合失去过牌的其他角色，对其造成1点伤害",
-  ["@@m_ex__juece_lostcard-turn"] = "失去过牌",
+  
   ["$m_ex__juece1"] = "束手就擒吧！",
   ["$m_ex__juece2"] = "斩草除根，以绝后患！",
 }
@@ -1673,14 +1677,17 @@ local m_ex__qiuyuan = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local to = self.cost_data
+    local to = room:getPlayerById(self.cost_data)
     --FIXME: cant use "^slash|.|.|.|.|basic"!!
-    local card = room:askForCard(room:getPlayerById(to), 1, 1, false, self.name, true, "jink,peach,analeptic", "#m_ex__qiuyuan-give::"..player.id)
+    local ids = table.filter(to:getCardIds("h"),
+      function(id) return Fk:getCardById(id).type == Card.TypeBasic and Fk:getCardById(id).trueName ~= "slash"
+    end)
+    local card = room:askForCard(to, 1, 1, false, self.name, true, tostring(Exppattern{ id = ids }), "#m_ex__qiuyuan-give::"..player.id)
     if #card > 0 then
       room:obtainCard(player, Fk:getCardById(card[1]), true, fk.ReasonGive)
     else
-      AimGroup:addTargets(room, data, to)
-      AimGroup:setTargetDone(data.tos, to)
+      AimGroup:addTargets(room, data, to.id)
+      AimGroup:setTargetDone(data.tos, to.id)
     end
   end,
 }

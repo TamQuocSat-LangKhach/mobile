@@ -2545,7 +2545,7 @@ for generalName, _  in pairs(tenChangShiMapper) do
   changshi:addSkill("mowang")
 end
 
-local yanxiang = General(extension, "yanxiang", "qun", 3)
+local mobile__yanxiang = General(extension, "mobile__yanxiang", "qun", 3)
 
 local kujian = fk.CreateActiveSkill{
   name = "kujian",
@@ -2767,11 +2767,11 @@ local ruilian = fk.CreateTriggerSkill{
   end,
 }
 
-yanxiang:addSkill(kujian)
-yanxiang:addSkill(ruilian)
+mobile__yanxiang:addSkill(kujian)
+mobile__yanxiang:addSkill(ruilian)
 
 Fk:loadTranslationTable{
-  ["yanxiang"] = "阎象",
+  ["mobile__yanxiang"] = "阎象",
   ["kujian"] = "苦谏",
   [":kujian"] = "出牌阶段限一次，你可将至多两张手牌标记为“谏”并交给一名其他角色。当其他角色使用或打出“谏”牌时，你与其各摸两张牌。当其他角色非因使用或打出从手牌区失去“谏”牌后，你与其各弃置一张牌。",
   ["ruilian"] = "睿敛",
@@ -2790,7 +2790,7 @@ Fk:loadTranslationTable{
   ["$kujian3"] = "明公虽奕世克昌，未若有周之盛。",
   ["$ruilian1"] = "公若擅进庸肆，必失民心！",
   ["$ruilian2"] = "外敛虚进之势，内减弊民之政。",
-  ["~yanxiang"] = "若遇明主，或可青史留名……",
+  ["~mobile__yanxiang"] = "若遇明主，或可青史留名……",
 }
 
 return extension

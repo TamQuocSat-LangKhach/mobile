@@ -2659,7 +2659,7 @@ local duansuo = fk.CreateActiveSkill{
   name = "duansuo",
   anim_type = "offensive",
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)

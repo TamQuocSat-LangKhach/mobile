@@ -559,7 +559,7 @@ local qiaosi_choices = {
   "qiaosi_figure4",
   "qiaosi_figure5",
   "qiaosi_figure6",
-  "qiaosi_abort",
+  --"qiaosi_abort",
 }
 local qiaosi = fk.CreateActiveSkill{
   name = "qiaosi",
@@ -570,6 +570,7 @@ local qiaosi = fk.CreateActiveSkill{
   card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
+    --[[
     local choices = table.simpleClone(qiaosi_choices)
     local choosed = {}
     while #choosed < 3 do
@@ -581,6 +582,8 @@ local qiaosi = fk.CreateActiveSkill{
         table.insert(choosed, choice)
       end
     end
+    --]]
+    local choosed = room:askForChoices(from, qiaosi_choices, 0, 3, "qiaosi_baixitu", nil, false, false)
 
     local cards = {}
     for _, choice in ipairs(choosed) do

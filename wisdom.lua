@@ -847,7 +847,7 @@ local tianyi = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   frequency = Skill.Wake,
   can_trigger = function(self, event, target, player, data)
-    return 
+    return
       target == player and
       player.phase == Player.Start and
       player:hasSkill(self) and
@@ -855,7 +855,7 @@ local tianyi = fk.CreateTriggerSkill{
   end,
   can_wake = function(self, event, target, player, data)
     return table.every(player.room.alive_players, function(p)
-      return p:getMark("mobile__tianyi_damaged_count") > 0
+      return #U.getActualDamageEvents(player.room, 1, function(e) return e.data[1].to == p end, Player.HistoryGame) > 0
     end)
   end,
   on_use = function(self, event, target, player, data)
@@ -868,21 +868,10 @@ local tianyi = fk.CreateTriggerSkill{
       skillName = self.name,
     })
 
-    local alivePlayerIds = table.map(room.alive_players, function(p)
-      return p.id
-    end)
-    local target = room:askForChoosePlayers(player, alivePlayerIds, 1, 1, "#mobile__tianyi-choose", self.name, true)
-    if #target > 0 then
-      room:handleAddLoseSkills(room:getPlayerById(target[1]), "zuoxing")
+    local tos = room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper), 1, 1, "#mobile__tianyi-choose", self.name, false)
+    if #tos > 0 then
+      room:handleAddLoseSkills(room:getPlayerById(tos[1]), "zuoxing")
     end
-  end,
-
-  refresh_events = {fk.Damage},
-  can_refresh = function(self, event, target, player, data)
-    return data.to == player and player:getMark("mobile__tianyi_damaged_count") == 0
-  end,
-  on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "mobile__tianyi_damaged_count")
   end,
 }
 local limitedHuishi = fk.CreateActiveSkill{
@@ -893,9 +882,7 @@ local limitedHuishi = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return true
   end,
@@ -976,9 +963,7 @@ local zuoxing = fk.CreateViewAsSkill{
         return table.find({ p.general, p.deputyGeneral }, function(name) return string.find(name, "godguojia") end) and p.maxHp > 1
       end)
   end,
-  card_filter = function()
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   view_as = function(self, cards)
     if not self.interaction.data then return end
     local card = Fk:cloneCard(self.interaction.data)

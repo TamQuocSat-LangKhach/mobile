@@ -965,7 +965,7 @@ local heji = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local targets = TargetGroup:getRealTargets(data.tos)
-    local use = player.room:askForUseCard(player, "slash,duel", "slash,duel", "#heji-use::" .. targets[1], true,
+    local use = player.room:askForUseCard(player, self.name, "slash,duel", "#heji-use::" .. targets[1], true,
       { must_targets = targets, bypass_distances = true, bypass_times = true })
     if use then
       if not use.card:isVirtual() then
@@ -1340,39 +1340,27 @@ local fuhai = fk.CreateTriggerSkill{
   anim_type = "drawcard",
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self) then return end
+    if not player:hasSkill(self) then return false end
     if event == fk.TargetSpecified then
-      return
-        target == player and
-        player.room:getPlayerById(data.to):getMark("@yingba_pingding") > 0 and
-        player:usedSkillTimes(self.name) < 2
+      return target == player and player.room:getPlayerById(data.to):getMark("@yingba_pingding") > 0
     else
       return player.room:getPlayerById(data.who):getMark("@yingba_pingding") > 0
     end
   end,
   on_use = function(self, event, target, player, data)
+    local room = player.room
     if event == fk.TargetSpecified then
-      player:drawCards(1, self.name)
+      data.disresponsiveList = data.disresponsiveList or {}
+      table.insert(data.disresponsiveList, data.to)
+      if player:getMark("fuhai_draw-turn") < 2 then
+        room:addPlayerMark(player, "fuhai_draw-turn")
+        player:drawCards(1, self.name)
+      end
     else
-      local room = player.room
-      local deadOne = room:getPlayerById(data.who)
-      local pingdingNum = deadOne:getMark("@yingba_pingding")
-
-      player.room:changeMaxHp(player, pingdingNum)
+      local pingdingNum = target:getMark("@yingba_pingding")
+      room:changeMaxHp(player, pingdingNum)
       player:drawCards(pingdingNum, self.name)
     end
-  end,
-
-  refresh_events = {fk.TargetSpecified},
-  can_refresh = function(self, event, target, player, data)
-    return
-      target == player and
-      player:hasSkill(self) and
-      player.room:getPlayerById(data.to):getMark("@yingba_pingding") > 0
-  end,
-  on_refresh = function(self, event, target, player, data)
-    data.disresponsiveList = data.disresponsiveList or {}
-    table.insert(data.disresponsiveList, data.to)
   end,
 }
 local pinghe = fk.CreateTriggerSkill{
@@ -1424,8 +1412,7 @@ Fk:loadTranslationTable{
   [":yingba"] = "出牌阶段限一次，你可以令一名体力上限大于1的其他角色减1点体力上限，并令其获得一枚“平定”标记，然后你减1点体力上限；"..
   "你对拥有“平定”标记的角色使用牌无距离限制。",
   ["fuhai"] = "覆海",
-  [":fuhai"] = "锁定技，拥有“平定”标记的角色不能响应你对其使用的牌；当你使用牌指定拥有“平定”标记的角色为目标后，你摸一张牌；当拥有“平定”标记"..
-  "的角色死亡时，你加X点体力上限并摸X张牌（X为其“平定”标记数）。",
+  [":fuhai"] = "锁定技，①当你使用牌指定拥有“平定”标记的角色为目标后，其不能响应此牌，且你摸一张牌（每回合限摸两张）；②当拥有“平定”标记的角色死亡时，你增加X点体力上限并摸X张牌（X为其“平定”标记数）。",
   ["pinghe"] = "冯河",
   [":pinghe"] = "锁定技，你的手牌上限基值为你已损失的体力值；当你受到其他角色造成的伤害时，若你的体力上限大于1且你有手牌，你防止此伤害，"..
   "减1点体力上限并将一张手牌交给一名其他角色，然后若你有技能〖英霸〗，伤害来源获得一枚“平定”标记。",

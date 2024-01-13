@@ -20,8 +20,8 @@ local function NotifyRenPile(room)
     arg = #GetRenPile(room),
     card = GetRenPile(room),
   }
-  room:doBroadcastNotify("ShowToast", Fk:translate("RenPileToast")..table.concat(table.map(GetRenPile(room), function(id)
-    return Fk:getCardById(id):toLogString() end), "、"))
+  room:setBanner("@$RenPile", table.simpleClone(room.tag["ren"]))
+  --room:doBroadcastNotify("ShowToast", Fk:translate("RenPileToast")..table.concat(table.map(GetRenPile(room), function(id) return Fk:getCardById(id):toLogString() end), "、"))
 end
 
 ---@param room Room @ 房间
@@ -151,6 +151,7 @@ Fk:loadTranslationTable{
   ["#GetCardFromRenPile"] = "%from 从“仁”区获得 %arg 张牌 %card",
   ["#DiscardCardFromRenPile"] = "%from 弃置了“仁”区 %arg 张牌 %card",
   ["$RenPile"] = "仁区",
+  ["@$RenPile"] = "仁区",
 }
 
 local nos__huaxin = General(extension, "nos__huaxin", "wei", 3)
@@ -867,9 +868,7 @@ local luanchou = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     return #selected < 2
   end,
@@ -897,16 +896,20 @@ local gonghuan = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {target.id})
-    local damage = table.simpleClone(data)
-    damage.to = player
-    damage.gonghuan = true
-    room:damage(damage)
-    if not player.dead and player.hp == target.hp then
-      room:setPlayerMark(player, "@@luanchou", 0)
-      room:handleAddLoseSkills(player, "-gonghuan", nil, true, false)
-      room:setPlayerMark(target, "@@luanchou", 0)
-      room:handleAddLoseSkills(target, "-gonghuan", nil, true, false)
-    end
+    room:damage{
+      from = data.from,
+      to = player,
+      damage = data.damage,
+      damageType = data.damageType,
+      skillName = data.skillName,
+      card = data.card,
+      chain = data.chain,
+      gonghuan = true,
+    }
+    room:setPlayerMark(player, "@@luanchou", 0)
+    room:handleAddLoseSkills(player, "-gonghuan", nil, true, false)
+    room:setPlayerMark(target, "@@luanchou", 0)
+    room:handleAddLoseSkills(target, "-gonghuan", nil, true, false)
     return true
   end,
 }
@@ -923,8 +926,7 @@ Fk:loadTranslationTable{
   ["luanchou"] = "鸾俦",
   [":luanchou"] = "出牌阶段限一次，你可以移除场上所有「姻」标记并选择两名角色，令其获得「姻」。有「姻」的角色视为拥有技能〖共患〗。",
   ["gonghuan"] = "共患",
-  [":gonghuan"] = "锁定技，每回合限一次，当另一名拥有「姻」的角色受到伤害时，若其体力值小于你，将此伤害转移给你；当你受到此伤害后，"..
-  "若你与其体力值相等，移除你们的「姻」标记。",
+  [":gonghuan"] = "锁定技，每回合限一次，当另一名拥有「姻」的角色受到伤害时，若其体力值小于你，将此伤害转移给你；然后移除双方的「姻」标记。",
   ["#yizhu-card"] = "遗珠：将两张牌作为“遗珠”洗入牌堆",
   ["@$yizhu"] = "遗珠",
   ["#yizhu-invoke"] = "遗珠：你可以取消 %dest 使用的%arg，然后你可以使用之",
@@ -1037,7 +1039,9 @@ local binglun = fk.CreateActiveSkill{
     if choice == "draw1" then
       target:drawCards(1, self.name)
     else
-      room:setPlayerMark(target, self.name, 1)
+      local mark = U.getMark(target, self.name)
+      table.insert(mark, player.id)
+      room:setPlayerMark(target, self.name, mark)
     end
   end,
 }
@@ -1046,22 +1050,24 @@ local binglun_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.TurnEnd},
   can_trigger = function (self, event, target, player, data)
-    return target == player and player:getMark("binglun") > 0
+    return target == player and #U.getMark(player, "binglun") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
-    local src = table.find(room.players, function(p) return p:hasSkill("binglun", true) end)
-    if src then
-      src:broadcastSkillInvoke("binglun")
-      room:notifySkillInvoked(src, "binglun", "support")
-    end
+    local mark = U.getMark(player, "binglun")
     room:setPlayerMark(player, "binglun", 0)
-    if player:isWounded() then
+    for _, pid in ipairs(mark) do
+      if player.dead or not player:isWounded() then break end
+      local me = room:getPlayerById(pid)
+      if not me.dead then
+        me:broadcastSkillInvoke("binglun")
+        room:notifySkillInvoked(me, "binglun", "support")
+      end
       room:recover({
         who = player,
         num = 1,
-        recoverBy = src,
+        recoverBy = me,
         skillName = "binglun",
       })
     end
@@ -1088,14 +1094,14 @@ zhangzhongjing:addSkill(binglun)
 Fk:loadTranslationTable{
   ["zhangzhongjing"] = "张仲景",
   ["jishi"] = "济世",
-  [":jishi"] = "锁定技，你使用牌结算结束后，若此牌没有造成伤害，则将之置入“仁”区；当“仁”牌不因溢出而离开“仁”区时，你摸一张牌。"..
+  [":jishi"] = "锁定技，你使用牌结算结束后置入弃牌堆前，若此牌没有造成伤害，则将之置入“仁”区；当“仁”牌不因溢出而离开“仁”区时，你摸一张牌。"..
   "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
   "仁区是一个存于场上，用于存放牌的公共区域。<br>仁区中的牌上限为6张。<br>当仁区中的牌超过6张时，最先置入仁区中的牌将置入弃牌堆。",
   ["liaoyi"] = "疗疫",
   [":liaoyi"] = "其他角色回合开始时，若其手牌数小于体力值且场上“仁”数量不小于X，则你可以令其获得X张“仁”；若其手牌数大于体力值，"..
   "则可以令其将X张牌置入“仁”区（X为其手牌数与体力值差值，且至多为4）。",
   ["binglun"] = "病论",
-  [":binglun"] = "出牌阶段限一次，你可以选择一名角色并弃置一张“仁”牌，令其选择：1.摸一张牌；2.其下个回合结束时回复1点体力。",
+  [":binglun"] = "出牌阶段限一次，你可以选择一名角色并弃置一张“仁”牌，令其选择：1.摸一张牌；2.其回合结束时回复1点体力。",
   ["#liaoyi1-invoke"] = "疗疫：你可以令 %dest 获得%arg张“仁”",
   ["#liaoyi2-invoke"] = "疗疫：你可以令 %dest 将%arg张牌置入“仁”区",
   ["#liaoyi-choose"] = "疗疫：获得%arg张“仁”区牌",

@@ -980,7 +980,7 @@ local liaoyi = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.TurnStart},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self) then
+    if player:hasSkill(self) and target ~= player then
       local n = target:getHandcardNum() - target.hp
       return n ~= 0 and #GetRenPile(player.room) >= math.min(-n, 4)
     end
@@ -1026,7 +1026,7 @@ local binglun = fk.CreateActiveSkill{
   card_filter = function (self, to_select, selected)
     return #selected == 0 and Self:getPileNameOfId(to_select) == "$RenPile"
   end,
-  target_filter = function(self, to_select, selected, selected_cards)
+  target_filter = function(self, to_select, selected)
     return #selected == 0
   end,
   on_use = function(self, room, effect)

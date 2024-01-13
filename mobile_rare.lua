@@ -1598,20 +1598,17 @@ local huiyao = fk.CreateActiveSkill{
     }
     if player.dead then return end
     local targets = table.map(room:getOtherPlayers(target), Util.IdMapper)
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#huiyao-choose::"..target.id, self.name, false, true)
-    if #to > 0 then
-      to = to[1]
-    else
-      to = table.random(targets)
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#huiyao-choose::"..target.id, self.name, false, true)
+    if #tos > 0 then
+      room:doIndicate(target.id, tos)
+      room:damage{
+        from = target,
+        to = room:getPlayerById(tos[1]),
+        damage = 1,
+        skillName = self.name,
+        isVirtualDMG = true,
+      }
     end
-    room:doIndicate(target.id, {to})
-    room:damage{
-      from = target,
-      to = room:getPlayerById(to),
-      damage = 1,
-      skillName = self.name,
-      isVirtualDMG = true,
-    }
   end,
 }
 local quesong = fk.CreateTriggerSkill{
@@ -1620,10 +1617,7 @@ local quesong = fk.CreateTriggerSkill{
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and target.phase == Player.Finish then
-      return #player.room.logic:getEventsOfScope(GameEvent.ChangeHp, 1, function(e)
-        local damage = e.data[5]
-        return damage and player == damage.to
-      end, Player.HistoryTurn) > 0
+      return #U.getActualDamageEvents(player.room, 1, function(e) return e.data[1].to == player end) > 0
     end
   end,
   on_cost = function(self, event, target, player, data)
@@ -1638,20 +1632,22 @@ local quesong = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = room:getPlayerById(self.cost_data)
-    local choices = {"yl_draw"}
+    local x = (#to:getCardIds("e") > 2) and 2 or 3
+    local choices = {"quesong_draw:::"..x}
     if to:isWounded() then
       table.insert(choices, "recover")
     end
     local choice = room:askForChoice(to, choices, self.name)
-    if choice == "yl_draw" then
-      to:drawCards(math.max(4 - #to:getCardIds("e")//2, 1), self.name)
-    else
+    if choice == "recover" then
       room:recover({
         who = to,
         num = 1,
         recoverBy = player,
         skillName = self.name
       })
+    else
+      to:drawCards(x, self.name)
+      to:reset()
     end
   end,
 }
@@ -1662,11 +1658,11 @@ Fk:loadTranslationTable{
   ["huiyao"] = "慧夭",
   [":huiyao"] = "出牌阶段限一次，你可以受到1点无来源伤害并选择一名其他角色，<font color='red'>视为</font>其对你选择的另一名角色造成1点伤害。",
   ["quesong"] = "雀颂",
-  [":quesong"] = "一名角色结束阶段，若你本回合受到过伤害，你可以令一名角色选择一项：1.摸X张牌并复原武将牌（X为4-其装备数的一半，至少为1）"..
-  "回复1点体力。",
+  [":quesong"] = "一名角色结束阶段，若你本回合受到过伤害，你可以令一名角色选择一项：1.摸三张牌（若其装备区里的牌数大于2，则改为摸两张牌）并复原武将牌；2.回复1点体力。",
   ["#huiyao"] = "慧夭：你可以受到1点无来源伤害，选择一名其他角色，令其<font color='red'>视为</font>造成伤害",
   ["#huiyao-choose"] = "慧夭：选择一名角色，视为 %dest 对其造成1点伤害",
   ["#quesong-choose"] = "雀颂：你可以令一名角色选择摸牌或回复体力",
+  ["quesong_draw"] = "摸%arg张牌并复原",
 
   ["$huiyao1"] = "幸有仓舒为伴，吾不至居高寡寒。",
   ["$huiyao2"] = "通悟而无笃学之念，则必盈天下之叹也。",

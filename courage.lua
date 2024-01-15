@@ -279,8 +279,9 @@ local jungongNullified = fk.CreateTriggerSkill{
     return
       target == player and
       player:hasSkill(self) and
-      table.contains(data.card.skillNames, "jungong") and
-      not data.chain
+      not data.chain and
+      data.card and
+      table.contains(data.card.skillNames, "jungong")
   end,
   on_cost = function(self, event, target, player, data)
     return true

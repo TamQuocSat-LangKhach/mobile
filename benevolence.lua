@@ -713,7 +713,7 @@ local yizhu = fk.CreateTriggerSkill{
     player:drawCards(2, self.name)
     if player.dead or player:isNude() then return end
     local cards = room:askForCard(player, math.min(#player:getCardIds("he"), 2), 2, true, self.name, false, ".", "#yizhu-card")
-    local mark = U.getMark(player, "@yizhu")
+    local mark = U.getMark(player, "yizhu_cards")
     local moves = {}
     for _, id in ipairs(cards) do
       table.insertIfNeed(mark, id)
@@ -726,7 +726,7 @@ local yizhu = fk.CreateTriggerSkill{
         drawPilePosition = math.random(math.min(#room.draw_pile, math.max(2 * #room.alive_players , 1))),
       })
     end
-    room:setPlayerMark(player, "@yizhu", mark)
+    room:setPlayerMark(player, "yizhu_cards", mark)
     room:moveCards(table.unpack(moves))
   end,
 }
@@ -736,7 +736,7 @@ local yizhu_trigger = fk.CreateTriggerSkill{
   events = {fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill("yizhu") then
-      local mark = U.getMark(player, "@yizhu")
+      local mark = U.getMark(player, "yizhu_cards")
       if #mark > 0 and target ~= player and #AimGroup:getAllTargets(data.tos) == 1 then
         local cardlist = Card:getIdList(data.card)
         return table.find(cardlist, function(id) return table.contains(mark, id) end)
@@ -752,19 +752,19 @@ local yizhu_trigger = fk.CreateTriggerSkill{
     room:notifySkillInvoked(player, "yizhu", "control")
     room:doIndicate(player.id, {data.to})
     AimGroup:cancelTarget(data, data.to)
-    local mark = U.getMark(player, "@yizhu")
+    local mark = U.getMark(player, "yizhu_cards")
     local cardlist = Card:getIdList(data.card)
     for _, id in ipairs(Card:getIdList(data.card)) do
       if table.contains(mark, id) then
         table.removeOne(mark, id)
       end
     end
-    room:setPlayerMark(player, "@yizhu", #mark > 0 and mark or 0)
+    room:setPlayerMark(player, "yizhu_cards", #mark > 0 and mark or 0)
   end,
 
   refresh_events = {fk.AfterCardsMove},
   can_refresh = function(self, event, target, player, data)
-    local mark = U.getMark(player, "@yizhu")
+    local mark = U.getMark(player, "yizhu_cards")
     if #mark > 0 then
       for _, move in ipairs(data) do
         if move.toArea == Card.DiscardPile then
@@ -779,7 +779,7 @@ local yizhu_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    local mark = U.getMark(player, "@yizhu")
+    local mark = U.getMark(player, "yizhu_cards")
     for _, move in ipairs(data) do
       if move.toArea == Card.DiscardPile then
         for _, info in ipairs(move.moveInfo) do
@@ -789,7 +789,7 @@ local yizhu_trigger = fk.CreateTriggerSkill{
         end
       end
     end
-    room:setPlayerMark(player, "@yizhu", #mark > 0 and mark or 0)
+    room:setPlayerMark(player, "yizhu_cards", #mark > 0 and mark or 0)
   end,
 }
 local luanchou = fk.CreateActiveSkill{
@@ -859,7 +859,7 @@ Fk:loadTranslationTable{
   ["gonghuan"] = "共患",
   [":gonghuan"] = "锁定技，每回合限一次，当另一名拥有「姻」的角色受到伤害时，若其体力值小于你，将此伤害转移给你；然后移除双方的「姻」标记。",
   ["#yizhu-card"] = "遗珠：将两张牌作为“遗珠”洗入牌堆",
-  ["@yizhu"] = "遗珠",
+  ["yizhu_cards"] = "遗珠",
   ["#yizhu-invoke"] = "遗珠：你可以取消 %dest 使用的%arg",
   ["#yizhu_trigger"] = "遗珠",
   ["#luanchou"] = "鸾俦：令两名角色获得「姻」标记并获得技能〖共患〗",

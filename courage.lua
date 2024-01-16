@@ -126,7 +126,7 @@ local qingjue = fk.CreateTriggerSkill{
     local room = player.room
     room:doIndicate(player.id, {target.id})
     player:drawCards(1, self.name)
-    if player.dead or target.dead or player:isKongcheng() or target:isKongcheng() then return false end
+    if player.dead or target.dead or not player:canPindian(target) then return false end
     local pindian = player:pindian({target}, self.name)
     data.tos = AimGroup:initAimGroup({})
     data.targetGroup = {}

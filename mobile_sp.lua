@@ -3591,7 +3591,7 @@ local daigong = fk.CreateTriggerSkill{
         table.insertIfNeed(suits, Fk:getCardById(id):getSuitString())
       end
     end
-    local card = room:askForCard(data.from, 1, 1, true, self.name, true, ".|.|"..table.concat(suits, ","), "#daigong-give:"..player.id)
+    local card = room:askForCard(data.from, 1, 1, true, self.name, true, ".|.|^("..table.concat(suits, ",")..")", "#daigong-give:"..player.id)
     if #card > 0 then
       room:obtainCard(player.id, card[1], true, fk.ReasonGive)
     else

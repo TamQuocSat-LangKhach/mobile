@@ -1202,6 +1202,36 @@ Fk:loadTranslationTable{
   ["~liuzhang"] = "引狼入室，噬脐莫及啊！",
 }
 
+local wulingHu = fk.CreateTrickCard{
+  name = "wulingHu",
+}
+
+extension:addCard(wulingHu)
+
+local wulingLu = fk.CreateTrickCard{
+  name = "wulingLu",
+}
+
+extension:addCard(wulingLu)
+
+local wulingXiong = fk.CreateTrickCard{
+  name = "wulingXiong",
+}
+
+extension:addCard(wulingXiong)
+
+local wulingYuan = fk.CreateTrickCard{
+  name = "wulingYuan",
+}
+
+extension:addCard(wulingYuan)
+
+local wulingHe = fk.CreateTrickCard{
+  name = "wulingHe",
+}
+
+extension:addCard(wulingHe)
+
 local godhuatuo = General(extension, "godhuatuo", "god", 3)
 local wuling = fk.CreateActiveSkill{
   name = "wuling",
@@ -1209,9 +1239,8 @@ local wuling = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 1,
   prompt = "#wuling",
-  expand_pile = "$RenPile",
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) < 2
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
@@ -1220,15 +1249,27 @@ local wuling = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    local all_choices = table.map({1, 2, 3, 4, 5}, function(i) return "wuling"..i end)
-    local choices = table.simpleClone(all_choices)
-    local result = {}
-    for i = 1, 5, 1 do
-      local choice = room:askForChoice(player, choices, self.name,
-        "#wuling-choice::"..target.id..":"..table.concat(table.map(result, function(s) return Fk:translate(s) end), "、"), true)
-      table.removeOne(choices, choice)
-      table.insert(result, choice)
+
+    local result = room:askForCustomDialog(
+      player, self.name,
+      "packages/mobile/qml/WuLingBox.qml",
+      {}
+    )
+
+    local wulingMarkMap = {
+      ["wulingHu"] = "wuling1",
+      ["wulingLu"] = "wuling2",
+      ["wulingXiong"] = "wuling3",
+      ["wulingYuan"] = "wuling4",
+      ["wulingHe"] = "wuling5",
+    }
+
+    if result == "" then
+      result = { "wuling5", "wuling1", "wuling3", "wuling4", "wuling2" }
+    else
+      result = table.map(json.decode(result).sort, function(name) return wulingMarkMap[name] end)
     end
+
     room:setPlayerMark(target, self.name, result)
     room:setPlayerMark(target, "wuling_invoke", tonumber(result[1][7]))
     room:setPlayerMark(target, "@wuling", "<font color='red'>"..Fk:translate(result[1]).."</font>"..
@@ -1262,14 +1303,9 @@ local wuling_trigger = fk.CreateTriggerSkill{
           end
         end
       elseif event == fk.DamageInflicted then
-        return player:getMark("wuling_invoke") == 3
+        return player:getMark("wuling_invoke") == 3 and player:getMark("wuling3Triggered-turn") == 0
       elseif event == fk.EventPhaseStart then
-        if player.phase == Player.Start then
-          return true
-        elseif player.phase == Player.Play then
-          return (player:getMark("wuling_invoke") == 4 and table.find(player.room:getOtherPlayers(player), function(p)
-            return #p:getCardIds("e") > 0 end)) or player:getMark("wuling_invoke") == 5
-        end
+        return player.phase == Player.Start
       end
     end
   end,
@@ -1281,8 +1317,13 @@ local wuling_trigger = fk.CreateTriggerSkill{
       room:notifySkillInvoked(player, "wuling", "offensive")
       data.damage = data.damage + 1
     elseif event == fk.DamageInflicted then
+      room:setPlayerMark(player, "wuling3Triggered-turn", 1)
       room:notifySkillInvoked(player, "wuling", "defensive")
       data.damage = data.damage - 1
+
+      if data.damage < 1 then
+        return true
+      end
     elseif event == fk.EventPhaseStart then
       if player.phase == Player.Start then
         room:notifySkillInvoked(player, "wuling", "special")
@@ -1313,18 +1354,21 @@ local wuling_trigger = fk.CreateTriggerSkill{
           if not target.dead and #target:getCardIds("j") > 0 then
             target:throwAllCards("j")
           end
-        end
-      elseif player.phase == Player.Play then
-        if player:getMark("wuling_invoke") == 4 then
+        elseif result[new_index] == "wuling4" then
           room:notifySkillInvoked(player, "wuling", "control")
           local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return #p:getCardIds("e") > 0 end), Util.IdMapper)
-          local to = room:askForChoosePlayers(player, targets, 1, 1, "#wuling-choose", "wuling", true)
-          if #to > 0 then
-            room:obtainCard(player.id, table.random(room:getPlayerById(to[1]):getCardIds("e")), true, fk.ReasonPrey)
+          if #targets == 0 then
+            return false
           end
-        elseif player:getMark("wuling_invoke") == 5 then
+
+          local to = room:askForChoosePlayers(player, targets, 1, 1, "#wuling-choose", "wuling", false)
+          if #to > 0 then
+            local cards = room:askForCardsChosen(player, room:getPlayerById(to[1]), 1, 1, "e", "wuling")
+            room:obtainCard(player.id, cards[1], true, fk.ReasonPrey)
+          end
+        elseif result[new_index] == "wuling5" then
           room:notifySkillInvoked(player, "wuling", "drawcard")
-          player:drawCards(2, "wuling")
+          player:drawCards(3, "wuling")
         end
       end
     end
@@ -1432,29 +1476,25 @@ Fk:addSkill(godhuatuo_win)
 Fk:loadTranslationTable{
   ["godhuatuo"] = "神华佗",
   ["wuling"] = "五灵",
-  [":wuling"] = "出牌阶段限一次，你可以选择一名没有“五灵”标记的角色，按照你选择的顺序向其传授“五禽戏”。拥有“五灵”标记的角色在其准备阶段"..
+  [":wuling"] = "出牌阶段限两次，你可以选择一名没有“五灵”标记的角色，按照你选择的顺序向其传授“五禽戏”。拥有“五灵”标记的角色在其准备阶段"..
   "按照传授的顺序依次切换为下一种效果：<br>"..
   "虎：当你使用指定唯一目标的牌对目标角色造成伤害时，此伤害+1。<br>"..
   "鹿：回复1点体力并弃置判定区里的所有牌，你不能成为延时锦囊牌的目标。<br>"..
-  "熊：当你受到伤害时，此伤害-1。<br>"..
-  "猿：出牌阶段开始时，你选择一名其他角色，随机获得其装备区里的一张牌。<br>"..
-  "鹤：出牌阶段开始时，你摸两张牌。",
+  "熊：每回合限一次，当你受到伤害时，此伤害-1。<br>"..
+  "猿：获得一名其他角色装备区里的一张牌。<br>"..
+  "鹤：你摸三张牌。",
   ["youyi"] = "游医",
   [":youyi"] = "弃牌阶段结束时，你可以将此阶段弃置的牌置入“仁”区。出牌阶段限一次，你可以弃置所有“仁”区的牌，令所有角色回复1点体力。",
   ["#wuling"] = "五灵：向一名角色传授“五禽戏”",
+  ["Please arrange WuLing cards"] = "请拖动分配“五禽戏”的顺序（从左至右）",
   ["#wuling-choice"] = "五灵：选择向 %dest 传授“五禽戏”的顺序<br>已选择：%arg",
   ["wuling1"] = "虎",
   ["wuling2"] = "鹿",
   ["wuling3"] = "熊",
   ["wuling4"] = "猿",
   ["wuling5"] = "鹤",
-  [":wuling1"] = "使用指定唯一目标的牌对目标角色造成伤害时，此伤害+1。",
-  [":wuling2"] = "回复1点体力并弃置判定区里的所有牌，不能成为延时锦囊牌的目标。",
-  [":wuling3"] = "受到伤害时，此伤害-1。",
-  [":wuling4"] = "出牌阶段开始时，选择一名其他角色，随机获得其装备区里的一张牌。",
-  [":wuling5"] = "出牌阶段开始时，摸两张牌。",
   ["@wuling"] = "五灵",
-  ["#wuling-choose"] = "五灵：你可以选择一名其他角色，随机获得其装备区里的一张牌",
+  ["#wuling-choose"] = "五灵：请选择一名其他角色，获得其装备区里的一张牌",
   ["#youyi"] = "游医：你可以弃置所有“仁”区牌，令所有角色回复1点体力",
   ["#youyi-invoke"] = "游医：是否将本阶段弃置的牌置入“仁”区？",
 

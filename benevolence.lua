@@ -1232,6 +1232,38 @@ local wulingHe = fk.CreateTrickCard{
 
 extension:addCard(wulingHe)
 
+local wuLingMarkGainedEffect = function(mark, player)
+  local room = player.room
+
+  if mark == "wuling2" and (player:isWounded() or #player:getCardIds("j") > 0) then
+    if player:isWounded() then
+      room:recover{
+        who = player,
+        num = 1,
+        skillName = "wuling"
+      }
+    end
+    if not player.dead and #player:getCardIds("j") > 0 then
+      player:throwAllCards("j")
+    end
+  elseif mark == "wuling4" then
+    room:notifySkillInvoked(player, "wuling", "control")
+    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return #p:getCardIds("e") > 0 end), Util.IdMapper)
+    if #targets == 0 then
+      return false
+    end
+
+    local to = room:askForChoosePlayers(player, targets, 1, 1, "#wuling-choose", "wuling", false)
+    if #to > 0 then
+      local cards = room:askForCardsChosen(player, room:getPlayerById(to[1]), 1, 1, "e", "wuling")
+      room:obtainCard(player.id, cards[1], true, fk.ReasonPrey)
+    end
+  elseif mark == "wuling5" then
+    room:notifySkillInvoked(player, "wuling", "drawcard")
+    player:drawCards(3, "wuling")
+  end
+end
+
 local godhuatuo = General(extension, "godhuatuo", "god", 3)
 local wuling = fk.CreateActiveSkill{
   name = "wuling",
@@ -1274,18 +1306,8 @@ local wuling = fk.CreateActiveSkill{
     room:setPlayerMark(target, "wuling_invoke", tonumber(result[1][7]))
     room:setPlayerMark(target, "@wuling", "<font color='red'>"..Fk:translate(result[1]).."</font>"..
       table.concat(table.map(result, function(s) return Fk:translate(s) end), "", 2, 5))
-    if result[1] == "wuling2" and (target:isWounded() or #target:getCardIds("j") > 0) then
-      if target:isWounded() then
-        room:recover{
-          who = player,
-          num = 1,
-          skillName = self.name
-        }
-      end
-      if not target.dead and #target:getCardIds("j") > 0 then
-        target:throwAllCards("j")
-      end
-    end
+    
+    wuLingMarkGainedEffect(result[1], target)
   end,
 }
 local wuling_trigger = fk.CreateTriggerSkill{
@@ -1343,33 +1365,7 @@ local wuling_trigger = fk.CreateTriggerSkill{
           end
         end
         room:setPlayerMark(player, "@wuling", new_str)
-        if result[new_index] == "wuling2" and (player:isWounded() or #player:getCardIds("j") > 0) then
-          if player:isWounded() then
-            room:recover{
-              who = player,
-              num = 1,
-              skillName = self.name
-            }
-          end
-          if not target.dead and #target:getCardIds("j") > 0 then
-            target:throwAllCards("j")
-          end
-        elseif result[new_index] == "wuling4" then
-          room:notifySkillInvoked(player, "wuling", "control")
-          local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return #p:getCardIds("e") > 0 end), Util.IdMapper)
-          if #targets == 0 then
-            return false
-          end
-
-          local to = room:askForChoosePlayers(player, targets, 1, 1, "#wuling-choose", "wuling", false)
-          if #to > 0 then
-            local cards = room:askForCardsChosen(player, room:getPlayerById(to[1]), 1, 1, "e", "wuling")
-            room:obtainCard(player.id, cards[1], true, fk.ReasonPrey)
-          end
-        elseif result[new_index] == "wuling5" then
-          room:notifySkillInvoked(player, "wuling", "drawcard")
-          player:drawCards(3, "wuling")
-        end
+        wuLingMarkGainedEffect(result[new_index], player)
       end
     end
   end,

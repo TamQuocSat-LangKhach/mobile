@@ -1302,7 +1302,9 @@ local wuling = fk.CreateActiveSkill{
       result = table.map(json.decode(result).sort, function(name) return wulingMarkMap[name] end)
     end
 
-    room:setPlayerMark(target, self.name, result)
+    player.tag["wulingUsed"] = true
+
+    room:setPlayerMark(target, self.name, { result, player.id })
     room:setPlayerMark(target, "wuling_invoke", tonumber(result[1][7]))
     room:setPlayerMark(target, "@wuling", "<font color='red'>"..Fk:translate(result[1]).."</font>"..
       table.concat(table.map(result, function(s) return Fk:translate(s) end), "", 2, 5))
@@ -1348,13 +1350,17 @@ local wuling_trigger = fk.CreateTriggerSkill{
       end
     elseif event == fk.EventPhaseStart then
       if player.phase == Player.Start then
-        room:notifySkillInvoked(player, "wuling", "special")
-        local result = player:getMark("wuling")
+        local result = player:getMark("wuling")[1]
         local n = player:getMark("wuling_invoke")
         local new_index = table.indexOf(result, "wuling"..n) + 1
         if new_index > 5 then
-          new_index = 1
+          room:setPlayerMark(target, "wuling", 0)
+          room:setPlayerMark(target, "wuling_invoke", 0)
+          room:setPlayerMark(target, "@wuling", 0)
+          return false
         end
+
+        room:notifySkillInvoked(player, "wuling", "special")
         room:setPlayerMark(player, "wuling_invoke", tonumber(result[new_index][7]))
         local new_str = ""
         for i = 1, 5, 1 do
@@ -1366,6 +1372,23 @@ local wuling_trigger = fk.CreateTriggerSkill{
         end
         room:setPlayerMark(player, "@wuling", new_str)
         wuLingMarkGainedEffect(result[new_index], player)
+      end
+    end
+  end,
+
+  refresh_events = { fk.Death },
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player.tag["wulingUsed"]
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    player.tag["wulingUsed"] = nil
+    for _, p in ipairs(room.alive_players) do
+      local mark = p:getMark("wuling")
+      if type(mark) == "table" and mark[2] == player.id then
+        room:setPlayerMark(p, "wuling", 0)
+        room:setPlayerMark(p, "wuling_invoke", 0)
+        room:setPlayerMark(p, "@wuling", 0)
       end
     end
   end,

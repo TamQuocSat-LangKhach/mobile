@@ -64,6 +64,8 @@ local shixin = fk.CreateTriggerSkill{
 sunru:addSkill(shixin)
 Fk:loadTranslationTable{
   ["sunru"] = "孙茹",
+  ["#sunru"] = "出水青莲",
+  ["illustrator:sunru"] = "撒呀酱",
   ["yingjian"] = "影箭",
   ["#yingjian-choose"] = "影箭：你可以视为使用无视距离的【杀】",
   [":yingjian"] = "准备阶段，你可以视为使用一张无距离限制的【杀】。",
@@ -89,6 +91,8 @@ local lingcao = General(extension, "lingcao", "wu", 4)
 lingcao:addSkill(dujin)
 Fk:loadTranslationTable{
   ["lingcao"] = "凌操",
+  ["#lingcao"] = "激流勇进",
+  ["illustrator:lingcao"] = "樱花闪乱",
   ["dujin"] = "独进",
   [":dujin"] = "摸牌阶段，你可以多摸X+1张牌，X为你装备区内牌数的一半（向下取整）",
   ["$dujin1"] = "带兵十万，不如老夫多甲一件！",
@@ -133,6 +137,8 @@ local fenyin = fk.CreateTriggerSkill{
 liuzan:addSkill(fenyin)
 Fk:loadTranslationTable{
   ["liuzan"] = "留赞",
+  ["#liuzan"] = "啸天亢声",
+  ["illustrator:liuzan"] = "酸包", -- 传说皮 灵魂歌王
   ["fenyin"] = "奋音",
   [":fenyin"] = "你的回合内，当你使用和上一张牌颜色不同的牌时，你可以摸一张牌。",
   ["@fenyin"] = "奋音",
@@ -244,6 +250,8 @@ miheng:addSkill(mobile__kuangcai)
 miheng:addSkill(mobile__shejian)
 Fk:loadTranslationTable{
   ["miheng"] = "祢衡",
+  ["#miheng"] = "鸷鹗啄孤凤",
+  ["illustrator:miheng"] = "Thinking",
   ["mobile__kuangcai"] = "狂才",
   [":mobile__kuangcai"] = "出牌阶段开始时，你可以令你此阶段内的主动出牌时间变为5秒，响应出牌时间也变为5秒。若如此做，本阶段你使用牌无距离次数限制，"..
   "且当你使用牌时，你摸一张牌且主动出牌时间-1秒（每阶段至多以此法摸五张牌）。",
@@ -329,6 +337,8 @@ local shanjia = fk.CreateTriggerSkill{
 caochun:addSkill(shanjia)
 Fk:loadTranslationTable{
   ["caochun"] = "曹纯",
+  ["#caochun"] = "虎豹骑首",
+  ["illustrator:caochun"] = "depp",
   ["shanjia"] = "缮甲",
   [":shanjia"] = "出牌阶段开始时，你可以摸X张牌，然后弃置等量的牌（X为你于本局游戏内使用过的装备牌数且至多为7）。若你以此法弃置了装备区内的牌，"..
   "视为你使用一张无距离次数限制的【杀】。",
@@ -468,6 +478,8 @@ pangdegong:addSkill(pingcai)
 pangdegong:addSkill(yinship)
 Fk:loadTranslationTable{
   ["pangdegong"] = "庞德公",
+  ["#pangdegong"] = "德懿举世",
+  ["illustrator:pangdegong"] = "Town",
   ["pingcai"] = "评才",
   [":pingcai"] = "出牌阶段限一次，你可以挑选一个宝物，擦拭掉上面的灰尘。如果擦拭成功，你可以根据宝物类型执行对应的效果："..
   "卧龙：对一名角色造成1点火焰伤害。若场上有存活的卧龙诸葛亮，则改为对至多两名角色各造成1点火焰伤害。<br>"..
@@ -651,6 +663,9 @@ local qiaosi = fk.CreateActiveSkill{
 majun:addSkill(qiaosi)
 Fk:loadTranslationTable{
   ["majun"] = "马钧",
+  ["#majun"] = "没渊瑰璞",
+  ["cv:majun"] = "金垚",
+  ["illustrator:majun"] = "聚一_小道恩",
   ["jingxie"] = "精械",
   [":jingxie"] = "①出牌阶段，你可以展示你手牌区或装备区里的一张【诸葛连弩】或"
     .. "【八卦阵】或【仁王盾】或【白银狮子】或【藤甲】，然后升级此牌；"
@@ -810,6 +825,8 @@ zhengjing:addRelatedSkill(zhengjing_trigger)
 zhengxuan:addSkill(zhengjing)
 Fk:loadTranslationTable{
   ["zhengxuan"] = "郑玄",
+  ["#zhengxuan"] = "兼采定道",
+  ["illustrator:zhengxuan"] = "monkey",
   ["zhengjing"] = "整经",
   [":zhengjing"] = "出牌阶段限一次，你可以整理一次经典，并将你整理出的任意牌置于一名角色的武将牌上，称为“经”，然后你获得剩余的牌。"..
   "武将牌上有“经”的角色准备阶段，其获得所有“经”，然后跳过本回合的判定阶段和摸牌阶段。",
@@ -944,6 +961,8 @@ Fk:addSkill(mxing__zhangliao_win)
 
 Fk:loadTranslationTable{
   ["mxing__zhangliao"] = "星张辽",
+  ["#mxing__zhangliao"] = "蹈锋饮血",
+  ["illustrator:mxing__zhangliao"] = "王强",
   ["weifeng"] = "威风",
   [":weifeng"] = "锁定技，你于出牌阶段第一次使用【杀】或伤害类锦囊牌结算后，你选择其中一名没有“惧”的其他目标角色，令其获得此牌名的“惧”标记。"..
   "有“惧”的角色受到伤害时，移除“惧”并执行效果：若造成伤害的牌名与“惧”相同，则此伤害+1；若不同，你获得其一张牌。准备阶段或你死亡时，移除所有“惧”。",
@@ -1104,6 +1123,8 @@ Fk:addSkill(mxing__zhanghe_win)
 
 Fk:loadTranslationTable{
   ["mxing__zhanghe"] = "星张郃",
+  ["#mxing__zhanghe"] = "宁国中郎将",
+  ["illustrator:mxing__zhanghe"] = "王强",
   ["zhilve"] = "知略",
   [":zhilve"] = "出牌阶段限一次，你可以失去1点体力令你本回合手牌上限+1，并选择一项：1.移动场上一张牌；2.摸一张牌并视为使用一张无距离次数限制的【杀】。",
   ["#zhilve1"] = "知略：选择移动牌的来源和目标",
@@ -1182,6 +1203,8 @@ Fk:addSkill(mxing__xuhuang_win)
 
 Fk:loadTranslationTable{
   ["mxing__xuhuang"] = "星徐晃",
+  ["#mxing__xuhuang"] = "沉详性严",
+	["illustrator:mxing__xuhuang"] = "王强",
   ["mxing__zhiyan"] = "治严",
   [":mxing__zhiyan"] = "出牌阶段每项各限一次，你可以：1.将手牌摸至体力上限，然后你于此阶段内不能对其他角色使用牌；2.将多于体力值的手牌交给一名其他角色。",
   ["mxing__zhiyan_draw"] = "将手牌摸至体力上限",
@@ -1324,6 +1347,8 @@ Fk:addSkill(mxing__ganning_win)
 
 Fk:loadTranslationTable{
   ["mxing__ganning"] = "星甘宁",
+  ["#mxing__ganning"] = "铃震没羽",
+  ["illustrator:mxing__ganning"] = "王强",
   ["jinfan"] = "锦帆",
   [":jinfan"] = "弃牌阶段开始时，你可以将任意张手牌置于武将牌上，称为“铃”（每种花色限一张），你可以将“铃”如手牌般使用或打出；当“铃”离开你的武将牌时，"..
   "你从牌堆获得一张同花色的牌。",
@@ -1443,6 +1468,7 @@ huangzhong:addSkill(yishi)
 huangzhong:addSkill(qishe)
 Fk:loadTranslationTable{
   ["mxing__huangzhong"] = "星黄忠",
+  ["#mxing__huangzhong"] = "强挚烈弓",
   ["shidi"] = "势敌",
   [":shidi"] = "锁定技，准备阶段开始时，转换为阳；结束阶段开始时，转换为阴；阳：你计算与其他角色的距离-1，且你使用的黑色【杀】不可被响应；"..
   "阴：其他角色计算与你的距离+1，且你不可响应其他角色对你使用的红色【杀】。",
@@ -1558,6 +1584,7 @@ weiyan:addSkill(guli)
 weiyan:addSkill(aosi)
 Fk:loadTranslationTable{
   ["mxing__weiyan"] = "星魏延",
+  ["#mxing__weiyan"] = "骜勇孤战",
   ["guli"] = "孤厉",
   [":guli"] = "出牌阶段限一次，你可以将所有手牌当一张无视防具的【杀】使用。此牌结算后，若此牌造成过伤害，你可以失去1点体力，然后将手牌摸至体力上限。",
   ["aosi"] = "骜肆",
@@ -1655,6 +1682,7 @@ zhoubuyi:addSkill(huiyao)
 zhoubuyi:addSkill(quesong)
 Fk:loadTranslationTable{
   ["mxing__zhoubuyi"] = "星周不疑",
+  ["#mxing__zhoubuyi"] = "稚雀清声",
   ["huiyao"] = "慧夭",
   [":huiyao"] = "出牌阶段限一次，你可以受到1点无来源伤害并选择一名其他角色，<font color='red'>视为</font>其对你选择的另一名角色造成1点伤害。",
   ["quesong"] = "雀颂",

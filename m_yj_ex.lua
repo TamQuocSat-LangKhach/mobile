@@ -137,6 +137,9 @@ local m_ex__xusheng = General(extension, "m_ex__xusheng", "wu", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__xusheng"] = "界徐盛",
+  ["#m_ex__xusheng"] = "江东的铁壁",
+  ["cv:m_ex__xusheng"] = "金垚",
+	["illustrator:m_ex__xusheng"] = "铁杵文化",
   ["~m_ex__xusheng"] = "盛只恨，不能再为主公，破敌致胜了。",
 }
 

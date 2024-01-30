@@ -16,7 +16,7 @@ local yiyongw = fk.CreateTriggerSkill{
     if target == player and player:hasSkill(self) and data.card and data.card.trueName == "slash" and
       data.from and data.from ~= player and not data.from.dead and player:getEquipment(Card.SubtypeWeapon) then
       local subcards = data.card:isVirtual() and data.card.subcards or {data.card.id}
-      return #subcards>0 and table.every(subcards, function(id) return player.room:getCardArea(id) == Card.Processing end)
+      return #subcards > 0 and table.every(subcards, function(id) return player.room:getCardArea(id) == Card.Processing end)
     end
   end,
   on_cost = function(self, event, target, player, data)
@@ -24,7 +24,7 @@ local yiyongw = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:obtainCard(player.id, data.card, true, fk.ReasonJustMove)
+    room:obtainCard(player.id, data.card, true, fk.ReasonPrey)
     local subcards = data.card:isVirtual() and data.card.subcards or {data.card.id}
     if player.dead or data.from.dead then return end
     if table.every(subcards, function(id) return table.contains(player:getCardIds("h"), id) end) then
@@ -39,11 +39,26 @@ local yiyongw = fk.CreateTriggerSkill{
           extraUse = true,
         }
         if not data.from:getEquipment(Card.SubtypeWeapon) then
-          use.additionalDamage = (use.additionalDamage or 0) + 1
+          use.extra_data = use.extra_data or {}
+          use.extra_data.yiyongw_victim = data.from.id
         end
         room:useCard(use)
       end
     end
+  end,
+
+  refresh_events = {fk.DamageCaused},
+  can_refresh = function (self, event, target, player, data)
+    if player == data.to then
+      local e = player.room.logic:getCurrentEvent():findParent(GameEvent.CardEffect)
+      if e then
+        local use = e.data[1]
+        return use.extra_data and use.extra_data.yiyongw_victim == player.id
+      end
+    end
+  end,
+  on_refresh = function (self, event, target, player, data)
+    data.damage = data.damage + 1
   end,
 }
 local shanxie = fk.CreateActiveSkill{
@@ -63,7 +78,7 @@ local shanxie = fk.CreateActiveSkill{
       local ids = {}
       for _, p in ipairs(room:getOtherPlayers(player)) do
         if p:getEquipment(Card.SubtypeWeapon) then
-          table.insertIfNeed(ids, p:getEquipment(Card.SubtypeWeapon))
+          table.insertTableIfNeed(ids, p:getEquipments(Card.SubtypeWeapon))
         end
       end
       card = {table.random(ids)}
@@ -92,9 +107,10 @@ wangshuang:addSkill(yiyongw)
 wangshuang:addSkill(shanxie)
 Fk:loadTranslationTable{
   ["mobile__wangshuang"] = "王双",
+  ["#mobile__wangshuang"] = "边城猛兵",
+  ["illustrator:mobile__wangshuang"] = "我是插画",
   ["yiyongw"] = "异勇",
-  [":yiyongw"] = "当你受到其他角色使用【杀】造成的伤害后，若你装备区内有武器牌，你可以获得此【杀】，然后将之当无距离和次数限制的普通【杀】对其"..
-  "使用；若其装备区内没有武器牌，此【杀】伤害+1。",
+  [":yiyongw"] = "当你受到其他角色使用【杀】造成的伤害后，若你的装备区里有武器牌，你可以获得此【杀】，然后将此【杀】当普【杀】对其使用（若其装备区里没有武器牌，此【杀】对其造成的伤害+1）。",
   ["shanxie"] = "擅械",
   [":shanxie"] = "出牌阶段限一次，你可以从牌堆中获得一张武器牌（若没有，则随机获得一名其他角色装备区内的武器牌）。其他角色使用【闪】响应你使用的【杀】"..
   "时，若此【闪】没有点数或点数不大于你攻击范围的两倍，则此【闪】无效。",
@@ -189,6 +205,8 @@ yuanhuan:addSkill(qingjue)
 yuanhuan:addSkill(fengjie)
 Fk:loadTranslationTable{
   ["yuanhuan"] = "袁涣",
+  ["#yuanhuan"] = "随车致雨",
+  ["illustrator:yuanhuan"] = "凝聚永恒",
   ["qingjue"] = "请决",
   [":qingjue"] = "每轮限一次，一名其他角色使用牌指定一名体力值小于其的其他角色为唯一目标时，若没有角色处于濒死状态，你可以摸一张牌，与使用者拼点，"..
   "若你赢或你不是此牌合法目标，取消此牌；若你没赢且是此牌合法目标，此牌目标转移为你。",
@@ -209,6 +227,9 @@ Fk:loadTranslationTable{
 local courageGaolan = General(extension, "mobile__gaolan", "qun", 4)
 Fk:loadTranslationTable{
   ["mobile__gaolan"] = "高览",
+  ["#mobile__gaolan"] = "绝击坚营",
+  ["cv:mobile__gaolan"] = "曹真",
+	["illustrator:mobile__gaolan"] = "兴游",
   ["~mobile__gaolan"] = "满腹忠肝，难抵一句谮言……唉！",
 }
 
@@ -336,6 +357,7 @@ courageGaolan:addSkill(dengli)
 local huaman = General(extension, "mobile__huaman", "shu", 4, 4, General.Female)
 Fk:loadTranslationTable{
   ["mobile__huaman"] = "花鬘",
+  ["#mobile__huaman"] = "薮泽清影",
   ["~mobile__huaman"] = "战事已定，吾愿终亦得偿……",
 }
 
@@ -502,6 +524,8 @@ local wenyang = General(extension, "mobile__wenyang", "wei", 4)
 wenyang.subkingdom = "wu"
 Fk:loadTranslationTable{
   ["mobile__wenyang"] = "文鸯",
+  ["#mobile__wenyang"] = "独骑破军",
+  ["illustrator:mobile__wenyang"] = "鬼画府",
   ["~mobile__wenyang"] = "半生功业，而见疑于一家之言，岂能无怨！",
 }
 

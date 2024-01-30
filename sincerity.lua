@@ -29,6 +29,7 @@ local mobile__yinju = fk.CreateActiveSkill{
     local use = room:askForUseCard(target, "slash", "slash", "#mobile__yinju-slash:"..player.id, true,
       {must_targets = {player.id}, bypass_distances = true, bypass_times = true})
     if use then
+      use.extraUse = true
       room:useCard(use)
     else
       room:setPlayerMark(target, "@@mobile__yinju", 1)
@@ -80,6 +81,9 @@ xinpi:addSkill(mobile__yinju)
 xinpi:addSkill(mobile__chijie)
 Fk:loadTranslationTable{
   ["mobile__xinpi"] = "辛毗",
+  ["#mobile__xinpi"] = "一节肃六军",
+  ["illustrator:mobile__xinpi"] = "鬼画府",
+
   ["mobile__yinju"] = "引裾",
   [":mobile__yinju"] = "出牌阶段限一次，你可以令一名其他角色选择一项：1.跳过其下回合出牌阶段和弃牌阶段；2.对你使用一张无距离限制的【杀】。",
   ["mobile__chijie"] = "持节",
@@ -294,6 +298,7 @@ wangling:addSkill(mibei)
 wangling:addRelatedSkill(mouli)
 Fk:loadTranslationTable{
   ["mobile__wangling"] = "王凌",
+  ["#mobile__wangling"] = "风节格尚",
   ["xingqi"] = "星启",
   [":xingqi"] = "当你使用一张不为延时锦囊的牌时，若没有此牌名的“备”，则记录此牌牌名为“备”。结束阶段，你可以移除一个“备”，获得牌堆中一张同名牌。",
   ["zifu"] = "自缚",
@@ -394,6 +399,9 @@ nos__mifuren:addSkill(nos__cunsi)
 nos__mifuren:addSkill(nos__guixiu)
 Fk:loadTranslationTable{
   ["nos__mifuren"] = "糜夫人",
+  ["#nos__mifuren"] = "乱世沉香",
+  ["illustrator:nos__mifuren"] = "M云涯", -- 史诗皮 花团锦簇
+
   ["nos__cunsi"] = "存嗣",
   [":nos__cunsi"] = "出牌阶段限一次，你可以将武将牌翻至背面朝上，令一名角色获得一张【杀】，其使用下一张【杀】造成的伤害+1。",
   ["nos__guixiu"] = "闺秀",
@@ -526,6 +534,8 @@ mifuren:addSkill(qingyu)
 mifuren:addRelatedSkill(xuancun)
 Fk:loadTranslationTable{
   ["mobile__mifuren"] = "糜夫人",
+  ["#mobile__mifuren"] = "乱世沉香",
+  ["illustrator:mobile__mifuren"] = "zoo",
   ["mobile__guixiu"] = "闺秀",
   [":mobile__guixiu"] = "结束阶段，你可以选择一项：1.将手牌摸至体力值；2.回复1点体力。",
   ["qingyu"] = "清玉",
@@ -626,6 +636,8 @@ local xunyi = fk.CreateTriggerSkill{
 wangfuzhaolei:addSkill(xunyi)
 Fk:loadTranslationTable{
   ["wangfuzhaolei"] = "王甫赵累",
+  ["#wangfuzhaolei"] = "忱忠不移",
+  ["illustrator:wangfuzhaolei"] = "游漫美绘",
   ["xunyi"] = "殉义",
   [":xunyi"] = "游戏开始时，你选择一名其他角色，令其获得“义”标记。<br>当你或有“义”的角色受到1点伤害后，若伤害来源不为另一方，"..
   "另一方弃置一张牌。<br>当你或有“义”的角色造成1点伤害后，若受伤角色不为另一方，另一方摸一张牌。<br>当有“义”的角色死亡时，你可以转移“义”标记。",
@@ -923,6 +935,8 @@ zhouchu:addSkill(chuhai)
 zhouchu:addRelatedSkill(zhangming)
 Fk:loadTranslationTable{
   ["mobile__zhouchu"] = "周处",
+  ["#mobile__zhouchu"] = "英情天逸",
+  ["illustrator:mobile__zhouchu"] = "枭瞳",
   ["xianghai"] = "乡害",
   [":xianghai"] = "锁定技，其他角色的手牌上限-1，你手牌中的装备牌均视为【酒】。",
   ["chuhai"] = "除害",
@@ -968,7 +982,7 @@ local heji = fk.CreateTriggerSkill{
     local use = player.room:askForUseCard(player, self.name, "slash,duel", "#heji-use::" .. targets[1], true,
       { must_targets = targets, bypass_distances = true, bypass_times = true })
     if use then
-      if not use.card:isVirtual() then
+      if U.isPureCard(use.card) then
         use.extra_data = {hejiDrawer = player.id}
       end
       self.cost_data = use
@@ -1043,6 +1057,7 @@ wujing:addSkill(heji)
 wujing:addSkill(liubing)
 Fk:loadTranslationTable{
   ["mobile__wujing"] = "吴景",
+  ["#mobile__wujing"] = "助吴征战",
   ["heji"] = "合击",
   ["#heji_delay"] = "合击",
   [":heji"] = "若一名角色使用【决斗】或红色【杀】仅指定唯一其他角色为目标，此牌结算后，你可从手牌中对相同目标使用一张无次数和距离限制的"..

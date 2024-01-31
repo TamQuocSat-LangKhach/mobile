@@ -75,6 +75,8 @@ local chengzhao = fk.CreateTriggerSkill{
 mobile__dongcheng:addSkill(chengzhao)
 Fk:loadTranslationTable{
   ["mobile__dongcheng"] = "董承",
+  ["#mobile__dongcheng"] = "沥胆卫汉",
+  ["illustrator:mobile__dongcheng"] = "绘聚艺堂",
   ["chengzhao"] = "承诏",
   [":chengzhao"] = "一名角色的结束阶段，若你本回合获得过至少两张牌，你可以与一名其他角色拼点，若你赢，视为你对其使用一张无视防具的【杀】。",
   ["#chengzhao-choose"] = "承诏：你可以与一名其他角色拼点，若你赢，视为你对其使用一张无视防具的【杀】",
@@ -167,6 +169,8 @@ local yirang = fk.CreateTriggerSkill{
 taoqian:addSkill(yirang)
 Fk:loadTranslationTable{
   ["taoqian"] = "陶谦",
+  ["#taoqian"] = "膺秉温仁",
+  ["illustrator:taoqian"] = "F.源",
   ["zhaohuo"] = "招祸",
   [":zhaohuo"] = "锁定技，当其他角色进入濒死状态时，若你的体力上限大于1，你将体力上限减至1点，然后你摸等同于体力上限减少数张牌。",
   ["yixiang"] = "义襄",
@@ -276,6 +280,8 @@ local mobile__gongsun_vs = fk.CreateActiveSkill{
 Fk:addSkill(mobile__gongsun_vs)
 Fk:loadTranslationTable{
   ["mobile__yangyi"] = "杨仪",
+  ["#mobile__yangyi"] = "孤鹬",
+  ["illustrator:mobile__yangyi"] = "绘聚艺堂",
   ["mobile__gongsun"] = "共损",
   [":mobile__gongsun"] = "出牌阶段开始时，你可以弃置两张牌并选择一名其他角色，然后你声明一种基本牌或普通锦囊牌的牌名。若如此做，直到你的下个回合开始或你死亡时，你与其均不能使用、打出或弃置此牌名的手牌。",
   ["#mobile__gongsun-choose"] = "共损：弃置两张牌并选择一名其他角色",
@@ -300,7 +306,7 @@ local shouye = fk.CreateTriggerSkill{
     return player:hasSkill(self) and target == player and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and data.from ~= player.id and #AimGroup:getAllTargets(data.tos) == 1
   end,
   on_cost = function (self, event, target, player, data)
-    return player.room:askForSkillInvoke(player, self.name, nil, "#shouye-invoke::"..data.from)
+    return player.room:askForSkillInvoke(player, self.name, nil, "#shouye-invoke::"..data.from..":"..data.card.name)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -384,9 +390,11 @@ local liezhi = fk.CreateTriggerSkill{
 mobile__shenpei:addSkill(liezhi)
 Fk:loadTranslationTable{
   ["mobile__shenpei"] = "审配",
+  ["#mobile__shenpei"] = "正南义北",
+  ["illustrator:mobile__shenpei"] = "YanBai",
   ["shouye"] = "守邺",
   [":shouye"] = "每回合限一次，当你成为其他角色使用牌的唯一目标后，你可以与其对策，若你对策成功，此牌对你无效，且此牌结算结束后，你获得之。",
-  ["#shouye-invoke"] = "守邺：你可以与 %dest 对策",
+  ["#shouye-invoke"] = "守邺：你可以与 %dest 对策，若成功，%arg 对你无效且你获得之",
   ["shouye_choice1"] = "开门诱敌",
   ["shouye_choice2"] = "奇袭粮道",
   ["shouye_choice3"] = "全力攻城",
@@ -994,6 +1002,7 @@ beizhu:addRelatedSkill(beizhu_trigger)
 dingyuan:addSkill(beizhu)
 Fk:loadTranslationTable{
   ["dingyuan"] = "丁原",
+  ["#dingyuan"] = "饲虎成患",
   ["beizhu"] = "备诛",
   [":beizhu"] = "出牌阶段限一次，你可以观看一名其他角色的手牌。若其中有【杀】，则其对你依次使用这些【杀】（当你受到因此使用的【杀】造成的伤害后，"..
   "你摸一张牌），否则你弃置其一张牌并可以令其从牌堆中获得一张【杀】。",
@@ -1084,6 +1093,8 @@ furong:addSkill(mobile__xuewei)
 furong:addSkill(mobile__liechi)
 Fk:loadTranslationTable{
   ["mobile__furong"] = "傅肜",
+  ["#mobile__furong"] = "危汉烈义",
+  ["illustrator:mobile__furong"] = "三道纹",
   ["mobile__xuewei"] = "血卫",
   [":mobile__xuewei"] = "准备阶段，你可以标记一名其他角色。若如此做，直到你下回合开始前，你标记的角色第一次受到伤害时，你防止此伤害并受到等量伤害，"..
   "然后你对伤害来源造成等量的同属性伤害。",
@@ -2290,6 +2301,8 @@ fuqian:addSkill(poxiang)
 fuqian:addSkill(jueyong)
 Fk:loadTranslationTable{
   ["fuqian"] = "傅佥",
+  ["#fuqian"] = "危汉绝勇",
+  ["illustrator:fuqian"] = "君桓文化",
   ["poxiang"] = "破降",
   [":poxiang"] = "出牌阶段限一次，你可以交给一名其他角色一张牌，然后你摸三张牌，移去所有“绝”并失去1点体力，你以此法获得的牌本回合不计入手牌上限。",
   ["jueyong"] = "绝勇",
@@ -4858,6 +4871,7 @@ laimin:addSkill(laishou)
 laimin:addSkill(luanqun)
 Fk:loadTranslationTable{
   ["laimin"] = "来敏",
+  ["#laimin"] = "悖骴乱群",
   ["laishou"] = "来寿",
   [":laishou"] = "锁定技，当你受到致命伤害时，若你的体力上限小于9，防止此伤害并增加等量的体力上限。准备阶段，若你的体力上限不小于9，你死亡。",
   ["luanqun"] = "乱群",

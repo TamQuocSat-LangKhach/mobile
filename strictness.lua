@@ -277,6 +277,7 @@ zhangchangpu:addSkill(difei)
 zhangchangpu:addSkill(mobile__yanjiao)
 Fk:loadTranslationTable{
   ["mobile__zhangchangpu"] = "张昌蒲",
+  ["#mobile__zhangchangpu"] = "厉色严教",
   ["difei"] = "抵诽",
   [":difei"] = "锁定技，每回合限一次，当你受到伤害后，你摸一张牌或弃置一张手牌，然后你展示所有手牌，若对你造成伤害的牌无花色或"..
   "你的手牌中没有与对你造成伤害的牌花色相同的牌，你回复1点体力。",
@@ -397,6 +398,7 @@ cuiyan:addSkill(yajun)
 cuiyan:addSkill(zundi)
 Fk:loadTranslationTable{
   ["mobile__cuiyan"] = "崔琰",
+  ["#mobile__cuiyan"] = "伯夷之风",
   ["yajun"] = "雅俊",
   [":yajun"] = "摸牌阶段，你多摸一张牌。出牌阶段开始时，你可以与一名角色拼点：若你赢，你可以将其中一张拼点牌置于牌堆顶；"..
   "若你没赢，你本回合的手牌上限-1。",
@@ -474,6 +476,7 @@ jiangwan:addSkill(zhenting)
 jiangwan:addSkill(mobile__jincui)
 Fk:loadTranslationTable{
   ["jiangwan"] = "蒋琬",
+  ["#jiangwan"] = "方整威重",
   ["zhenting"] = "镇庭",
   [":zhenting"] = "每回合限一次，当你攻击范围内的一名角色成为【杀】或延时锦囊牌的目标时，若你不为此牌的使用者或目标，"..
   "你可以代替其成为此牌的目标，然后选择一项：1.弃置此牌使用者的一张牌；2.摸一张牌。",
@@ -627,6 +630,7 @@ liuba:addSkill(duanbi)
 liuba:addSkill(mobile__tongdu)
 Fk:loadTranslationTable{
   ["mobile__liuba"] = "刘巴",
+  ["#mobile__liuba"] = "撰科行律",
   ["duanbi"] = "锻币",
   [":duanbi"] = "限定技，出牌阶段，若所有角色的手牌数之和大于存活角色数的两倍，你可以令所有其他角色弃置X张手牌（X为其手牌数的一半，向上取整且至多为3），"..
   "然后你将以此法弃置的三张牌交给一名角色。",
@@ -681,17 +685,15 @@ local jianyi = fk.CreateTriggerSkill{
       end
     end, Player.HistoryTurn)
     if #ids == 0 then return end
-    local get = room:askForCardsChosen(player, player, 1, 1, {card_data = {{self.name, ids}}}, self.name)
-    if #get > 0 then
-      room:moveCards({
-        ids = get,
-        to = player.id,
-        toArea = Card.PlayerHand,
-        moveReason = fk.ReasonJustMove,
-        proposer = player.id,
-        skillName = self.name,
-      })
-    end
+    local get = room:askForCardChosen(player, player, {card_data = {{self.name, ids}}}, self.name)
+    room:moveCards({
+      ids = {get},
+      to = player.id,
+      toArea = Card.PlayerHand,
+      moveReason = fk.ReasonPrey,
+      proposer = player.id,
+      skillName = self.name,
+    })
   end,
 }
 local mobile__shangyi = fk.CreateActiveSkill{
@@ -721,10 +723,7 @@ local mobile__shangyi = fk.CreateActiveSkill{
     room:throwCard(effect.cards, self.name, player, player)
     if player.dead or target.dead or player:isKongcheng() or target:isKongcheng() then return end
     U.viewCards(target, player:getCardIds("h"), self.name)
-    local cards = table.simpleClone(target:getCardIds("h"))
-    room:fillAG(player, cards)
-    local id = room:askForAG(player, cards, false, self.name)
-    room:closeAG(player)
+    local id = room:askForCardChosen(player, target, { card_data = { { "$Hand", target:getCardIds(Player.Hand) }  } }, self.name)
     room:obtainCard(player, id, false, fk.ReasonPrey)
   end,
 }
@@ -732,6 +731,7 @@ jiangqin:addSkill(jianyi)
 jiangqin:addSkill(mobile__shangyi)
 Fk:loadTranslationTable{
   ["mobile__jiangqin"] = "蒋钦",
+  ["#mobile__jiangqin"] = "折节尚义",
   ["jianyi"] = "俭衣",
   [":jianyi"] = "锁定技，其他角色回合结束时，若弃牌堆中有本回合弃置的防具牌，则你选择其中一张获得。",
   ["mobile__shangyi"] = "尚义",
@@ -843,6 +843,7 @@ lvfan:addSkill(mobile__diancai)
 lvfan:addSkill(yanji)
 Fk:loadTranslationTable{
   ["mobile__lvfan"] = "吕范",
+  ["#mobile__lvfan"] = "持筹廉悍",
   ["mobile__diaodu"] = "调度",
   [":mobile__diaodu"] = "准备阶段，你可以移动场上的一张装备牌，然后以此法失去牌的角色摸一张牌。",
   ["mobile__diancai"] = "典财",
@@ -929,9 +930,7 @@ local shiji = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {data.to.id})
-    room:fillAG(player, data.to:getCardIds("h"))
-    room:delay(3000)
-    room:closeAG(player)
+    U.viewCards(player, data.to:getCardIds("h"))
     local ids = {}
     for _, id in ipairs(data.to:getCardIds("h")) do
       if Fk:getCardById(id).color == Card.Red then
@@ -999,9 +998,10 @@ huangfusong:addSkill(shiji)
 huangfusong:addSkill(zhengjun)
 Fk:loadTranslationTable{
   ["mobile__huangfusong"] = "皇甫嵩",
+  ["#mobile__huangfusong"] = "铁血柔肠",
   ["taoluanh"] = "讨乱",
-  [":taoluanh"] = "每回合限一次，当一名角色判定牌生效前，若判定结果为♠，你可以终止此次判定并选择一项：1.你获得此判定牌；"..
-  "2.若进行判定的角色不是你，你视为对其使用一张无距离和次数限制的火【杀】。",
+  [":taoluanh"] = "每回合限一次，当一名角色判定牌生效前，若判定结果为♠，你可以终止此次判定并选择一项：1.你获得此判定牌；2.若进行判定的角色不是你，你视为对其使用一张无距离和次数限制的火【杀】。"..
+  "<br><font color='red'>注：延时锦囊被终止判定后直接消失，不会回到判定区",
   ["shiji"] = "势击",
   [":shiji"] = "当你对其他角色造成属性伤害时，若你的手牌数不为全场唯一最多，你可以观看其手牌并弃置其中所有的红色牌，然后你摸等量的牌。",
   ["zhengjun"] = "整军",
@@ -1146,6 +1146,7 @@ zhujun:addSkill(zj__juxiang)
 zhujun:addSkill(houfeng)
 Fk:loadTranslationTable{
   ["mobile__zhujun"] = "朱儁",
+  ["#mobile__zhujun"] = "功成师克",
   ["yangjie"] = "佯解",
   [":yangjie"] = "出牌阶段限一次，你可以与一名角色拼点。若你没赢，你可以令另一名其他角色视为对与你拼点的角色使用一张无距离限制的火【杀】。",
   ["houfeng"] = "厚俸",

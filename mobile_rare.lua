@@ -138,7 +138,10 @@ liuzan:addSkill(fenyin)
 Fk:loadTranslationTable{
   ["liuzan"] = "留赞",
   ["#liuzan"] = "啸天亢声",
+  ["cv:liuzan"] = "腾格尔",
+  ["designer:liuzan"] = "东郊易尘Noah",
   ["illustrator:liuzan"] = "酸包", -- 传说皮 灵魂歌王
+
   ["fenyin"] = "奋音",
   [":fenyin"] = "你的回合内，当你使用和上一张牌颜色不同的牌时，你可以摸一张牌。",
   ["@fenyin"] = "奋音",
@@ -168,6 +171,7 @@ local mobile__kuangcai = fk.CreateTriggerSkill{
     end
     room:setPlayerMark(player, "mobile__kuangcai_timeout-phase", 5)
     room.timeout = 5
+    --- FIXME: 会修改其他角色的响应时间，且qml框会按原时间关闭
   end,
 
   refresh_events = {fk.StartPlayCard},
@@ -665,7 +669,9 @@ Fk:loadTranslationTable{
   ["majun"] = "马钧",
   ["#majun"] = "没渊瑰璞",
   ["cv:majun"] = "金垚",
+  ["designer:majun"] = "Loun老萌",
   ["illustrator:majun"] = "聚一_小道恩",
+
   ["jingxie"] = "精械",
   [":jingxie"] = "①出牌阶段，你可以展示你手牌区或装备区里的一张【诸葛连弩】或"
     .. "【八卦阵】或【仁王盾】或【白银狮子】或【藤甲】，然后升级此牌；"
@@ -826,7 +832,9 @@ zhengxuan:addSkill(zhengjing)
 Fk:loadTranslationTable{
   ["zhengxuan"] = "郑玄",
   ["#zhengxuan"] = "兼采定道",
+  ["designer:zhengxuan"] = "Loun老萌",
   ["illustrator:zhengxuan"] = "monkey",
+
   ["zhengjing"] = "整经",
   [":zhengjing"] = "出牌阶段限一次，你可以整理一次经典，并将你整理出的任意牌置于一名角色的武将牌上，称为“经”，然后你获得剩余的牌。"..
   "武将牌上有“经”的角色准备阶段，其获得所有“经”，然后跳过本回合的判定阶段和摸牌阶段。",

@@ -2106,6 +2106,8 @@ local bingqing = fk.CreateTriggerSkill{
 maojie:addSkill(bingqing)
 Fk:loadTranslationTable{
   ["maojie"] = "毛玠",
+  ["#maojie"] = "清公素履",
+  ["cv:maojie"] = "刘强",
   ["bingqing"] = "秉清",
   [":bingqing"] = "当你于出牌阶段内使用牌结算结束后，若此牌的花色与你于此阶段内使用并结算结束的牌花色均不相同，则你记录此牌花色直到此阶段结束，"..
   "然后你根据记录的花色数，你可以执行对应效果：<br>两种，令一名角色摸两张牌；<br>三种，弃置一名角色区域内的一张牌；<br>四种，对一名角色造成1点伤害。",
@@ -2782,6 +2784,10 @@ Fk:addSkill(zhaotongzhaoguang_win)
 
 Fk:loadTranslationTable{
   ["zhaotongzhaoguang"] = "赵统赵广",
+  ["#zhaotongzhaoguang"] = "翊赞季兴",
+  ["designer:zhaotongzhaoguang"] = "Loun老萌",
+	["illustrator:zhaotongzhaoguang"] = "蛋费鸡丁",
+
   ["yizan"] = "翊赞",
   [":yizan"] = "你可以将两张牌（其中至少一张是基本牌）当任意基本牌使用或打出。",
   ["longyuan"] = "龙渊",
@@ -2891,6 +2897,11 @@ liuye:addSkill(choulue)
 
 Fk:loadTranslationTable{
   ["mobile__liuye"] = "刘晔",
+  ["#mobile__liuye"] = "佐世之才",
+  ["designer:mobile__liuye"] = "荼蘼",
+	["illustrator:mobile__liuye"] = "Thinking",
+
+
   ["polu"] = "破橹",
   [":polu"] = "锁定技，①回合开始时，你获得游戏外的【霹雳车】并使用之；②当你受到1点伤害后，若你的装备区里没有【霹雳车】，你摸一张牌，然后随机从"..
   "牌堆中获得一张武器牌并使用之。<br>"..
@@ -3497,6 +3508,10 @@ yangbiao:addSkill(rangjie)
 yangbiao:addSkill(mobileYizheng)
 Fk:loadTranslationTable{
   ["yangbiao"] = "杨彪",
+  ["#yangbiao"] = "德彰海内",
+  ["designer:yangbiao"] = "Loun老萌",
+	["illustrator:yangbiao"] = "木美人",
+
   ["zhaohan"] = "昭汉",
   [":zhaohan"] = "锁定技，准备阶段开始时，若X：小于4，你加1点体力上限并回复1点体力；不小于4且小于7，你减1点体力上限（X为你发动过本技能的次数）。",
   ["rangjie"] = "让节",

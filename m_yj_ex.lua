@@ -2115,12 +2115,12 @@ jvshou.shield = 3
 
 Fk:loadTranslationTable{
   ["m_ex__jvshou"] = "界沮授",
+  ["#m_ex__jvshou"] = "监军谋国",
   ["~m_ex__jvshou"] = "授，无愧主公之恩……",
 }
 
 local m_ex__jianying = fk.CreateViewAsSkill{
   name = "m_ex__jianying",
-  pattern = ".|.|.|.|.|basic",
   prompt = "#m_ex__jianying-active",
   interaction = function()
     local names, all_names = {} , {}
@@ -2140,6 +2140,9 @@ local m_ex__jianying = fk.CreateViewAsSkill{
   card_filter = function(self, to_select, selected)
     return #selected == 0
   end,
+  before_use = function(self, player, use)
+    player.room:setPlayerMark(player, "m_ex__jianying-used-phase", 1)
+  end,
   view_as = function(self, cards)
     if not self.interaction.data or #cards ~= 1 then return end
     local card = Fk:cloneCard(self.interaction.data)
@@ -2158,14 +2161,14 @@ local m_ex__jianying = fk.CreateViewAsSkill{
     return card
   end,
   enabled_at_play = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return player:getMark("m_ex__jianying-used-phase") == 0 and not player:isNude()
   end,
-  enabled_at_response = function() return false end,
 }
 local m_ex__jianying_trigger = fk.CreateTriggerSkill{
   name = "#m_ex__jianying_trigger",
   events = {fk.CardUsing},
   mute = true,
+  main_skill = m_ex__jianying,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player.phase == Player.Play and
     (data.extra_data or {}).m_ex__jianying_triggerable

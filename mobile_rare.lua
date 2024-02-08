@@ -1708,6 +1708,8 @@ Fk:loadTranslationTable{
 }
 
 local shichangshi = General(extension, "shichangshi", "qun", 1)
+shichangshi.hidden = true
+shichangshi.total_hidden = true
 
 local shichangshi_win = fk.CreateActiveSkill{ name = "shichangshi_win_audio" }
 shichangshi_win.package = extension

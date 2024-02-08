@@ -420,30 +420,16 @@ local mifuren = General(extension, "mobile__mifuren", "shu", 3, 3, General.Femal
 local mobile__guixiu = fk.CreateTriggerSkill{
   name = "mobile__guixiu",
   anim_type = "support",
-  events = {fk.EventPhaseEnd},
+  frequency = Skill.Compulsory,
+  events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Play and
-      (player:getHandcardNum() < player.hp or player:isWounded())
-  end,
-  on_cost = function(self, event, target, player, data)
-    local choices = {"Cancel"}
-    if player:getHandcardNum() < player.hp then
-      table.insert(choices, "mobile__guixiu_draw")
-    end
-    if player:isWounded() then
-      table.insert(choices, "recover")
-    end
-    local choice = player.room:askForChoice(player, choices, self.name, "#mobile__guixiu-invoke", false,
-      {"Cancel", "mobile__guixiu_draw", "recover"})
-    if choice ~= "Cancel" then
-      self.cost_data = choice
-      return true
-    end
+    return target == player and player:hasSkill(self) and player.phase == Player.Finish and
+      ((player.hp % 2 == 1) or player:isWounded())
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if self.cost_data[1] == "m" then
-      player:drawCards(player.hp - player:getHandcardNum(), self.name)
+    if player.hp % 2 == 1 then
+      player:drawCards(1, self.name)
     else
       room:recover({
         who = player,
@@ -491,9 +477,7 @@ local qingyu_trigger = fk.CreateTriggerSkill{
       end
     end
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.EventPhaseStart then
@@ -536,8 +520,9 @@ Fk:loadTranslationTable{
   ["mobile__mifuren"] = "糜夫人",
   ["#mobile__mifuren"] = "乱世沉香",
   ["illustrator:mobile__mifuren"] = "zoo",
+
   ["mobile__guixiu"] = "闺秀",
-  [":mobile__guixiu"] = "结束阶段，你可以选择一项：1.将手牌摸至体力值；2.回复1点体力。",
+  [":mobile__guixiu"] = "锁定技，结束阶段，若你的体力值为奇数，则你摸一张牌，否则你回复1点体力。",
   ["qingyu"] = "清玉",
   [":qingyu"] = "使命技，当你受到伤害时，你需弃置两张手牌并防止此伤害。<br>\
   <strong>成功</strong>：准备阶段，若你未受伤且没有手牌，你获得技能〖悬存〗。<br>\

@@ -77,6 +77,7 @@ Fk:loadTranslationTable{
   ["mobile__dongcheng"] = "董承",
   ["#mobile__dongcheng"] = "沥胆卫汉",
   ["illustrator:mobile__dongcheng"] = "绘聚艺堂",
+
   ["chengzhao"] = "承诏",
   [":chengzhao"] = "一名角色的结束阶段，若你本回合获得过至少两张牌，你可以与一名其他角色拼点，若你赢，视为你对其使用一张无视防具的【杀】。",
   ["#chengzhao-choose"] = "承诏：你可以与一名其他角色拼点，若你赢，视为你对其使用一张无视防具的【杀】",
@@ -282,6 +283,7 @@ Fk:loadTranslationTable{
   ["mobile__yangyi"] = "杨仪",
   ["#mobile__yangyi"] = "孤鹬",
   ["illustrator:mobile__yangyi"] = "绘聚艺堂",
+
   ["mobile__gongsun"] = "共损",
   [":mobile__gongsun"] = "出牌阶段开始时，你可以弃置两张牌并选择一名其他角色，然后你声明一种基本牌或普通锦囊牌的牌名。若如此做，直到你的下个回合开始或你死亡时，你与其均不能使用、打出或弃置此牌名的手牌。",
   ["#mobile__gongsun-choose"] = "共损：弃置两张牌并选择一名其他角色",
@@ -392,6 +394,7 @@ Fk:loadTranslationTable{
   ["mobile__shenpei"] = "审配",
   ["#mobile__shenpei"] = "正南义北",
   ["illustrator:mobile__shenpei"] = "YanBai",
+
   ["shouye"] = "守邺",
   [":shouye"] = "每回合限一次，当你成为其他角色使用牌的唯一目标后，你可以与其对策，若你对策成功，此牌对你无效，且此牌结算结束后，你获得之。",
   ["#shouye-invoke"] = "守邺：你可以与 %dest 对策，若成功，%arg 对你无效且你获得之",
@@ -914,6 +917,8 @@ baosanniang:addRelatedSkill("wusheng")
 baosanniang:addRelatedSkill("dangxian")
 Fk:loadTranslationTable{
   ["mobile__baosanniang"] = "鲍三娘",
+  ["#mobile__baosanniang"] = "慕花之姝",
+  ["illustrator:mobile__baosanniang"] = "迷走之音", -- 皮肤 嫣然一笑
   ["shuyong"] = "姝勇",
   [":shuyong"] = "当你使用或打出【杀】时，你可以获得一名其他角色区域内的一张牌；若如此做，其摸一张牌。",
   ["mobile__xushen"] = "许身",
@@ -4038,6 +4043,8 @@ yangfu:addSkill(jiebing)
 yangfu:addSkill(hannan)
 Fk:loadTranslationTable{
   ["yangfu"] = "杨阜",
+  ["#yangfu"] = "勇撼雄狮",
+
   ["jiebing"] = "借兵",
   [":jiebing"] = "锁定技，当你受到伤害后，你选择除伤害来源外的一名其他角色，随机获得其两张牌并展示之，若为装备牌则你使用之。",
   ["hannan"] = "扞难",
@@ -4148,6 +4155,7 @@ qianzhao:addSkill(shihe)
 qianzhao:addSkill(zhenfu)
 Fk:loadTranslationTable{
   ["qianzhao"] = "牵招",
+  ["#qianzhao"] = "威风远振",
   ["shihe"] = "势吓",
   [":shihe"] = "出牌阶段限一次，你可以与一名其他角色拼点，若你赢，直到其下回合结束，防止其对友方角色造成的伤害；没赢，你随机弃置一张牌。",
   ["zhenfu"] = "镇抚",

@@ -2095,8 +2095,8 @@ Fk:loadTranslationTable{
   [":changshi__xiaolu"] = "出牌阶段限一次，你可以摸两张牌，然后选择一项：1.弃置两张手牌；2.将两张手牌交给一名其他角色。",
   ["changshi__xiaolu_give"] = "交出两张手牌",
   ["changshi__xiaolu_discard"] = "弃置两张手牌",
-  ["#qiaosi-give"] = "宵赂：请选择要交出的 %arg 张牌",
-  ["#qiaosi-give-choose"] = "宵赂：请选择要交给的目标",
+  ["#changshi__xiaolu-give"] = "宵赂：请选择要交出的 %arg 张牌",
+  ["#changshi__xiaolu-give-choose"] = "宵赂：请选择要交给的目标",
   ["$changshi__xiaolu1"] = "咱家上下打点，自是要费些银子。",
 }
 
@@ -2165,7 +2165,7 @@ Fk:addPoxiMethod{
     return #selected == 4
   end,
   prompt = function ()
-    return "窥机：弃置双方手里四张不同花色的牌"
+    return "#changshi__kuiji-poxi_prompt"
   end
 }
 Fk:loadTranslationTable{
@@ -2173,6 +2173,7 @@ Fk:loadTranslationTable{
   [":changshi__kuiji"] = "出牌阶段限一次，你可以观看一名其他角色的手牌并可弃置你与其手牌中共计四张花色各不相同的牌。",
   ["changshi__kuiji_discard"] = "窥机观看",
   ["#changshi__kuiji-prompt"] = "窥机：选择一名有手牌的其他角色，并可弃置你与其手牌中共计四张花色各不相同的牌",
+  ["#changshi__kuiji-poxi_prompt"] = "窥机：弃置双方手里四张不同花色的牌",
   ["$changshi__kuiji1"] = "同道者为忠，殊途者为奸！",
 }
 

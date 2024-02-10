@@ -9,6 +9,8 @@ local mShzlEx = require "packages/mobile/m_shzl_ex"
 local mYjEx = require "packages/mobile/m_yj_ex"
 local mobileDerived = require "packages/mobile/mobile_derived"
 
+Fk:loadTranslationTable(require 'packages/mobile/i18n/en_US', 'en_US')
+
 return {
   mobile_rare,
   mobile_sp,

@@ -532,6 +532,8 @@ sunshao:addSkill(zuici)
 sunshao:addSkill(fubi)
 Fk:loadTranslationTable{
   ["mobile__sunshao"] = "孙邵",
+  ["#mobile__sunshao"] = "创基抉政",
+  ["illustrator:mobile__sunshao"] = "君桓文化",
   ["dingyi"] = "定仪",
   [":dingyi"] = "锁定技，游戏开始时，你选择一项对全场角色生效：1.摸牌阶段摸牌数+1；2.手牌上限+2；3.攻击范围+1；4.脱离濒死状态时回复1点体力。",
   ["zuici"] = "罪辞",

@@ -194,6 +194,7 @@ local dengai = General(extension, "m_ex__dengai", "wei", 4)
 local tuntian = fk.CreateTriggerSkill{
   name = "m_ex__tuntian",
   anim_type = "special",
+  derived_piles = "dengai_field",
   events = {fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and player.phase == Player.NotActive then

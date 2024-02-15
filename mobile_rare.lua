@@ -743,7 +743,7 @@ local zhengjing = fk.CreateActiveSkill{
     end
     table.insertTable(all_choices, table.random(basics, n - #all_choices))
     table.insert(all_choices, "bomb")
-    room:delay(3000)
+    room:delay(2000)
     local patterns = {}
     local audio = table.random({{3, 4, 5, 6}, {7, 8, 9, 10}, {11, 12, 13, 14}})
     for i = 1, math.random(n, 2 * n), 1 do
@@ -769,27 +769,16 @@ local zhengjing = fk.CreateActiveSkill{
       proposer = player.id,
       skillName = self.name,
     })
-    player.special_cards["zhengjing"] = table.simpleClone(cards)
-    player:doNotify("ChangeSelf", json.encode {
-      id = player.id,
-      handcards = player:getCardIds("h"),
-      special_cards = player.special_cards,
-    })
-    local success, dat = room:askForUseActiveSkill(player, "zhengjing_active", "#zhengjing-give", true)
-    if success then
+    room:setPlayerMark(player, "zhengjing", cards)
+    local _, dat = room:askForUseActiveSkill(player, "zhengjing_active", "#zhengjing-give", true)
+    if dat then
       local to = room:getPlayerById(dat.targets[1])
       local dummy = Fk:cloneCard("dilu")
       dummy:addSubcards(dat.cards)
       to:addToPile("zhengxuan_jing", dummy, true, self.name)
     end
-    player.special_cards["zhengjing"] = {}
-    player:doNotify("ChangeSelf", json.encode {
-      id = player.id,
-      handcards = player:getCardIds("h"),
-      special_cards = player.special_cards,
-    })
     cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
-    if #cards > 0 then
+    if #cards > 0 and not player.dead then
       local dummy = Fk:cloneCard("dilu")
       dummy:addSubcards(cards)
       room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonJustMove, self.name, nil, true, player.id)
@@ -801,12 +790,12 @@ local zhengjing_active = fk.CreateActiveSkill{
   mute = true,
   min_card_num = 1,
   target_num = 1,
-  expand_pile = "zhengjing",
+  expand_pile = function() return U.getMark(Self, "zhengjing") end,
   card_filter = function(self, to_select, selected)
-    return Self:getPileNameOfId(to_select) == "zhengjing"
+    return table.contains(U.getMark(Self, "zhengjing"), to_select)
   end,
-  target_filter = function(self, to_select, selected)
-    return #selected == 0
+  target_filter = function(self, to_select, selected, cards)
+    return #selected == 0 and #cards > 0
   end,
 }
 local zhengjing_trigger = fk.CreateTriggerSkill{
@@ -821,9 +810,7 @@ local zhengjing_trigger = fk.CreateTriggerSkill{
     local room = player.room
     player:skip(Player.Judge)
     player:skip(Player.Draw)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(player:getPile("zhengxuan_jing"))
-    room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonJudge, "zhengjing", nil, true, player.id)
+    room:moveCardTo(player:getPile("zhengxuan_jing"), Card.PlayerHand, player, fk.ReasonPrey, "zhengjing", nil, true, player.id)
   end,
 }
 Fk:addSkill(zhengjing_active)
@@ -845,6 +832,7 @@ Fk:loadTranslationTable{
   ["zhengjing_active"] = "整经",
   ["#zhengjing-give"] = "整经：你可以将整理出的牌置为一名角色的“经”",
   ["zhengxuan_jing"] = "经",
+  ["#zhengjing_trigger"] = "整经",
 
   ["$zhengjing1"] = "兼采今古，博学并蓄，择善以教之。",
   ["$zhengjing2"] = "君子需通六艺，亦当识明三礼。",
@@ -1229,6 +1217,7 @@ local jinfan = fk.CreateTriggerSkill{
   name = "jinfan",
   anim_type = "drawcard",
   expand_pile = "jinfan&",
+  derived_piles = "jinfan&",
   events = {fk.EventPhaseStart, fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
@@ -1249,8 +1238,8 @@ local jinfan = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     if event == fk.EventPhaseStart then
-      local success, dat = player.room:askForUseActiveSkill(target, "jinfan_active", "#jinfan-invoke", true)
-      if success then
+      local _, dat = player.room:askForUseActiveSkill(target, "jinfan_active", "#jinfan-invoke", true)
+      if dat then
         self.cost_data = dat.cards
         return true
       end
@@ -1357,6 +1346,7 @@ Fk:loadTranslationTable{
   ["mxing__ganning"] = "星甘宁",
   ["#mxing__ganning"] = "铃震没羽",
   ["illustrator:mxing__ganning"] = "王强",
+  
   ["jinfan"] = "锦帆",
   [":jinfan"] = "弃牌阶段开始时，你可以将任意张手牌置于武将牌上，称为“铃”（每种花色限一张），你可以将“铃”如手牌般使用或打出；当“铃”离开你的武将牌时，"..
   "你从牌堆获得一张同花色的牌。",

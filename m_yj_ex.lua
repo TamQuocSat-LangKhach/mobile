@@ -681,31 +681,30 @@ local zhonghui = General(extension, "m_ex__zhonghui", "wei", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__zhonghui"] = "界钟会",
+  ["#m_ex__zhonghui"] = "桀骜的野心家",
+  ["illustrator:m_ex__zhonghui"] = "monkey",
   ["~m_ex__zhonghui"] = "父亲，吾能自知。却终不能自制……",
 }
 
 local m_ex__quanji = fk.CreateTriggerSkill{
   name = "m_ex__quanji",
   anim_type = "masochism",
+  derived_piles = "m_ex__zhonghui_power",
   events = {fk.Damaged, fk.EventPhaseEnd},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and
     (event == fk.Damaged or (player.phase == Player.Play and player:getHandcardNum() > player.hp))
   end,
   on_trigger = function(self, event, target, player, data)
-    local x = 1
-    if event == fk.Damaged then
-      x = data.damage
-    end
+    local x = (event == fk.Damaged) and data.damage or 1
     self.cancel_cost = false
     for i = 1, x do
-      if self.cancel_cost then break end
+      if self.cancel_cost or not player:hasSkill(self) then break end
       self:doCost(event, target, player, data)
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local room = player.room
-    if room:askForSkillInvoke(player, self.name, data) then
+    if player.room:askForSkillInvoke(player, self.name, data) then
       return true
     end
     self.cancel_cost = true

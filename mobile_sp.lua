@@ -877,7 +877,6 @@ local mobile__xushen_delay = fk.CreateTriggerSkill{
             local dying = dying_event.data[1]
             dying.extra_data = dying.extra_data or {}
             dying.extra_data.mobile__xushen = dat.recoverBy.id
-            room.logic:dumpEventStack()
           end
         end
       end

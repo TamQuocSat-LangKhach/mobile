@@ -17,16 +17,16 @@ local wisdom__qiai = fk.CreateActiveSkill{
     return player:usedSkillTimes(self.name) == 0 and not player:isNude()
   end,
   card_filter = function(self, to_select, selected)
-    return Fk:getCardById(to_select).type ~= Card.TypeBasic
+    return #selected == 0 and Fk:getCardById(to_select).type ~= Card.TypeBasic
   end,
-  target_filter = function(self, to_select)
-    return to_select ~= Self.id
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id
   end,
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
     local to = room:getPlayerById(effect.tos[1])
-    room:moveCardTo(Fk:getCardById(effect.cards[1]), Player.Hand, to, fk.ReasonGive, self.name, nil, true)
-
+    room:moveCardTo(Fk:getCardById(effect.cards[1]), Player.Hand, to, fk.ReasonGive, self.name, nil, true, from.id)
+    if to.dead or from.dead then return end
     local choices = {"draw2"}
     if from:isWounded() then
       table.insert(choices, 1, "recover")
@@ -98,6 +98,8 @@ wangcan:addSkill(wisdom__qiai)
 wangcan:addSkill(wisdom__shanxi)
 Fk:loadTranslationTable{
   ["mobile__wangcan"] = "王粲",
+  ["#mobile__wangcan"] = "词章纵横",
+  ["illustrator:mobile__wangcan"] = "鬼画府", -- 皮肤 笔翰如流
   ["wisdom__qiai"] = "七哀",
   [":wisdom__qiai"] = "出牌阶段限一次，你可以将一张非基本牌交给一名其他角色，然后其须选择一项：1.令你回复1点体力；2.令你摸两张牌。",
   ["wisdom__shanxi"] = "善檄",
@@ -165,9 +167,14 @@ local mobile__yuejian = fk.CreateTriggerSkill{
     return player:hasSkill(self) and target == player and #player:getCardIds("he") > 1
   end,
   on_cost = function (self, event, target, player, data)
-    return #player.room:askForDiscard(player, 2, 2, true,self.name,true,".","#mobile__yuejian-invoke") == 2
+    local cards = player.room:askForDiscard(player, 2, 2, true,self.name,true,".","#mobile__yuejian-invoke",true)
+    if #cards == 2 then
+      self.cost_data = cards
+      return true
+    end
   end,
   on_use = function(self, event, target, player, data)
+    player.room:throwCard(self.cost_data, self.name, player, player)
     player.room:recover({ who = target, num = 1, recoverBy = player, skillName = self.name })
   end,
 }
@@ -183,7 +190,8 @@ mobile__yuejian:addRelatedSkill(mobile__yuejian_maxcards)
 mobile__bianfuren:addSkill(mobile__yuejian)
 Fk:loadTranslationTable{
   ["mobile__bianfuren"] = "卞夫人",
-
+  ["#mobile__bianfuren"] = "内助贤后",
+  ["illustrator:mobile__bianfuren"] = "芝芝不加糖", -- 皮肤 慈母情深
   ["mobile__wanwei"] = "挽危",
   [":mobile__wanwei"] = "每轮限一次，当一名其他角色进入濒死状态时，或出牌阶段内你可以选择一名其他角色，你可以令其回复X+1点体力（若不足使其脱离濒死，"..
   "改为回复至1点体力），然后你失去X点体力（X为你的体力值）。",
@@ -264,6 +272,8 @@ feiyi:addSkill(jianyu)
 feiyi:addSkill("os__shengxi")
 Fk:loadTranslationTable{
   ["mobile__feiyi"] = "费祎",
+  ["#mobile__feiyi"] = "蜀汉名相",
+  ["illustrator:mobile__feiyi"] = "游漫美绘", -- 皮肤 居中调解
   ["jianyu"] = "谏喻",
   [":jianyu"] = "每轮限一次，出牌阶段，你可以选择两名角色，直到你下回合开始，当这些角色于其出牌阶段使用牌指定对方为目标后，你令目标摸一张牌。",
   ["#jianyu"] = "谏喻：指定两名角色，直到你下回合开始，这些角色互相使用牌时，目标摸一张牌",
@@ -310,6 +320,8 @@ local shameng = fk.CreateActiveSkill{
 chenzhen:addSkill(shameng)
 Fk:loadTranslationTable{
   ["chenzhen"] = "陈震",
+  ["#chenzhen"] = "歃盟使节",
+  ["illustrator:chenzhen"] = "成都劲心", -- 皮肤 千里之任
   ["shameng"] = "歃盟",
   [":shameng"] = "出牌阶段限一次，你可以弃置两张颜色相同的手牌并选择一名其他角色，该角色摸两张牌，然后你摸三张牌。",
   ["#shameng"] = "歃盟：弃置两张颜色相同的手牌，令一名其他角色摸两张牌，你摸三张牌",
@@ -373,6 +385,8 @@ local qinzheng = fk.CreateTriggerSkill{
 luotong:addSkill(qinzheng)
 Fk:loadTranslationTable{
   ["luotong"] = "骆统",
+  ["#luotong"] = "力政人臣",
+  ["illustrator:luotong"] = "鬼画府",
   ["qinzheng"] = "勤政",
   [":qinzheng"] = "锁定技，你每使用或打出：三张牌时，你随机获得一张【杀】或【闪】；五张牌时，你随机获得一张【桃】或【酒】；"..
   "八张牌时，你随机获得一张【无中生有】或【决斗】。",
@@ -649,6 +663,8 @@ miewu:addRelatedSkill(miewu_delay)
 duyu:addRelatedSkill(miewu)
 Fk:loadTranslationTable{
   ["mobile__duyu"] = "杜预",
+  ["#mobile__duyu"] = "文成武德",
+  ["illustrator:mobile__duyu"] = "鬼画府",
   ["wuku"] = "武库",
   [":wuku"] = "锁定技，当一名角色使用装备时，你获得1个“武库”标记。（“武库”数量至多为3）",
   ["mobile__sanchen"] = "三陈",
@@ -735,6 +751,7 @@ xunchen:addSkill(jianzhan)
 xunchen:addSkill(duoji)
 Fk:loadTranslationTable{
   ["nos__xunchen"] = "荀谌",
+  ["#nos__xunchen"] = "谋刃略锋",
   ["jianzhan"] = "谏战",
   [":jianzhan"] = "出牌阶段限一次，你可以令一名其他角色选择一项：1.视为其对攻击范围内你选择的另一名手牌少于其的角色使用一张【杀】；2.你摸一张牌。",
   ["duoji"] = "夺冀",
@@ -989,6 +1006,8 @@ godguojia:addSkill(limitedHuishi)
 godguojia:addRelatedSkill(zuoxing)
 Fk:loadTranslationTable{
   ["godguojia"] = "神郭嘉",
+  ["#godguojia"] = "星月奇佐",
+  ["illustrator:godguojia"] = "木美人",
   ["mobile__god_huishi"] = "慧识",
   [":mobile__god_huishi"] = "出牌阶段限一次，若你的体力上限小于10，你可以判定，若结果与本次流程中的其他判定结果均不同，且你的体力上限小于10，你可加1点"..
   "体力上限并重复此流程。最后你将本次流程中所有生效的判定牌交给一名角色，若其手牌为全场最多，你减1点体力上限。",
@@ -1078,7 +1097,6 @@ local dinghan = fk.CreateTriggerSkill{
   name = "dinghan",
   anim_type = "defensive",
   events = {fk.TargetConfirming, fk.TurnStart},
-  frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     if target ~= player or not player:hasSkill(self) then
       return false
@@ -1150,6 +1168,8 @@ godxunyu:addSkill(lingce)
 godxunyu:addSkill(dinghan)
 Fk:loadTranslationTable{
   ["godxunyu"] = "神荀彧",
+  ["#godxunyu"] = "洞心先识",
+  ["illustrator:godxunyu"] = "枭瞳",
   ["tianzuo"] = "天佐",
   [":tianzuo"] = "锁定技，游戏开始时，将8张【奇正相生】加入牌堆；【奇正相生】对你无效。",
   ["lingce"] = "灵策",

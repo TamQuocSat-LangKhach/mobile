@@ -263,6 +263,8 @@ nos__huaxin:addSkill(debao)
 nos__huaxin:addSkill(buqi)
 Fk:loadTranslationTable{
   ["nos__huaxin"] = "华歆",
+  ["#nos__huaxin"] = "清素拂浊",
+  ["illustrator:nos__huaxin"] = "凡果", -- 脂膏不润
   ["renshih"] = "仁仕",
   [":renshih"] = "出牌阶段每名角色限一次，你可以将一张手牌交给一名其他角色。",
   ["debao"] = "德报",
@@ -353,6 +355,8 @@ huaxin:addSkill(yuanqing)
 huaxin:addSkill(shuchen)
 Fk:loadTranslationTable{
   ["mobile__huaxin"] = "华歆",
+  ["#mobile__huaxin"] = "清素拂浊",
+  ["illustrator:mobile__huaxin"] = "游漫美绘",
   ["yuanqing"] = "渊清",
   [":yuanqing"] = "锁定技，出牌阶段结束时，你随机将弃牌堆中你本回合因使用而置入弃牌堆的牌中的每种类别各一张牌置入“仁”区。"..
   "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
@@ -452,6 +456,8 @@ caizhenji:addSkill(sheyi)
 caizhenji:addSkill(tianyin)
 Fk:loadTranslationTable{
   ["caizhenji"] = "蔡贞姬",
+  ["#caizhenji"] = "舍心顾复",
+  ["illustrator:caizhenji"] = "我是插画",
   ["sheyi"] = "舍裔",
   [":sheyi"] = "每轮限一次，当一名其他角色受到伤害时，若其体力值小于你，你可以交给其至少X张牌，防止此伤害（X为你的体力值）。",
   ["tianyin"] = "天音",
@@ -612,6 +618,8 @@ xiangchong:addSkill(guying)
 xiangchong:addSkill(muzhen)
 Fk:loadTranslationTable{
   ["xiangchong"] = "向宠",
+  ["#xiangchong"] = "镇军之岳",
+  ["illustrator:xiangchong"] = "凝聚永恒",
   ["guying"] = "固营",
   [":guying"] = "锁定技，每回合限一次，当你于回合外因使用、打出或弃置一次性仅失去一张牌后，当前回合角色须选择一项：1.你获得此牌（若为装备则使用之）；"..
   "2.交给你一张牌。准备阶段，你须弃置X张牌（X为本技能发动次数），然后重置此技能发动次数。",
@@ -681,6 +689,8 @@ zhangwen:addSkill(gebo)
 zhangwen:addSkill(mobile__songshu)
 Fk:loadTranslationTable{
   ["mobile__zhangwen"] = "张温",
+  ["#mobile__zhangwen"] = "抱德炀和",
+  ["illustrator:mobile__zhangwen"] = "凝聚永恒",
   ["gebo"] = "戈帛",
   [":gebo"] = "锁定技，一名角色回复体力后，你从牌堆顶将一张牌置于“仁”区中。"..
   "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
@@ -852,6 +862,7 @@ qiaogong:addSkill(luanchou)
 qiaogong:addRelatedSkill(gonghuan)
 Fk:loadTranslationTable{
   ["qiaogong"] = "桥公",
+  ["#qiaogong"] = "高风硕望",
   ["yizhu"] = "遗珠",
   [":yizhu"] = "结束阶段，你摸两张牌，然后选择两张牌作为「遗珠」并记录之，随机洗入牌堆顶前2X张牌中（X为场上存活角色数）。其他角色使用「遗珠」牌指定唯一目标后，你可以取消之，然后你将此牌从记录中移除。",
   ["luanchou"] = "鸾俦",
@@ -1023,6 +1034,8 @@ zhangzhongjing:addSkill(liaoyi)
 zhangzhongjing:addSkill(binglun)
 Fk:loadTranslationTable{
   ["zhangzhongjing"] = "张仲景",
+  ["#zhangzhongjing"] = "医理圣哲",
+  ["illustrator:zhangzhongjing"] = "鬼画府",
   ["jishi"] = "济世",
   [":jishi"] = "锁定技，你使用牌结算结束后置入弃牌堆前，若此牌没有造成伤害，则将之置入“仁”区；当“仁”牌不因溢出而离开“仁”区时，你摸一张牌。"..
   "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
@@ -1176,6 +1189,8 @@ liuzhang:addSkill(yaohu)
 liuzhang:addSkill(huaibi)
 Fk:loadTranslationTable{
   ["liuzhang"] = "刘璋",
+  ["#liuzhang"] = "半圭黯暗",
+  ["illustrator:liuzhang"] = "鬼画府",
   ["jutu"] = "据土",
   [":jutu"] = "锁定技，准备阶段，你获得所有所有的“生”，摸X+1张牌，然后将X张牌置于你的武将牌上，称为“生”（X为你〖邀虎〗选择势力的角色数）。",
   ["yaohu"] = "邀虎",
@@ -1494,6 +1509,7 @@ Fk:addSkill(godhuatuo_win)
 
 Fk:loadTranslationTable{
   ["godhuatuo"] = "神华佗",
+  ["#godhuatuo"] = "悬壶济世",
   ["wuling"] = "五灵",
   [":wuling"] = "出牌阶段限两次，你可以选择一名没有“五灵”标记的角色，按照你选择的顺序向其传授“五禽戏”。拥有“五灵”标记的角色在其准备阶段"..
   "按照传授的顺序依次切换为下一种效果：<br>"..

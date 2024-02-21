@@ -3715,7 +3715,7 @@ local yijin_active = fk.CreateActiveSkill{
     return UI.ComboBox {choices = U.getMark(Self, "@[:]yijin_owner") }
   end,
   prompt = function (self)
-    return Fk:translate(":"..self.interaction.data)
+    return self.interaction.data and Fk:translate(":"..self.interaction.data) or ""
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, cards)
@@ -3742,7 +3742,7 @@ local yijin_trigger = fk.CreateTriggerSkill{
       elseif event == fk.EventPhaseStart then
         return player.phase == Player.Play and mark == "yijin_guxiong"
       elseif event == fk.DamageInflicted then
-        return data.damageType ~= fk.NormalDamage and mark == "yijin_tongshen"
+        return data.damageType ~= fk.ThunderDamage and mark == "yijin_tongshen"
       end
     end
   end,
@@ -3791,7 +3791,7 @@ local yijin_trigger = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterTurnEnd},
   can_refresh = function(self, event, target, player, data)
-    return target == player
+    return target == player and player:getMark("@[:]yijin") ~= 0
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:setPlayerMark(player, "@[:]yijin", 0)

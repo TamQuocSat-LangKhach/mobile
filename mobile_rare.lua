@@ -2800,6 +2800,7 @@ mobile__yanxiang:addSkill(ruilian)
 
 Fk:loadTranslationTable{
   ["mobile__yanxiang"] = "阎象",
+  ["#mobile__yanxiang"] = "明尚夙达",
   ["kujian"] = "苦谏",
   [":kujian"] = "出牌阶段限一次，你可将至多两张手牌标记为“谏”并交给一名其他角色。当其他角色使用或打出“谏”牌时，你与其各摸两张牌。当其他角色非因使用或打出从手牌区失去“谏”牌后，你与其各弃置一张牌。",
   ["ruilian"] = "睿敛",

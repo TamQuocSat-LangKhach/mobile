@@ -2487,10 +2487,22 @@ local danggu = fk.CreateTriggerSkill{
       local hasMoWang = player:hasSkill("mowang", true, true)
 
       if #generals > 1 then
-        room:changeHero(player, generals[2], false, true, false, false)
+        if event == fk.GameFinished then
+          room:setPlayerProperty(player, "deputyGeneral", generals[2])
+        else
+          room:changeHero(player, generals[2], false, true, false, false)
+        end
       end
       if generals[1] ~= "" then
-        room:changeHero(player, generals[1], false, false, false, false)
+        if event == fk.GameFinished then
+          room:setPlayerProperty(player, "general", generals[1])
+        else
+          room:changeHero(player, generals[1], false, false, false, false)
+        end
+      end
+
+      if event == fk.GameFinished then
+        return false
       end
 
       local toObtain = {}

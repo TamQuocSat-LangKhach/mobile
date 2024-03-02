@@ -1622,7 +1622,7 @@ local tiansuan = fk.CreateActiveSkill{
       table.insert(choices, dat:sub(9))
     end
     local result = "tiansuan" .. table.random(choices)
-    room:doBroadcastNotify("ShowToast", Fk:translate("tiansuan_result") .. Fk:translate(result))
+    room:sendLog{type = "#TiansuanResult", from = player.id, arg = result, toast = true}
 
     local tos = room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper),
       1, 1, "#tiansuan-choose:::" .. result, self.name, false)
@@ -1676,7 +1676,7 @@ Fk:loadTranslationTable{
   ['tiansuanA'] = '中签',
   ['tiansuanB'] = '下签',
   ['tiansuanC'] = '下下签',
-  ['tiansuan_result'] = '天算的抽签结果是：',
+  ['#TiansuanResult'] = '%from 天算的抽签结果是 %arg',
   ['@tiansuan'] = '天算',
   ['#tiansuan-choose'] = '天算：抽签结果是 %arg ，请选择一名角色获得签的效果',
 

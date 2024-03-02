@@ -21,7 +21,6 @@ local function NotifyRenPile(room)
     card = GetRenPile(room),
   }
   room:setBanner("@$RenPile", table.simpleClone(room.tag["ren"]))
-  --room:doBroadcastNotify("ShowToast", Fk:translate("RenPileToast")..table.concat(table.map(GetRenPile(room), function(id) return Fk:getCardById(id):toLogString() end), "、"))
 end
 
 ---@param room Room @ 房间

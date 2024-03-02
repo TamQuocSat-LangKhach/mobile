@@ -108,6 +108,7 @@ GraphicsBox {
           GeneralCardItem {
             name: modelData
             selectable: disabledGeneral !== modelData
+            chosenInBox: selectedItem.includes(modelData)
 
             Rectangle {
               id: taunt
@@ -158,14 +159,6 @@ GraphicsBox {
               visible: false
               font.family: fontLibian.name
               font.pixelSize: 14
-            }
-
-            Image {
-              visible: selectedItem.includes(modelData)
-              source: SkinBank.CARD_DIR + "chosen"
-              anchors.horizontalCenter: parent.horizontalCenter
-              y: 90
-              scale: 1.25
             }
 
             onClicked: {

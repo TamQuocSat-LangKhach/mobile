@@ -751,7 +751,7 @@ local zhengjing = fk.CreateActiveSkill{
       local choices = table.random(all_choices, math.random(math.min(3, #all_choices), #all_choices))
       table.shuffle(choices)
       local choice = room:askForChoice(player, choices, self.name, "#zhengjing_choice")
-      room:doBroadcastNotify("ShowToast", Fk:translate(player.general)..Fk:translate("zhengjing_choice")..Fk:translate(choice))
+      room:sendLog{type = "#ZhengjingChoice", from = player.id, arg = choice, toast = true}
       table.insertIfNeed(patterns, choice)
       if choice == "bomb" then
         break
@@ -828,7 +828,7 @@ Fk:loadTranslationTable{
   ["#zhengjing"] = "整经：开始整理经典！",
   ["bomb"] = "炸弹",
   ["#zhengjing_choice"] = "整理经典！",
-  ["zhengjing_choice"] = "整理出了：",
+  ["#ZhengjingChoice"] = "%from 整理出了 %arg",
   ["zhengjing_active"] = "整经",
   ["#zhengjing-give"] = "整经：你可以将整理出的牌置为一名角色的“经”",
   ["zhengxuan_jing"] = "经",
@@ -2375,6 +2375,9 @@ local danggu = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
 
+    ---@param room Room
+    ---@param player ServerPlayer
+    ---@param generals string[]
     local doJieDang = function(room, player, generals)
       if type(generals) ~= "table" or #generals < 2 then
         return

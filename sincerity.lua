@@ -1190,57 +1190,93 @@ yanghu.subkingdom = "jin"
 local mobile__mingfa = fk.CreateTriggerSkill{
   name = "mobile__mingfa",
   anim_type = "control",
-  events = {fk.EventPhaseStart},
+  events = {fk.EventPhaseStart, fk.PindianCardsDisplayed},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Play and not player:isKongcheng() and
-      table.find(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end)
+    if not player:hasSkill(self) then return false end
+    if event == fk.EventPhaseStart then
+      return target == player and player.phase == Player.Finish and not player:isNude()
+    else
+      return (player == data.from or data.results[player.id])
+    end
   end,
   on_cost = function(self, event, target, player, data)
-    local room = player.room
-    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-      return player:canPindian(p) end), Util.IdMapper)
-    local to, card =  room:askForChooseCardAndPlayers(player, targets, 1, 1, ".|.|.|hand", "#mobile__mingfa-invoke", self.name, true)
-    if #to > 0 and card then
-      self.cost_data = {to[1], card}
+    if event == fk.EventPhaseStart then
+      local cards = player.room:askForCard(player, 1, 1, true, self.name, true, ".", "#mobile__mingfa-show")
+      if #cards > 0 then
+        self.cost_data = cards
+        return true
+      end
+    else
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local to = room:getPlayerById(self.cost_data[1])
-    player:showCards(self.cost_data[2])
-    if player.dead or to:isKongcheng() then return end
-    local pindian = player:pindian({to}, self.name, Fk:getCardById(self.cost_data[2]))
-    if player.dead then return end
-    if pindian.results[to.id].winner == player then
-      if not to.dead and not to:isNude() then
-        local id = room:askForCardChosen(player, to, "he", self.name)
-        room:obtainCard(player, id, false, fk.ReasonPrey)
-      end
-      if not player.dead then
-        player:drawCards(1, self.name)
-      end
+    if event == fk.EventPhaseStart then
+      player:showCards(self.cost_data)
+      local mark = U.getMark(player, "@$mobile__mingfa_cards")
+      table.insertIfNeed(mark, self.cost_data[1])
+      room:setPlayerMark(player, "@$mobile__mingfa_cards", mark)
     else
-      room:setPlayerMark(player, "mobile__mingfa-turn", 1)
+      if player == data.from then
+        data.fromCard.number = math.min(13, data.fromCard.number + 2)
+      elseif data.results[player.id] then
+        data.results[player.id].toCard.number = math.min(13, data.results[player.id].toCard.number + 2)
+      end
+    end
+  end,
+}
+local mobile__mingfa_delay = fk.CreateTriggerSkill{
+  name = "#mobile__mingfa_delay",
+  mute = true,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player.phase == Player.Play and #U.getMark(player, "mobile__mingfa-turn") > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local ids = table.filter(U.getMark(player, "mobile__mingfa-turn"), function(id) return table.contains(player:getCardIds("he"), id) end)
+    room:setPlayerMark(player, "mobile__mingfa-turn", 0)
+    if #ids == 0 then return end
+    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return player:canPindian(p) end), Util.IdMapper)
+    local tos, cid =  room:askForChooseCardAndPlayers(player, targets, 1, 1, tostring(Exppattern{ id = ids }), "#mobile__mingfa-choose", "mobile__mingfa", true)
+    if #tos > 0 and cid then
+      local to = room:getPlayerById(tos[1])
+      player:showCards({cid})
+      local pindian = player:pindian({to}, "mobile__mingfa", Fk:getCardById(cid))
+      if player.dead then return end
+      if pindian.results[to.id].winner == player then
+        if not to:isNude() then
+          local id = room:askForCardChosen(player, to, "he", "mobile__mingfa")
+          room:moveCardTo(id, Card.PlayerHand, player, fk.ReasonPrey, "mobile__mingfa", nil, false, player.id)
+        end
+        if not player.dead then
+          local x = pindian.fromCard.number - 1
+          local get = room:getCardsFromPileByRule(".|"..x)
+          if #get > 0 then
+            room:moveCardTo(get, Card.PlayerHand, player, fk.ReasonPrey, "mobile__mingfa")
+          end
+        end
+      else
+        room:setPlayerMark(player, "@@mobile__mingfa_fail-turn", 1)
+      end
     end
   end,
 
-  refresh_events = {fk.PindianCardsDisplayed},
+  refresh_events = {fk.TurnStart},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self) and (player == data.from or data.results[player.id])
+    return target == player and player:getMark("@$mobile__mingfa_cards") ~= 0
   end,
   on_refresh = function(self, event, target, player, data)
-    if player == data.from then
-      data.fromCard.number = math.min(13, data.fromCard.number + 2)
-    elseif data.results[player.id] then
-      data.results[player.id].toCard.number = math.min(13, data.results[player.id].toCard.number + 2)
-    end
+    player.room:setPlayerMark(player, "mobile__mingfa-turn", player:getMark("@$mobile__mingfa_cards"))
+    player.room:setPlayerMark(player, "@$mobile__mingfa_cards", 0)
   end,
 }
 local mobile__mingfa_prohibit = fk.CreateProhibitSkill{
   name = "#mobile__mingfa_prohibit",
-  is_prohibited = function(self, from, to, card)
-    return from:getMark("mobile__mingfa-turn") > 0 and from ~= to
+  is_prohibited = function(self, from, to)
+    return from:getMark("@@mobile__mingfa_fail-turn") > 0 and from ~= to
   end,
 }
 local rongbei = fk.CreateActiveSkill{
@@ -1287,16 +1323,22 @@ local rongbei = fk.CreateActiveSkill{
   end,
 }
 mobile__mingfa:addRelatedSkill(mobile__mingfa_prohibit)
+mobile__mingfa:addRelatedSkill(mobile__mingfa_delay)
 yanghu:addSkill(mobile__mingfa)
 yanghu:addSkill(rongbei)
 Fk:loadTranslationTable{
   ["mobile__yanghu"] = "羊祜",
+  ["#mobile__yanghu"] = "鹤德璋声",
+  ["illustrator:mobile__yanghu"] = "白",
   ["mobile__mingfa"] = "明伐",
-  [":mobile__mingfa"] = "你的拼点牌点数+2。出牌阶段开始时，你可以展示一张手牌并用此牌与一名角色拼点，若你赢，你获得其一张牌并摸一张牌；"..
-  "若你没赢，你本回合使用牌不能指定其他角色为目标。",
+  [":mobile__mingfa"] = "①结束阶段，你可以展示一张牌。你的下个回合的首个出牌阶段开始时，若此牌仍在你手牌或装备区，你可以用此牌与一名其他角色进行拼点，若你：赢，你获得其一张牌，并随机获得牌堆中一张点数为X的牌（X为你拼点的牌的点数-1）；没赢，本回合你不能对其他角色使用牌。②当你拼点的牌亮出后，你令此牌的点数+2。",
   ["rongbei"] = "戎备",
   [":rongbei"] = "限定技，出牌阶段，你可以选择一名装备区有空置装备栏的角色，其为每个空置的装备栏从牌堆或弃牌堆随机使用一张对应类别的装备。",
-  ["#mobile__mingfa-invoke"] = "明伐：你可以展示一张手牌并用此牌拼点，若赢则获得其一张牌并摸一张牌",
+  ["#mobile__mingfa-choose"] = "明伐：你可以用上回合展示的牌拼点",
+  ["#mobile__mingfa-show"] = "明伐：你可以展示一张牌，下回合的出牌阶段可用此牌拼点",
+  ["@@mobile__mingfa_fail-turn"] = "明伐失败",
+  ["#mobile__mingfa_delay"] = "明伐",
+  ["@$mobile__mingfa_cards"] = "明伐",
   ["#rongbei"] = "戎备：令一名角色每个空置的装备栏随机使用一张装备",
 
   ["$mobile__mingfa1"] = "明日即为交兵之时，望尔等早做准备。",
@@ -1408,6 +1450,8 @@ Fk:addSkill(godsunce_win)
 
 Fk:loadTranslationTable{
   ["godsunce"] = "神孙策",
+  ["#godsunce"] = "踞江鬼雄",
+  ["illustrator:godsunce"] = "枭瞳",
   ["yingba"] = "英霸",
   [":yingba"] = "出牌阶段限一次，你可以令一名体力上限大于1的其他角色减1点体力上限，并令其获得一枚“平定”标记，然后你减1点体力上限；"..
   "你对拥有“平定”标记的角色使用牌无距离限制。",
@@ -1433,6 +1477,8 @@ Fk:loadTranslationTable{
 local godTaishici = General(extension, "godtaishici", "god", 4)
 Fk:loadTranslationTable{
   ["godtaishici"] = "神太史慈",
+  ["#godtaishici"] = "义信天武",
+  ["illustrator:godtaishici"] = "枭瞳",
   ["~godtaishici"] = "魂归……天地……",
 
   ["$godtaishici_win_audio"] = "执此神弓，恭行天罚！",

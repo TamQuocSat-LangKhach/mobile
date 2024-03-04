@@ -3962,43 +3962,31 @@ Fk:loadTranslationTable{
   ["~peixiu"] = "既食寒石散，便不可饮冷酒啊……",
 }
 
-local yangfu = General(extension, "yangfu", "wei", 4)
+local yangfu = General(extension, "yangfu", "wei", 3)
 local jiebing = fk.CreateTriggerSkill{
   name = "jiebing",
   anim_type = "masochism",
   frequency = Skill.Compulsory,
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and (not data.from or
-      table.find(player.room:getOtherPlayers(player), function(p) return p ~= data.from and not p:isNude() end))
+    return target == player and player:hasSkill(self)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-      return not p:isNude() and (not data.from or p ~= data.from) end), function(p) return p.id end)
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#jiebing-choose", self.name, false)
-    if #to > 0 then
-      to = to[1]
-    else
-      to = table.random(targets)
-    end
-    local ids = table.random(room:getPlayerById(to):getCardIds("he"), 2)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(ids)
-    room:obtainCard(player, dummy, false, fk.ReasonPrey)
-    ids = table.filter(ids, function(id) return room:getCardOwner(id) == player and room:getCardArea(id) == Card.PlayerHand end)
-    if #ids == 0 then return end
-    player:showCards(ids)
-    if player.dead then return end
-    for _, id in ipairs(ids) do
-      if room:getCardOwner(id) == player and room:getCardArea(id) == Card.PlayerHand and
-        Fk:getCardById(id).type == Card.TypeEquip and not player:isProhibited(player, Fk:getCardById(id)) then
-        room:useCard({
-          from = player.id,
-          tos = {{player.id}},
-          card = Fk:getCardById(id),
-        })
-      end
+    local targets = table.filter(room:getOtherPlayers(player), function(p) return not p:isNude() and p ~= data.from end)
+    if #targets == 0 then return false end
+    local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#jiebing-choose", self.name, false)
+    local to = room:getPlayerById(tos[1])
+    local id = table.random(to:getCardIds("he"))
+    room:obtainCard(player, id, false, fk.ReasonPrey)
+    if not table.contains(player.player_cards[Player.Hand], id) then return end
+    player:showCards({id})
+    if Fk:getCardById(id).type == Card.TypeEquip and not player:isProhibited(player, Fk:getCardById(id)) then
+      room:useCard({
+        from = player.id,
+        tos = {{player.id}},
+        card = Fk:getCardById(id),
+      })
     end
   end,
 }
@@ -4009,7 +3997,7 @@ local hannan = fk.CreateActiveSkill{
   target_num = 1,
   prompt = "#hannan",
   can_use = function(self, player)
-    return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
+    return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
@@ -4029,7 +4017,7 @@ local hannan = fk.CreateActiveSkill{
       room:damage{
         from = from,
         to = to,
-        damage = 2,
+        damage = 1,
         skillName = self.name,
       }
     end
@@ -4042,11 +4030,11 @@ Fk:loadTranslationTable{
   ["#yangfu"] = "勇撼雄狮",
 
   ["jiebing"] = "借兵",
-  [":jiebing"] = "锁定技，当你受到伤害后，你选择除伤害来源外的一名其他角色，随机获得其两张牌并展示之，若为装备牌则你使用之。",
+  [":jiebing"] = "锁定技，当你受到伤害后，你选择除伤害来源外的一名其他角色，随机获得其一张牌并展示之，若此牌为装备牌，则你使用之。",
   ["hannan"] = "扞难",
-  [":hannan"] = "出牌阶段限一次，你可以与一名其他角色拼点，拼点赢的角色对没赢的角色造成2点伤害。",
-  ["#jiebing-choose"] = "借兵：选择一名角色，随机获得其两张牌",
-  ["#hannan"] = "扞难：你可以拼点，赢的角色对没赢的角色造成2点伤害！",
+  [":hannan"] = "出牌阶段限一次，你可以与一名其他角色拼点，拼点赢的角色对拼点没赢的角色造成1点伤害。",
+  ["#jiebing-choose"] = "借兵：选择一名角色，随机获得其一张牌",
+  ["#hannan"] = "扞难：你可以拼点，赢的角色对没赢的角色造成1点伤害！",
 
   ["$jiebing1"] = "敌寇势大，情况危急，只能多谢阁下。",
   ["$jiebing2"] = "将军借兵之恩，阜退敌后自当报还。",

@@ -316,11 +316,23 @@ local yajun = fk.CreateTriggerSkill{
     if event == fk.DrawNCards then
       return true
     else
-      local to = player.room:askForChoosePlayers(player, table.map(table.filter(player.room:getOtherPlayers(player), function(p)
-        return player:canPindian(p) end), function(p) return p.id end),
-        1, 1, "#yajun-choose", self.name, true)
-      if #to > 0 then
-        self.cost_data = to[1]
+      local ids = {}
+      player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+        for _, move in ipairs(e.data) do
+          if move.to == player.id and move.toArea == Card.PlayerHand then
+            for _, info in ipairs(move.moveInfo) do
+              if table.contains(player.player_cards[Player.Hand], info.cardId) then
+                table.insertIfNeed(ids, info.cardId)
+              end
+            end
+          end
+        end
+        return false
+      end, Player.HistoryTurn)
+      if #ids == 0 then return false end
+      local tos, id = player.room:askForChooseCardAndPlayers(player, table.map(table.filter(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end), Util.IdMapper), 1, 1, tostring(Exppattern{ id = ids }), "#yajun-use", self.name, true)
+      if #tos > 0 and id then
+        self.cost_data = {tos[1], id}
         return true
       end
     end
@@ -330,8 +342,9 @@ local yajun = fk.CreateTriggerSkill{
     if event == fk.DrawNCards then
       data.n = data.n + 1
     else
-      local to = room:getPlayerById(self.cost_data)
-      local pindian = player:pindian({to}, self.name)
+      local to = room:getPlayerById(self.cost_data[1])
+      local pindian = player:pindian({to}, self.name, self.cost_data[2])
+      if player.dead then return end
       if pindian.results[to.id].winner == player then
         local ids = {}
         if room:getCardArea(pindian.fromCard) == Card.DiscardPile then
@@ -341,18 +354,19 @@ local yajun = fk.CreateTriggerSkill{
           table.insertIfNeed(ids, pindian.results[to.id].toCard:getEffectiveId())
         end
         if #ids == 0 then return end
-        local result = room:askForGuanxing(player, ids, {0, 1}, {}, self.name, true, {"yajun_top", "DiscardPile"})
+        local result = room:askForGuanxing(player, ids, {0, 1}, {}, self.name, true, {"yajun_top", "pile_discard"})
         if #result.top == 1 then
           room:moveCards({
             ids = result.top,
             fromArea = Card.DiscardPile,
             toArea = Card.DrawPile,
-            moveReason = fk.ReasonJustMove,
+            moveReason = fk.ReasonPut,
             skillName = self.name,
           })
         end
       else
         room:addPlayerMark(player, MarkEnum.MinusMaxCardsInTurn, 1)
+        room:broadcastProperty(player, "MaxCards")
       end
     end
   end,
@@ -400,11 +414,10 @@ Fk:loadTranslationTable{
   ["mobile__cuiyan"] = "崔琰",
   ["#mobile__cuiyan"] = "伯夷之风",
   ["yajun"] = "雅俊",
-  [":yajun"] = "摸牌阶段，你多摸一张牌。出牌阶段开始时，你可以与一名角色拼点：若你赢，你可以将其中一张拼点牌置于牌堆顶；"..
-  "若你没赢，你本回合的手牌上限-1。",
+  [":yajun"] = "①摸牌阶段，你多摸一张牌；②出牌阶段开始时，你可以用一张本回合获得的牌与一名其他角色拼点，若你：赢，你可以将其中一张拼点牌置于牌堆顶；没赢，你本回合的手牌上限-1。",
   ["zundi"] = "尊嫡",
   [":zundi"] = "出牌阶段限一次，你可以弃置一张手牌并选择一名角色，然后你进行判定，若结果为：黑色，其摸三张牌；红色，其可以移动场上一张牌。",
-  ["#yajun-choose"] = "雅俊：你可以拼点，若赢，可以将一张拼点牌置于牌堆顶，若没赢，本回合手牌上限-1",
+  ["#yajun-use"] = "雅俊：你可以用一张本回合获得的牌与一名其他角色拼点",
   ["#zundi"] = "尊嫡：弃置一张手牌指定一名角色，你判定，黑色其摸三张牌，红色则其可以移动场上一张牌",
   ["yajun_top"] = "置于牌堆顶",
   ["#zundi-move"] = "尊嫡：你可以移动场上一张牌",

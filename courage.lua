@@ -172,7 +172,7 @@ local fengjie = fk.CreateTriggerSkill{
       elseif target.phase == Player.Finish then
         if player:getMark(self.name) == 0 then return end
         local to = player.room:getPlayerById(player:getMark(self.name))
-        return not to.dead and player:getHandcardNum() ~= to:getHandcardNum()
+        return not to.dead and (player:getHandcardNum() > to.hp or (player:getHandcardNum()< math.min(4, to.hp)))
       end
     end
   end,
@@ -180,16 +180,12 @@ local fengjie = fk.CreateTriggerSkill{
     local room = player.room
     if player.phase == Player.Start then
       local targets = table.map(room:getOtherPlayers(player), function(p) return p.id end)
-      local to = room:askForChoosePlayers(player, targets, 1, 1, "#fengjie-choose", self.name, false)
-      if #to > 0 then
-        to = to[1]
-      else
-        to = table.random(targets)
-      end
-      room:setPlayerMark(player, "@fengjie", room:getPlayerById(to).general)
-      room:setPlayerMark(player, self.name, to)
+      if #targets == 0 then return end
+      local tos = room:askForChoosePlayers(player, targets, 1, 1, "#fengjie-choose", self.name, false)
+      room:setPlayerMark(player, "@fengjie", room:getPlayerById(tos[1]).general)
+      room:setPlayerMark(player, self.name, tos[1])
     else
-      local x, y = room:getPlayerById(player:getMark(self.name)):getHandcardNum(), player:getHandcardNum()
+      local x, y = room:getPlayerById(player:getMark(self.name)).hp, player:getHandcardNum()
       if x < y then
         room:askForDiscard(player, y-x, y-x, false, self.name, false)
       else
@@ -199,6 +195,15 @@ local fengjie = fk.CreateTriggerSkill{
         end
       end
     end
+  end,
+
+  refresh_events = {fk.TurnStart},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and player:getMark(self.name) ~= 0
+  end,
+  on_refresh = function (self, event, target, player, data)
+    player.room:setPlayerMark(player, self.name, 0)
+    player.room:setPlayerMark(player, "@fengjie", 0)
   end,
 }
 yuanhuan:addSkill(qingjue)
@@ -211,7 +216,7 @@ Fk:loadTranslationTable{
   [":qingjue"] = "每轮限一次，一名其他角色使用牌指定一名体力值小于其的其他角色为唯一目标时，若没有角色处于濒死状态，你可以摸一张牌，与使用者拼点，"..
   "若你赢或你不是此牌合法目标，取消此牌；若你没赢且是此牌合法目标，此牌目标转移为你。",
   ["fengjie"] = "奉节",
-  [":fengjie"] = "锁定技，准备阶段，你选择一名其他角色，直到你下回合开始，每名角色结束阶段，若其存活，你将手牌摸或弃至与其相同（至多摸至四张）。",
+  [":fengjie"] = "锁定技，准备阶段，你选择一名其他角色，直到你下回合开始，每名角色结束阶段，若你选择的角色存活，你将手牌摸或弃至与该角色的体力值相同（至多摸至四张）。",
   ["#qingjue-invoke"] = "请决：%src 对 %dest 使用%arg，你可以摸一张牌与 %src 拼点，若赢则取消之，若没赢则转移给你",
   ["#fengjie-choose"] = "奉节：选择一名角色，每回合结束阶段你将手牌调整至与其相同",
   ["@fengjie"] = "奉节",

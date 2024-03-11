@@ -2605,6 +2605,7 @@ Fk:loadTranslationTable{
 }
 
 sunxiu:addSkill(m_ex__xingxue)
+sunxiu:addSkill("zhaofu")
 
 local zhuzhi = General(extension, "m_ex__zhuzhi", "wu", 4)
 

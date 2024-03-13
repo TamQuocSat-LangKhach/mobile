@@ -660,7 +660,7 @@ local qiaosi = fk.CreateActiveSkill{
 
       tmp = Fk:cloneCard("slash")
       tmp:addSubcards(to_give)
-      room:obtainCard(room:getPlayerById(tgt), tmp, false, fk.ReasonGive)
+      room:obtainCard(room:getPlayerById(tgt), tmp, false, fk.ReasonGive, from.id)
     end
   end,
 }
@@ -1174,12 +1174,10 @@ local mxing__zhiyan = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
     if self.interaction.data == "mxing__zhiyan_draw" then
-      from:drawCards(from.maxHp - #from:getCardIds(Player.Hand), self.name)
+      from:drawCards(from.maxHp - from:getHandcardNum(), self.name)
       room:setPlayerMark(from, "mxing__zhiyan_draw-phase", 1)
     else
-      local pack = Fk:cloneCard("slash")
-      pack:addSubcards(effect.cards)
-      room:moveCardTo(pack, Player.Hand, room:getPlayerById(effect.tos[1]), fk.ReasonGive, self.name)
+      room:moveCardTo(effect.cards, Player.Hand, room:getPlayerById(effect.tos[1]), fk.ReasonGive, self.name, nil, false, from.id)
       room:setPlayerMark(from, "mxing__zhiyan_give-phase", 1)
     end
   end,
@@ -1965,12 +1963,7 @@ local changshiPicai = fk.CreateActiveSkill{
     local targets = room:askForChoosePlayers(from, alivePlayerIds, 1, 1, "#changshi__picai-give", self.name, true)
     
     if #targets > 0 then
-      local to = targets[1]
-      local pack = Fk:cloneCard("slash")
-      pack:addSubcards(table.map(cardsJudged, function(card)
-        return card:getEffectiveId()
-      end))
-      room:obtainCard(to, pack, true, fk.ReasonGive)
+      room:moveCardTo(cardsJudged, Card.PlayerHand, room:getPlayerById(targets[1]), fk.ReasonGive, self.name, nil, true, from.id)
     else
       room:moveCards({
         ids = table.map(cardsJudged, function(card)
@@ -2053,16 +2046,13 @@ local changshixiaolu = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
+  target_num = 0,
+  card_num = 0,
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
     from:drawCards(2, self.name)
-
+    if from.dead or from:isKongcheng() then return end
     local choice = room:askForChoice(from, { "changshi__xiaolu_give", "changshi__xiaolu_discard" }, self.name)
     if choice == "changshi__xiaolu_discard" then
       room:askForDiscard(from, 2, 2, false, self.name, false)
@@ -2074,7 +2064,7 @@ local changshixiaolu = fk.CreateActiveSkill{
 
       local tmp = Fk:cloneCard("slash")
       tmp:addSubcards(to_give)
-      room:obtainCard(room:getPlayerById(tgt), tmp, false, fk.ReasonGive)
+      room:obtainCard(room:getPlayerById(tgt), tmp, false, fk.ReasonGive, from.id)
     end
   end,
 }
@@ -2608,7 +2598,7 @@ local kujian = fk.CreateActiveSkill{
     table.forEach(effect.cards, function(cid)
       room:setCardMark(Fk:getCardById(cid), "@@kujian", 1)
     end)
-    room:moveCardTo(effect.cards, Player.Hand, target, fk.ReasonGive, self.name, nil, false)
+    room:moveCardTo(effect.cards, Player.Hand, target, fk.ReasonGive, self.name, nil, false, effect.from)
   end,
 }
 local kujian_judge = fk.CreateTriggerSkill{

@@ -85,9 +85,7 @@ local wisdom__shanxi = fk.CreateTriggerSkill{
     else
       local cardIds = room:askForCard(target, 2, 2, true, self.name, true, nil, "#wisdom__shanxi-give::" .. player.id)
       if #cardIds == 2 then
-        local pack = Fk:cloneCard("slash")
-        pack:addSubcards(cardIds)
-        room:moveCardTo(pack, Player.Hand, player, fk.ReasonGive, self.name)
+        room:moveCardTo(cardIds, Player.Hand, player, fk.ReasonGive, self.name, nil, false, target.id)
       else
         room:loseHp(target, 1, self.name)
       end
@@ -831,16 +829,11 @@ local godHuishi = fk.CreateActiveSkill{
     local targets = room:askForChoosePlayers(from, alivePlayerIds, 1, 1, "#mobile__god_huishi-give", self.name, true)
     
     if #targets > 0 then
-      local to = targets[1]
-      local pack = Fk:cloneCard("slash")
-      pack:addSubcards(table.map(cardsJudged, function(card)
-        return card:getEffectiveId()
-      end))
-      room:obtainCard(to, pack, true, fk.ReasonGive)
-
+      local to = room:getPlayerById(targets[1])
+      room:moveCardTo(cardsJudged, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, from.id)
       if
         table.every(room.alive_players, function(p)
-          return p:getHandcardNum() <= room:getPlayerById(to):getHandcardNum()
+          return p:getHandcardNum() <= to:getHandcardNum()
         end)
       then
         room:changeMaxHp(from, -1)

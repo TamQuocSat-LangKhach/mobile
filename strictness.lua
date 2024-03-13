@@ -537,58 +537,11 @@ local duanbi = fk.CreateActiveSkill{
     if player.dead then return end
     ids = table.filter(ids, function(id) return room:getCardArea(id) == Card.DiscardPile end)
     if #ids > 0 then
-      local fakemove = {
-        toArea = Card.PlayerHand,
-        to = player.id,
-        moveInfo = table.map(ids, function(id) return {cardId = id, fromArea = Card.Void} end),
-        moveReason = fk.ReasonJustMove,
-      }
-      room:notifyMoveCards({player}, {fakemove})
-      room:setPlayerMark(player, self.name, ids)
-      room:askForUseActiveSkill(player, "duanbi_active", "#duanbi-give", true)
-      room:setPlayerMark(player, self.name, 0)
-      ids = table.filter(ids, function(id) return room:getCardArea(id) ~= Card.PlayerHand end)
-      fakemove = {
-        from = player.id,
-        toArea = Card.Void,
-        moveInfo = table.map(ids, function(id) return {cardId = id, fromArea = Card.PlayerHand} end),
-        moveReason = fk.ReasonJustMove,
-      }
-      room:notifyMoveCards({player}, {fakemove})
+      local tos = player.room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper), 1, 1, "#duanbi-give", self.name, true)
+      if #tos > 0 then
+        room:moveCardTo(table.random(ids, 3), Player.Hand, room:getPlayerById(tos[1]), fk.ReasonGive, self.name, nil, true, player.id)
+      end
     end
-  end,
-}
-local duanbi_active = fk.CreateActiveSkill{
-  name = "duanbi_active",
-  mute = true,
-  min_card_num = 1,
-  max_card_num = 3,
-  target_num = 1,
-  card_filter = function(self, to_select, selected, targets)
-    return #selected < 3 and Self:getMark("duanbi") ~= 0 and table.contains(Self:getMark("duanbi"), to_select)
-  end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return #selected == 0
-  end,
-  on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.tos[1])
-    room:doIndicate(player.id, {target.id})
-    local fakemove = {
-      from = player.id,
-      toArea = Card.Void,
-      moveInfo = table.map(effect.cards, function(id) return {cardId = id, fromArea = Card.PlayerHand} end),
-      moveReason = fk.ReasonGive,
-    }
-    room:notifyMoveCards({player}, {fakemove})
-    room:moveCards({
-      fromArea = Card.Void,
-      ids = effect.cards,
-      to = target.id,
-      toArea = Card.PlayerHand,
-      moveReason = fk.ReasonGive,
-      skillName = self.name,
-    })
   end,
 }
 local mobile__tongdu = fk.CreateTriggerSkill{
@@ -602,7 +555,7 @@ local mobile__tongdu = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local to = player.room:askForChoosePlayers(player, table.map(table.filter(player.room.alive_players, function(p)
-      return not p:isNude() end), function(p) return p.id end),
+      return not p:isNude() end), Util.IdMapper),
       1, 1, "#mobile__tongdu-choose", self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
@@ -638,21 +591,18 @@ local mobile__tongdu = fk.CreateTriggerSkill{
     end
   end,
 }
-Fk:addSkill(duanbi_active)
 liuba:addSkill(duanbi)
 liuba:addSkill(mobile__tongdu)
 Fk:loadTranslationTable{
   ["mobile__liuba"] = "刘巴",
   ["#mobile__liuba"] = "撰科行律",
   ["duanbi"] = "锻币",
-  [":duanbi"] = "限定技，出牌阶段，若所有角色的手牌数之和大于存活角色数的两倍，你可以令所有其他角色弃置X张手牌（X为其手牌数的一半，向上取整且至多为3），"..
-  "然后你将以此法弃置的三张牌交给一名角色。",
+  [":duanbi"] = "限定技，出牌阶段，若所有角色的手牌数之和大于存活角色数的两倍，你可以令所有其他角色弃置X张手牌（X为其手牌数的一半，向上取整且至多为3），然后你可以选择一名角色，随机将三张以此法弃置的牌交给其。",
   ["mobile__tongdu"] = "统度",
   [":mobile__tongdu"] = "每回合限一次，当你成为其他角色使用牌的唯一目标后，你可以令一名角色重铸一张牌，若此牌为：<font color='red'>♥</font>牌或锦囊牌，"..
   "其多摸一张牌；【无中生有】，你重置〖锻币〗。",
-  ["#duanbi"] = "锻币：令其他角色各弃置一半手牌（向上取整），然后你将其中三张牌交给一名角色！",
-  ["duanbi_active"] = "锻币",
-  ["#duanbi-give"] = "锻币：你可以将其中至多三张牌交给一名角色",
+  ["#duanbi"] = "锻币：令其他角色各弃置一半手牌（向上取整），然后可将随机三张牌交给一名角色！",
+  ["#duanbi-give"] = "锻币：你可以将随机三张弃置的牌交给一名角色",
   ["#mobile__tongdu-choose"] = "统度：你可以令一名角色重铸一张牌，根据类别获得额外效果",
   ["#mobile__tongdu-card"] = "统度：重铸一张牌，若为<font color='red'>♥</font>牌或锦囊牌则额外摸一张，若为【无中生有】则 %src 重置〖锻币〗",
 

@@ -343,7 +343,7 @@ local yajun = fk.CreateTriggerSkill{
       data.n = data.n + 1
     else
       local to = room:getPlayerById(self.cost_data[1])
-      local pindian = player:pindian({to}, self.name, self.cost_data[2])
+      local pindian = player:pindian({to}, self.name, Fk:getCardById(self.cost_data[2]))
       if player.dead then return end
       if pindian.results[to.id].winner == player then
         local ids = {}
@@ -383,8 +383,8 @@ local zundi = fk.CreateActiveSkill{
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand
   end,
-  target_filter = function(self, to_select, selected)
-    return #selected == 0
+  target_filter = function(self, to_select, selected, cards)
+    return #selected == 0 and #cards == 1
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)

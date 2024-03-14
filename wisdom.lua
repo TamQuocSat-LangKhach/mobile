@@ -912,7 +912,7 @@ local limitedHuishi = fk.CreateActiveSkill{
     end
 
     if #wakeSkills > 0 and from.maxHp >= #room.alive_players then
-      local choice = room:askForChoice(from, wakeSkills, self.name, "#mobile__limited_huishi")
+      local choice = room:askForChoice(from, wakeSkills, self.name, "#mobile__limited_huishi-choice:"..to.id)
       local toWakeSkills = type(to:getMark("@mobile__limited_huishi")) == "table" and to:getMark("@mobile__limited_huishi") or {}
       table.insertIfNeed(toWakeSkills, choice)
       room:setPlayerMark(to, "@mobile__limited_huishi", toWakeSkills)
@@ -1015,6 +1015,7 @@ Fk:loadTranslationTable{
   ["#mobile__god_huishi-give"] = "慧识：你可以将这些判定牌交给一名角色",
   ["#mobile__tianyi-choose"] = "天翊：请选择一名角色获得技能“佐幸”",
   ["@mobile__limited_huishi"] = "辉逝",
+  ["#mobile__limited_huishi-choice"] = "辉逝：选择 %src 一个觉醒技，视为满足觉醒条件",
   ["#zuoxing"] = "佐幸：你可以令神郭嘉减1点体力上限，视为使用一张普通锦囊牌",
 
   ["$mobile__god_huishi1"] = "聪以知远，明以察微。",

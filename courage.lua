@@ -108,7 +108,7 @@ wangshuang:addSkill(shanxie)
 Fk:loadTranslationTable{
   ["mobile__wangshuang"] = "王双",
   ["#mobile__wangshuang"] = "边城猛兵",
-  ["illustrator:mobile__wangshuang"] = "我是插画",
+  ["illustrator:mobile__wangshuang"] = "铁杵文化",
   ["yiyongw"] = "异勇",
   [":yiyongw"] = "当你受到其他角色使用【杀】造成的伤害后，若你的装备区里有武器牌，你可以获得此【杀】，然后将此【杀】当普【杀】对其使用（若其装备区里没有武器牌，此【杀】对其造成的伤害+1）。",
   ["shanxie"] = "擅械",
@@ -649,16 +649,26 @@ wenyang:addSkill(chuifeng)
 
 local chongjian = fk.CreateViewAsSkill{
   name = "chongjian",
-  interaction = UI.ComboBox { choices = { "slash", "analeptic" } },
+  interaction = function()
+    local names = {}
+    for name, _ in pairs(Fk.all_card_types) do
+      local card = Fk:cloneCard(name)
+      if not card.is_derived and not table.contains(Fk:currentRoom().disabled_packs, card.package.name)
+        and (card.name == "analeptic" or card.trueName == "slash")
+        and ((Fk.currentResponsePattern == nil and Self:canUse(card)) or
+        (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
+        table.insertIfNeed(names, name)
+      end
+    end
+    if #names == 0 then return end
+    return UI.ComboBox {choices = names}
+  end,
   pattern = "slash,analeptic",
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).type == Card.TypeEquip
   end,
   view_as = function(self, cards)
-    if #cards ~= 1 then
-      return
-    end
-
+    if #cards ~= 1 or not self.interaction.data then return end
     local card = Fk:cloneCard(self.interaction.data)
     card:addSubcard(cards[1])
     card.skillName = self.name
@@ -674,7 +684,7 @@ local chongjian = fk.CreateViewAsSkill{
 }
 Fk:loadTranslationTable{
   ["chongjian"] = "冲坚",
-  [":chongjian"] = "吴势力技，你可以将装备牌当【酒】或无距离限制且无视防具的【杀】使用。当你以此法使用的【杀】对一名角色造成伤害后，"..
+  [":chongjian"] = "吴势力技，你可以将装备牌当【酒】或无距离限制且无视防具的任意一种【杀】使用。当你以此法使用的【杀】对一名角色造成伤害后，"..
   "你获得其装备区里的X张牌（X为伤害值）。",
   ["#chongjian_buff"] = "冲坚",
 
@@ -687,20 +697,29 @@ chongjian:addAttachedKingdom("wu")
 local chongjianBuff = fk.CreateTriggerSkill{
   name = "#chongjian_buff",
   mute = true,
-  refresh_events = {fk.TargetSpecified, fk.Damaged, fk.CardUseFinished},
-  can_refresh = function(self, event, target, player, data)
+  events = {fk.Damage},
+  can_trigger = function (self, event, target, player, data)
+    if data.to:isAlive() and #data.to:getCardIds(Player.Equip) > 0 then
+      local parentUseData = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+      return parentUseData and (parentUseData.data[1].extra_data or {}).chongjianUser == player.id
+    end
+  end,
+  on_use = function (self, event, target, player, data)
     local room = player.room
+    local equipsNum = #data.to:getCardIds(Player.Equip)
+    local num = math.min(equipsNum, data.damage)
+    local cards = room:askForCardsChosen(player, data.to, num, num, "e", self.name)
+    local pack = Fk:cloneCard("slash")
+    pack:addSubcards(cards)
+    room:obtainCard(player, pack, true, fk.ReasonPrey)
+  end,
+
+  refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
+  can_refresh = function(self, event, target, player, data)
     if event == fk.CardUseFinished then
       return (data.extra_data or {}).chongjianNullified
-    elseif event == fk.TargetSpecified then
-      return table.contains(data.card.skillNames, chongjian.name) and room:getPlayerById(data.to):isAlive()
     else
-      if data.to:isAlive() and #data.to:getCardIds(Player.Equip) > 0 then
-        local parentUseData = room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
-        return parentUseData and (parentUseData.data[1].extra_data or {}).chongjianUser == player.id
-      end
-
-      return false
+      return table.contains(data.card.skillNames, chongjian.name) and player.room:getPlayerById(data.to):isAlive()
     end
   end,
   on_refresh = function(self, event, target, player, data)
@@ -712,22 +731,12 @@ local chongjianBuff = fk.CreateTriggerSkill{
           room:removePlayerMark(p, fk.MarkArmorNullified, num)
         end
       end
-
       data.chongjianNullified = nil
     elseif event == fk.TargetSpecified then
       room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
-
       data.extra_data = data.extra_data or {}
       data.extra_data.chongjianNullified = data.extra_data.chongjianNullified or {}
       data.extra_data.chongjianNullified[tostring(data.to)] = (data.extra_data.chongjianNullified[tostring(data.to)] or 0) + 1
-    else
-      local equipsNum = #data.to:getCardIds(Player.Equip)
-      local num = math.min(equipsNum, data.damage)
-      local cards = room:askForCardsChosen(player, data.to, num, num, "e", self.name)
-
-      local pack = Fk:cloneCard("slash")
-      pack:addSubcards(cards)
-      room:obtainCard(player, pack, true, fk.ReasonPrey)
     end
   end,
 }
@@ -735,8 +744,8 @@ chongjian:addRelatedSkill(chongjianBuff)
 
 local chongjianUnlimited = fk.CreateTargetModSkill{
   name = "#chongjian_unlimited",
-  distance_limit_func = function(self, player, skill, card)
-    return (card and table.contains(card.skillNames, chongjian.name)) and 999 or 0
+  bypass_distances = function(self, player, skill, card)
+    return card and table.contains(card.skillNames, chongjian.name)
   end,
 }
 chongjian:addRelatedSkill(chongjianUnlimited)

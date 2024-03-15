@@ -363,7 +363,7 @@ local beige = fk.CreateTriggerSkill{
     }
     room:judge(judge)
     if judge.card.suit == Card.Heart then
-      if target:isWounded() then
+      if target:isWounded() and not target.dead then
         room:recover{
           who = target,
           num = data.damage,
@@ -372,7 +372,9 @@ local beige = fk.CreateTriggerSkill{
         }
       end
     elseif judge.card.suit == Card.Diamond then
-      target:drawCards(3, self.name)
+      if not target.dead then
+        target:drawCards(3, self.name)
+      end
     elseif judge.card.suit == Card.Club then
       if data.from and not data.from.dead then
         room:askForDiscard(data.from, 2, 2, true, self.name, false)

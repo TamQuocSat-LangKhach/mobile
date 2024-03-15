@@ -415,8 +415,8 @@ local m_ex__jieyue = fk.CreateTriggerSkill{
     return player:hasSkill(self) and target == player and player.phase == Player.Finish and not player:isNude()
   end,
   on_cost = function(self, event, target, player, data)
-    local tar, card =  player.room:askForChooseCardAndPlayers(player, table.map(player.room:getOtherPlayers(player), function (p)
-      return p.id end), 1, 1, ".", "#m_ex__jieyue-choose", self.name, true)
+    local tar, card =  player.room:askForChooseCardAndPlayers(player, table.map(player.room:getOtherPlayers(player),
+    Util.IdMapper), 1, 1, ".", "#m_ex__jieyue-choose", self.name, true)
     if #tar > 0 and card then
       self.cost_data = {tar[1], card}
       return true
@@ -425,7 +425,7 @@ local m_ex__jieyue = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = room:getPlayerById(self.cost_data[1])
-    room:obtainCard(to, self.cost_data[2], false, fk.ReasonGive)
+    room:obtainCard(to, self.cost_data[2], false, fk.ReasonGive, player.id)
     if player.dead or to.dead then return false end
     local _, ret = room:askForUseActiveSkill(to, "m_ex__jieyue_select", "#m_ex__jieyue-select:" .. player.id, true)
     if ret then
@@ -472,7 +472,7 @@ local m_ex__jiushi = fk.CreateViewAsSkill{
   anim_type = "support",
   prompt = "#m_ex__jiushi-active",
   pattern = "analeptic",
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   before_use = function(self, player)
     player:turnOver()
   end,

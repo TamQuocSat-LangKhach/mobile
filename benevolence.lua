@@ -389,7 +389,7 @@ local sheyi = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local dummy = Fk:cloneCard("dilu")
     dummy:addSubcards(self.cost_data)
-    player.room:obtainCard(target, dummy, false, fk.ReasonGive)
+    player.room:obtainCard(target, dummy, false, fk.ReasonGive, player.id)
     return true
   end,
 }
@@ -456,7 +456,7 @@ caizhenji:addSkill(tianyin)
 Fk:loadTranslationTable{
   ["caizhenji"] = "蔡贞姬",
   ["#caizhenji"] = "舍心顾复",
-  ["illustrator:caizhenji"] = "我是插画",
+  ["illustrator:caizhenji"] = "M云涯",
   ["sheyi"] = "舍裔",
   [":sheyi"] = "每轮限一次，当一名其他角色受到伤害时，若其体力值小于你，你可以交给其至少X张牌，防止此伤害（X为你的体力值）。",
   ["tianyin"] = "天音",

@@ -4904,4 +4904,324 @@ Fk:loadTranslationTable{
   ["~laimin"] = "狂嚣之言，一言十过啊……",
 }
 
+local huban = General(extension, "mobile__huban", "wei", 4)
+Fk:loadTranslationTable{
+  ["mobile__huban"] = "胡班",
+  ["#mobile__huban"] = "昭义烈勇",
+  ["~mobile__huban"] = "生虽微而志不可改，位虽卑而节不可夺……",
+}
+
+local yilie = fk.CreateTriggerSkill{
+  name = "mobile__yilie",
+  frequency = Skill.Compulsory,
+  events = {fk.GameStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and table.find(player.room.alive_players, function(p) return p ~= player end)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:askForChoosePlayers(
+      player,
+      table.map(room:getOtherPlayers(player), Util.IdMapper),
+      1,
+      1,
+      "#mobile__yilie-choose",
+      self.name,
+      true
+    )[1]
+
+    local toPlayer = room:getPlayerById(to)
+    local yiliePlayers = U.getMark(toPlayer, "@@mobile__yilie")
+    table.insertIfNeed(yiliePlayers, player.id)
+    room:setPlayerMark(toPlayer, "@@mobile__yilie", yiliePlayers)
+  end,
+}
+local yilieDelay = fk.CreateTriggerSkill{
+  name = "#yilie_delay",
+  events = {fk.DamageInflicted, fk.Damage, fk.EventPhaseStart},
+  mute = true,
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.DamageInflicted then
+      return table.contains(U.getMark(target, "@@mobile__yilie"), player.id) and player:getMark("@mobile__yilie_lie") == 0
+    elseif event == fk.Damage then
+      return table.contains(U.getMark(target, "@@mobile__yilie"), player.id) and data.to ~= player and player:isWounded()
+    else
+      return target == player and player.phase == Player.Finish and player:getMark("@mobile__yilie_lie") > 0
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    player.room:notifySkillInvoked(player, "mobile__yilie", "support")
+    player:broadcastSkillInvoke("mobile__yilie")
+
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.DamageInflicted then
+      room:setPlayerMark(player, "@mobile__yilie_lie", data.damage)
+      return true
+    elseif event == fk.Damage then
+      room:recover({
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name,
+      })
+    else
+      player:drawCards(1, self.name)
+      room:loseHp(player, player:getMark("@mobile__yilie_lie"), self.name)
+      room:setPlayerMark(player, "@mobile__yilie_lie", 0)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["mobile__yilie"] = "义烈",
+  [":mobile__yilie"] = "锁定技，游戏开始时，你选择一名其他角色。当该角色受到伤害时，若你没有“烈”标记，则你获得等同于伤害值数量的“烈”标记，" ..
+  "然后防止此伤害；当该角色对其他角色造成伤害后，你回复1点体力；结束阶段开始时，若你有“烈”标记，则你摸一张牌并失去X点体力（X为你的“烈”标记数），" ..
+  "然后移去你的所有“烈”标记。",
+  ["#yilie_delay"] = "义烈",
+  ["@@mobile__yilie"] = "义烈",
+  ["@mobile__yilie_lie"] = "烈",
+  ["#mobile__yilie-choose"] = "义烈：请选择一名其他角色，你为其抵挡伤害，且其造成伤害后你回复体力",
+
+  ["$mobile__yilie1"] = "禽兽尚且知义，而况于人乎？",
+  ["$mobile__yilie2"] = "班虽无名，亦有忠义在骨！",
+  ["$mobile__yilie3"] = "身不慕生，宁比泰山之重！",
+}
+
+yilie:addRelatedSkill(yilieDelay)
+huban:addSkill(yilie)
+
+local chengui = General(extension, "mobile__chengui", "qun", 3)
+Fk:loadTranslationTable{
+  ["mobile__chengui"] = "陈珪",
+  ["#mobile__chengui"] = "弄辞巧掇",
+  ["~mobile__chengui"] = "布非忠良之士，将军宜早图之……",
+}
+
+local guimou = fk.CreateTriggerSkill{
+  name = "guimou",
+  frequency = Skill.Compulsory,
+  events = {fk.GameStart, fk.TurnEnd, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return
+      (
+        event == fk.GameStart or
+        target == player
+      ) and
+      player:hasSkill(self) and
+      (
+        event ~= fk.EventPhaseStart or
+        (player.phase == Player.Start and player:getMark("@[private]guimou") ~= 0)
+      )
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      local targets = {}
+      local minValue = 999
+      for _, p in ipairs(room:getOtherPlayers(player)) do
+        local recordVal = p.tag["guimou_record" .. player.id] or 0
+        if minValue >= recordVal then
+          if minValue > recordVal then
+            targets = {}
+            minValue = recordVal
+          end
+          
+          if not p:isKongcheng() then
+            table.insert(targets, p.id)
+          end
+        end
+      end
+
+      if #targets > 0 then
+        local to = targets[1]
+        if #targets > 1 then
+          to = room:askForChoosePlayers(player, targets, 1, 1, "#guimou-choose", self.name, true)[1]
+        end
+
+        local choices = {"guimou_option_discard"}
+        local canGive = table.filter(room.alive_players, function(p) return p.id ~= to and p ~= player end)
+        if #canGive > 0 then
+          table.insert(choices, 1, "guimou_option_give")
+        end
+        local ids, choice = U.askforChooseCardsAndChoice(
+          player,
+          room:getPlayerById(to):getCardIds("h"),
+          choices,
+          self.name,
+          "#guimou-view::" .. to,
+          {"Cancel"},
+          1,
+          1
+        )
+
+        if choice == "guimou_option_give" then
+          local toGive = room:askForChoosePlayers(
+            player,
+            table.map(canGive, Util.IdMapper),
+            1,
+            1,
+            "#guimou-give:::" .. Fk:getCardById(ids[1]):toLogString(),
+            self.name,
+            true
+          )[1]
+          room:obtainCard(room:getPlayerById(toGive), ids[1], false, fk.ReasonGive, player.id)
+        elseif choice == "guimou_option_discard" then
+          room:throwCard(ids, self.name, room:getPlayerById(to), player)
+        end
+      end
+
+      for _, p in ipairs(room.alive_players) do
+        p.tag["guimou_record" .. player.id] = nil
+      end
+      room:setPlayerMark(player, "@[private]guimou", 0)
+    else
+      local choices = { "guimou_use", "guimou_discard", "guimou_gain" }
+      local choice
+      if event == fk.GameStart then
+        choice = table.random(choices)
+      else
+        choice = room:askForChoice(player, choices, self.name)
+      end
+
+      for _, p in ipairs(room.alive_players) do
+        p.tag["guimou_record" .. player.id] = nil
+      end
+      U.setPrivateMark(player, "guimou", { choice })
+    end
+  end,
+
+  refresh_events = {fk.EventPhaseEnd, fk.AfterCardUseDeclared, fk.AfterCardsMove},
+  can_refresh = function(self, event, target, player, data)
+    if event == fk.EventPhaseEnd then
+      return target == player and player.phase == Player.Start and player:getMark("@[private]guimou") ~= 0
+    elseif event == fk.AfterCardUseDeclared then
+      return target ~= player and U.getPrivateMark(player, "guimou")[1] == "guimou_use"
+    else
+      local guimouMark = U.getPrivateMark(player, "guimou")[1]
+      if guimouMark == "guimou_discard" then
+        return table.find(data, function(info)
+          return info.moveReason == fk.ReasonDiscard and info.proposer and info.proposer ~= player.id
+        end)
+      elseif guimouMark == "guimou_gain" then
+        return table.find(data, function(info)
+          return info.toArea == Player.Hand and info.to and info.to ~= player.id
+        end)
+      end
+    end
+
+    return false
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseEnd then
+      for _, p in ipairs(room.alive_players) do
+        p.tag["guimou_record" .. player.id] = nil
+      end
+      room:setPlayerMark(player, "@[private]guimou", 0)
+    elseif event == fk.AfterCardUseDeclared then
+      target.tag["guimou_record" .. player.id] = (target.tag["guimou_record" .. player.id] or 0) + 1
+    else
+      local guimouMark = U.getPrivateMark(player, "guimou")[1]
+      if guimouMark == "guimou_discard" then
+        table.forEach(data, function(info)
+          if info.moveReason == fk.ReasonDiscard and info.proposer and info.proposer ~= player.id then
+            local to = room:getPlayerById(info.proposer)
+            to.tag["guimou_record" .. player.id] = (to.tag["guimou_record" .. player.id] or 0) + #info.moveInfo
+          end
+        end)
+      elseif guimouMark == "guimou_gain" then
+        table.forEach(data, function(info)
+          if info.toArea == Player.Hand and info.to and info.to ~= player.id then
+            local to = room:getPlayerById(info.to)
+            to.tag["guimou_record" .. player.id] = (to.tag["guimou_record" .. player.id] or 0) + #info.moveInfo
+          end
+        end)
+      end
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["guimou"] = "诡谋",
+  [":guimou"] = "锁定技，游戏开始时你随机选择一项，或回合结束时你选择一项：直到你的下个准备阶段开始时，1.记录使用牌最少的其他角色；" ..
+  "2.记录弃置牌最少的其他角色；3.记录获得牌最少的其他角色。准备阶段开始时，你选择被记录的一名角色，观看其手牌并可选择其中一张牌，" ..
+  "弃置此牌或将此牌交给另一名其他角色。",
+  ["@[private]guimou"] = "诡谋",
+  ["#guimou-choose"] = "诡谋：你选择一项，你下个准备阶段令该项值最少的角色受到惩罚",
+  ["guimou_use"] = "使用牌",
+  ["guimou_discard"] = "弃置牌",
+  ["guimou_gain"] = "获得牌",
+  ["guimou_option_give"] = "给出此牌",
+  ["guimou_option_discard"] = "弃置此牌",
+  ["#guimou-choose"] = "诡谋：选择其中一名角色查看其手牌，可选择其中一张给出或弃置",
+  ["#guimou-give"] = "诡谋：将 %arg 交给另一名其他角色",
+  ["#guimou-view"] = "当前观看的是 %dest 的手牌",
+
+  ["$guimou1"] = "不过卒合之师，岂是将军之敌乎？",
+  ["$guimou2"] = "连鸡势不俱栖，依珪计便可一一解离。",
+}
+
+chengui:addSkill(guimou)
+
+local zhouxian = fk.CreateTriggerSkill{
+  name = "zhouxian",
+  frequency = Skill.Compulsory,
+  events = {fk.TargetConfirming},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.from ~= player.id and data.card.is_damage_card
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local ids = room:getNCards(3)
+    room:moveCardTo(ids, Card.Processing, nil, fk.ReasonJustMove, self.name)
+    local types = {}
+    for _, id in ipairs(ids) do
+      table.insertIfNeed(types, Fk:getCardById(id):getTypeString())
+    end
+
+    room:moveCardTo(
+      table.filter(ids, function(id) return room:getCardArea(id) == Card.Processing end),
+      Card.DiscardPile,
+      nil,
+      fk.ReasonPutIntoDiscardPile,
+      self.name,
+      nil,
+      true,
+      player.id
+    )
+
+    local from = room:getPlayerById(data.from)
+    if from:isAlive() then
+      local toDiscard = room:askForDiscard(
+        from,
+        1,
+        1,
+        true,
+        self.name,
+        true,
+        ".|.|.|.|.|" .. table.concat(types, ","),
+        "#zhouxian-discard::" .. player.id .. ":" .. data.card:toLogString()
+      )
+
+      if #toDiscard > 0 then
+        return false
+      end
+    end
+
+    AimGroup:cancelTarget(data, player.id)
+    return true
+  end,
+}
+Fk:loadTranslationTable{
+  ["zhouxian"] = "州贤",
+  [":zhouxian"] = "锁定技，当你成为其他角色使用伤害牌的目标时，你亮出牌堆顶三张牌，然后其须弃置一张亮出牌中含有的一种类别的牌，否则取消此目标。",
+  ["#zhouxian-discard"] = "州贤：请弃置一张亮出牌中含有的一种类别的牌，否则取消 %arg 对 %dest 的目标",
+
+  ["$zhouxian1"] = "今未有苛暴之乱，汝敢言失政之语。",
+  ["$zhouxian2"] = "曹将军神武应期，如何以以身试祸。",
+}
+
+chengui:addSkill(zhouxian)
+
 return extension

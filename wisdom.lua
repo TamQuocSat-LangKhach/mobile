@@ -460,7 +460,7 @@ local zuici = fk.CreateTriggerSkill{
   anim_type = "masochism",
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name) and data.from and not data.from.dead and data.from:getMark("@dingyi") ~= 0
+    return target == player and player:hasSkill(self) and data.from and not data.from.dead and data.from:getMark("@dingyi") ~= 0
   end,
   on_cost = function(self, event, target, player, data)
     local choice = player.room:askForChoice(player, {"Cancel", "dismantlement", "ex_nihilo", "nullification"}, self.name,
@@ -545,6 +545,7 @@ sunshao:addSkill(fubi)
 Fk:loadTranslationTable{
   ["mobile__sunshao"] = "孙邵",
   ["#mobile__sunshao"] = "创基抉政",
+  ["designer:mobile__sunshao"] = "Loun老萌",
   ["illustrator:mobile__sunshao"] = "君桓文化",
   ["dingyi"] = "定仪",
   [":dingyi"] = "锁定技，游戏开始时，你选择一项对全场角色生效：1.摸牌阶段摸牌数+1；2.手牌上限+2；3.攻击范围+1；4.脱离濒死状态时回复1点体力。",

@@ -224,13 +224,13 @@ local mobile__yanjiao = fk.CreateActiveSkill{
     if #choiceList == 0 then return false end
     return UI.ComboBox { choices = choiceList, all_choices = {"log_spade", "log_heart", "log_club", "log_diamond"} }
   end,
-  max_card_num = 0,
+  card_num = 0,
   target_num = 1,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
   end,
-  card_filter = function() return false end,
-  target_filter = function(self, to_select, selected, selected_cards)
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id
   end,
   on_use = function(self, room, effect)
@@ -243,9 +243,7 @@ local mobile__yanjiao = fk.CreateActiveSkill{
     end)
     if #cards == 0 then return false end
     room:addPlayerMark(player, "@mobile__yanjiao", #cards)
-    local dummy = Fk:cloneCard'slash'
-    dummy:addSubcards(cards)
-    room:obtainCard(target.id, dummy, false, fk.ReasonGive)
+    room:moveCardTo(cards, Player.Hand, target, fk.ReasonGive, self.name, nil, false, player.id)
     if not target.dead then
       room:damage{
         from = player,
@@ -264,7 +262,7 @@ local mobile__yanjiao_delay = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and not player.dead and player:getMark("@mobile__yanjiao") > 0
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local x = player:getMark("@mobile__yanjiao")
@@ -378,10 +376,11 @@ local zundi = fk.CreateActiveSkill{
   target_num = 1,
   prompt = "#zundi",
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) == Player.Hand
+    and not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
   target_filter = function(self, to_select, selected, cards)
     return #selected == 0 and #cards == 1
@@ -621,34 +620,28 @@ local jianyi = fk.CreateTriggerSkill{
   events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
     if target ~= player and player:hasSkill(self) then
+      local ids = {}
       local events =  player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
         for _, move in ipairs(e.data) do
           if move.moveReason == fk.ReasonDiscard then
             for _, info in ipairs(move.moveInfo) do
-             return Fk:getCardById(info.cardId).sub_type == Card.SubtypeArmor and player.room:getCardArea(info.cardId) == Card.DiscardPile
+              if Fk:getCardById(info.cardId).sub_type == Card.SubtypeArmor
+              and player.room:getCardArea(info.cardId) == Card.DiscardPile then
+                table.insertIfNeed(ids, info.cardId)
+              end
             end
           end
         end
       end, Player.HistoryTurn)
-      return #events > 0
+      if #ids > 0 then
+        self.cost_data = ids
+        return true
+      end
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local ids = {}
-    room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
-      for _, move in ipairs(e.data) do
-        if move.moveReason == fk.ReasonDiscard then
-          for _, info in ipairs(move.moveInfo) do
-           if Fk:getCardById(info.cardId).sub_type == Card.SubtypeArmor and player.room:getCardArea(info.cardId) == Card.DiscardPile then
-            table.insertIfNeed(ids, info.cardId)
-           end
-          end
-        end
-      end
-    end, Player.HistoryTurn)
-    if #ids == 0 then return end
-    local get = room:askForCardChosen(player, player, {card_data = {{self.name, ids}}}, self.name)
+    local get = room:askForCardChosen(player, player, {card_data = {{self.name, self.cost_data}}}, self.name)
     room:moveCards({
       ids = {get},
       to = player.id,
@@ -750,7 +743,7 @@ local mobile__diancai = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardsMove},
   can_refresh = function(self, event, target, player, data)
-    return player:hasSkill(self.name, true) and player.phase == Player.NotActive and
+    return player:hasSkill(self, true) and player.phase == Player.NotActive and
       player.room.current and player.room.current.phase == Player.Play
   end,
   on_refresh = function(self, event, target, player, data)

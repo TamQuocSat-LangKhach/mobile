@@ -2353,7 +2353,7 @@ local danggu = fk.CreateTriggerSkill{
   events = {fk.GameStart, fk.AfterPlayerRevived},
   can_trigger = function(self, event, target, player, data)
     if event == fk.GameStart then
-      return player:hasSkill(self.name)
+      return player:hasSkill(self)
     elseif event == fk.AfterPlayerRevived then
       return
         target == player and
@@ -2476,7 +2476,7 @@ local danggu = fk.CreateTriggerSkill{
     else
       local generals = player.tag['jiedang_before_generals']
 
-      local hasDangGu = player:hasSkill(self.name, true, true)
+      local hasDangGu = player:hasSkill(self, true, true)
       local hasMoWang = player:hasSkill("mowang", true, true)
 
       if #generals > 1 then
@@ -2499,7 +2499,7 @@ local danggu = fk.CreateTriggerSkill{
       end
 
       local toObtain = {}
-      if hasDangGu and not player:hasSkill(self.name) then
+      if hasDangGu and not player:hasSkill(self) then
         table.insert(toObtain, self.name)
       end
       if hasMoWang and not player:hasSkill("mowang") then
@@ -2543,13 +2543,13 @@ local mowang = fk.CreateTriggerSkill{
     if event == fk.BeforeGameOverJudge then
       return
         target == player and
-        player:hasSkill(self.name, false, true) and
+        player:hasSkill(self, false, true) and
         player:hasSkill("danggu", true, true) and
         type(player.tag["changshi_cards"]) == "table" and
         #player.tag["changshi_cards"] > 0 and
         player.maxHp > 0
     else
-      return target == player and player:hasSkill(self.name)
+      return target == player and player:hasSkill(self)
     end
   end,
   on_use = function(self, event, target, player, data)

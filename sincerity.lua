@@ -169,7 +169,7 @@ local zifu = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardUseDeclared},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name, true) and player.phase == Player.Play and player:getMark("zifu-phase") == 0
+    return target == player and player:hasSkill(self, true) and player.phase == Player.Play and player:getMark("zifu-phase") == 0
   end,
   on_refresh = function(self, event, target, player, data)
     player.room:setPlayerMark(player, "zifu-phase", 1)
@@ -550,7 +550,7 @@ local xunyi = fk.CreateTriggerSkill{
   events = {fk.GameStart, fk.Damaged, fk.Damage, fk.Death},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self.name, true) then
+    if player:hasSkill(self, true) then
       if event == fk.GameStart then
         return true
       elseif event == fk.Damaged then

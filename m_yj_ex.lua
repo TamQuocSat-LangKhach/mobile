@@ -1187,7 +1187,7 @@ local m_ex__danshou = fk.CreateTriggerSkill{
   on_refresh = function(self, event, target, player, data)
     local room = player.room
     room:addPlayerMark(player, "m_ex__danshou_count-turn")
-    if player:hasSkill(self.name, true) and player.phase == Player.NotActive then
+    if player:hasSkill(self, true) and player.phase == Player.NotActive then
       room:setPlayerMark(player, "@m_ex__danshou_count-turn", player:getMark("m_ex__danshou_count-turn"))
     end
   end,
@@ -1291,6 +1291,7 @@ local m_ex__junxing = fk.CreateActiveSkill{
       if target.dead then return end
       room:drawCards(target, x, self.name)
     else
+      if target.dead then return end
       room:loseHp(target, 1, self.name)
     end
   end
@@ -2180,7 +2181,7 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardUseDeclared},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self.name, true) and player.phase == Player.Play
+    return target == player and player:hasSkill(self, true) and player.phase == Player.Play
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room

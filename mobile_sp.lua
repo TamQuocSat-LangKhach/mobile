@@ -3922,21 +3922,17 @@ local juezhi = fk.CreateActiveSkill{
   card_filter = function(self, to_select, selected)
     return not Self:prohibitDiscard(Fk:getCardById(to_select))
   end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return false
-  end,
+  target_num = 0,
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
     local number = 0
     for _, id in ipairs(effect.cards) do
       number = number + math.max(Fk:getCardById(id).number, 0)
     end
-
     number = number % 13
     number = number == 0 and 13 or number
-
     room:throwCard(effect.cards, self.name, from, from)
-
+    if from.dead then return end
     local randomId = room:getCardsFromPileByRule(".|" .. number)
     if #randomId > 0 then
       room:obtainCard(from, randomId[1], true, fk.ReasonPrey)

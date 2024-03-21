@@ -2825,4 +2825,139 @@ Fk:loadTranslationTable{
   ["~mobile__yanxiang"] = "若遇明主，或可青史留名……",
 }
 
+local nanhualaoxian = General(extension, "mobile__nanhualaoxian", "qun", 3)
+nanhualaoxian.hidden = true
+
+local yufeng = fk.CreateActiveSkill{
+  name = "mobile__yufeng",
+  anim_type = "control",
+  card_num = 0,
+  target_num = 0,
+  card_filter = Util.FalseFunc,
+  prompt = "#mobile__yufeng-prompt",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local n, fail = 0, false
+    for i = 1, 3 do
+      local choices = {"■■■■","■■■■","■■■■","■■■■"}
+      choices[math.random(4)] = "mobile__yufeng_good"
+      local choice = room:askForChoice(player, choices, self.name)
+      if choice == "mobile__yufeng_good" then
+        n = n + 1
+      else
+        fail = true
+        break
+      end
+    end
+    if n == 0 then return end
+    if not fail then
+      local tos = player.room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player), Util.IdMapper), 1, n,
+      "#mobile__yufeng-choose:::"..n, self.name, true)
+      for _, pid in ipairs(tos) do
+        room:setPlayerMark(room:getPlayerById(pid), "@@mobile__yufeng", 1)
+      end
+      n = n - #tos
+    end
+    if n > 0 then
+      player:drawCards(n, self.name)
+    end
+  end,
+}
+local yufeng_delay = fk.CreateTriggerSkill{
+  name = "#mobile__yufeng_delay",
+  mute = true,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return player == target and player.phase == Player.Start and player:getMark("@@mobile__yufeng") > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local judge = {
+      who = player,
+      reason = "mobile__yufeng",
+      pattern = ".|.|^nosuit",
+    }
+    room:judge(judge)
+    if judge.card.color == Card.Black then
+      player:skip(Player.Play)
+      player:skip(Player.Discard)
+    elseif judge.card.color == Card.Red then
+      player:skip(Player.Draw)
+    end
+    room:setPlayerMark(player, "@@mobile__yufeng", 0)
+  end,
+}
+yufeng:addRelatedSkill(yufeng_delay)
+nanhualaoxian:addSkill(yufeng)
+
+local peace_spell = {{"js__peace_spell", Card.Heart, 3}}
+local tianshu = fk.CreateTriggerSkill{
+  name = "mobile__tianshu",
+  anim_type = "support",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player == target and player:hasSkill(self) and player.phase == Player.Play and not player:isNude() then
+      local spell = U.prepareDeriveCards(player.room, peace_spell, "mobile__tianshu_spell")[1]
+      return table.contains({Card.Void, Card.DrawPile, Card.DiscardPile}, player.room:getCardArea(spell))
+    end
+  end,
+  on_cost = function (self, event, target, player, data)
+    local ids = table.filter(player:getCardIds("he"), function(id) return not player:prohibitDiscard(Fk:getCardById(id)) end)
+    local tos, cid = player.room:askForChooseCardAndPlayers(player, table.map(player.room.alive_players, Util.IdMapper), 1, 1, 
+    tostring(Exppattern{ id = ids }), "#mobile__tianshu-invoke", self.name, true)
+    if #tos == 1 and cid then
+      self.cost_data = {tos[1], cid}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data[1])
+    room:throwCard(self.cost_data[2], self.name, player, player)
+    local spell = U.prepareDeriveCards(room, peace_spell, "mobile__tianshu_spell")[1]
+    if not to.dead and table.contains({Card.Void, Card.DrawPile, Card.DiscardPile}, room:getCardArea(spell)) then
+      room:moveCardTo(spell, Player.Hand, to, fk.ReasonPrey, self.name)
+      local c = Fk:getCardById(spell)
+      if table.contains(to:getCardIds("h"), spell) and c.name == "js__peace_spell" and to:canUseTo(c, to) then
+        room:useCard{from = player.id, tos = {{to.id}}, card = c}
+      end
+    end
+  end,
+}
+nanhualaoxian:addSkill(tianshu)
+
+local mobile__nanhualaoxian_win = fk.CreateActiveSkill{ name = "mobile__nanhualaoxian_win_audio" }
+mobile__nanhualaoxian_win.package = extension
+Fk:addSkill(mobile__nanhualaoxian_win)
+
+Fk:loadTranslationTable{
+  ["mobile__nanhualaoxian"] = "南华老仙",
+  ["#mobile__nanhualaoxian"] = "冯虚御风",
+  ["illustrator:mobile__nanhualaoxian"] = "君桓文化",
+
+  ["mobile__yufeng"] = "御风",
+  [":mobile__yufeng"] = "出牌阶段限一次，你可以进行一次御风飞行。若失败你摸X张牌；若成功，则你可选择至多X名其他角色，其下一个准备阶段进行一次判定：若结果为黑色，其跳过接下来的出牌和弃牌阶段；若结果为红色，其跳过接下来的摸牌阶段（若选择角色数不足X，剩余的分数改为摸等量张牌）（X为御风飞行得分，至多为3）。",
+  ["#mobile__yufeng-prompt"] = "你可玩一次小游戏，成功后令他人跳过摸牌或出牌弃牌阶段",
+  ["#mobile__yufeng-choose"] = "御风：选择至多 %arg 名其他角色，其下回合跳过摸牌或出牌弃牌阶段",
+  ["@@mobile__yufeng"] = "御风",
+  ["mobile__yufeng_good"] = "选我!",
+  ["#mobile__yufeng_delay"] = "御风",
+
+  ["mobile__tianshu"] = "天书",
+  [":mobile__tianshu"] = "出牌阶段开始时，若【太平要术】不在游戏内、在牌堆或弃牌堆中，你可以弃置一张牌，令一名角色获得【太平要术】并使用之。",
+  ["#mobile__tianshu-invoke"] = "天书：你可弃置一张牌，令一名角色获得【太平要术】并使用",
+  
+  ["$mobile__yufeng1"] = "广开兮天门，纷吾乘兮玄云。",
+  ["$mobile__yufeng2"] = "高飞兮安翔，乘清气兮御阴阳。",
+  ["$mobile__tianshu1"] = "其耆欲深者，其天机浅。",
+  ["$mobile__tianshu2"] = "杀生者不死，生生者不生。",
+  ["$mobile__nanhualaoxian_win_audio"] = "纷总总兮九州，何寿夭兮在予？",
+  ["~mobile__nanhualaoxian"] = "天机求而近，执而远……",
+}
+
+
 return extension

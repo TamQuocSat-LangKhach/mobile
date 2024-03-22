@@ -153,24 +153,19 @@ local m_ex__pojun = fk.CreateTriggerSkill{
         local to = player.room:getPlayerById(data.to)
         return not to.dead and to.hp > 0 and not to:isNude()
       elseif event == fk.DamageCaused then
-        return not data.chain and #player:getCardIds(Player.Hand) >= #data.to:getCardIds(Player.Hand) and
+        return U.damageByCardEffect(player.room)
+        and #player:getCardIds(Player.Hand) >= #data.to:getCardIds(Player.Hand) and
         #player:getCardIds(Player.Equip) >= #data.to:getCardIds(Player.Equip)
       end
     end
   end,
   on_cost = function(self, event, target, player, data)
-    if event == fk.TargetSpecified then
-      if player.room:askForSkillInvoke(player, self.name, nil, "#m_ex__pojun-invoke::"..data.to) then
-        player.room:doIndicate(player.id, {data.to})
-        return true
-      end
-    elseif event == fk.DamageCaused then
-      return true
-    end
+    return event == fk.DamageCaused or player.room:askForSkillInvoke(player, self.name, nil, "#m_ex__pojun-invoke::"..data.to)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.TargetSpecified then
+      room:doIndicate(player.id, {data.to})
       local to = room:getPlayerById(data.to)
       local cards = room:askForCardsChosen(player, to, 1, to.hp, "he", self.name)
       to:addToPile(self.name, cards, false, self.name)
@@ -187,12 +182,9 @@ local m_ex__pojun_delay = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return #player:getPile("m_ex__pojun") > 0
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    local dummy = Fk:cloneCard("zixing")
-    dummy:addSubcards(player:getPile("m_ex__pojun"))
-    local room = player.room
-    room:obtainCard(player.id, dummy, false)
+    player.room:moveCardTo(player:getPile("m_ex__pojun"), Player.Hand, player, fk.ReasonPrey, "m_ex__pojun")
   end,
 }
 
@@ -202,7 +194,7 @@ m_ex__xusheng:addSkill(m_ex__pojun)
 Fk:loadTranslationTable{
   ["m_ex__pojun"] = "破军",
   ["#m_ex__pojun_delay"] = "破军",
-  [":m_ex__pojun"] = "当你使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）；若如此做，当前回合结束时，该角色获得这些牌。你使用【杀】对手牌数与装备数均不大于你的角色造成伤害时，此伤害+1。",
+  [":m_ex__pojun"] = "①当你使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）；若如此做，当前回合结束时，该角色获得这些牌。②当你使用【杀】对手牌数与装备区里的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
 
   ["#m_ex__pojun-invoke"] = "是否对%dest发动 破军",
 

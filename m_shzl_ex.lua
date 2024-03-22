@@ -5,6 +5,68 @@ Fk:loadTranslationTable{
   ["m_shzl_ex"] = "手杀-界神话再临",
 }
 
+local U = require "packages/utility/utility"
+
+local xiahoudun = General(extension, "m_ex__xiahoudun", "wei", 4)
+local qingjian = fk.CreateTriggerSkill{
+  name = "m_ex__qingjian",
+  anim_type = "support",
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and player.phase ~= Player.Draw
+     and not player:isKongcheng() then
+      for _, move in ipairs(data) do
+        if move.to == player.id and move.toArea == Player.Hand and move.skillName ~= self.name then
+          return true
+        end
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local cards = player.room:askForCard(player, 1, 9999, false, self.name, true, ".", "#m_ex__qingjian-cost")
+    if #cards > 0 then
+      self.cost_data = cards
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    player:broadcastSkillInvoke("ex__qingjian")
+    player:addToPile(self.name, self.cost_data, false, self.name)
+  end,
+}
+local qingjian_delay = fk.CreateTriggerSkill{
+  name = "#m_ex__qingjian_delay",
+  mute = true,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target.phase == Player.Finish and #player:getPile("m_ex__qingjian") > 0 and #player.room:getOtherPlayers(player) > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local move = U.askForDistribution(player, player:getPile("m_ex__qingjian"), room:getOtherPlayers(player), "m_ex__qingjian",
+    #player:getPile("m_ex__qingjian"), #player:getPile("m_ex__qingjian"), nil, "m_ex__qingjian", true)
+    local cards = U.doDistribution(room, move, player.id, "m_ex__qingjian")
+    player:broadcastSkillInvoke("ex__qingjian")
+    if #cards > 1 and not player.dead then
+      player:drawCards(1, "m_ex__qingjian")
+    end
+  end,
+}
+qingjian:addRelatedSkill(qingjian_delay)
+xiahoudun:addSkill("ex__ganglie")
+xiahoudun:addSkill(qingjian)
+Fk:loadTranslationTable{
+  ["m_ex__xiahoudun"] = "界夏侯惇",
+  ["#m_ex__xiahoudun"] = "独眼的罗刹",
+	["illustrator:m_ex__xiahoudun"] = "木美人", -- 浴血奋战
+  ["m_ex__qingjian"] = "清俭",
+  [":m_ex__qingjian"] = "①每回合限一次，当你于你的摸牌阶段外获得牌后，你可以将任意张手牌扣置于你的武将牌上；"..
+  "<br>②一名角色的结束阶段，若你的武将牌上有“清俭”牌，你将这些牌分配给其他角色，若交出的牌大于一张，你摸一张牌。",
+  ["#m_ex__qingjian-cost"] = "清俭：你可以将任意张手牌扣置于你的武将牌上",
+  ["#m_ex__qingjian_delay"] = "清俭",
+}
+
 local xunyu = General(extension, "m_ex__xunyu", "wei", 3)
 local m_ex__jieming = fk.CreateTriggerSkill{
   name = "m_ex__jieming",

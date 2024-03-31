@@ -3306,7 +3306,7 @@ local quanfeng = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 then
       if event == fk.Deathed then
-        return player:hasSkill(hongyi.name, true)
+        return player:hasSkill(hongyi.name, true) and not table.contains(player.room:getBanner('memorializedPlayers') or {}, target.id)
       else
         return player == target and player.dying and player.hp < 1
       end
@@ -3319,6 +3319,10 @@ local quanfeng = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.Deathed then
+      local zhuisiPlayers = room:getBanner('memorializedPlayers') or {}
+      table.insertIfNeed(zhuisiPlayers, target.id)
+      room:setBanner('memorializedPlayers', zhuisiPlayers)
+
       room:handleAddLoseSkills(player, "-hongyi", nil, true, false)
 
       local skills = Fk.generals[target.general]:getSkillNameList()
@@ -3367,8 +3371,9 @@ Fk:loadTranslationTable{
   [":hongyi"] = "出牌阶段限一次，你可以指定一名其他角色，然后直到你的下个回合开始时，其造成伤害时进行一次判定：若结果为红色，则受伤角色摸一张牌；"..
   "若结果为黑色则此伤害-1。",
   ["quanfeng"] = "劝封",
-  [":quanfeng"] = "限定技，当一名其他角色死亡后，你可以失去〖弘仪〗，然后获得其武将牌上的所有技能（主公技除外），你加1点体力上限并回复1点体力；"..
-  "当你处于濒死状态时，你可以加2点体力上限，回复4点体力。",
+  [":quanfeng"] = "限定技，当一名其他角色死亡后，你可以<u>追思</u>该角色，失去“弘仪”，然后获得其武将牌上的所有技能（主公技除外），"..
+  "你加1点体力上限并回复1点体力；当你处于濒死状态时，你可以加2点体力上限，回复4点体力。" ..
+  "<br/><font color='grey'>#\"<b>追思</b>\"：被追思过的角色本局游戏不能再成为追思的目标。",
   ["#hongyi-active"] = "发动弘仪，选择一名其他角色",
   ["@@hongyi"] = "弘仪",
   ["#quanfeng1-invoke"] = "劝封：可失去弘仪并获得%dest的所有技能，然后加1点体力上限和体力",
@@ -4937,6 +4942,10 @@ local yilieDelay = fk.CreateTriggerSkill{
   events = {fk.DamageInflicted, fk.Damage, fk.EventPhaseStart},
   mute = true,
   can_trigger = function(self, event, target, player, data)
+    if not player:isAlive() then
+      return false
+    end
+
     if event == fk.DamageInflicted then
       return table.contains(U.getMark(target, "@@mobile__yilie"), player.id) and player:getMark("@mobile__yilie_lie") == 0
     elseif event == fk.Damage then
@@ -5219,5 +5228,191 @@ Fk:loadTranslationTable{
 }
 
 chengui:addSkill(zhouxian)
+
+local muludawang = General(extension, "muludawang", "qun", 3)
+muludawang.shield = 1
+Fk:loadTranslationTable{
+  ["muludawang"] = "木鹿大王",
+  ["#muludawang"] = "八纳洞主",
+  ["~muludawang"] = "啊啊，诸葛亮神人降世，吾等难挡天威。",
+}
+
+local shoufa = fk.CreateTriggerSkill{
+  name = "shoufa",
+  anim_type = "offensive",
+  events = {fk.Damage, fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    if not (target == player and player:hasSkill(self)) then
+      return false
+    end
+
+    local room = player.room
+    if event == fk.Damage then
+      return U.getActualDamageEvents(room, 1, function(e) return e.data[1].from == player end)[1].data[1] == data
+    else
+      return
+        player:usedSkillTimes(self.name, Player.HistoryTurn) < 5 and
+        (
+          table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) or
+          table.find(room.alive_players, function(p) return p ~= player and p:distanceTo(player) > 1 end)
+        )
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local targets = table.filter(
+      room.alive_players,
+      function(p)
+        return
+          table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) or
+          (event == fk.Damage and player:distanceTo(p) < 3 or p:distanceTo(player) > 1)
+      end
+    )
+
+    if #targets > 0 then
+      local to = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#shoufa-choose", self.name)
+      if #to > 0 then
+        self.cost_data = to[1]
+        return true
+      end
+    end
+
+    return false
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local targetPlayer = room:getPlayerById(self.cost_data)
+    local beasts = { "shoufa_bao", "shoufa_ying", "shoufa_xiong", "shoufa_tu" }
+    local beast = type(player:getMark("@zhoulin")) == "string" and player:getMark("@zhoulin") or table.random(beasts)
+
+    if beast == beasts[1] then
+      room:damage({
+        to = targetPlayer,
+        damage = 1,
+        damageType = fk.NormalDamage,
+        skillName = self.name,
+      })
+    elseif beast == beasts[2] then
+      if targetPlayer == player then
+        if #player:getCardIds("e") > 0 then
+          room:obtainCard(player, table.random(player:getCardIds("e")), true, fk.ReasonPrey, player.id)
+        end
+      elseif not targetPlayer:isNude() then
+        room:obtainCard(player, table.random(targetPlayer:getCardIds("he")), false, fk.ReasonPrey, player.id)
+      end
+    elseif beast == beasts[3] then
+      local equips = table.filter(
+        targetPlayer:getCardIds("e"),
+        function(id) return not (player == targetPlayer and player:prohibitDiscard(Fk:getCardById(id))) end
+      )
+      if #equips > 0 then
+        room:throwCard(table.random(equips), self.name, targetPlayer, player)
+      end
+    else
+      targetPlayer:drawCards(1, self.name)
+    end
+
+    return false
+  end,
+}
+Fk:loadTranslationTable{
+  ["shoufa"] = "兽法",
+  [":shoufa"] = "当你每回合首次造成伤害后，你可以选择你距离2以内的一名角色；每回合限五次，当你受到伤害后，" ..
+  "你可以选择与你距离大于1的一名角色（若为斗地主，则以上选择角色均改为选择任一角色）。其随机执行一种效果：" ..
+  "豹，其受到1点无来源伤害；鹰，你随机获得其一张牌；熊，你随机弃置其装备区里的一张牌；兔，其摸一张牌。",
+  ["#shoufa-choose"] = "兽法：请选择一名角色令其执行野兽效果",
+  ["shoufa_bao"] = "豹",
+  ["shoufa_ying"] = "鹰",
+  ["shoufa_xiong"] = "熊",
+  ["shoufa_tu"] = "兔",
+
+  ["$shoufa1"] = "毒蛇恶蝎，奉旨而行！",
+  ["$shoufa2"] = "虎豹豺狼，皆听我令！",
+}
+
+muludawang:addSkill(shoufa)
+
+local zhoulin = fk.CreateActiveSkill{
+  name = "zhoulin",
+  anim_type = "support",
+  prompt = "#zhoulin",
+  card_num = 0,
+  target_num = 0,
+  frequency = Skill.Limited,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and player:hasSkill(shoufa)
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:changeShield(player, 2)
+
+    local choiceList = { "zhoulin_bao", "zhoulin_ying", "zhoulin_xiong", "zhoulin_tu" }
+    local choice = room:askForChoice(player, choiceList, self.name)
+    room:setPlayerMark(player, "@zhoulin", "shoufa_" .. choice:split("_")[2])
+  end,
+}
+local zhoulinRefresh = fk.CreateTriggerSkill{
+  name = "#zhoulin_refresh",
+  refresh_events = { fk.TurnStart },
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player:getMark("@zhoulin") ~= 0
+  end,
+  on_refresh = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "@zhoulin", 0)
+  end,
+}
+Fk:loadTranslationTable{
+  ["zhoulin"] = "咒鳞",
+  [":zhoulin"] = "限定技，出牌阶段，若你有“兽法”，则你可以获得2点护甲并选择一种野兽效果，令你直到你的下个回合开始，" ..
+  "“兽法”必定执行此野兽效果。",
+  ["@zhoulin"] = "咒鳞",
+  ["#zhoulin"] = "你可以选择一种野兽，令兽法直到你下回合开始前必定执行此效果",
+  ["zhoulin_bao"] = "豹：受到伤害",
+  ["zhoulin_ying"] = "鹰：被你获得牌",
+  ["zhoulin_xiong"] = "熊：被你弃装备区牌",
+  ["zhoulin_tu"] = "兔：摸牌",
+
+  ["$zhoulin1"] = "料一山野书生，安识我南中御兽之术！",
+  ["$zhoulin2"] = "本大王承天大法，岂与诸葛亮小计等同！",
+}
+
+zhoulin:addRelatedSkill(zhoulinRefresh)
+muludawang:addSkill(zhoulin)
+
+local yuxiang = fk.CreateTriggerSkill{
+  name = "yuxiang",
+  anim_type = "negative",
+  frequency = Skill.Compulsory,
+  events = { fk.DamageInflicted },
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.shield > 0 and data.damageType == fk.FireDamage
+  end,
+  on_trigger = function(self, event, target, player, data)
+    data.damage = data.damage + 1
+  end,
+}
+local yuxiangDistance = fk.CreateDistanceSkill{
+  name = "#yuxiang_distance",
+  correct_func = function(self, from, to)
+    if from:hasSkill(yuxiang) and from.shield > 0 then
+      return -1
+    elseif to:hasSkill(yuxiang) and to.shield > 0 then
+      return 1
+    end
+
+    return 0
+  end,
+}
+Fk:loadTranslationTable{
+  ["yuxiang"] = "御象",
+  [":yuxiang"] = "锁定技，若你有护甲，则你拥有以下效果：你计算与其他角色的距离-1；其他角色计算与你的距离+1；当你受到火焰伤害时，此伤害+1。",
+
+  ["$yuxiang1"] = "额啊啊，好大的火光啊！",
+}
+
+yuxiang:addRelatedSkill(yuxiangDistance)
+muludawang:addSkill(yuxiang)
 
 return extension

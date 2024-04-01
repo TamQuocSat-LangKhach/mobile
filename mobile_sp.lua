@@ -5251,7 +5251,7 @@ local shoufa = fk.CreateTriggerSkill{
       return U.getActualDamageEvents(room, 1, function(e) return e.data[1].from == player end)[1].data[1] == data
     else
       return
-        player:usedSkillTimes(self.name, Player.HistoryTurn) < 5 and
+        player:usedSkillTimes(self.name, Player.HistoryTurn) < (5 + player:getMark("shoufa_damage_triggered-turn")) and
         (
           table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) or
           table.find(room.alive_players, function(p) return p ~= player and p:distanceTo(player) > 1 end)
@@ -5281,6 +5281,10 @@ local shoufa = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    if event == fk.Damage then
+      room:setPlayerMark(player, "shoufa_damage_triggered-turn", 1)
+    end
+
     local targetPlayer = room:getPlayerById(self.cost_data)
     local beasts = { "shoufa_bao", "shoufa_ying", "shoufa_xiong", "shoufa_tu" }
     local beast = type(player:getMark("@zhoulin")) == "string" and player:getMark("@zhoulin") or table.random(beasts)

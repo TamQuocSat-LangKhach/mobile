@@ -523,6 +523,8 @@ local gaoyuan = fk.CreateTriggerSkill{
 mobile__sufei:addSkill(gaoyuan)
 Fk:loadTranslationTable{
   ["mobile__sufei"] = "苏飞",
+  ["#mobile__sufei"] = "诤友投明",
+  ["illustrator:mobile__sufei"] = "石蝉",
   ["zhengjian"] = "诤荐",
   [":zhengjian"] = "锁定技，结束阶段，你令一名角色获得“诤荐”标记，然后其于你的下个回合开始时摸X张牌并移去“诤荐”标记（X为其此期间使用或打出牌的数量且"..
   "至多为其体力上限且至多为5）。",
@@ -670,6 +672,8 @@ jiakui:addSkill(tongqu)
 jiakui:addSkill(wanlan)
 Fk:loadTranslationTable{
   ["tongqu__jiakui"] = "贾逵",
+  ["#tongqu__jiakui"] = "肃齐万里",
+  ["illustrator:tongqu__jiakui"] = "福州暗金", -- 皮肤 水到渠成
   ["tongqu"] = "通渠",
   [":tongqu"] = "游戏开始时，你获得一枚“渠”标记；准备阶段，你可以失去1点体力令一名没有“渠”标记的角色获得“渠”标记。有“渠”的角色摸牌阶段额外摸一张牌，"..
   "然后将一张牌交给另一名有“渠”的角色或弃置一张牌，若以此法给出的是装备牌则其使用之。有“渠”的角色进入濒死状态时移除其“渠”。",
@@ -1174,7 +1178,7 @@ local mobile__shuaiyan = fk.CreateTriggerSkill{
     local to = room:getPlayerById(self.cost_data)
     if not player.dead and not to:isNude() then
       local c = room:askForCard(to, 1, 1, true, self.name, false, ".", "#mobile__shuaiyan-give::"..player.id)[1]
-      room:moveCardTo(c, Player.Hand, player, fk.ReasonGive, self.name, nil, false)
+      room:moveCardTo(c, Player.Hand, player, fk.ReasonGive, self.name, nil, false, to.id)
     end
   end,
 }
@@ -1183,6 +1187,8 @@ mobile__dengzhi:addSkill(mobile__shuaiyan)
 
 Fk:loadTranslationTable{
   ["mobile__dengzhi"] = "邓芝",
+  ["#mobile__dengzhi"] = "绝境外交家",
+  ["illustrator:mobile__dengzhi"] = "齐名", -- 皮肤 出使东吴
   ["mobile__jimeng"] = "急盟",
   [":mobile__jimeng"] = "出牌阶段开始时，你可以获得一名其他角色的一张牌，然后你交给该角色X张牌（X为你的体力值）。",
   ["mobile__shuaiyan"] = "率言",
@@ -1404,6 +1410,8 @@ local zhiyi = fk.CreateTriggerSkill{
 zhangyi:addSkill(zhiyi)
 Fk:loadTranslationTable{
   ["mobile__zhangyiy"] = "张翼",
+  ["#mobile__zhangyiy"] = "亢锐怀忠",
+  ["illustrator:mobile__zhangyiy"] = "王强",
   ["zhiyi"] = "执义",
   [":zhiyi"] = "锁定技，一名角色的结束阶段，若你本回合使用或打出过基本牌，你选择一项：1.视为使用任意一张你本回合使用或打出过的基本牌；2.摸一张牌。",
 
@@ -1523,6 +1531,8 @@ gongsunkang:addSkill(juliao)
 gongsunkang:addSkill(taomie)
 Fk:loadTranslationTable{
   ["gongsunkang"] = "公孙康",
+  ["#gongsunkang"] = "沸流腾蛟",
+  ["illustrator:gongsunkang"] = "小强",
   ["juliao"] = "据辽",
   [":juliao"] = "锁定技，其他角色计算与你的距离+X（X为场上势力数-1）。",
   ["taomie"] = "讨灭",
@@ -1657,6 +1667,8 @@ Fk:addSkill(zhouqun_win)
 
 Fk:loadTranslationTable{
   ['zhouqun'] = '周群',
+  ["#zhouqun"] = "后圣",
+	["illustrator:zhouqun"] = "张帅",
   ['tiansuan'] = '天算',
   ['#tiansuan_trig'] = '天算',
   [':tiansuan'] = '每轮限一次，出牌阶段，你可以抽取一个“命运签”' ..
@@ -1778,6 +1790,8 @@ yanpu:addSkill(huantu)
 yanpu:addSkill(bihuoy)
 Fk:loadTranslationTable{
   ["yanpu"] = "阎圃",
+  ["#yanpu"] = "盱衡识势",
+  ["illustrator:yanpu"] = "鬼画府",
   ["huantu"] = "缓图",
   [":huantu"] = "每轮限一次，你攻击范围内一名其他角色摸牌阶段开始前，你可以交给其一张牌，令其跳过摸牌阶段，若如此做，本回合结束阶段你选择一项："..
   "1.令其回复1点体力并摸两张牌；2.你摸三张牌并交给其两张手牌。",
@@ -3950,6 +3964,7 @@ peixiu:addSkill(juezhi)
 Fk:loadTranslationTable{
   ["peixiu"] = "裴秀",
   ["#peixiu"] = "晋国开秘",
+  ["designer:peixiu"] = "Loun老萌",
   ["xingtu"] = "行图",
   [":xingtu"] = "锁定技，当你使用牌时，若此牌的点数为X的因数，你摸一张牌；你使用点数为X的倍数的牌无次数限制（X为你使用的上一张牌的点数）。",
   ["juezhi"] = "爵制",

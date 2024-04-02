@@ -11,6 +11,9 @@ local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
     return #selected == 0 and Self ~= Fk:currentRoom():getPlayerById(to_select)
   end,
   target_num = 1,
+  mod_target_filter = function(self, to_select, selected, user, card)
+    return user ~= to_select
+  end,
   on_effect = function(self, room, effect)
     local cardResponded = room:askForResponse(room:getPlayerById(effect.to), "raid_and_frontal_attack", "slash,jink", "#RFA-response:" .. effect.from, false, nil, effect)
 
@@ -66,6 +69,7 @@ local raidAndFrontalAttack = fk.CreateTrickCard{
   name = "&raid_and_frontal_attack",
   suit = Card.Spade,
   number = 2,
+  is_damage_card = true,
   skill = raidAndFrontalAttackSkill,
 }
 Fk:loadTranslationTable{

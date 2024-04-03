@@ -5267,20 +5267,26 @@ local shoufa = fk.CreateTriggerSkill{
     else
       return
         player:usedSkillTimes(self.name, Player.HistoryTurn) < (5 + player:getMark("shoufa_damage_triggered-turn")) and
-        (
-          table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) or
-          table.find(room.alive_players, function(p) return p ~= player and p:distanceTo(player) > 1 end)
+        table.find(
+          room.alive_players,
+          function(p)
+            local distance = table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) and 0 or 1
+            return p ~= player and p:distanceTo(player) > distance
+          end
         )
     end
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
+    local isDoudizhu = table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode)
     local targets = table.filter(
       room.alive_players,
       function(p)
-        return
-          table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) or
-          (event == fk.Damage and player:distanceTo(p) < 3 or p:distanceTo(player) > 1)
+        if event == fk.Damage then
+          return player:distanceTo(p) < (isDoudizhu and 2 or 3)
+        end
+
+        return p:distanceTo(player) > (isDoudizhu and 0 or 1)
       end
     )
 
@@ -5337,7 +5343,7 @@ local shoufa = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["shoufa"] = "兽法",
   [":shoufa"] = "当你每回合首次造成伤害后，你可以选择你距离2以内的一名角色；每回合限五次，当你受到伤害后，" ..
-  "你可以选择与你距离大于1的一名角色（若为斗地主，则以上选择角色均改为选择任一角色）。其随机执行一种效果：" ..
+  "你可以选择与你距离大于1的一名角色（若为斗地主，则上述距离改为你距离1以内和与你距离不小于1）。其随机执行一种效果：" ..
   "豹，其受到1点无来源伤害；鹰，你随机获得其一张牌；熊，你随机弃置其装备区里的一张牌；兔，其摸一张牌。",
   ["#shoufa-choose"] = "兽法：请选择一名角色令其执行野兽效果",
   ["shoufa_bao"] = "豹",
@@ -5408,7 +5414,7 @@ local yuxiang = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player.shield > 0 and data.damageType == fk.FireDamage
   end,
-  on_trigger = function(self, event, target, player, data)
+  on_use = function(self, event, target, player, data)
     data.damage = data.damage + 1
   end,
 }

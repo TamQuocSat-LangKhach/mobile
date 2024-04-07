@@ -12,6 +12,8 @@ local wuguotai = General(extension, "m_ex__wuguotai", "wu", 3, 3, General.Female
 
 Fk:loadTranslationTable{
   ["m_ex__wuguotai"] = "界吴国太",
+  ["#m_ex__wuguotai"] = "慈怀瑾瑜",
+  ["illustrator:m_ex__wuguotai"] = "李秀森",
   ["~m_ex__wuguotai"] = "诸位卿家，还请尽力辅佐仲谋啊……",
 }
 
@@ -206,6 +208,8 @@ local gaoshun = General(extension, "m_ex__gaoshun", "qun", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__gaoshun"] = "界高顺",
+  ["#m_ex__gaoshun"] = "攻无不克",
+  ["illustrator:m_ex__gaoshun"] = "蛋费鸡丁",
   ["~m_ex__gaoshun"] = "可叹主公知而不用啊！",
 }
 
@@ -375,6 +379,8 @@ local yujin = General(extension, "m_ex__yujin", "wei", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__yujin"] = "界于禁",
+  ["#m_ex__yujin"] = "讨暴坚垒",
+  ["illustrator:m_ex__yujin"] = "biou09",
   ["~m_ex__yujin"] = "如今临危处难，却负丞相三十年之赏识，唉……",
 }
 
@@ -449,6 +455,8 @@ local caozhi = General(extension, "m_ex__caozhi", "wei", 3)
 
 Fk:loadTranslationTable{
   ["m_ex__caozhi"] = "界曹植",
+  ["#m_ex__caozhi"] = "八斗之才",
+  ["illustrator:m_ex__caozhi"] = "青岛磐蒲",
   ["~m_ex__caozhi"] = "先民谁不死，知命复何忧？",
 }
 
@@ -588,6 +596,8 @@ local lingtong = General(extension, "m_ex__lingtong", "wu", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__lingtong"] = "界凌统",
+  ["#m_ex__lingtong"] = "豪情烈胆",
+  ["illustrator:m_ex__lingtong"] = "青岛磐蒲",
   ["~m_ex__lingtong"] = "先……停一下吧……",
 }
 
@@ -842,6 +852,9 @@ local m_ex__yicong = fk.CreateDistanceSkill{
 gongsunzan:addSkill(m_ex__yicong)
 Fk:loadTranslationTable{
   ["m_ex__gongsunzan"] = "公孙瓒",
+  ["#m_ex__gongsunzan"] = "白马将军",
+  ["illustrator:m_ex__gongsunzan"] = "fingerling",
+
   ["m_ex__yicong"] = "义从",
   [":m_ex__yicong"] = "锁定技，你计算与其他角色的距离-X（X为你的体力值-1）；其他角色计算与你的距离+Y（Y为你已损失的体力值-1）。",
 
@@ -854,6 +867,8 @@ local liubiao = General(extension, "m_ex__liubiao", "qun", 3)
 
 Fk:loadTranslationTable{
   ["m_ex__liubiao"] = "界刘表",
+  ["#m_ex__liubiao"] = "跨蹈汉南",
+  ["illustrator:m_ex__liubiao"] = "光域",
   ["~m_ex__liubiao"] = "垂垂老矣，已忘壮年雄心……",
 }
 
@@ -917,6 +932,8 @@ Fk:addSkill(m_ex__bulianshi_win)
 
 Fk:loadTranslationTable{
   ["m_ex__bulianshi"] = "界步练师",
+  ["#m_ex__bulianshi"] = "无冕之后",
+  ["illustrator:m_ex__bulianshi"] = "凡果",
   ["~m_ex__bulianshi"] = "今生先君逝，来世再侍君……",
   ["$m_ex__bulianshi_win_audio"] = "壮我江东，人才济济！",
 }
@@ -978,6 +995,8 @@ local liaohua = General(extension, "m_ex__liaohua", "shu", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__liaohua"] = "界廖化",
+  ["#m_ex__liaohua"] = "历尽沧桑",
+  ["illustrator:m_ex__liaohua"] = "聚一工作室",
   ["~m_ex__liaohua"] = "兴复大业，就靠你们了！",
 }
 
@@ -1048,6 +1067,8 @@ local caozhang = General(extension, "m_ex__caozhang", "wei", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__caozhang"] = "界曹彰",
+  ["#m_ex__caozhang"] = "黄须儿",
+  ["illustrator:m_ex__caozhang"] = "枭瞳",
   ["~m_ex__caozhang"] = "黄须金甲，也难敌骨肉毒心！",
 }
 
@@ -1127,6 +1148,8 @@ local zhuran = General(extension, "m_ex__zhuran", "wu", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__zhuran"] = "界朱然",
+  ["#m_ex__zhuran"] = "不动之督",
+  ["illustrator:m_ex__zhuran"] = "zoo",
   ["~m_ex__zhuran"] = "大耳贼就在眼前，快追……",
 }
 
@@ -1235,6 +1258,9 @@ local m_ex__anjian = fk.CreateTriggerSkill{
 m_ex__panzhangmazhong:addSkill(m_ex__anjian)
 Fk:loadTranslationTable{
   ["m_ex__panzhangmazhong"] = "潘璋马忠",
+  ["#m_ex__panzhangmazhong"] = "擒龙伏虎",
+  ["illustrator:m_ex__panzhangmazhong"] = "凝聚永恒",
+
   ["m_ex__duodao"] = "夺刀",
   [":m_ex__duodao"] = "当你受到伤害后，你可以获得伤害来源装备区里的武器牌。",
   ["m_ex__anjian"] = "暗箭",
@@ -1254,6 +1280,8 @@ local manchong = General(extension, "m_ex__manchong", "wei", 3)
 
 Fk:loadTranslationTable{
   ["m_ex__manchong"] = "界满宠",
+  ["#m_ex__manchong"] = "政法兵谋",
+  ["illustrator:m_ex__manchong"] = "YanBai",
   ["~m_ex__manchong"] = "宠一生为公，无愧忠俭之节。",
 }
 
@@ -1408,6 +1436,8 @@ local m_ex__zongshij = fk.CreateTriggerSkill{
 jianyong:addSkill(m_ex__zongshij)
 Fk:loadTranslationTable{
   ["m_ex__jianyong"] = "界简雍",
+  ["#m_ex__jianyong"] = "悠游风议",
+  ["illustrator:m_ex__jianyong"] = "zoo",
   
   ["m_ex__qiaoshui"] = "巧说",
   [":m_ex__qiaoshui"] = "出牌阶段限一次，你可以与一名角色拼点：若你赢，本阶段你使用下一张基本牌或普通锦囊牌可以多选择或少选择一个目标；若你没赢，本阶段你不能使用锦囊牌。",
@@ -1431,6 +1461,8 @@ local liru = General(extension, "m_ex__liru", "qun", 3)
 
 Fk:loadTranslationTable{
   ["m_ex__liru"] = "界李儒",
+  ["#m_ex__liru"] = "魔仕",
+  ["illustrator:m_ex__liru"] = "三道纹",
   ["~m_ex__liru"] = "吾等皆死于妇人之手矣！",
 }
 
@@ -1573,6 +1605,8 @@ local fuhuanghou = General(extension, "m_ex__fuhuanghou", "qun", 3, 3, General.F
 
 Fk:loadTranslationTable{
   ["m_ex__fuhuanghou"] = "界伏皇后",
+  ["#m_ex__fuhuanghou"] = "孤注一掷",
+  ["illustrator:m_ex__fuhuanghou"] = "zoo",
   ["~m_ex__fuhuanghou"] = "父亲大人，你竟如此优柔寡断……",
 }
 
@@ -1702,6 +1736,8 @@ local chenqun = General(extension, "m_ex__chenqun", "wei", 3)
 
 Fk:loadTranslationTable{
   ["m_ex__chenqun"] = "界陈群",
+  ["#m_ex__chenqun"] = "万世臣表",
+  ["illustrator:m_ex__chenqun"] = "鬼画府",
   ["~m_ex__chenqun"] = "立身纯且粹，一死复何忧……",
 }
 
@@ -1846,6 +1882,8 @@ local caozhen = General(extension, "m_ex__caozhen", "wei", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__caozhen"] = "界曹真",
+  ["#m_ex__caozhen"] = "荷国天督",
+  ["illustrator:m_ex__caozhen"] = "鬼画府",
   ["~m_ex__caozhen"] = "雍凉动乱，皆吾之过也……",
 }
 
@@ -1948,6 +1986,8 @@ local sunluban = General(extension, "m_ex__sunluban", "wu", 3, 3, General.Female
 
 Fk:loadTranslationTable{
   ["m_ex__sunluban"] = "界孙鲁班",
+  ["#m_ex__sunluban"] = "为虎作伥",
+  ["illustrator:m_ex__sunluban"] = "鬼画府",
   ["~m_ex__sunluban"] = "妹妹，姐姐是迫不得已……",
 }
 
@@ -2001,7 +2041,8 @@ local m_ex__jiaojin = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and data.from and data.from.gender == General.Male and not player:isNude()
+    return target == player and player:hasSkill(self) and data.from and not player:isNude()
+    and (data.from.gender == General.Male or data.from.gender == General.Bigender)
   end,
   on_cost = function(self, event, target, player, data)
     local cards = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".|.|.|.|.|equip", "#m_ex__jiaojin-discard", true)
@@ -2030,6 +2071,8 @@ local caifuren = General(extension, "m_ex__caifuren", "qun", 3, 3, General.Femal
 
 Fk:loadTranslationTable{
   ["m_ex__caifuren"] = "界蔡夫人",
+  ["#m_ex__caifuren"] = "襄江的蒲苇",
+  ["illustrator:m_ex__caifuren"] = "漫想族",
   ["~m_ex__caifuren"] = "琮儿！啊啊……",
 }
 
@@ -2218,6 +2261,7 @@ local wuyi = General(extension, "m_ex__wuyi", "shu", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__wuyi"] = "界吴懿",
+  ["#m_ex__wuyi"] = "建兴鞍辔",
   ["~m_ex__wuyi"] = "吾等虽不惧蜀道之险，却亦难过这渭水长安……",
 }
 
@@ -2328,6 +2372,7 @@ local zhuhuan = General(extension, "m_ex__zhuhuan", "wu", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__zhuhuan"] = "界朱桓",
+  ["#m_ex__zhuhuan"] = "中洲拒天人",
   ["~m_ex__zhuhuan"] = "为将不行前而为人下，非可生受之辱……",
 }
 
@@ -2460,6 +2505,8 @@ m_ex__yaoming:addRelatedSkill(m_ex__yaoming_trigger)
 quancong:addSkill(m_ex__yaoming)
 Fk:loadTranslationTable{
   ["m_ex__quancong"] = "界全琮",
+  ["#m_ex__quancong"] = "慕势耀族",
+
   ["m_ex__yaoming"] = "邀名",
   [":m_ex__yaoming"] = "蓄力技（2/4），出牌阶段或当你受到伤害后，你可以减1点“蓄力”值并选择一项：1.弃置手牌数不小于你的一名其他角色的一张牌；2.令手牌数不大于你的一名角色摸一张牌。若与你上次选择的选项不同，你获得1点“蓄力”值，并清除已记录的选项。每当你受到1点伤害后，你获得1点“蓄力”值。",
   ["m_ex__yaoming_throw"] = "弃置手牌数不小于你的其他角色一张牌",
@@ -2479,6 +2526,8 @@ local sunxiu = General(extension, "m_ex__sunxiu", "wu", 3)
 
 Fk:loadTranslationTable{
   ["m_ex__sunxiu"] = "界孙休",
+  ["#m_ex__sunxiu"] = "弥殇的景君",
+  ["illustrator:m_ex__sunxiu"] = "君桓文化",
   ["~m_ex__sunxiu"] = "不求外取城地，但保大吴永安……",
 }
 
@@ -2604,6 +2653,7 @@ local zhuzhi = General(extension, "m_ex__zhuzhi", "wu", 4)
 
 Fk:loadTranslationTable{
   ["m_ex__zhuzhi"] = "界朱治",
+  ["#m_ex__zhuzhi"] = "功崇信重",
   ["~m_ex__zhuzhi"] = "臣辅孙氏三代之业，今年近古稀，死而无憾。",
 }
 

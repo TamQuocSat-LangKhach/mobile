@@ -618,6 +618,7 @@ xiangchong:addSkill(muzhen)
 Fk:loadTranslationTable{
   ["xiangchong"] = "向宠",
   ["#xiangchong"] = "镇军之岳",
+  ["cv:xiangchong"] = "虞晓旭",
   ["illustrator:xiangchong"] = "凝聚永恒",
   ["guying"] = "固营",
   [":guying"] = "锁定技，每回合限一次，当你于回合外因使用、打出或弃置一次性仅失去一张牌后，当前回合角色须选择一项：1.你获得此牌（若为装备则使用之）；"..

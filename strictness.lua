@@ -800,6 +800,7 @@ lvfan:addSkill(yanji)
 Fk:loadTranslationTable{
   ["mobile__lvfan"] = "吕范",
   ["#mobile__lvfan"] = "持筹廉悍",
+  ["cv:mobile__lvfan"] = "虞晓旭",
   ["mobile__diaodu"] = "调度",
   [":mobile__diaodu"] = "准备阶段，你可以移动场上的一张装备牌，然后以此法失去牌的角色摸一张牌。",
   ["mobile__diancai"] = "典财",

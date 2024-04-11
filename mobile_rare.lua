@@ -2937,6 +2937,7 @@ Fk:addSkill(mobile__nanhualaoxian_win)
 Fk:loadTranslationTable{
   ["mobile__nanhualaoxian"] = "南华老仙",
   ["#mobile__nanhualaoxian"] = "冯虚御风",
+  ["cv:mobile__nanhualaoxian"] = "宋国庆",
   ["illustrator:mobile__nanhualaoxian"] = "君桓文化",
 
   ["mobile__yufeng"] = "御风",

@@ -299,6 +299,7 @@ wangling:addRelatedSkill(mouli)
 Fk:loadTranslationTable{
   ["mobile__wangling"] = "王凌",
   ["#mobile__wangling"] = "风节格尚",
+  ["cv:mobile__wangling"] = "宋国庆",
   ["xingqi"] = "星启",
   [":xingqi"] = "当你使用一张不为延时锦囊的牌时，若没有此牌名的“备”，则记录此牌牌名为“备”。结束阶段，你可以移除一个“备”，获得牌堆中一张同名牌。",
   ["zifu"] = "自缚",
@@ -1043,6 +1044,7 @@ wujing:addSkill(liubing)
 Fk:loadTranslationTable{
   ["mobile__wujing"] = "吴景",
   ["#mobile__wujing"] = "助吴征战",
+  ["cv:mobile__wujing"] = "虞晓旭",
   ["heji"] = "合击",
   ["#heji_delay"] = "合击",
   [":heji"] = "若一名角色使用【决斗】或红色【杀】仅指定唯一其他角色为目标，此牌结算后，你可从手牌中对相同目标使用一张无次数和距离限制的"..

@@ -2299,6 +2299,7 @@ Fk:loadTranslationTable{
   ["fuqian"] = "傅佥",
   ["#fuqian"] = "危汉绝勇",
   ["illustrator:fuqian"] = "君桓文化",
+  ["cv:fuqian"] = "杨超然",
   
   ["poxiang"] = "破降",
   [":poxiang"] = "出牌阶段限一次，你可以交给一名其他角色一张牌，然后你摸三张牌，移去所有“绝”并失去1点体力，你以此法获得的牌本回合不计入手牌上限。",
@@ -3000,6 +3001,7 @@ lifeng:addSkill(shuliang)
 Fk:loadTranslationTable{
   ["lifeng"] = "李丰",
   ["#lifeng"] = "朱提太守",
+  ["cv:lifeng"] = "秦且歌",
   ["illustrator:lifeng"] = "NOVART",
 
   ["tunchu"] = "屯储",

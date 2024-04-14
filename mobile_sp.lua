@@ -251,13 +251,13 @@ local mobile__gongsun_prohibit = fk.CreateProhibitSkill{
     local mark = U.getMark(player, "@mobile__gongsun")
     local cards = card:isVirtual() and card.subcards or {card.id}
     return table.contains(mark, card.trueName) and
-    table.find(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
+    table.every(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
   end,
   prohibit_response = function(self, player, card)
     local mark = U.getMark(player, "@mobile__gongsun")
     local cards = card:isVirtual() and card.subcards or {card.id}
     return table.contains(mark, card.trueName) and
-    table.find(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
+    table.every(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
   end,
   prohibit_discard = function(self, player, card)
     local mark = U.getMark(player, "@mobile__gongsun")
@@ -282,7 +282,7 @@ Fk:addSkill(mobile__gongsun_vs)
 Fk:loadTranslationTable{
   ["mobile__yangyi"] = "杨仪",
   ["#mobile__yangyi"] = "孤鹬",
-  ["illustrator:mobile__yangyi"] = "绘聚艺堂",
+  ["illustrator:mobile__yangyi"] = "铁杵文化", -- 皮肤 破口怒骂
 
   ["mobile__gongsun"] = "共损",
   [":mobile__gongsun"] = "出牌阶段开始时，你可以弃置两张牌并选择一名其他角色，然后你声明一种基本牌或普通锦囊牌的牌名。若如此做，直到你的下个回合开始或你死亡时，你与其均不能使用、打出或弃置此牌名的手牌。",

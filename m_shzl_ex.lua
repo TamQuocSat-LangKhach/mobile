@@ -610,18 +610,12 @@ local m_ex__yuji = General(extension, "m_ex__yuji", "qun", 3)
 local m_ex__guhuo = fk.CreateViewAsSkill{
   name = "m_ex__guhuo",
   pattern = ".",
-  interaction = function()
-    local names = {}
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if (card.type == Card.TypeBasic or card:isCommonTrick()) and not card.is_derived and
-      ((Fk.currentResponsePattern == nil and Self:canUse(card)) or
-      (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
-        table.insertIfNeed(names, card.name)
-      end
+  prompt = "#m_ex__guhuo-prompt",
+  interaction = function(self)
+    local names = U.getViewAsCardNames(Self, self.name, U.getAllCardNames("bt"))
+    if #names > 0 then
+      return UI.ComboBox { choices = names }
     end
-    if #names == 0 then return false end
-    return UI.ComboBox { choices = names }
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Card.PlayerEquip
@@ -667,8 +661,8 @@ local m_ex__guhuo = fk.CreateViewAsSkill{
           from = p.id,
           arg = choice
         }
-        player:showCards({card_id})
         if choice ~= "noquestion" then
+          player:showCards({card_id})
           if use.card.name == Fk:getCardById(card_id).name then
             room:handleAddLoseSkills(p, "chanyuan")
           else
@@ -701,30 +695,43 @@ m_ex__yuji:addSkill(m_ex__guhuo)
 local chanyuan = fk.CreateInvaliditySkill {
   name = "chanyuan",
   invalidity_func = function(self, from, skill)
+    --- FIXME:无法在此处判断“缠怨”的isEffectable，会导致自我嵌套死循环
     return from:hasSkill(self, true) and from.hp == 1
     and not (skill:isEquipmentSkill() or skill.name:endsWith("&"))
   end
 }
 local chanyuan_audio = fk.CreateTriggerSkill{
   name = "#chanyuan_audio",
-  refresh_events = {fk.HpChanged},
+  refresh_events = {fk.HpChanged, fk.EventAcquireSkill, fk.EventLoseSkill},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill("chanyuan") and not player:isFakeSkill("chanyuan") and player.hp == 1 and data.num < 0
+    if event == fk.HpChanged then
+      return target == player and player:hasShownSkill(chanyuan) and player.hp == 1 and data.num < 0
+    else
+      return target == player and data == chanyuan
+    end
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    room:notifySkillInvoked(player, "chanyuan", "negative")
-    player:broadcastSkillInvoke("chanyuan")
+    if event == fk.HpChanged then
+      room:notifySkillInvoked(player, "chanyuan", "negative")
+      player:broadcastSkillInvoke("chanyuan")
+    else
+      room:setPlayerMark(player, "@@chanyuan", event == fk.EventAcquireSkill and 1 or 0)
+    end
   end,
 }
 chanyuan:addRelatedSkill(chanyuan_audio)
 m_ex__yuji:addRelatedSkill(chanyuan)
 Fk:loadTranslationTable{
   ["m_ex__yuji"] = "界于吉",
+  ["#m_ex__yuji"] = "太平道人",
+  ["illustrator:m_ex__yuji"] = "魔鬼鱼",
   ["m_ex__guhuo"] = "蛊惑",
   [":m_ex__guhuo"] = "每回合限一次，你可以扣置一张手牌当任意一张基本牌或普通锦囊牌使用或打出。使用此牌前，令所有其他角色依次选择是否质疑，若有角色质疑则翻开此牌：若为假，则此牌作废；若为真，则该色获得〖缠怨〗。",
   ["chanyuan"] = "缠怨",
   [":chanyuan"] = "锁定技，你不能质疑〖蛊惑〗；若你的体力值为1，你的其他技能失效。",
+  ["@@chanyuan"] = "缠怨",
+  ["#m_ex__guhuo-prompt"] = "蛊惑:扣置一张手牌并声明一种基本牌或普通锦囊牌，若无人质疑，则按牌名使用或打出",
 
   ["$m_ex__guhuo1"] = "道法玄机，变幻莫测。",
   ["$m_ex__guhuo2"] = "如真似幻，扑朔迷离。",

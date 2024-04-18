@@ -1542,4 +1542,249 @@ Fk:loadTranslationTable{
   ["$godhuatuo_win_audio"] = "但愿世间人无病，何惜架上药生尘。",
 }
 
+local godlusu = General(extension, "godlusu", "god", 3)
+local godlusuWin = fk.CreateActiveSkill{ name = "godlusu_win_audio" }
+godlusuWin.package = extension
+Fk:addSkill(godlusuWin)
+
+Fk:loadTranslationTable{
+  ["godlusu"] = "神鲁肃",
+  ["#godlusu"] = "兴吴之邓禹",
+  ["~godlusu"] = "常计小利，何成大局……",
+
+  ["$godlusu_win_audio"] = "至尊高坐天中，四海皆在目下！",
+}
+
+local tamo = fk.CreateTriggerSkill{
+  name = "tamo",
+  priority = 2,
+  events = {fk.GameStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    if room:askForSkillInvoke(player, self.name, nil, "#tamo-invoke") then
+      local availablePlayerIds = table.map(table.filter(room.players, function(p) return p.rest > 0 or not p.dead end), Util.IdMapper)
+      local result = room:askForCustomDialog(
+        player, self.name,
+        "packages/mobile/qml/TaMoBox.qml",
+        {
+          availablePlayerIds,
+          table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and
+            table.filter(availablePlayerIds, function(pid)
+              local p = room:getPlayerById(pid)
+              return p.role_shown and p.role == "lord"
+            end) or
+            {},
+          "$TaMo",
+        }
+      )
+
+      if result ~= "" then
+        self.cost_data = json.decode(result)
+        return true
+      end
+    end
+
+    return false
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room.players = table.map(self.cost_data, function(playerId) return room:getPlayerById(playerId) end)
+    local player_circle = {}
+    for i = 1, #room.players do
+      room.players[i].seat = i
+      table.insert(player_circle, room.players[i].id)
+    end
+    for i = 1, #room.players - 1 do
+      room.players[i].next = room.players[i + 1]
+    end
+    room.players[#room.players].next = room.players[1]
+    room.current = room.players[1]
+    room:doBroadcastNotify("ArrangeSeats", json.encode(player_circle))
+  end,
+}
+Fk:loadTranslationTable{
+  ["tamo"] = "榻谟",
+  [":tamo"] = "游戏开始时，你可以重新分配除主公外的角色的座次（若不为身份模式，则改为所有角色）。",
+  ["#tamo-invoke"] = "榻谟：你可以重新分配场上角色的座次",
+  ["$TaMo"] = "榻谟",
+  ["click to exchange"] = "点击交换",
+
+  ["$tamo1"] = "天下分崩，乱之已极，肃竭浅智，窃为君计。",
+  ["$tamo2"] = "天下易主，已为大势，君当据此，以待其时。",
+}
+
+godlusu:addSkill(tamo)
+
+local dingzhou = fk.CreateActiveSkill{
+  name = "dingzhou",
+  anim_type = "control",
+  target_num = 1,
+  prompt = "#dingzhou",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isNude()
+  end,
+  card_filter = Util.TrueFunc,
+  target_filter = function(self, to_select, selected, selected_cards)
+    return
+      #selected == 0 and
+      to_select ~= Self.id and
+      #Fk:currentRoom():getPlayerById(to_select):getCardIds("ej") + 1 == #selected_cards
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+
+    local dummy = Fk:cloneCard("slash")
+    dummy:addSubcards(effect.cards)
+    room:obtainCard(target, dummy, false, fk.ReasonGive, effect.from)
+
+    if #target:getCardIds("ej") > 0 then
+      dummy = Fk:cloneCard("jink")
+      dummy:addSubcards(target:getCardIds("ej"))
+      room:obtainCard(player, dummy, false, fk.ReasonPrey, target.id)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["dingzhou"] = "定州",
+  [":dingzhou"] = "出牌阶段限一次，你可以选择一名其他角色并交给其X张牌（X为其场上的牌数+1），然后你获得其场上的所有牌。",
+  ["#dingzhou"] = "定州：你可以交给一名其他角色其场上牌数+1张牌，获得其场上的牌",
+
+  ["$dingzhou1"] = "今肃亲往，主公何愁不定！",
+  ["$dingzhou2"] = "肃之所至，万事皆平！",
+}
+
+godlusu:addSkill(dingzhou)
+
+local zhimeng = fk.CreateTriggerSkill{
+  name = "zhimeng",
+  events = {fk.TurnEnd},
+  can_trigger = function(self, event, target, player, data)
+    local room = player.room
+    return
+      target == player and
+      player:hasSkill(self) and
+      table.find(room.alive_players, function(p)
+        return
+          p ~= player and
+          (table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) or
+          p:getHandcardNum() <= player:getHandcardNum() + 1)
+      end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local availableTargets = table.map(
+      table.filter(room.alive_players, function(p)
+        return
+          p ~= player and
+          (table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) or
+          p:getHandcardNum() <= player:getHandcardNum() + 1)
+      end),
+      Util.IdMapper
+    )
+
+    local to = room:askForChoosePlayers(player, availableTargets, 1, 1, "#zhimeng-choose", self.name)
+    if #to > 0 then
+      self.cost_data = to[1]
+      return true
+    end
+
+    return false
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data)
+
+    local moveInfos = {}
+    local wholeCards = {}
+    if player:getHandcardNum() > 0 then
+      table.insertTable(wholeCards, player:getCardIds("h"))
+      table.insert(moveInfos, {
+        from = player.id,
+        ids = player:getCardIds("h"),
+        toArea = Card.Void,
+        moveReason = fk.ReasonExchange,
+        proposer = player.id,
+        skillName = self.name,
+      })
+    end
+    if to:getHandcardNum() > 0 then
+      table.insertTable(wholeCards, to:getCardIds("h"))
+      table.insert(moveInfos, {
+        from = to.id,
+        ids = to:getCardIds("h"),
+        toArea = Card.Void,
+        moveReason = fk.ReasonExchange,
+        proposer = player.id,
+        skillName = self.name,
+      })
+    end
+
+    if #moveInfos == 0 or #wholeCards == 0 then
+      return false
+    end
+
+    room:moveCards(table.unpack(moveInfos))
+
+    moveInfos = {}
+    local youGainNum = math.ceil(#wholeCards / 2)
+    local youGain = {}
+    for i = 1, youGainNum do
+      local idRemoved = table.remove(wholeCards, math.random(1, #wholeCards))
+      table.insert(youGain, idRemoved)
+    end
+
+    if not player.dead then
+      local to_ex_cards = table.filter(youGain, function (id)
+        return room:getCardArea(id) == Card.Void
+      end)
+      if #to_ex_cards > 0 then
+        table.insert(moveInfos, {
+          ids = to_ex_cards,
+          fromArea = Card.Void,
+          to = player.id,
+          toArea = Card.PlayerHand,
+          moveReason = fk.ReasonExchange,
+          proposer = player.id,
+          skillName = self.name,
+        })
+      end
+    end
+    if not to.dead then
+      local to_ex_cards = table.filter(wholeCards, function (id)
+        return room:getCardArea(id) == Card.Void
+      end)
+      if #to_ex_cards > 0 then
+        table.insert(moveInfos, {
+          ids = wholeCards,
+          fromArea = Card.Void,
+          to = to.id,
+          toArea = Card.PlayerHand,
+          moveReason = fk.ReasonExchange,
+          proposer = player.id,
+          skillName = self.name,
+        })
+      end
+    end
+
+    if #moveInfos > 0 then
+      room:moveCards(table.unpack(moveInfos))
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["zhimeng"] = "智盟",
+  [":zhimeng"] = "回合结束时，你可以与一名其他角色随机平均分配手牌（若不为身份模式，则改为手牌数不大于你手牌数+1的其他角色），" ..
+  "若总牌数为奇数，则你分配较多张数。",
+  ["#zhimeng-choose"] = "智盟：你可以选择其中一名角色与其随机平分手牌",
+
+  ["$zhimeng1"] = "豫州何图远窜，而不投吾雄略之主乎？",
+  ["$zhimeng2"] = "吾主英明神武，曹众虽百万亦无所惧！",
+}
+
+godlusu:addSkill(zhimeng)
+
 return extension

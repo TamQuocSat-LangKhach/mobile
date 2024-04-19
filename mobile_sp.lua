@@ -4966,6 +4966,7 @@ local yilieDelay = fk.CreateTriggerSkill{
     if event == fk.DamageInflicted then
       return table.contains(U.getMark(target, "@@mobile__yilie"), player.id) and player:getMark("@mobile__yilie_lie") == 0
     elseif event == fk.Damage then
+      if not target then return end
       return table.contains(U.getMark(target, "@@mobile__yilie"), player.id) and data.to ~= player and player:isWounded()
     else
       return target == player and player.phase == Player.Finish and player:getMark("@mobile__yilie_lie") > 0

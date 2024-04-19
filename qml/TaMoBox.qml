@@ -15,112 +15,97 @@ GraphicsBox {
 
   title.text: Backend.translate(titleName)
   // TODO: Adjust the UI design in case there are more than 7 cards
-  width: photoRow.width + 70
+  width: photoRow.width + 10
   height: 300
 
-  Flickable {
-    anchors.fill: parent
-    contentWidth: photoRow.width
-    ScrollBar.horizontal: ScrollBar {}
-    clip: true
+  Row {
+    id: photoRow
+    anchors.top: parent.top
+    anchors.topMargin: 30
+    spacing: -45
 
-    flickableDirection: Flickable.HorizontalFlick
+    Repeater {
+      id: photoRepeater
+      model: ListModel {
+        id: playerInfos
+      }
 
-    RowLayout {
-      id: photoRow
-      anchors.top: parent.top
-      anchors.topMargin: 30
-      spacing: 0
+      Photo {
+        id: photo
+        // scale: 0.65
+        scale: selectedItem.some(data => data.id === model.id) ? 0.75 : 0.65
+        playerid: model.id
+        general: model.general
+        deputyGeneral: model.deputyGeneral
+        role: model.role
+        state: "candidate"
+        screenName: model.screenName
+        kingdom: model.kingdom
+        seatNumber: model.seat
+        selectable: !model.disabled
 
-      Repeater {
-        id: photoRepeater
-        model: ListModel {
-          id: playerInfos
+        Behavior on scale { NumberAnimation { duration: 100 } }
+        Behavior on x { NumberAnimation { duration: 280 } }
+
+        Image {
+          visible: selectedItem.some(data => data.id === model.id)
+          source: SkinBank.CARD_DIR + "chosen"
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.bottom: parent.bottom
+          anchors.bottomMargin: 15
+          scale: 1.5
         }
 
-        Item {
-          width: 105
+        Image {
+          visible: model.disabled
+          source: AppPath + "/image/button/skill/locked.png"
+          anchors.horizontalCenter: parent.horizontalCenter
+          anchors.top: parent.top
+          anchors.topMargin: -50
+        }
 
-          Photo {
-            id: photo
-            scale: 0.55
-            playerid: model.id
-            general: model.general
-            deputyGeneral: model.deputyGeneral
-            role: model.role
-            state: "candidate"
-            screenName: model.screenName
-            kingdom: model.kingdom
-            seatNumber: model.seat
-            selectable: !model.disabled
+        GlowText {
+          anchors.centerIn: parent
+          text: luatr("click to exchange")
+          visible: selectedItem.length && !model.disabled && selectedItem[0] !== model
+          font.family: fontLibian.name
+          font.pixelSize: 30
+          font.bold: true
+          color: "#FEF7D6"
+          glow.color: "#845422"
+          glow.spread: 0.8
+        }
 
-            Image {
-              visible: selectedItem.some(data => data.id === model.id)
-              source: SkinBank.CARD_DIR + "chosen"
-              anchors.horizontalCenter: parent.horizontalCenter
-              anchors.bottom: parent.bottom
-              anchors.bottomMargin: 15
-              scale: 1.5
-            }
+        onSelectedChanged: {
+          if (selectedItem.length) {
+            if (selectedItem[0].id !== model.id) {
+              let chosenPhoto;
 
-            Image {
-              visible: model.disabled
-              source: AppPath + "/image/button/skill/locked.png"
-              anchors.horizontalCenter: parent.horizontalCenter
-              anchors.top: parent.top
-              anchors.topMargin: -50
-            }
-
-            GlowText {
-              anchors.centerIn: parent
-              text: luatr("click to exchange")
-              visible: selectedItem.length && !model.disabled && selectedItem[0] !== model
-              font.family: fontLibian.name
-              font.pixelSize: 30
-              font.bold: true
-              color: "#FEF7D6"
-              glow.color: "#845422"
-              glow.spread: 0.8
-            }
-
-            onSelectedChanged: {
-              if (selectedItem.length) {
-                if (selectedItem[0].id !== model.id) {
-                  const modelData = Object.assign({}, model);
-                  const chosenData = Object.assign({}, selectedItem[0]);;
-                  let idFound;
-
-                  for (let i = 0; i < playerInfos.count; i++) {
-                    const photo = playerInfos.get(i);
-                    if (photo.id === idFound) {
-                      continue;
-                    }
-
-                    if (photo.id === modelData.id) {
-                      idFound = modelData.id;
-                      chosenData.seat = i + 1;
-
-                      playerInfos.set(i, chosenData);
-                    } else if (photo.id === chosenData.id) {
-                      idFound = chosenData.id;
-                      modelData.seat = i + 1;
-
-                      playerInfos.set(i, modelData);
-                    }
-                  }
+              for (let i = 0; i < playerInfos.count; i++) {
+                const photo = photoRepeater.itemAt(i);
+                if (photo.playerid === selectedItem[0].id) {
+                  chosenPhoto = photo;
+                  break;
                 }
-
-                selectedItem = [];
-              } else {
-                selectedItem = [model];
+                continue;
               }
+              const cx = chosenPhoto.x;
+              const cseat = selectedItem[0].seat;
+              selectedItem[0].seat = model.seat;
+              chosenPhoto.x = this.x;
+              this.x = cx;
+              model.seat = cseat;
             }
 
-            Component.onCompleted: {
-              this.visibleChildren[12].visible = false;
-              model.disabled && (this.children[9].opacity = 1);
-            }
+            selectedItem = [];
+          } else {
+            selectedItem = [model];
           }
+        }
+
+        Component.onCompleted: {
+          this.visibleChildren[12].visible = false;
+          model.disabled && (this.children[9].opacity = 1);
         }
       }
     }
@@ -147,7 +132,8 @@ GraphicsBox {
           roomScene.state = "notactive";
           const playerIds = [];
           for (let i = 0; i < playerInfos.count; i++) {
-            playerIds.push(playerInfos.get(i).id)
+            const data = playerInfos.get(i);
+            playerIds[data.seat - 1] = data.id;
           }
           const reply = JSON.stringify(playerIds);
           ClientInstance.replyToServer("", reply);

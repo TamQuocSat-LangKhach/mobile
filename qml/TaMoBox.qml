@@ -45,7 +45,7 @@ GraphicsBox {
         selectable: !model.disabled
 
         Behavior on scale { NumberAnimation { duration: 100 } }
-        Behavior on x { NumberAnimation { duration: 280 } }
+        //Behavior on x { NumberAnimation { duration: 280 } }
 
         Image {
           visible: selectedItem.some(data => data.id === model.id)

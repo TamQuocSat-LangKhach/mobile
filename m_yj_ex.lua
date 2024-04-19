@@ -1689,14 +1689,14 @@ local m_ex__qiuyuan = fk.CreateTriggerSkill{
     if target == player and player:hasSkill(self) and data.card.trueName == "slash" then
       local tos = AimGroup:getAllTargets(data.tos)
       return table.find(player.room:getOtherPlayers(player), function(p)
-        return p.id ~= data.from and not table.contains(tos, p.id) and not target:isProhibited(player, data.card) end)
+        return p.id ~= data.from and not table.contains(tos, p.id) and not target:isProhibited(p, data.card) end)
     end
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local tos = AimGroup:getAllTargets(data.tos)
     local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-      return p.id ~= data.from and not table.contains(tos, p.id) and not target:isProhibited(player, data.card) end), function (p)
+      return p.id ~= data.from and not table.contains(tos, p.id) and not target:isProhibited(p, data.card) end), function (p)
         return p.id end)
     local to = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__qiuyuan-choose", self.name, true)
     if #to > 0 then
@@ -1713,7 +1713,7 @@ local m_ex__qiuyuan = fk.CreateTriggerSkill{
     end)
     local card = room:askForCard(to, 1, 1, false, self.name, true, tostring(Exppattern{ id = ids }), "#m_ex__qiuyuan-give::"..player.id)
     if #card > 0 then
-      room:obtainCard(player, Fk:getCardById(card[1]), true, fk.ReasonGive)
+      room:moveCardTo(card, Player.Hand, player, fk.ReasonGive, self.name, nil, true, to.id)
     else
       AimGroup:addTargets(room, data, to.id)
       AimGroup:setTargetDone(data.tos, to.id)

@@ -1566,17 +1566,25 @@ local tamo = fk.CreateTriggerSkill{
     local room = player.room
     if room:askForSkillInvoke(player, self.name, nil, "#tamo-invoke") then
       local availablePlayerIds = table.map(table.filter(room.players, function(p) return p.rest > 0 or not p.dead end), Util.IdMapper)
+      local disabledPlayerIds = {}
+      if table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) then
+        disabledPlayerIds = table.filter(availablePlayerIds, function(pid)
+          local p = room:getPlayerById(pid)
+          return p.role_shown and p.role == "lord"
+        end)
+      elseif table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) then
+        local seat3Player = table.find(availablePlayerIds, function(pid)
+          return room:getPlayerById(pid).seat == 3
+        end)
+        disabledPlayerIds = { seat3Player }
+      end
+
       local result = room:askForCustomDialog(
         player, self.name,
         "packages/mobile/qml/TaMoBox.qml",
         {
           availablePlayerIds,
-          table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and
-            table.filter(availablePlayerIds, function(pid)
-              local p = room:getPlayerById(pid)
-              return p.role_shown and p.role == "lord"
-            end) or
-            {},
+          disabledPlayerIds,
           "$TaMo",
         }
       )
@@ -1607,7 +1615,7 @@ local tamo = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["tamo"] = "榻谟",
-  [":tamo"] = "游戏开始时，你可以重新分配除主公外的角色的座次（若不为身份模式，则改为所有角色）。",
+  [":tamo"] = "游戏开始时，你可以重新分配所有角色的座次（若为身份模式，则改为除主公外的所有角色；若为斗地主，则改为除三号位外的所有角色）。",
   ["#tamo-invoke"] = "榻谟：你可以重新分配场上角色的座次",
   ["$TaMo"] = "榻谟",
   ["click to exchange"] = "点击交换",
@@ -1628,10 +1636,12 @@ local dingzhou = fk.CreateActiveSkill{
   end,
   card_filter = Util.TrueFunc,
   target_filter = function(self, to_select, selected, selected_cards)
+    local cardsNumInField = #Fk:currentRoom():getPlayerById(to_select):getCardIds("ej")
     return
       #selected == 0 and
       to_select ~= Self.id and
-      #Fk:currentRoom():getPlayerById(to_select):getCardIds("ej") + 1 == #selected_cards
+      cardsNumInField > 0 and
+      cardsNumInField == #selected_cards
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
@@ -1650,7 +1660,7 @@ local dingzhou = fk.CreateActiveSkill{
 }
 Fk:loadTranslationTable{
   ["dingzhou"] = "定州",
-  [":dingzhou"] = "出牌阶段限一次，你可以选择一名其他角色并交给其X张牌（X为其场上的牌数+1），然后你获得其场上的所有牌。",
+  [":dingzhou"] = "出牌阶段限一次，你可以选择一名其他角色并交给其X张牌（X为其场上的牌数），然后你获得其场上的所有牌。",
   ["#dingzhou"] = "定州：你可以交给一名其他角色其场上牌数+1张牌，获得其场上的牌",
 
   ["$dingzhou1"] = "今肃亲往，主公何愁不定！",
@@ -1772,6 +1782,13 @@ local zhimeng = fk.CreateTriggerSkill{
 
     if #moveInfos > 0 then
       room:moveCards(table.unpack(moveInfos))
+    end
+
+    local dis_cards = table.filter(wholeCards, function (id)
+      return room:getCardArea(id) == Card.Void
+    end)
+    if #dis_cards > 0 then
+      room:moveCardTo(dis_cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
     end
   end,
 }

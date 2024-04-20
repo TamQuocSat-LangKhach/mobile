@@ -1084,10 +1084,11 @@ local jutu = fk.CreateTriggerSkill{
       local n = #table.filter(room.alive_players, function(p) return p.kingdom == player:getMark("@yaohu") end)
       player:drawCards(n + 1, self.name)
       if not player.dead and not player:isNude() then
-        local cards = room:askForCard(player, n, n, true, self.name, false, ".", "#jutu-put:::"..n)
-        local dummy2 = Fk:cloneCard("dilu")
-        dummy2:addSubcards(cards)
-        player:addToPile("liuzhang_sheng", dummy2, false, self.name)
+        local cards = player:getCardIds("he")
+        if #cards > n then
+          cards = room:askForCard(player, n, n, true, self.name, false, ".", "#jutu-put:::"..n)
+        end
+        player:addToPile("liuzhang_sheng", cards, true, self.name)
       end
     end
   end,

@@ -14,7 +14,7 @@ local wisdom__qiai = fk.CreateActiveSkill{
   card_num = 1,
   target_num = 1,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name) == 0 and not player:isNude()
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).type ~= Card.TypeBasic

@@ -2334,6 +2334,7 @@ local mingcha = fk.CreateTriggerSkill{
       toArea = Card.Processing,
       moveReason = fk.ReasonJustMove,
       skillName = self.name,
+      proposer = player.id,
     })
     room:delay(2000)
     local _, choice = U.askforChooseCardsAndChoice(player, cards, {"OK"}, self.name, "#mingcha-get", {"Cancel"}, 0, 0, cards)

@@ -2133,7 +2133,7 @@ local poxiang = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     room:moveCardTo(effect.cards, Card.PlayerHand, room:getPlayerById(effect.tos[1]), fk.ReasonGive, self.name, "", false, player.id)
     if player.dead then return end
-    player:drawCards(3, self.name)
+    player:drawCards(3, self.name, nil, "@@poxiang-inhand-turn")
     local pile = player:getPile("jueyong_desperation")
     if #pile > 0 then
       room:moveCards({
@@ -2148,36 +2148,10 @@ local poxiang = fk.CreateActiveSkill{
     room:loseHp(player, 1, self.name)
   end
 }
-local poxiang_refresh = fk.CreateTriggerSkill{
-  name = "#poxiang_refresh",
-
-  refresh_events = {fk.AfterCardsMove, fk.AfterTurnEnd},
-  can_refresh = function(self, event, target, player, data)
-    return true
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.AfterCardsMove then
-      for _, move in ipairs(data) do
-        if move.to == player.id and move.toArea == Card.PlayerHand and move.skillName == "poxiang" and move.moveReason == fk.ReasonDraw then
-          for _, info in ipairs(move.moveInfo) do
-            if table.contains(player.player_cards[Player.Hand], info.cardId) then
-              room:setCardMark(Fk:getCardById(info.cardId), "@@poxiang-inhand", 1)
-            end
-          end
-        end
-      end
-    else
-      for _, id in ipairs(player:getCardIds(Player.Hand)) do
-        room:setCardMark(Fk:getCardById(id), "@@poxiang-inhand", 0)
-      end
-    end
-  end,
-}
 local poxiang_maxcards = fk.CreateMaxCardsSkill{
   name = "#poxiang_maxcards",
   exclude_from = function(self, player, card)
-    return card:getMark("@@poxiang-inhand") > 0
+    return card:getMark("@@poxiang-inhand-turn") > 0
   end,
 }
 local jueyong = fk.CreateTriggerSkill{
@@ -2291,7 +2265,6 @@ local jueyong = fk.CreateTriggerSkill{
     room:setPlayerMark(player, self.name, to_record)
   end,
 }
-poxiang:addRelatedSkill(poxiang_refresh)
 poxiang:addRelatedSkill(poxiang_maxcards)
 fuqian:addSkill(poxiang)
 fuqian:addSkill(jueyong)
@@ -2300,7 +2273,7 @@ Fk:loadTranslationTable{
   ["#fuqian"] = "危汉绝勇",
   ["illustrator:fuqian"] = "君桓文化",
   ["cv:fuqian"] = "杨超然",
-  
+
   ["poxiang"] = "破降",
   [":poxiang"] = "出牌阶段限一次，你可以交给一名其他角色一张牌，然后你摸三张牌，移去所有“绝”并失去1点体力，你以此法获得的牌本回合不计入手牌上限。",
   ["jueyong"] = "绝勇",
@@ -2308,7 +2281,7 @@ Fk:loadTranslationTable{
   "且此时“绝”的数量小于你的体力值，你取消之。然后将此牌置于你的武将牌上，称为“绝”。结束阶段，若你有“绝”，则按照置入顺序从前到后依次结算“绝”，"..
   "令其原使用者对你使用（若此牌使用者不在场，则将此牌置入弃牌堆）。",
   ["#poxiang-active"] = "发动破降，选择一张牌交给一名角色，然后摸三张牌，移去所有绝并失去1点体力",
-  ["@@poxiang-inhand"] = "破降",
+  ["@@poxiang-inhand-turn"] = "破降",
   ["jueyong_desperation"] = "绝",
   ["#jueyong-choose"] = "绝勇：选择对%dest使用的%arg的副目标",
 

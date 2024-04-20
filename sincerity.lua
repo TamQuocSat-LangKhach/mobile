@@ -854,38 +854,7 @@ local zhangming = fk.CreateTriggerSkill{
       end
     end
     if #toObtain > 0 then
-      player.room:moveCards({
-        ids = toObtain,
-        to = player.id,
-        toArea = Card.PlayerHand,
-        moveReason = fk.ReasonPrey,
-        proposer = player.id,
-        skillName = "zhangming_draw",
-      })
-    end
-  end,
-
-  refresh_events = {fk.AfterCardsMove, fk.AfterTurnEnd},
-  can_refresh = function(self, event, target, player, data)
-    return true
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.AfterCardsMove then
-      for _, move in ipairs(data) do
-        if move.to == player.id and move.toArea == Card.PlayerHand and move.skillName == "zhangming_draw" then
-          for _, info in ipairs(move.moveInfo) do
-            local id = info.cardId
-            if room:getCardArea(id) == Card.PlayerHand and room:getCardOwner(id) == player then
-              room:setCardMark(Fk:getCardById(id), "@@zhangming-inhand", 1)
-            end
-          end
-        end
-      end
-    elseif event == fk.AfterTurnEnd then
-      for _, id in ipairs(player:getCardIds(Player.Hand)) do
-        room:setCardMark(Fk:getCardById(id), "@@zhangming-inhand", 0)
-      end
+      room:moveCardTo(toObtain, Card.PlayerHand, player, fk.ReasonPrey, self.name, "", false, player.id, "@@zhangming-inhand-turn")
     end
   end,
 }
@@ -908,7 +877,7 @@ local zhangming_trigger = fk.CreateTriggerSkill{
 local zhangming_maxcards = fk.CreateMaxCardsSkill{
   name = "#zhangming_maxcards",
   exclude_from = function(self, player, card)
-    return card:getMark("@@zhangming-inhand") > 0
+    return card:getMark("@@zhangming-inhand-turn") > 0
   end,
 }
 xianghai:addRelatedSkill(xianghai_maxcards)
@@ -939,7 +908,7 @@ Fk:loadTranslationTable{
   ["#chuhai-active"] = "发动除害，选择与你拼点的角色",
   ["@@chuhai-phase"] = "除害",
   ["#zhangming_trigger"] = "彰名",
-  ["@@zhangming-inhand"] = "彰名",
+  ["@@zhangming-inhand-turn"] = "彰名",
 
   ["$xianghai1"] = "快快闪开，伤到你们可就不好了，哈哈哈！",
   ["$xianghai2"] = "你自己撞上来的，这可怪不得小爷我！",

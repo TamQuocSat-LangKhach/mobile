@@ -30,42 +30,54 @@ end
 local function AddToRenPile(room, card, skillName, proposer)
   local ids = Card:getIdList(card)
   room.tag["ren"] = room.tag["ren"] or {}
+  local add, remove = {}, {}
   local ren_cards = table.simpleClone(room.tag["ren"])
-  if #ids + #ren_cards <= 6 then
-    table.insertTable(room.tag["ren"], ids)
-  else
-    local rens = {}
-    if #ids >= 6 then
-      for i = 1, 6, 1 do
-        table.insert(rens, ids[i])
-      end
-    else
-      local n = #ids + #ren_cards - 6
-      for i = n + 1, #ren_cards, 1 do
-        table.insert(rens, ren_cards[i])
-      end
-      table.insertTable(rens, ids)
-    end
-    room.tag["ren"] = rens
+  local ren_limit = 6
+  for i = 1, ren_limit do
+    local id = ids[i]
+    if not id then break end
+    table.insert(ren_cards, id)
+    table.insert(add, id)
   end
-  local dummy = Fk:cloneCard("dilu")
-  dummy:addSubcards(table.filter(ids, function(id) return table.contains(room.tag["ren"], id) end))
-  room:moveCardTo(dummy, Card.Void, nil, fk.ReasonJustMove, skillName, nil, true, proposer)
-  room:sendLog{
-    type = "#AddToRenPile",
-    arg = #dummy.subcards,
-    card = dummy.subcards,
-  }
-
-  local dummy2 = Fk:cloneCard("dilu")
-  dummy2:addSubcards(table.filter(ren_cards, function(id) return not table.contains(room.tag["ren"], id) end))
-  if #dummy2.subcards > 0 then
-    room:moveCardTo(dummy2, Card.DiscardPile, nil, fk.ReasonJustMove, "ren_overflow", nil, true, nil)
+  if #ren_cards > ren_limit then
+    for i = #ren_cards - ren_limit, 1, -1 do
+      table.insert(remove, table.remove(room.tag["ren"], i))
+    end
+  end
+  local moveInfos = {}
+  if #add > 0 then
+    table.insertTable(room.tag["ren"], add)
+    table.insert(moveInfos, {
+      ids = add,
+      from = room.owner_map[add[1]],
+      toArea = Card.Void,
+      moveReason = fk.ReasonJustMove,
+      skillName = skillName,
+      moveVisible = true,
+      proposer = proposer,
+    })
+    room:sendLog{
+      type = "#AddToRenPile",
+      arg = #add,
+      card = add,
+    }
+  end
+  if #remove > 0 then
+    table.insert(moveInfos, {
+      ids = remove,
+      toArea = Card.DiscardPile,
+      moveReason = fk.ReasonPutIntoDiscardPile,
+      skillName = "ren_overflow",
+      moveVisible = true,
+    })
     room:sendLog{
       type = "#OverflowFromRenPile",
-      arg = #dummy2.subcards,
-      card = dummy2.subcards,
+      arg = #remove,
+      card = remove,
     }
+  end
+  if #moveInfos > 0 then
+    room:moveCards(table.unpack(moveInfos))
   end
 
   NotifyRenPile(room)
@@ -960,12 +972,12 @@ local binglun = fk.CreateActiveSkill{
   card_num = 1,
   target_num = 1,
   prompt = "#binglun",
-  expand_pile = "$RenPile",
+  expand_pile = function () return U.getMark(Self, "$RenPile") end,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #player:getPile("$RenPile") > 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #U.getMark(player, "$RenPile") > 0
   end,
   card_filter = function (self, to_select, selected)
-    return #selected == 0 and Self:getPileNameOfId(to_select) == "$RenPile"
+    return #selected == 0 and table.contains(U.getMark(Self, "$RenPile"), to_select)
   end,
   target_filter = function(self, to_select, selected)
     return #selected == 0
@@ -1020,12 +1032,7 @@ local binglun_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    player.special_cards["$RenPile"] = table.simpleClone(GetRenPile(room))
-    player:doNotify("ChangeSelf", json.encode {
-      id = player.id,
-      handcards = player:getCardIds("h"),
-      special_cards = player.special_cards,
-    })
+    room:setPlayerMark(player, "$RenPile", GetRenPile(room))
   end,
 }
 binglun:addRelatedSkill(binglun_trigger)
@@ -1421,15 +1428,16 @@ local youyi = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 0,
   prompt = "#youyi",
+  expand_pile = function () return U.getMark(Self, "$RenPile") end,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #player:getPile("$RenPile") > 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #U.getMark(player, "$RenPile") > 0
   end,
   card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     room:doIndicate(player.id, table.map(room.alive_players, Util.IdMapper))
     DiscardCardFromRenPile(room, player, GetRenPile(room), self.name)
-    for _, p in ipairs(room.alive_players) do
+    for _, p in ipairs(room:getAlivePlayers()) do
       if not p.dead and p:isWounded() then
         room:recover{
           who = p,
@@ -1490,12 +1498,7 @@ local youyi_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    player.special_cards["$RenPile"] = table.simpleClone(GetRenPile(room))
-    player:doNotify("ChangeSelf", json.encode {
-      id = player.id,
-      handcards = player:getCardIds("h"),
-      special_cards = player.special_cards,
-    })
+    room:setPlayerMark(player, "$RenPile", GetRenPile(room))
   end,
 }
 wuling:addRelatedSkill(wuling_trigger)

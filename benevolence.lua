@@ -1719,10 +1719,11 @@ local zhimeng = fk.CreateTriggerSkill{
       table.insert(moveInfos, {
         from = player.id,
         ids = player:getCardIds("h"),
-        toArea = Card.Void,
+        toArea = Card.Processing,
         moveReason = fk.ReasonExchange,
         proposer = player.id,
         skillName = self.name,
+        moveVisible = false,
       })
     end
     if to:getHandcardNum() > 0 then
@@ -1730,10 +1731,11 @@ local zhimeng = fk.CreateTriggerSkill{
       table.insert(moveInfos, {
         from = to.id,
         ids = to:getCardIds("h"),
-        toArea = Card.Void,
+        toArea = Card.Processing,
         moveReason = fk.ReasonExchange,
         proposer = player.id,
         skillName = self.name,
+        moveVisible = false,
       })
     end
 
@@ -1753,33 +1755,35 @@ local zhimeng = fk.CreateTriggerSkill{
 
     if not player.dead then
       local to_ex_cards = table.filter(youGain, function (id)
-        return room:getCardArea(id) == Card.Void
+        return room:getCardArea(id) == Card.Processing
       end)
       if #to_ex_cards > 0 then
         table.insert(moveInfos, {
           ids = to_ex_cards,
-          fromArea = Card.Void,
+          fromArea = Card.Processing,
           to = player.id,
           toArea = Card.PlayerHand,
           moveReason = fk.ReasonExchange,
           proposer = player.id,
           skillName = self.name,
+          moveVisible = false,
         })
       end
     end
     if not to.dead then
       local to_ex_cards = table.filter(wholeCards, function (id)
-        return room:getCardArea(id) == Card.Void
+        return room:getCardArea(id) == Card.Processing
       end)
       if #to_ex_cards > 0 then
         table.insert(moveInfos, {
           ids = wholeCards,
-          fromArea = Card.Void,
+          fromArea = Card.Processing,
           to = to.id,
           toArea = Card.PlayerHand,
           moveReason = fk.ReasonExchange,
           proposer = player.id,
           skillName = self.name,
+          moveVisible = false,
         })
       end
     end
@@ -1789,7 +1793,7 @@ local zhimeng = fk.CreateTriggerSkill{
     end
 
     local dis_cards = table.filter(wholeCards, function (id)
-      return room:getCardArea(id) == Card.Void
+      return room:getCardArea(id) == Card.Processing
     end)
     if #dis_cards > 0 then
       room:moveCardTo(dis_cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)

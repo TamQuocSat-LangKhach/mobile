@@ -1665,7 +1665,7 @@ local dingzhou = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["dingzhou"] = "定州",
   [":dingzhou"] = "出牌阶段限一次，你可以选择一名其他角色并交给其X张牌（X为其场上的牌数），然后你获得其场上的所有牌。",
-  ["#dingzhou"] = "定州：你可以交给一名其他角色其场上牌数+1张牌，获得其场上的牌",
+  ["#dingzhou"] = "定州：你可以交给一名其他角色其场上牌数张牌，获得其场上的牌",
 
   ["$dingzhou1"] = "今肃亲往，主公何愁不定！",
   ["$dingzhou2"] = "肃之所至，万事皆平！",

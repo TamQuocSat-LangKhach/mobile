@@ -35,7 +35,7 @@ local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
           from = from,
           to = to,
           card = effect.card,
-          damage = 1 + (effect.additionalDamage or 0),
+          damage = 1,
           damageType = fk.NormalDamage,
           skillName = self.name,
         })

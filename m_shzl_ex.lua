@@ -631,7 +631,7 @@ local m_ex__guhuo = fk.CreateViewAsSkill{
     local room = player.room
     local cards = self.cost_data
     local card_id = cards[1]
-    room:moveCardTo(cards, Card.Void, nil, fk.ReasonPut, self.name, "", false)  --暂时放到Card.Void,理论上应该是Card.Processing,只要moveVisible可以false
+    room:moveCardTo(cards, Card.Processing, nil, fk.ReasonPut, self.name, "", false, player.id)
     local targets = TargetGroup:getRealTargets(use.tos)
     if targets and #targets > 0 then
       room:sendLog{
@@ -641,7 +641,6 @@ local m_ex__guhuo = fk.CreateViewAsSkill{
         arg = use.card.name,
         arg2 = self.name
       }
-
       room:doIndicate(player.id, targets)
     else
       room:sendLog{
@@ -664,19 +663,17 @@ local m_ex__guhuo = fk.CreateViewAsSkill{
         if choice ~= "noquestion" then
           player:showCards({card_id})
           if use.card.name == Fk:getCardById(card_id).name then
+            room:setCardEmotion(card_id, "judgegood")
             room:handleAddLoseSkills(p, "chanyuan")
           else
+          room:setCardEmotion(card_id, "judgebad")
             canuse = false
           end
           break
         end
       end
     end
-	--暂时使用setCardArea,当moveVisible可以false之后,不必再移动到Card.Void,也就不必再setCardArea
-    table.removeOne(room.void, card_id)
-    table.insert(room.processing_area, card_id)
-    room:setCardArea(card_id, Card.Processing, nil)
-	--
+
     if canuse then
       use.card:addSubcard(card_id)
     else

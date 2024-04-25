@@ -3501,6 +3501,7 @@ yangbiao:addSkill(mobileYizheng)
 Fk:loadTranslationTable{
   ["yangbiao"] = "杨彪",
   ["#yangbiao"] = "德彰海内",
+  ["cv:yangbiao"] = "袁国庆",
   ["designer:yangbiao"] = "Loun老萌",
 	["illustrator:yangbiao"] = "木美人",
 

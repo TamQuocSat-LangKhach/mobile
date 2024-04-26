@@ -1281,6 +1281,7 @@ local manchong = General(extension, "m_ex__manchong", "wei", 3)
 Fk:loadTranslationTable{
   ["m_ex__manchong"] = "界满宠",
   ["#m_ex__manchong"] = "政法兵谋",
+	["designer:m_ex__manchong"] = "Loun老萌",
   ["illustrator:m_ex__manchong"] = "YanBai",
   ["~m_ex__manchong"] = "宠一生为公，无愧忠俭之节。",
 }

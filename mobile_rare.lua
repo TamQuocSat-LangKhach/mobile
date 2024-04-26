@@ -255,7 +255,9 @@ miheng:addSkill(mobile__shejian)
 Fk:loadTranslationTable{
   ["miheng"] = "祢衡",
   ["#miheng"] = "鸷鹗啄孤凤",
+	["designer:miheng"] = "千幻",
   ["illustrator:miheng"] = "Thinking",
+
   ["mobile__kuangcai"] = "狂才",
   [":mobile__kuangcai"] = "出牌阶段开始时，你可以令你此阶段内的主动出牌时间变为5秒，响应出牌时间也变为5秒。若如此做，本阶段你使用牌无距离次数限制，"..
   "且当你使用牌时，你摸一张牌且主动出牌时间-1秒（每阶段至多以此法摸五张牌）。",

@@ -3354,6 +3354,7 @@ yanghuiyu:addSkill(quanfeng)
 Fk:loadTranslationTable{
   ["mobile__yanghuiyu"] = "羊徽瑜",
   ["#mobile__yanghuiyu"] = "温慧母仪",
+	["designer:mobile__yanghuiyu"] = "Loun老萌",
   ["illustrator:mobile__yanghuiyu"] = "石蝉",
 
   ["hongyi"] = "弘仪",

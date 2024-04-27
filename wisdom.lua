@@ -559,6 +559,7 @@ Fk:loadTranslationTable{
   ["dingyi2"] = "手牌上限",
   ["dingyi3"] = "攻击范围",
   ["dingyi4"] = "额外回复",
+  ["#dingyi_trigger"] = "定仪",
   ["#zuici-invoke"] = "罪辞：你可以令 %dest 失去“定仪”效果并获得你指定的一种智囊",
   ["#fubi-choice"] = "辅弼：选择为 %dest 更换的“定仪”效果",
   ["#fubi"] = "辅弼：更换一名角色“定仪”效果，或弃一张牌令一名角色“定仪”效果加倍直到你下回合开始",

@@ -1111,6 +1111,7 @@ Fk:loadTranslationTable{
   ["mobile__liechi"] = "烈斥",
   [":mobile__liechi"] = "锁定技，当你进入濒死状态时，伤害来源弃置一张牌。",
   ["#mobile__xuewei-choose"] = "血卫：秘密选择一名角色，防止其下次受到的伤害，你受到等量伤害，并对伤害来源造成伤害",
+  ["#mobile__xuewei_trigger"] = "血卫",
 
   ["$mobile__xuewei1"] = "老夫一息尚存，吴狗便动不得主公分毫！",
   ["$mobile__xuewei2"] = "吴狗何在，大汉将军傅肜在此！",
@@ -1400,6 +1401,7 @@ local zhiyi = fk.CreateTriggerSkill{
           from = player.id,
           tos = table.map(dat.targets, function(id) return {id} end),
           card = card,
+          extraUse = true,
         }
       else
         room:drawCards(player, 1, self.name)
@@ -1416,6 +1418,7 @@ Fk:loadTranslationTable{
   [":zhiyi"] = "锁定技，一名角色的结束阶段，若你本回合使用或打出过基本牌，你选择一项：1.视为使用任意一张你本回合使用或打出过的基本牌；2.摸一张牌。",
 
   ["@$zhiyi-turn"] = "执义",
+  ["zhiyi_viewas"] = "执义",
   ["#zhiyi-choose"] = "执义：选择视为使用一张基本牌，或点取消则摸一张牌",
 
   ["$zhiyi1"] = "岂可擅退而误国家之功？",

@@ -1058,6 +1058,7 @@ Fk:loadTranslationTable{
   ["#liaoyi-put"] = "疗疫：你需将%arg张牌置入“仁”区",
   ["#binglun"] = "病论：你可以弃置一张“仁”区牌，令一名角色选择摸牌或其回合结束时回复体力",
   ["binglun_recover"] = "你下个回合结束时回复1点体力",
+  ["#binglun_trigger"] = "病论",
 
   ["$jishi1"] = "勤求古训，常怀济人之志。",
   ["$jishi2"] = "博采众方，不随趋势之徒。",
@@ -1533,6 +1534,7 @@ Fk:loadTranslationTable{
   ["wuling4"] = "猿",
   ["wuling5"] = "鹤",
   ["@wuling"] = "五灵",
+  ["#wuling_trigger"] = "五灵",
   ["#wuling-choose"] = "五灵：请选择一名其他角色，获得其装备区里的一张牌",
   ["#youyi"] = "游医：你可以弃置所有“仁”区牌，令所有角色回复1点体力",
   ["#youyi-invoke"] = "游医：是否将本阶段弃置的牌置入“仁”区？",

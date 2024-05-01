@@ -1769,7 +1769,6 @@ local zhimeng = fk.CreateTriggerSkill{
           proposer = player.id,
           skillName = self.name,
           moveVisible = false,
-          visiblePlayers = to.id,
         })
       end
     end
@@ -1787,7 +1786,6 @@ local zhimeng = fk.CreateTriggerSkill{
           proposer = player.id,
           skillName = self.name,
           moveVisible = false,
-          visiblePlayers = player.id,
         })
       end
     end

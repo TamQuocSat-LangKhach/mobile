@@ -5422,4 +5422,215 @@ Fk:loadTranslationTable{
 yuxiang:addRelatedSkill(yuxiangDistance)
 muludawang:addSkill(yuxiang)
 
+local jianggan = General(extension, "mobile__jianggan", "wei", 3)
+Fk:loadTranslationTable{
+  ["mobile__jianggan"] = "蒋干",
+  ["#mobile__jianggan"] = "虚义伪诚",
+  ["~mobile__jianggan"] = "唉，假信害我不浅啊……",
+}
+
+local daoshu = fk.CreateActiveSkill{
+  name = "mobile__daoshu",
+  prompt = "#mobile__daoshu",
+  mute = true,
+  card_num = 0,
+  target_num = 1,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    local room = Fk:currentRoom()
+    local target = room:getPlayerById(to_select)
+    if target:getHandcardNum() < 2 then
+      return false
+    end
+
+    if table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, room.room_settings.gameMode) then
+      return target.role ~= Self.role
+    end
+
+    return to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    player:broadcastSkillInvoke(self.name, 1)
+    room:notifySkillInvoked(player, self.name, "offensive")
+    local target = room:getPlayerById(effect.tos[1])
+
+    local cardNames = {}
+    for _, id in ipairs(Fk:getAllCardIds()) do
+      local card = Fk:getCardById(id)
+      if not card.is_derived then
+        table.insertIfNeed(cardNames, card.name)
+      end
+    end
+    local randomNames = table.random(cardNames, 3)
+    room:setPlayerMark(target, "mobile__daoshu_names", randomNames)
+    local _, dat = room:askForUseActiveSkill(target, "mobile__daoshu_choose", "#mobile__daoshu-choose", false)
+    room:setPlayerMark(target, "mobile__daoshu_names", 0)
+
+    local cardChosen = dat and dat.cards[1] or table.random(target:getCardIds("h"))
+    local newName = dat and dat.interaction or table.random(
+      table.filter(randomNames,
+      function(name) return name ~= Fk:getCardById(cardChosen).name end)
+    )
+    local newHandIds = table.map(target:getCardIds("h"), function(id)
+      if id == cardChosen then
+        local card = Fk:getCardById(id)
+        return {
+          cid = 0,
+          name = newName,
+          extension = card.package.extensionName,
+          number = card.number,
+          suit = card:getSuitString(),
+          color = card:getColorString(),
+        }
+      end
+
+      return id
+    end)
+
+    local friends = { player }
+    if table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, room.settings.gameMode) then
+      friends = U.GetFriends(room, player)
+    end
+    for _, p in ipairs(friends) do
+      p.request_data = json.encode({
+        path = "packages/utility/qml/ChooseCardsAndChoiceBox.qml",
+        data = {
+          newHandIds,
+          { "OK" },
+          "#mobile__daoshu-guess",
+          nil,
+          1,
+          1,
+          {}
+        },
+      })
+    end
+
+    room:notifyMoveFocus(friends, self.name)
+    room:doBroadcastRequest("CustomDialog", friends)
+
+    local friendIds = table.map(friends, Util.IdMapper)
+    room:sortPlayersByAction(friendIds)
+    for _, pid in ipairs(friendIds) do
+      local p = room:getPlayerById(pid)
+      if p:isAlive() then
+        local cardGuessed
+        if p.reply_ready then
+          cardGuessed = json.decode(p.client_reply).cards[1]
+        else
+          cardGuessed = table.random(target:getCardIds("h"))
+        end
+
+        if cardGuessed == 0 then
+          if p == player then
+            player:broadcastSkillInvoke(self.name, 2)
+          end
+          room:damage{
+            from = p,
+            to = target,
+            damage = 1,
+            skillName = self.name,
+          }
+        else
+          if p == player then
+            player:broadcastSkillInvoke(self.name, 3)
+          end
+          if# p:getCardIds("h") > 1 then
+            local canDiscard = table.filter(p:getCardIds("h"), function(id) return not p:prohibitDiscard(Fk:getCardById(id)) end)
+            if #canDiscard then
+              room:throwCard(table.random(canDiscard, 2), self.name, p, p)
+            end
+          else
+            room:loseHp(p, 1, self.name)
+          end
+        end
+      end
+    end
+  end,
+}
+local daoshuChoose = fk.CreateActiveSkill{
+  name = "mobile__daoshu_choose",
+  mute = true,
+  card_num = 1,
+  target_num = 0,
+  interaction = function()
+    return UI.ComboBox { choices = Self:getMark("mobile__daoshu_names") }
+  end,
+  card_filter = function(self, to_select, selected)
+    return
+      #selected == 0 and
+      Fk:currentRoom():getCardArea(to_select) == Player.Hand and
+      Fk:getCardById(to_select).name ~= self.interaction.data
+  end,
+  target_filter = Util.FalseFunc,
+}
+Fk:loadTranslationTable{
+  ["mobile__daoshu"] = "盗书",
+  [":mobile__daoshu"] = "出牌阶段限一次，你可以选择一名手牌数不少于2的其他角色，该角色从随机三个牌名中选择一个，" ..
+  "并将一张牌名不同的手牌伪装成此牌名的牌，然后你观看其伪装后的手牌，并猜测其中伪装过的牌（若为2v2或斗地主，" ..
+  "则改为选择一名手牌数不少于2的敌方角色，且你与友方角色同时猜测）。猜中的角色对该角色各造成1点伤害，" ..
+  "猜错的角色分别随机弃置两张手牌，若手牌不足则改为失去1点体力。",
+  ["#mobile__daoshu"] = "盗书：你可与队友查看1名敌人的手牌，并找出其伪装牌名的牌",
+  ["mobile__daoshu_choose"] = "盗书伪装",
+  ["#mobile__daoshu-choose"] = "盗书：请选择左侧的牌名并选择一张手牌，将此牌伪装成此牌名",
+  ["#mobile__daoshu-guess"] = "猜测其中伪装牌名的牌",
+
+  ["$mobile__daoshu1"] = "嗨！不过区区信件，何妨故友一观？",
+  ["$mobile__daoshu2"] = "幸吾有备而来，不然为汝所戏矣。",
+  ["$mobile__daoshu3"] = "亏我一世英名，竟上了周瑜的大当！",
+}
+
+Fk:addSkill(daoshuChoose)
+jianggan:addSkill(daoshu)
+
+local daizui = fk.CreateTriggerSkill{
+  name = "daizui",
+  anim_type = "defensive",
+  frequency = Skill.Limited,
+  events = { fk.DamageInflicted },
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self) and
+      math.max(0, player.hp) + player.shield <= data.damage and
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if data.card and data.from:isAlive() and U.hasFullRealCard(room, data.card) then
+      data.from:addToPile("daizui_shi", data.card, true, self.name)
+    end
+    return true
+  end,
+}
+local daizuiRegain = fk.CreateTriggerSkill{
+  name = "#daizui_regain",
+  mute = true,
+  events = { fk.TurnEnd },
+  can_trigger = function(self, event, target, player, data)
+    return #player:getPile("daizui_shi") > 0
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    player.room:obtainCard(player, player:getPile("daizui_shi"), true, fk.ReasonPrey, player.id, "daizui")
+  end,
+}
+Fk:loadTranslationTable{
+  ["daizui"] = "戴罪",
+  [":daizui"] = "限定技，当你受到伤害时，若伤害值不小于你的体力值和护甲之和，你可以防止此伤害，然后将对你造成伤害的牌置于伤害来源的武将牌上，" ..
+  "称为“释”。本回合结束时，其获得其“释”。",
+  ["daizui_shi"] = "释",
+  ["#daizui_regain"] = "戴罪",
+
+  ["$daizui1"] = "望丞相权且记过，容干将功折罪啊！",
+  ["$daizui2"] = "干，谢丞相不杀之恩！",
+}
+
+daizui:addRelatedSkill(daizuiRegain)
+jianggan:addSkill(daizui)
+
 return extension

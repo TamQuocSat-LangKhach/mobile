@@ -2827,8 +2827,7 @@ Fk:loadTranslationTable{
   ["~mobile__yanxiang"] = "若遇明主，或可青史留名……",
 }
 
-local nanhualaoxian = General(extension, "mobile__nanhualaoxian", "qun", 3)
-nanhualaoxian.hidden = true
+local nanhualaoxian = General(extension, "nanhualaoxian", "qun", 3)
 
 local yufeng = fk.CreateActiveSkill{
   name = "mobile__yufeng",
@@ -2842,29 +2841,157 @@ local yufeng = fk.CreateActiveSkill{
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
-    local n, fail = 0, false
-    for i = 1, 3 do
-      local choices = {"■■■■","■■■■","■■■■","■■■■"}
-      choices[math.random(4)] = "mobile__yufeng_good"
-      local choice = room:askForChoice(player, choices, self.name)
-      if choice == "mobile__yufeng_good" then
-        n = n + 1
-      else
-        fail = true
+    local maxScore = math.random() <= 0.6 and 3 or 2
+    local score = 0
+    local findBig = math.random() < 0.5
+    local cardsRevealed = {}
+    for i = 1, maxScore + 1 do
+      if #room.draw_pile + #room.discard_pile == 0 then
         break
       end
+
+      local choice
+      if i > 1 then
+        choice = room:askForChoice(player, {"mobile__yufeng_more", "mobile__yufeng_less"}, self.name, "#mobile__yufeng-choice")
+      end
+
+      local cardToReveal
+      local randomNum = math.random()
+      if randomNum <= 0.7 or i == 1 then
+        local numberToApproach = findBig and 13 or 1
+        local minDiff = 99
+        for _, id in ipairs(room.draw_pile) do
+          local cardNumber = Fk:getCardById(id).number
+          if cardNumber == numberToApproach then
+            cardToReveal = id
+            minDiff = 0
+            break
+          elseif math.abs(cardNumber - numberToApproach) < minDiff then
+            cardToReveal = id
+            minDiff = math.abs(cardNumber - numberToApproach)
+          end
+        end
+        if minDiff > 0 then
+          for _, id in ipairs(room.discard_pile) do
+            local cardNumber = Fk:getCardById(id).number
+            if cardNumber == numberToApproach then
+              cardToReveal = id
+              break
+            elseif math.abs(cardNumber - numberToApproach) < minDiff then
+              cardToReveal = id
+              minDiff = math.abs(cardNumber - numberToApproach)
+            end
+          end
+        end
+
+        findBig = not findBig
+      elseif randomNum > 0.7 and randomNum <= 0.95 then
+        for i = 1, 3 do
+          local randomIndex = math.random(1, #room.draw_pile + #room.discard_pile)
+          if randomIndex <= #room.draw_pile then
+            cardToReveal = room.draw_pile[randomIndex]
+          else
+            cardToReveal = room.discard_pile[randomIndex - #room.draw_pile]
+          end
+
+          if not table.contains({6, 7, 8}, Fk:getCardById(cardToReveal).number) then
+            break
+          end
+        end
+
+        local numberFound = Fk:getCardById(cardToReveal).number
+        findBig = math.abs(numberFound - 13) > math.abs(numberFound - 1)
+      else
+        local randomMidNumber = math.random(6, 8)
+        for _, id in ipairs(room.draw_pile) do
+          if Fk:getCardById(id).number == randomMidNumber then
+            cardToReveal = id
+            break
+          end
+        end
+        if not cardToReveal then
+          for _, id in ipairs(room.discard_pile) do
+            if Fk:getCardById(id).number == randomMidNumber then
+              cardToReveal = id
+              break
+            end
+          end
+        end
+
+        if not cardToReveal then
+          local randomIndex = math.random(1, #room.draw_pile + #room.discard_pile)
+          if randomIndex <= #room.draw_pile then
+            cardToReveal = room.draw_pile[randomIndex]
+          else
+            cardToReveal = room.discard_pile[randomIndex - #room.draw_pile]
+          end
+
+          local numberFound = Fk:getCardById(cardToReveal).number
+          findBig = math.abs(numberFound - 13) > math.abs(numberFound - 1)
+        else
+          findBig = math.random() <= 0.5
+        end
+      end
+
+      table.insert(cardsRevealed, cardToReveal)
+
+      local curNumber = Fk:getCardById(cardToReveal).number
+      room:moveCards{
+        ids = { cardToReveal },
+        toArea = Card.Processing,
+        moveReason = fk.ReasonJustMove,
+        skillName = self.name,
+      }
+      if choice then
+        local lastNumber = Fk:getCardById(cardsRevealed[i - 1]).number
+        if
+          (choice == "mobile__yufeng_more" and lastNumber >= curNumber) or
+          (choice == "mobile__yufeng_less" and lastNumber <= curNumber)
+        then
+          room:setCardEmotion(cardToReveal, "judgebad")
+          room:delay(1000)
+          break
+        else
+          score = score + 1
+          room:setCardEmotion(cardToReveal, "judgegood")
+        end
+      end
+      room:delay(1000)
     end
-    if n == 0 then return end
-    if not fail then
-      local tos = player.room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player), Util.IdMapper), 1, n,
-      "#mobile__yufeng-choose:::"..n, self.name, true)
+
+    if #cardsRevealed == 0 then
+      return
+    end
+
+    cardsRevealed = table.filter(cardsRevealed, function(id) return room:getCardArea(id) == Card.Processing end)
+    if #cardsRevealed > 0 then
+      room:moveCards({
+        ids = cardsRevealed,
+        toArea = Card.DiscardPile,
+        moveReason = fk.ReasonPutIntoDiscardPile,
+      })
+    end
+
+    local chatStr = "score_full"
+    if score == 0 then
+      chatStr = "score_zero"
+    elseif score == 1 then
+      chatStr = "score_one"
+    elseif score < maxScore then
+      chatStr = "score_not_full"
+    end
+    player:chat(Fk:translate(chatStr))
+
+    if not (score < maxScore and math.random() < 0.2) then
+      local tos = player.room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player), Util.IdMapper), 1, score,
+      "#mobile__yufeng-choose:::" .. score, self.name, true)
       for _, pid in ipairs(tos) do
         room:setPlayerMark(room:getPlayerById(pid), "@@mobile__yufeng", 1)
       end
-      n = n - #tos
+      score = score - #tos
     end
-    if n > 0 then
-      player:drawCards(n, self.name)
+    if score > 0 then
+      player:drawCards(score, self.name)
     end
   end,
 }
@@ -2932,23 +3059,33 @@ local tianshu = fk.CreateTriggerSkill{
 }
 nanhualaoxian:addSkill(tianshu)
 
-local mobile__nanhualaoxian_win = fk.CreateActiveSkill{ name = "mobile__nanhualaoxian_win_audio" }
+local mobile__nanhualaoxian_win = fk.CreateActiveSkill{ name = "nanhualaoxian_win_audio" }
 mobile__nanhualaoxian_win.package = extension
 Fk:addSkill(mobile__nanhualaoxian_win)
 
 Fk:loadTranslationTable{
-  ["mobile__nanhualaoxian"] = "南华老仙",
-  ["#mobile__nanhualaoxian"] = "冯虚御风",
-  ["cv:mobile__nanhualaoxian"] = "宋国庆",
-  ["illustrator:mobile__nanhualaoxian"] = "君桓文化",
+  ["nanhualaoxian"] = "南华老仙",
+  ["#nanhualaoxian"] = "冯虚御风",
+  ["cv:nanhualaoxian"] = "宋国庆",
+  ["illustrator:nanhualaoxian"] = "君桓文化",
 
   ["mobile__yufeng"] = "御风",
-  [":mobile__yufeng"] = "出牌阶段限一次，你可以进行一次御风飞行。若失败你摸X张牌；若成功，则你可选择至多X名其他角色，其下一个准备阶段进行一次判定：若结果为黑色，其跳过接下来的出牌和弃牌阶段；若结果为红色，其跳过接下来的摸牌阶段（若选择角色数不足X，剩余的分数改为摸等量张牌）（X为御风飞行得分，至多为3）。",
+  [":mobile__yufeng"] = "出牌阶段限一次，你可以进行一次御风飞行。若失败你摸X张牌；若成功，则你可选择至多X名其他角色，" ..
+  "其下一个准备阶段进行一次判定：若结果为黑色，其跳过接下来的出牌和弃牌阶段；若结果为红色，其跳过接下来的摸牌阶段" ..
+  "（若选择角色数不足X，剩余的分数改为摸等量张牌）（X为御风飞行得分，至多为3）。" ..
+  "<br/><font color='grey'>#\"<b>御风飞行</b>\"：随机亮出牌堆和弃牌堆中的一张牌，然后重复猜测下一张亮出的牌比此牌点数大或小，" ..
+  "直到达到分数上限或猜错（2分或3分），每猜对一次得一分。",
   ["#mobile__yufeng-prompt"] = "你可玩一次小游戏，成功后令他人跳过摸牌或出牌弃牌阶段",
   ["#mobile__yufeng-choose"] = "御风：选择至多 %arg 名其他角色，其下回合跳过摸牌或出牌弃牌阶段",
   ["@@mobile__yufeng"] = "御风",
-  ["mobile__yufeng_good"] = "选我!",
   ["#mobile__yufeng_delay"] = "御风",
+  ["mobile__yufeng_more"] = "下一张牌点数较大",
+  ["mobile__yufeng_less"] = "下一张牌点数较小",
+  ["#mobile__yufeng-choice"] = "御风：猜测下一张牌的点数",
+  ["score_zero"] = "惜哉，未能窥见星辰。",
+  ["score_one"] = "风紧，赶紧跑。",
+  ["score_not_full"] = "星辰已纳入囊中。",
+  ["score_full"] = "满载而归，哈哈。",
 
   ["mobile__tianshu"] = "天书",
   [":mobile__tianshu"] = "出牌阶段开始时，若【太平要术】不在游戏内、在牌堆或弃牌堆中，你可以弃置一张牌，令一名角色获得【太平要术】并使用之。",
@@ -2958,8 +3095,8 @@ Fk:loadTranslationTable{
   ["$mobile__yufeng2"] = "高飞兮安翔，乘清气兮御阴阳。",
   ["$mobile__tianshu1"] = "其耆欲深者，其天机浅。",
   ["$mobile__tianshu2"] = "杀生者不死，生生者不生。",
-  ["$mobile__nanhualaoxian_win_audio"] = "纷总总兮九州，何寿夭兮在予？",
-  ["~mobile__nanhualaoxian"] = "天机求而近，执而远……",
+  ["$nanhualaoxian_win_audio"] = "纷总总兮九州，何寿夭兮在予？",
+  ["~nanhualaoxian"] = "天机求而近，执而远……",
 }
 
 

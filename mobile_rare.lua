@@ -2858,7 +2858,7 @@ local yufeng = fk.CreateActiveSkill{
       if randomNum <= 0.7 or i == 1 then
         local numberToApproach = findBig and 13 or 1
         local minDiff = 99
-        for _, id in ipairs(room.draw_pile) do
+        for _, id in ipairs(room.discard_pile) do
           local cardNumber = Fk:getCardById(id).number
           if cardNumber == numberToApproach then
             cardToReveal = id
@@ -2870,7 +2870,7 @@ local yufeng = fk.CreateActiveSkill{
           end
         end
         if minDiff > 0 then
-          for _, id in ipairs(room.discard_pile) do
+          for _, id in ipairs(room.draw_pile) do
             local cardNumber = Fk:getCardById(id).number
             if cardNumber == numberToApproach then
               cardToReveal = id
@@ -2901,14 +2901,14 @@ local yufeng = fk.CreateActiveSkill{
         findBig = math.abs(numberFound - 13) > math.abs(numberFound - 1)
       else
         local randomMidNumber = math.random(6, 8)
-        for _, id in ipairs(room.draw_pile) do
+        for _, id in ipairs(room.discard_pile) do
           if Fk:getCardById(id).number == randomMidNumber then
             cardToReveal = id
             break
           end
         end
         if not cardToReveal then
-          for _, id in ipairs(room.discard_pile) do
+          for _, id in ipairs(room.draw_pile) do
             if Fk:getCardById(id).number == randomMidNumber then
               cardToReveal = id
               break

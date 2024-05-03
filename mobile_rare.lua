@@ -2844,7 +2844,13 @@ local yufeng = fk.CreateActiveSkill{
 
       local choice
       if i > 1 then
-        choice = room:askForChoice(player, {"mobile__yufeng_more", "mobile__yufeng_less"}, self.name, "#mobile__yufeng-choice")
+        local lastNumber = Fk:getCardById(cardsRevealed[i - 1]):getNumberStr()
+        choice = room:askForChoice(
+          player,
+          {"mobile__yufeng_more:::" .. lastNumber, "mobile__yufeng_less:::" .. lastNumber},
+          self.name,
+          "#mobile__yufeng-choice"
+        )
       end
 
       local cardToReveal
@@ -2937,8 +2943,8 @@ local yufeng = fk.CreateActiveSkill{
       if choice then
         local lastNumber = Fk:getCardById(cardsRevealed[i - 1]).number
         if
-          (choice == "mobile__yufeng_more" and lastNumber >= curNumber) or
-          (choice == "mobile__yufeng_less" and lastNumber <= curNumber)
+          (choice:startsWith("mobile__yufeng_more") and lastNumber >= curNumber) or
+          (choice:startsWith("mobile__yufeng_less") and lastNumber <= curNumber)
         then
           room:setCardEmotion(cardToReveal, "judgebad")
           room:delay(1000)
@@ -3065,14 +3071,14 @@ Fk:loadTranslationTable{
   [":mobile__yufeng"] = "出牌阶段限一次，你可以进行一次御风飞行。若失败你摸X张牌；若成功，则你可选择至多X名其他角色，" ..
   "其下一个准备阶段进行一次判定：若结果为黑色，其跳过接下来的出牌和弃牌阶段；若结果为红色，其跳过接下来的摸牌阶段" ..
   "（若选择角色数不足X，剩余的分数改为摸等量张牌）（X为御风飞行得分，至多为3）。" ..
-  "<br/><font color='grey'>#\"<b>御风飞行</b>\"：随机亮出牌堆和弃牌堆中的一张牌，然后重复猜测下一张亮出的牌比此牌点数大或小，" ..
+  "<br/><font color='grey'>#\"<b>御风飞行</b>\"：随机亮出牌堆和弃牌堆中的一张牌，然后重复猜测下一张亮出的牌比上一张亮出的牌点数更大或更小，" ..
   "直到达到分数上限或猜错（2分或3分），每猜对一次得一分。",
   ["#mobile__yufeng-prompt"] = "你可玩一次小游戏，成功后令他人跳过摸牌或出牌弃牌阶段",
   ["#mobile__yufeng-choose"] = "御风：选择至多 %arg 名其他角色，其下回合跳过摸牌或出牌弃牌阶段",
   ["@@mobile__yufeng"] = "御风",
   ["#mobile__yufeng_delay"] = "御风",
-  ["mobile__yufeng_more"] = "下一张牌点数较大",
-  ["mobile__yufeng_less"] = "下一张牌点数较小",
+  ["mobile__yufeng_more"] = "下一张牌点数比%arg大",
+  ["mobile__yufeng_less"] = "下一张牌点数比%arg小",
   ["#mobile__yufeng-choice"] = "御风：猜测下一张牌的点数",
   ["score_zero"] = "惜哉，未能窥见星辰。",
   ["score_one"] = "风紧，赶紧跑。",

@@ -774,16 +774,11 @@ local zhengjing = fk.CreateActiveSkill{
     room:setPlayerMark(player, "zhengjing", cards)
     local _, dat = room:askForUseActiveSkill(player, "zhengjing_active", "#zhengjing-give", true)
     if dat then
-      local to = room:getPlayerById(dat.targets[1])
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(dat.cards)
-      to:addToPile("zhengxuan_jing", dummy, true, self.name)
+      room:getPlayerById(dat.targets[1]):addToPile("zhengxuan_jing", dat.cards, true, self.name)
     end
     cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
     if #cards > 0 and not player.dead then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(cards)
-      room:moveCardTo(dummy, Card.PlayerHand, player, fk.ReasonJustMove, self.name, nil, true, player.id)
+      room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonJustMove, self.name, nil, true, player.id)
     end
   end,
 }
@@ -1839,10 +1834,7 @@ local changshiChiyanDelay = fk.CreateTriggerSkill{
   end,
   on_cost = function() return true end,
   on_use = function(self, event, target, player, data)
-    local dummy = Fk:cloneCard("zixing")
-    dummy:addSubcards(player:getPile("changshi__chiyan"))
-    local room = player.room
-    room:obtainCard(player.id, dummy, false)
+    player.room:obtainCard(player.id, player:getPile("changshi__chiyan"), false)
   end,
 }
 Fk:loadTranslationTable{

@@ -140,10 +140,7 @@ local xingshang = fk.CreateTriggerSkill{
         skillName = self.name,
       })
     else
-      local cards_id = target:getCardIds{Player.Hand, Player.Equip}
-      local dummy = Fk:cloneCard'slash'
-      dummy:addSubcards(cards_id)
-      room:obtainCard(player.id, dummy, false, fk.ReasonPrey)
+      room:obtainCard(player.id, target:getCardIds{Player.Hand, Player.Equip}, false, fk.ReasonPrey)
     end
   end,
 }

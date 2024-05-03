@@ -742,9 +742,7 @@ local duoji = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     room:throwCard(effect.cards, self.name, player, player)
     if player.dead or target.dead or #target:getCardIds("e") == 0 then return end
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(target:getCardIds("e"))
-    room:obtainCard(player.id, dummy, true, fk.ReasonPrey)
+    room:obtainCard(player.id, target:getCardIds("e"), true, fk.ReasonPrey)
   end,
 }
 xunchen:addSkill(jianzhan)

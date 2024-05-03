@@ -111,9 +111,7 @@ local m_ex__ganlu = fk.CreateActiveSkill{
       return room:getCardArea(id) == Card.Processing
     end)
     if #dis_cards > 0 then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(dis_cards)
-      room:moveCardTo(dummy, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
+      room:moveCardTo(dis_cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name)
     end
   end,
 }
@@ -1231,9 +1229,7 @@ local m_ex__duodao = fk.CreateTriggerSkill{
     return player.room:askForSkillInvoke(player, self.name, nil, "#m_ex__duodao-invoke::"..data.from.id)
   end,
   on_use = function(self, event, target, player, data)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(data.from:getEquipments(Card.SubtypeWeapon))
-    player.room:obtainCard(player, dummy, false, fk.ReasonPrey)
+    player.room:obtainCard(player, data.from:getEquipments(Card.SubtypeWeapon), false, fk.ReasonPrey)
   end
 }
 m_ex__panzhangmazhong:addSkill(m_ex__duodao)
@@ -2558,9 +2554,7 @@ local m_ex__yanzhu = fk.CreateActiveSkill{
       local card = room:askForCardChosen(player, target, "hej", self.name)
       room:obtainCard(player.id, card, false, fk.ReasonPrey)
     elseif choice == "m_ex__yanzhu_choice2" then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(target.player_cards[Player.Equip])
-      room:obtainCard(player, dummy, true, fk.ReasonPrey)
+      room:obtainCard(player, target:getCardIds(Player.Equip), true, fk.ReasonPrey)
       room:handleAddLoseSkills(player, "-" .. self.name, nil, true, false)
     end
   end,

@@ -85,15 +85,11 @@ end
 
 ---@param room Room @ 房间
 ---@param player ServerPlayer @ 获得牌的角色
----@param cid integer|Card @ 要获得的牌/id
+---@param cid integer | integer[] | Card | Card[] @ 要获得的牌
 ---@param skillName string @ 技能名
 local function GetCardFromRenPile(room, player, cid, skillName)
   skillName = skillName or ""
-  if type(cid) ~= "number" then
-    cid = cid:isVirtual() and cid.subcards or {cid.id}
-  else
-    cid = {cid}
-  end
+  cid = Card:getIdList(cid)
   if #cid == 0 then return end
   local move = {
     ids = cid,
@@ -211,9 +207,7 @@ local debao = fk.CreateTriggerSkill{
     if event == fk.AfterCardsMove then
       player:addToPile("huaxin_ren", room:getNCards(1)[1], false, self.name)
     else
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(player:getPile("huaxin_ren"))
-      room:obtainCard(player.id, dummy, false, fk.ReasonJustMove)
+      room:obtainCard(player.id, player:getPile("huaxin_ren"), false, fk.ReasonJustMove)
     end
   end,
 }
@@ -349,9 +343,7 @@ local shuchen = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {target.id})
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(GetRenPile(room))
-    GetCardFromRenPile(room, player, dummy, self.name)
+    GetCardFromRenPile(room, player, GetRenPile(room), self.name)
     if not target.dead and target:isWounded() then
       room:recover{
         who = target,
@@ -399,9 +391,7 @@ local sheyi = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(self.cost_data)
-    player.room:obtainCard(target, dummy, false, fk.ReasonGive, player.id)
+    player.room:obtainCard(target, self.cost_data, false, fk.ReasonGive, player.id)
     return true
   end,
 }
@@ -612,15 +602,13 @@ local muzhen = fk.CreateActiveSkill{
       })
       if not (player.dead or target.dead or target:isKongcheng()) then
         local id = room:askForCardChosen(player, target, "h", self.name)
-        room:obtainCard(player.id, id, false, fk.ReasonPrey)
+        room:obtainCard(player, id, false, fk.ReasonPrey)
       end
     elseif self.interaction.data == "muzhen2" then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(effect.cards)
-      room:obtainCard(target.id, dummy, false, fk.ReasonGive)
+      room:obtainCard(target, effect.cards, false, fk.ReasonGive, player.id)
       if not (player.dead or target.dead or #target:getCardIds("e") == 0) then
         local id = room:askForCardChosen(player, target, "e", self.name)
-        room:obtainCard(player.id, id, false, fk.ReasonPrey)
+        room:obtainCard(player, id, true, fk.ReasonPrey)
       end
     end
   end,
@@ -684,9 +672,7 @@ local mobile__songshu = fk.CreateTriggerSkill{
     local n = math.min(player.hp, 5, #GetRenPile(room))
     local all_cards = GetRenPile(room)
     local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name, "#mobile__songshu-choose:::"..n, nil, n, n, all_cards)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(cards)
-    GetCardFromRenPile(room, target, dummy, self.name)
+    GetCardFromRenPile(room, target, cards, self.name)
     return true
   end,
 }
@@ -956,9 +942,7 @@ local liaoyi = fk.CreateTriggerSkill{
       n = math.min(-n, 4)
       local all_cards = GetRenPile(room)
       local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name, "#liaoyi-choose:::"..n, nil, n, n, all_cards)
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(cards)
-      GetCardFromRenPile(room, target, dummy, self.name)
+      GetCardFromRenPile(room, target, cards, self.name)
     else
       n = math.min(n, 4)
       local cards = room:askForCard(target, n, n, true, self.name, false, ".", "#liaoyi-put:::"..n)
@@ -1081,9 +1065,7 @@ local jutu = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if #player:getPile("liuzhang_sheng") > 0 then
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(player:getPile("liuzhang_sheng"))
-      room:obtainCard(player.id, dummy, false, fk.ReasonJustMove)
+      room:obtainCard(player.id, player:getPile("liuzhang_sheng"), false, fk.ReasonJustMove)
     end
     if player.dead then return end
     if player:getMark("@yaohu") == 0 then
@@ -1171,9 +1153,7 @@ local yaohu_trigger = fk.CreateTriggerSkill{
       else
         local cards = room:askForCard(target, 2, 2, true, "yaohu", true, ".", "#yaohu-give:"..player.id.."::"..data.card:toLogString())
         if #cards == 2 then
-          local dummy = Fk:cloneCard("dilu")
-          dummy:addSubcards(cards)
-          room:obtainCard(player.id, dummy, false, fk.ReasonGive)
+          room:obtainCard(player.id, cards, false, fk.ReasonGive)
         else
           AimGroup:cancelTarget(data, player.id)
           return true
@@ -1653,14 +1633,10 @@ local dingzhou = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
 
-    local dummy = Fk:cloneCard("slash")
-    dummy:addSubcards(effect.cards)
-    room:obtainCard(target, dummy, false, fk.ReasonGive, effect.from)
+    room:obtainCard(target, effect.cards, false, fk.ReasonGive, effect.from)
 
     if #target:getCardIds("ej") > 0 then
-      dummy = Fk:cloneCard("jink")
-      dummy:addSubcards(target:getCardIds("ej"))
-      room:obtainCard(player, dummy, false, fk.ReasonPrey, target.id)
+      room:obtainCard(player, target:getCardIds("ej"), false, fk.ReasonPrey, target.id)
     end
   end,
 }

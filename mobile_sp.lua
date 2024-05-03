@@ -158,9 +158,7 @@ local yirang = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = room:getPlayerById(self.cost_data[2])
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(self.cost_data[1])
-    room:obtainCard(to, dummy, false, fk.ReasonGive)
+    room:obtainCard(to, self.cost_data[1], false, fk.ReasonGive)
     room:changeMaxHp(player, to.maxHp-player.maxHp)
     if not player.dead and player:isWounded() then
       room:recover { num = self.cost_data[3], skillName = self.name, who = player , recoverBy = player}
@@ -336,9 +334,7 @@ local shouye_delay = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local ids = room:getSubcardsByRule(data.card, {Card.Processing})
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(ids)
-    room:obtainCard(player, dummy, true, fk.ReasonJustMove)
+    room:obtainCard(player, ids, true, fk.ReasonJustMove)
   end,
 }
 shouye:addRelatedSkill(shouye_delay)
@@ -1149,9 +1145,7 @@ local mobile__jimeng = fk.CreateTriggerSkill{
 
     if player.dead or player:isNude() or player.hp < 1 then return false end
     local cards = room:askForCard(player, player.hp, player.hp, true, self.name, false, ".", "#mobile__jimeng-give::" .. to.id..":"..player.hp)
-    local dummy = Fk:cloneCard("slash")
-    dummy:addSubcards(cards)
-    room:obtainCard(to, dummy, false, fk.ReasonGive)
+    room:obtainCard(to, cards, false, fk.ReasonGive)
   end,
 }
 local mobile__shuaiyan = fk.CreateTriggerSkill{
@@ -1866,9 +1860,7 @@ local jibing_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     player:broadcastSkillInvoke("jibing")
     player.room:notifySkillInvoked(player, "jibing", "special")
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(player.room:getNCards(2))
-    player:addToPile("mayuanyi_bing", dummy, false, "jibing")
+    player:addToPile("mayuanyi_bing", player.room:getNCards(2), false, "jibing")
     return true
   end,
 }
@@ -2315,15 +2307,15 @@ local mingcha = fk.CreateTriggerSkill{
     room:delay(2000)
     local _, choice = U.askforChooseCardsAndChoice(player, cards, {"OK"}, self.name, "#mingcha-get", {"Cancel"}, 0, 0, cards)
     if choice == "OK" then
-      local dummy = Fk:cloneCard("slash")
+      local to_get = {}
       for i = 3, 1, -1 do
         if Fk:getCardById(cards[i]).number < 9 then
-          dummy:addSubcard(cards[i])
+          table.insert(to_get, cards[i])
           table.remove(cards, i)
         end
       end
-      if #dummy.subcards > 0 then
-        room:obtainCard(player.id, dummy, true, fk.ReasonJustMove)
+      if #to_get > 0 then
+        room:obtainCard(player.id, to_get, true, fk.ReasonJustMove)
       end
       if not player.dead then
         local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return not p:isNude() end), Util.IdMapper)
@@ -2523,9 +2515,7 @@ local chengye = fk.CreateTriggerSkill{
     room:notifySkillInvoked(player, self.name, "drawcard")
     if event == fk.EventPhaseStart then
       player:broadcastSkillInvoke(self.name, 3)
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(player:getPile("chengye_classic"))
-      room:obtainCard(player, dummy, true, fk.ReasonPrey)
+      room:obtainCard(player, player:getPile("chengye_classic"), true, fk.ReasonPrey)
     else
       player:broadcastSkillInvoke(self.name, math.random(2))
       local ids = {}
@@ -2927,9 +2917,7 @@ local tunchu = fk.CreateTriggerSkill{
     if event == fk.DrawNCards then
       data.n = data.n + 2
     else
-      local dummy = Fk:cloneCard("dilu")
-      dummy:addSubcards(self.cost_data)
-      player:addToPile("lifeng_liang", dummy, true, self.name)
+      player:addToPile("lifeng_liang", self.cost_data, true, self.name)
     end
   end,
 }
@@ -3546,9 +3534,7 @@ local zhaoxin = fk.CreateActiveSkill{
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
-    local dummy = Fk:cloneCard("dilu")
-    dummy:addSubcards(effect.cards)
-    player:addToPile("simazhao_wang", dummy, true, self.name)
+    player:addToPile("simazhao_wang", effect.cards, true, self.name)
     if not player.dead then
       player:drawCards(#effect.cards, self.name)
     end

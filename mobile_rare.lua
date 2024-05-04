@@ -774,7 +774,7 @@ local zhengjing = fk.CreateActiveSkill{
     room:setPlayerMark(player, "zhengjing", cards)
     local _, dat = room:askForUseActiveSkill(player, "zhengjing_active", "#zhengjing-give", true)
     if dat then
-      room:getPlayerById(dat.targets[1]):addToPile("zhengxuan_jing", dat.cards, true, self.name)
+      room:getPlayerById(dat.targets[1]):addToPile("zhengxuan_jing", dat.cards, false, self.name, player.id, player.id)
     end
     cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
     if #cards > 0 and not player.dead then
@@ -807,7 +807,7 @@ local zhengjing_trigger = fk.CreateTriggerSkill{
     local room = player.room
     player:skip(Player.Judge)
     player:skip(Player.Draw)
-    room:moveCardTo(player:getPile("zhengxuan_jing"), Card.PlayerHand, player, fk.ReasonPrey, "zhengjing", nil, true, player.id)
+    room:moveCardTo(player:getPile("zhengxuan_jing"), Card.PlayerHand, player, fk.ReasonPrey, "zhengjing", nil, false, player.id)
   end,
 }
 Fk:addSkill(zhengjing_active)

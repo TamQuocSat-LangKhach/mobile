@@ -1206,6 +1206,17 @@ Fk:loadTranslationTable{
   ["~liuzhang"] = "引狼入室，噬脐莫及啊！",
 }
 
+Fk:addQmlMark{
+  name = "wuling",
+  how_to_show = function(name, value, p)
+    if type(value) == "table" then
+      return Fk:translate("wuling" .. tostring(p:getMark("wuling_invoke")))
+    end
+    return " "
+  end,
+  qml_path = "packages/mobile/qml/WuLingMark"
+}
+
 local wulingHu = fk.CreateTrickCard{
   name = "wulingHu",
 }
@@ -1238,8 +1249,8 @@ extension:addCard(wulingHe)
 
 local wuLingMarkGainedEffect = function(mark, player)
   local room = player.room
-
-  if mark == "wuling2" and (player:isWounded() or #player:getCardIds("j") > 0) then
+  if mark == "wuling2" then
+    room:notifySkillInvoked(player, "wulingLu", "support")
     if player:isWounded() then
       room:recover{
         who = player,
@@ -1251,19 +1262,17 @@ local wuLingMarkGainedEffect = function(mark, player)
       player:throwAllCards("j")
     end
   elseif mark == "wuling4" then
-    room:notifySkillInvoked(player, "wuling", "control")
-    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return #p:getCardIds("e") > 0 end), Util.IdMapper)
-    if #targets == 0 then
-      return false
-    end
-
+    room:notifySkillInvoked(player, "wulingYuan", "control")
+    local targets = table.map(table.filter(room:getOtherPlayers(player, false), function(p)
+      return #p:getCardIds("e") > 0 end), Util.IdMapper)
+    if #targets == 0 then return false end
     local to = room:askForChoosePlayers(player, targets, 1, 1, "#wuling-choose", "wuling", false)
     if #to > 0 then
       local cards = room:askForCardsChosen(player, room:getPlayerById(to[1]), 1, 1, "e", "wuling")
       room:obtainCard(player.id, cards[1], true, fk.ReasonPrey)
     end
   elseif mark == "wuling5" then
-    room:notifySkillInvoked(player, "wuling", "drawcard")
+    room:notifySkillInvoked(player, "wulingHe", "drawcard")
     player:drawCards(3, "wuling")
   end
 end
@@ -1300,19 +1309,19 @@ local wuling = fk.CreateActiveSkill{
       ["wulingHe"] = "wuling5",
     }
 
+    local names = {}
     if result == "" then
-      result = { "wuling5", "wuling1", "wuling3", "wuling4", "wuling2" }
+      names = { "wulingHe", "wulingHu", "wulingXiong", "wulingYuan", "wulingLu" }
     else
-      result = table.map(json.decode(result).sort, function(name) return wulingMarkMap[name] end)
+      names = json.decode(result).sort
     end
 
-    player.tag["wulingUsed"] = true
+    result = table.map(names, function(name) return wulingMarkMap[name] end)
 
     room:setPlayerMark(target, self.name, { result, player.id })
     room:setPlayerMark(target, "wuling_invoke", tonumber(result[1][7]))
-    room:setPlayerMark(target, "@wuling", "<font color='red'>"..Fk:translate(result[1]).."</font>"..
-      table.concat(table.map(result, function(s) return Fk:translate(s) end), "", 2, 5))
-    
+    room:setPlayerMark(target, "@[wuling]", { names, 1 })
+
     wuLingMarkGainedEffect(result[1], target)
   end,
 }
@@ -1340,18 +1349,13 @@ local wuling_trigger = fk.CreateTriggerSkill{
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    player:broadcastSkillInvoke("wuling")
     if event == fk.DamageCaused then
-      room:notifySkillInvoked(player, "wuling", "offensive")
+      room:notifySkillInvoked(player, "wulingHu", "offensive")
       data.damage = data.damage + 1
     elseif event == fk.DamageInflicted then
       room:setPlayerMark(player, "wuling3Triggered-turn", 1)
-      room:notifySkillInvoked(player, "wuling", "defensive")
+      room:notifySkillInvoked(player, "wulingXiong", "defensive")
       data.damage = data.damage - 1
-
-      if data.damage < 1 then
-        return true
-      end
     elseif event == fk.EventPhaseStart then
       if player.phase == Player.Start then
         local result = player:getMark("wuling")[1]
@@ -1360,21 +1364,14 @@ local wuling_trigger = fk.CreateTriggerSkill{
         if new_index > 5 then
           room:setPlayerMark(target, "wuling", 0)
           room:setPlayerMark(target, "wuling_invoke", 0)
-          room:setPlayerMark(target, "@wuling", 0)
+          room:setPlayerMark(target, "@[wuling]", 0)
           return false
         end
 
-        room:notifySkillInvoked(player, "wuling", "special")
         room:setPlayerMark(player, "wuling_invoke", tonumber(result[new_index][7]))
-        local new_str = ""
-        for i = 1, 5, 1 do
-          if i == new_index then
-            new_str = new_str .. "<font color='red'>"..Fk:translate(result[i]).."</font>"
-          else
-            new_str = new_str .. Fk:translate(result[i])
-          end
-        end
-        room:setPlayerMark(player, "@wuling", new_str)
+        local mark = player:getMark("@[wuling]")
+        mark[2] = new_index
+        room:setPlayerMark(player, "@[wuling]", mark)
         wuLingMarkGainedEffect(result[new_index], player)
       end
     end
@@ -1382,17 +1379,16 @@ local wuling_trigger = fk.CreateTriggerSkill{
 
   refresh_events = { fk.Death },
   can_refresh = function(self, event, target, player, data)
-    return target == player and player.tag["wulingUsed"]
+    return target == player
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    player.tag["wulingUsed"] = nil
     for _, p in ipairs(room.alive_players) do
       local mark = p:getMark("wuling")
       if type(mark) == "table" and mark[2] == player.id then
         room:setPlayerMark(p, "wuling", 0)
         room:setPlayerMark(p, "wuling_invoke", 0)
-        room:setPlayerMark(p, "@wuling", 0)
+        room:setPlayerMark(p, "@[wuling]", 0)
       end
     end
   end,
@@ -1513,7 +1509,12 @@ Fk:loadTranslationTable{
   ["wuling3"] = "熊",
   ["wuling4"] = "猿",
   ["wuling5"] = "鹤",
-  ["@wuling"] = "五灵",
+  ["wulingHu"] = "虎灵",
+  ["wulingLu"] = "鹿灵",
+  ["wulingXiong"] = "熊灵",
+  ["wulingYuan"] = "猿灵",
+  ["wulingHe"] = "鹤灵",
+  ["@[wuling]"] = "五灵",
   ["#wuling_trigger"] = "五灵",
   ["#wuling-choose"] = "五灵：请选择一名其他角色，获得其装备区里的一张牌",
   ["#youyi"] = "游医：你可以弃置所有“仁”区牌，令所有角色回复1点体力",

@@ -980,10 +980,7 @@ local liubing = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
-    local cardlist = data.card:isVirtual() and data.card.subcards or {data.card.id}
-    if table.every(cardlist, function(id) return player.room:getCardArea(id) == Card.Processing end) then
-      player.room:obtainCard(player.id, data.card, false)
-    end
+    player.room:obtainCard(player.id, data.card, true)
   end,
 }
 local liubing_trigger = fk.CreateTriggerSkill{
@@ -992,17 +989,27 @@ local liubing_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.AfterCardUseDeclared},
   can_trigger = function(self, event, target, player, data)
-    return player == target and player:hasSkill(liubing.name) and player:usedSkillTimes(self.name) == 0 and
+    return player == target and player:hasSkill(liubing) and player:usedSkillTimes(self.name) == 0 and
       data.card.trueName == "slash" and not (data.card:isVirtual() and #data.card.subcards == 0)
   end,
   on_use = function(self, event, target, player, data)
     if data.card.suit ~= Card.Diamond then
-      local diamondSlash = Fk:cloneCard(data.card.name)
-      diamondSlash:addSubcard(data.card)
-      diamondSlash.skillName = self.name
-      diamondSlash.suit = Card.Diamond
-      diamondSlash.color = Card.Red
-      data.card = diamondSlash
+      local card = Fk:cloneCard(data.card.name, data.card.suit, data.card.number)
+      for k, v in pairs(data.card) do
+        if card[k] == nil then
+          card[k] = v
+        end
+      end
+      if data.card:isVirtual() then
+        card.subcards = data.card.subcards
+      else
+        card.id = data.card.id
+      end
+      card.skillNames = data.card.skillNames
+      card.skillName = "liubing"
+      card.suit = Card.Diamond
+      card.color = Card.Red
+      data.card = card
     end
   end,
 }
@@ -1019,8 +1026,8 @@ Fk:loadTranslationTable{
   [":heji"] = "若一名角色使用【决斗】或红色【杀】仅指定唯一其他角色为目标，此牌结算后，你可从手牌中对相同目标使用一张无次数和距离限制的"..
   "【杀】或【决斗】。若你使用的不为转化牌，你使用此牌时随机获得一张红色牌。",
   ["liubing"] = "流兵",
-  [":liubing"] = "锁定技，你每回合使用的第一张非虚拟【杀】花色视为<font color='red'>♦</font>。其他角色于出牌阶段使用的非转化黑色【杀】"..
-  "结算后，若未造成伤害，你获得之。",
+  [":liubing"] = "锁定技，你每回合使用的第一张非虚拟的【杀】的花色视为<font color='red'>♦</font>。"..
+  "其他角色于其出牌阶段内使用的非转化黑色【杀】结算后，若未造成过伤害，你获得之。",
   ["#liubing_trigger"] = "流兵",
   ["#heji-use"] = "合击：你可以对%dest使用一张手牌中的【杀】或者【决斗】",
 

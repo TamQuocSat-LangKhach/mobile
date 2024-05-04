@@ -2735,11 +2735,11 @@ local ruilian = fk.CreateTriggerSkill{
     else
       local id = room:getCardsFromPileByRule(".|.|.|.|.|" .. self.cost_data, 1, "discardPile")
       if #id > 0 then
-        room:obtainCard(player, id[1], false, fk.ReasonPrey)
+        room:obtainCard(player, id[1], true, fk.ReasonPrey)
       end
       id = room:getCardsFromPileByRule(".|.|.|.|.|" .. self.cost_data, 1, "discardPile")
       if #id > 0 then
-        room:obtainCard(target, id[1], false, fk.ReasonPrey)
+        room:obtainCard(target, id[1], true, fk.ReasonPrey)
       end
     end
   end,
@@ -2938,6 +2938,7 @@ local yufeng = fk.CreateActiveSkill{
         ids = { cardToReveal },
         toArea = Card.Processing,
         moveReason = fk.ReasonJustMove,
+        proposer = player.id,
         skillName = self.name,
       }
       if choice then

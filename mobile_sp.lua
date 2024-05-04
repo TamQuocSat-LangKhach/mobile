@@ -158,7 +158,7 @@ local yirang = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local to = room:getPlayerById(self.cost_data[2])
-    room:obtainCard(to, self.cost_data[1], false, fk.ReasonGive)
+    room:obtainCard(to, self.cost_data[1], false, fk.ReasonGive, player.id)
     room:changeMaxHp(player, to.maxHp-player.maxHp)
     if not player.dead and player:isWounded() then
       room:recover { num = self.cost_data[3], skillName = self.name, who = player , recoverBy = player}
@@ -604,7 +604,7 @@ local tongqu_trigger = fk.CreateTriggerSkill{
           if #dat.targets == 1 then
             local to = room:getPlayerById(dat.targets[1])
             local id = dat.cards[1]
-            room:obtainCard(to.id, id, false, fk.ReasonGive)
+            room:obtainCard(to.id, id, false, fk.ReasonGive, player.id)
             if room:getCardOwner(id) == to and room:getCardArea(id) == Card.PlayerHand and
               Fk:getCardById(id).type == Card.TypeEquip and not to:isProhibited(to, Fk:getCardById(id)) then
             room:useCard({
@@ -2801,7 +2801,7 @@ local polu = fk.CreateTriggerSkill{
     if event == fk.TurnStart then
       local id = U.prepareDeriveCards(player.room, mobile__catapult, "mobile__catapult")[1]
       if not id then return end
-      room:obtainCard(player, id, false, fk.ReasonPrey)
+      room:obtainCard(player, id, true, fk.ReasonPrey)
       local card = Fk:getCardById(id)
       if table.contains(player:getCardIds("h"), id) and U.canUseCardTo(room, player, player, card) then
         room:useCard({from = player.id, tos = {{player.id}}, card = card})
@@ -2815,7 +2815,7 @@ local polu = fk.CreateTriggerSkill{
       end
       if #ids == 0 then return end
       local id = table.random(ids)
-      room:obtainCard(player, id, false, fk.ReasonPrey)
+      room:obtainCard(player, id, true, fk.ReasonPrey)
       local card = Fk:getCardById(id)
       if table.contains(player:getCardIds("h"), id) and U.canUseCardTo(room, player, player, card) then
         room:useCard({from = player.id, tos = {{player.id}}, card = card})
@@ -2846,7 +2846,7 @@ local choulue = fk.CreateTriggerSkill{
     local to = room:getPlayerById(self.cost_data)
     local cards = room:askForCard(to, 1, 1, true, self.name, true, ".", "#choulue-ask::"..player.id)
     if #cards > 0 then
-      room:obtainCard(player, cards[1], false, fk.ReasonGive)
+      room:obtainCard(player, cards[1], false, fk.ReasonGive, to.id)
       local name = player:getMark("@choulue")
       if name ~= 0 then
         U.askForUseVirtualCard(room, player, name, nil, self.name, nil, true, true, false, true)
@@ -3021,7 +3021,7 @@ local wuyuan = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     local card = Fk:getCardById(effect.cards[1])
-    room:obtainCard(target, card, false, fk.ReasonGive)
+    room:obtainCard(target, card, false, fk.ReasonGive, player.id)
     if not player.dead and player:isWounded() then
       room:recover({
         who = player,
@@ -3605,7 +3605,7 @@ local daigong = fk.CreateTriggerSkill{
     end
     local card = room:askForCard(data.from, 1, 1, true, self.name, true, ".|.|^("..table.concat(suits, ",")..")", "#daigong-give:"..player.id)
     if #card > 0 then
-      room:obtainCard(player.id, card[1], true, fk.ReasonGive)
+      room:obtainCard(player.id, card[1], true, fk.ReasonGive, data.from.id)
     else
       return true
     end
@@ -4206,7 +4206,7 @@ local daming_other = fk.CreateActiveSkill{
     py:broadcastSkillInvoke("daming")
     local get = effect.cards[1]
     local cardType = Fk:getCardById(get):getTypeString()
-    room:obtainCard(py, get, false, fk.ReasonGive)
+    room:obtainCard(py, get, false, fk.ReasonGive, player.id)
     local targets = table.simpleClone(room:getOtherPlayers(py))
     table.removeOne(targets, player)
     if #targets > 0 then
@@ -4217,14 +4217,14 @@ local daming_other = fk.CreateActiveSkill{
         local give = room:askForCard(to, 1, 1 ,true, self.name, false, ".|.|.|.|.|"..cardType, "#daming-give::"..player.id..":"..cardType)
         if #give > 0 and not player.dead then
           py:broadcastSkillInvoke("daming")
-          room:obtainCard(player, give[1], false, fk.ReasonGive)
+          room:obtainCard(player, give[1], false, fk.ReasonGive, to.id)
           changeDaming (py, 1)
           return
         end
       end
     end
     if table.contains(py:getCardIds("he"), get) and not player.dead then
-      room:obtainCard(player, get, false, fk.ReasonGive)
+      room:obtainCard(player, get, false, fk.ReasonGive, py.id)
     end
   end,
 }

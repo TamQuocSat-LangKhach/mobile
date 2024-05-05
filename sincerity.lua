@@ -984,13 +984,13 @@ local liubing = fk.CreateTriggerSkill{
 }
 local liubing_trigger = fk.CreateTriggerSkill{
   name = "#liubing_trigger",
-  frequency = Skill.Compulsory,
   mute = true,
   events = {fk.AfterCardUseDeclared},
   can_trigger = function(self, event, target, player, data)
     return player == target and player:hasSkill(liubing) and player:usedSkillTimes(self.name) == 0 and
       data.card.trueName == "slash" and not (data.card:isVirtual() and #data.card.subcards == 0)
   end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     if data.card.suit ~= Card.Diamond then
       local card = Fk:cloneCard(data.card.name, data.card.suit, data.card.number)

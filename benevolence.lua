@@ -1210,7 +1210,14 @@ Fk:addQmlMark{
   name = "wuling",
   how_to_show = function(name, value, p)
     if type(value) == "table" then
-      return Fk:translate("wuling" .. tostring(p:getMark("wuling_invoke")))
+      local wulingMarkMap = {
+        ["wulingHu"] = "wuling1",
+        ["wulingLu"] = "wuling2",
+        ["wulingXiong"] = "wuling3",
+        ["wulingYuan"] = "wuling4",
+        ["wulingHe"] = "wuling5",
+      }
+      return Fk:translate(wulingMarkMap[value[1][value[2]]])
     end
     return " "
   end,

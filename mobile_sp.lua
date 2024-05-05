@@ -5836,7 +5836,7 @@ local xionghuo_record = fk.CreateTriggerSkill{
       data.damage = data.damage + 1
     else
       room:doIndicate(player.id, {target.id})
-      room:removePlayerMark(target, "@mobile__baoli", 1)
+      room:setPlayerMark(target, "@mobile__baoli", 0)
       local rand = math.random(1, target:isNude() and 2 or 3)
       if rand == 1 then
         room:damage {
@@ -5860,6 +5860,27 @@ local xionghuo_record = fk.CreateTriggerSkill{
         local cards = table.random(target:getCardIds(Player.Hand), 1)
         table.insertTable(cards, table.random(target:getCardIds(Player.Equip), 1))
         room:obtainCard(player, cards, false, fk.ReasonPrey)
+      end
+    end
+  end,
+
+  refresh_events = {fk.BuryVictim, fk.EventLoseSkill},
+  can_refresh = function(self, event, target, player, data)
+    if event == fk.BuryVictim then
+      return player == target and player:hasSkill(xionghuo, true, true) and table.every(player.room.alive_players, function (p)
+        return not p:hasSkill(xionghuo, true)
+      end)
+    elseif event == fk.EventLoseSkill then
+      return player == target and data == xionghuo and table.every(player.room.alive_players, function (p)
+        return not p:hasSkill(xionghuo, true)
+      end)
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    for _, p in ipairs(room.alive_players) do
+      if p:getMark("@mobile__baoli") > 0 then
+        room:setPlayerMark(p, "@mobile__baoli", 0)
       end
     end
   end,

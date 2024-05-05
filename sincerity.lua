@@ -974,8 +974,7 @@ local liubing = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and player ~= target and target.phase == Player.Play then
       if data.card.trueName == "slash" and data.card.color == Card.Black and not data.damageDealt then
-        local cardlist = data.card:isVirtual() and data.card.subcards or {data.card.id}
-        return #cardlist == 1 and player.room:getCardArea(cardlist[1]) == Card.Processing
+        return U.isPureCard(data.card) and player.room:getCardArea(data.card) == Card.Processing
       end
     end
   end,

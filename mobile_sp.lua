@@ -4910,7 +4910,7 @@ local yilie = fk.CreateTriggerSkill{
       1,
       "#mobile__yilie-choose",
       self.name,
-      true
+      false
     )[1]
 
     local toPlayer = room:getPlayerById(to)
@@ -5052,7 +5052,7 @@ local guimou = fk.CreateTriggerSkill{
             1,
             "#guimou-give:::" .. Fk:getCardById(ids[1]):toLogString(),
             self.name,
-            true
+            false
           )[1]
           room:obtainCard(room:getPlayerById(toGive), ids[1], false, fk.ReasonGive, player.id)
         elseif choice == "guimou_option_discard" then

@@ -775,70 +775,43 @@ Fk:addSkill(godguojia_win)
 local godHuishi = fk.CreateActiveSkill{
   name = "mobile__god_huishi",
   anim_type = "drawcard",
+  prompt = "#mobile__god_huishi",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and player.maxHp < 10
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
-  target_filter = function(self, to_select, selected, selected_cards)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
+  target_num = 0,
   on_use = function(self, room, effect)
-    local from = room:getPlayerById(effect.from)
-
+    local player = room:getPlayerById(effect.from)
     local cardsJudged = {}
-    while from.maxHp < 10 do
+    while true do
       local parsePattern = table.concat(table.map(cardsJudged, function(card)
         return card:getSuitString()
       end), ",")
-
       local judge = {
-        who = from,
+        who = player,
         reason = self.name,
         pattern = ".|.|" .. (parsePattern == "" and "." or "^(" .. parsePattern .. ")"),
         skipDrop = true,
       }
       room:judge(judge)
-
       table.insert(cardsJudged, judge.card)
-
-      if
+      if player.dead or player.maxHp >= 10 or
         not table.every(cardsJudged, function(card)
           return card == judge.card or judge.card:compareSuitWith(card, true)
         end) or
-        not room:askForSkillInvoke(from, self.name, nil, "#mobile__god_huishi-ask")
+        not room:askForSkillInvoke(player, self.name, nil, "#mobile__god_huishi-ask")
       then
         break
       end
-
-      room:changeMaxHp(from, 1)
+      room:changeMaxHp(player, 1)
     end
-
-    local alivePlayerIds = table.map(room.alive_players, function(p)
-      return p.id
-    end)
-
     cardsJudged = table.filter(cardsJudged, function(card)
       return room:getCardArea(card.id) == Card.Processing
     end)
-    if #cardsJudged == 0 then
-      return false
-    end
-
-    local targets = room:askForChoosePlayers(from, alivePlayerIds, 1, 1, "#mobile__god_huishi-give", self.name, true)
-    
-    if #targets > 0 then
-      local to = room:getPlayerById(targets[1])
-      room:moveCardTo(cardsJudged, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, from.id)
-      if
-        table.every(room.alive_players, function(p)
-          return p:getHandcardNum() <= to:getHandcardNum()
-        end)
-      then
-        room:changeMaxHp(from, -1)
-      end
-    else
+    if #cardsJudged == 0 then return end
+    local targets = table.map(room.alive_players, Util.IdMapper)
+    if player.dead or #targets == 0 then
       room:moveCards({
         ids = table.map(cardsJudged, function(card)
           return card:getEffectiveId()
@@ -847,6 +820,18 @@ local godHuishi = fk.CreateActiveSkill{
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = self.name,
       })
+    else
+      local tos = room:askForChoosePlayers(player, targets, 1, 1, "#mobile__god_huishi-give", self.name, true)
+      if #tos == 0 then tos = {player.id} end
+      local to = room:getPlayerById(tos[1])
+      room:moveCardTo(cardsJudged, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, player.id)
+      if
+        table.every(room.alive_players, function(p)
+          return p:getHandcardNum() <= to:getHandcardNum()
+        end)
+      then
+        room:changeMaxHp(player, -1)
+      end
     end
   end,
 }
@@ -1011,8 +996,9 @@ Fk:loadTranslationTable{
   "视为该角色满足其觉醒条件；否则其摸四张牌。最后你减2点体力上限。",
   ["zuoxing"] = "佐幸",
   [":zuoxing"] = "出牌阶段限一次，你可以令神郭嘉减1点体力上限，视为使用一张普通锦囊牌。",
+  ["#mobile__god_huishi"] = "你可进行判定，然后将判定牌交给1名角色，其间你增加体力上限",
   ["#mobile__god_huishi-ask"] = "慧识：你可以加1点体力上限并重复此流程",
-  ["#mobile__god_huishi-give"] = "慧识：你可以将这些判定牌交给一名角色",
+  ["#mobile__god_huishi-give"] = "慧识：将这些判定牌交给一名角色，“取消”：留给自己",
   ["#mobile__tianyi-choose"] = "天翊：请选择一名角色获得技能“佐幸”",
   ["@mobile__limited_huishi"] = "辉逝",
   ["#mobile__limited_huishi-choice"] = "辉逝：选择 %src 一个觉醒技，视为满足觉醒条件",

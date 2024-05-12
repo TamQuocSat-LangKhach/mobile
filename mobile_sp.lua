@@ -6169,4 +6169,254 @@ Fk:loadTranslationTable{
   ["$mobile__zhangqiying_win_audio"] = "谷神不死，是谓玄牝。",
 }
 
+local yangfeng = General(extension, "yangfeng", "qun", 4)
+Fk:loadTranslationTable{
+  ["yangfeng"] = "杨奉",
+  ["#yangfeng"] = "忠勇半途",
+  ["~yangfeng"] = "刘备！本共图吕布，何设鸿门相欺！",
+}
+
+local xuetu = fk.CreateActiveSkill{
+  name = "xuetu",
+  anim_type = "support",
+  switch_skill_name = "xuetu",
+  target_num = 1,
+  prompt = function(self)
+    return "#xuetu_" .. Self:getSwitchSkillState(self.name, false, true)
+  end,
+  card_num = function(self)
+    return Self:getSwitchSkillState(self.name) == fk.SwitchYang and 1 or 0
+  end,
+  can_use = function(self, player)
+    return 
+      player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
+      not (player:getSwitchSkillState(self.name) == fk.SwitchYin and player.hp < 1)
+  end,
+  card_filter = function(self, to_select, selected)
+    if Self:getSwitchSkillState(self.name) == fk.SwitchYang then
+      return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
+    end
+
+    return false
+  end,
+  target_filter = function(self, to_select, selected)
+    return
+      #selected == 0 and
+      not (Self:getSwitchSkillState(self.name) == fk.SwitchYang and not Fk:currentRoom():getPlayerById(to_select):isWounded())
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    
+    if #effect.cards > 0 then
+      room:throwCard(effect.cards, self.name, player, player)
+      room:recover{
+        who = target,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name,
+      }
+    else
+      room:loseHp(player, 1, self.name)
+      target:drawCards(2, self.name)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["xuetu"] = "血途",
+  [":xuetu"] = "转换技，出牌阶段限一次，你可以：阳，弃置一张牌并令一名角色回复1点体力；阴，失去1点体力并令一名角色摸两张牌。" ..
+  "<br><strong>二级</strong>：出牌阶段各限一次，你可以选择一项：1.令一名角色回复1点体力；2.令一名角色摸两张牌。" ..
+  "<br><strong>三级</strong>：转换技，出牌阶段限一次，你可以：阳，回复1点体力并令一名角色弃置两张牌；阴，摸一张牌并对一名角色造成1点伤害。",
+  ["#xuetu_yang"] = "血途：你可弃一张牌令一名角色回复1点体力",
+  ["#xuetu_yin"] = "血途：你可失去1点体力令一名角色摸两张牌",
+
+  ["$xuetu1"] = "天子仪仗在此，逆贼安扰圣驾。",
+  ["$xuetu2"] = "末将救驾来迟，还望陛下恕罪。",
+}
+
+local xuetuV2 = fk.CreateActiveSkill{
+  name = "xuetu_v2",
+  card_num = 0,
+  target_num = 1,
+  mute = true,
+  interaction = function()
+    local options = { "xuetu_v2_recover", "xuetu_v2_draw" }
+    local choices = table.filter(options, function(option) return not table.contains(U.getMark(Self, "xuetu_v2_used-phase"), option) end)
+    return UI.ComboBox {choices = choices, all_choices = options }
+  end,
+  can_use = function(self, player)
+    return #U.getMark(player, "xuetu_v2_used-phase") < 2
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return
+      #selected == 0 and
+      not (self.interaction.data == "xuetu_v2_recover" and not Fk:currentRoom():getPlayerById(to_select):isWounded())
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    player:broadcastSkillInvoke(xuetu.name)
+    room:notifySkillInvoked(player, self.name, "support")
+    local target = room:getPlayerById(effect.tos[1])
+
+    local xuetuUsed = U.getMark(player, "xuetu_v2_used-phase")
+    table.insertIfNeed(xuetuUsed, self.interaction.data)
+    room:setPlayerMark(player, "xuetu_v2_used-phase", xuetuUsed)
+    
+    if self.interaction.data == "xuetu_v2_recover" then
+      room:recover{
+        who = target,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name,
+      }
+    else
+      target:drawCards(2, self.name)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["xuetu_v2"] = "血途",
+  [":xuetu_v2"] = "出牌阶段各限一次，你可以选择一项：1.令一名角色回复1点体力；2.令一名角色摸两张牌。",
+  ["xuetu_v2_recover"] = "令一名角色回复1点体力",
+  ["xuetu_v2_draw"] = "令一名角色摸两张牌",
+}
+
+local xuetuV3 = fk.CreateActiveSkill{
+  name = "xuetu_v3",
+  anim_type = "offensive",
+  switch_skill_name = "xuetu_v3",
+  card_num = 0,
+  target_num = 1,
+  prompt = function(self)
+    return "#xuetu_v3_" .. Self:getSwitchSkillState(self.name, false, true)
+  end,
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+    
+    if player:getSwitchSkillState(self.name, true) == fk.SwitchYang then
+      room:recover{
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name,
+      }
+
+      room:askForDiscard(target, 2, 2, true, self.name, false)
+    else
+      player:drawCards(1, self.name)
+      room:damage{
+        from = player,
+        to = target,
+        damage = 1,
+        skillName = self.name,
+      }
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["xuetu_v3"] = "血途",
+  [":xuetu_v3"] = "转换技，出牌阶段限一次，你可以：阳，回复1点体力并令一名角色弃置两张牌；阴，摸一张牌并对一名角色造成1点伤害。",
+  ["#xuetu_v3_yang"] = "血途：你可回复1点体力并令一名角色弃两张牌",
+  ["#xuetu_v3_yin"] = "血途：你可摸一张牌并对一名角色造成1点伤害",
+
+  ["$xuetu_v31"] = "徐、扬粮草甚多，众将随我前往。",
+  ["$xuetu_v32"] = "哈哈哈哈，所过之处，粒粟不留。",
+}
+
+yangfeng:addSkill(xuetu)
+yangfeng:addRelatedSkill(xuetuV2)
+yangfeng:addRelatedSkill(xuetuV3)
+
+local weiming = fk.CreateTriggerSkill{
+  name = "weiming",
+  mute = true,
+  frequency = Skill.Quest,
+  events = {fk.EventPhaseStart, fk.Deathed},
+  can_trigger = function(self, event, target, player, data)
+    if player:getQuestSkillState(self.name) or not player:hasSkill(self) then
+      return false
+    end
+
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      return
+        target == player and
+        player.phase == Player.Play and
+        table.find(room.alive_players, function(p) return p ~= player and not table.contains(U.getMark(p, "@@weiming"), player.id) end)
+    end
+
+    return table.contains(player.tag["weimingTargets"] or {}, data.who) or (data.damage and data.damage.from == player)
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseStart then
+      player:broadcastSkillInvoke(self.name, 1)
+      room:notifySkillInvoked(player, self.name, "offensive")
+
+      local targets = table.map(
+        table.filter(
+          room.alive_players,
+          function(p) return p ~= player and not table.contains(U.getMark(p, "@@weiming"), player.id) end
+        ),
+        Util.IdMapper
+      )
+      if #targets == 0 then
+        return false
+      end
+
+      local toId = room:askForChoosePlayers(player, targets, 1, 1, "#weiming-choose", self.name, false)[1]
+      local to = room:getPlayerById(toId)
+
+      local weimingTargets = player.tag["weimingTargets"] or {}
+      table.insertIfNeed(weimingTargets, toId)
+      player.tag["weimingTargets"] = weimingTargets
+
+      local weimingOwners = U.getMark(to, "@@weiming")
+      table.insertIfNeed(weimingOwners, player.id)
+      room:setPlayerMark(to, "@@weiming", weimingOwners)
+    else
+      for _, p in ipairs(room.alive_players) do
+        local weimingOwners = U.getMark(p, "@@weiming")
+        table.removeOne(weimingOwners, player.id)
+        room:setPlayerMark(p, "@@weiming", #weimingOwners > 0 and weimingOwners or 0)
+      end
+      if table.contains(player.tag["weimingTargets"] or {}, data.who) then
+        player:broadcastSkillInvoke(self.name, 3)
+        room:notifySkillInvoked(player, self.name, "negative")
+        room:updateQuestSkillState(player, self.name, true)
+        room:handleAddLoseSkills(player, "-xuetu|-xuetu_v2|xuetu_v3")
+      else
+        player:broadcastSkillInvoke(self.name, 2)
+        room:notifySkillInvoked(player, self.name, "offensive")
+        room:updateQuestSkillState(player, self.name)
+        room:handleAddLoseSkills(player, "-xuetu|-xuetu_v3|xuetu_v2")
+      end
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["weiming"] = "威命",
+  [":weiming"] = "使命技，出牌阶段开始时，你标记一名未标记过的其他角色。<br>" ..
+  "<strong>成功</strong>：当你杀死一名未标记的角色后，你将“血途”修改至二级；<br>" ..
+  "<strong>失败</strong>：当一名已被标记的角色死亡后，你将“血途”修改至三级；<br>",
+  ["@@weiming"] = "威命",
+  ["#weiming-choose"] = "威命：选择1名未被选择过的角色，如其在你杀死其他未被选择过的角色死亡前死亡，则威命失败",
+
+  ["$weiming1"] = "诸位东归洛阳，奉愿随驾以护。",
+  ["$weiming2"] = "不遵皇命，视同倡乱之贼。",
+  ["$weiming3"] = "布局良久，于今功亏一篑啊。",
+}
+
+yangfeng:addSkill(weiming)
+
 return extension

@@ -278,65 +278,55 @@ local shanjia = fk.CreateTriggerSkill{
   anim_type = "drawcard",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self) and player.phase == Player.Play then
-      if #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
-        local use = e.data[1]
-        return use.from == player.id and use.card.type == Card.TypeEquip
-      end, Player.HistoryGame) > 0 then
-        return true
-      end
-    end
+    return target == player and player:hasSkill(self) and player.phase == Player.Play
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 7, function(e)
-      local use = e.data[1]
-      return use.from == player.id and use.card.type == Card.TypeEquip
-    end, Player.HistoryGame)
-    n = math.min(n, 7)
-    player:drawCards(n, self.name)
-    if player.dead or player:isNude() then return end
-    local yes = false
-    if #player:getCardIds("he") < n then
-      if #player:getCardIds("e") > 0 then
-        yes = true
+    room:drawCards(player, 3, self.name)
+    if player.dead then return false end
+    local x = player:getMark("@shanjia")
+    if x > 0 then
+      --其实这么写会有个有趣的现象，在摸牌时失去缮甲的话会不用弃牌，待验证
+      local cards = room:askForDiscard(player, x, x, true, self.name, false, ".", "#shanjia-discard:::"..tostring(x), true)
+      if #cards > 0 then
+        local shanjia_failure = table.find(cards, function (id)
+          return Fk:getCardById(id).type ~= Card.TypeEquip
+        end)
+        room:throwCard(cards, self.name, player, player)
+        if player.dead or shanjia_failure then return false end
       end
-      player:throwAllCards("he")
-    else
-      local cards = room:askForDiscard(player, n, n, true, self.name, false, ".", nil, true)
-      if table.find(cards, function(id) return table.contains(player:getCardIds("e"), id) end) then
-        yes = true
-      end
-      room:throwCard(cards, self.name, player, player)
     end
-    if not player.dead and yes then
-      U.askForUseVirtualCard(room, player, "slash", nil, self.name, nil, true, true, true, true)
-    end
+    U.askForUseVirtualCard(room, player, "slash", {}, self.name, "#shanjia-slash", true, true, false, true)
   end,
 
-  refresh_events = {fk.CardUsing, fk.EventAcquireSkill, fk.EventLoseSkill},
+  refresh_events = {fk.AfterCardsMove, fk.EventAcquireSkill, fk.EventLoseSkill},
   can_refresh = function (self, event, target, player, data)
-    if target == player then
-      if event == fk.CardUsing then
-        return player:hasSkill(self, true) and data.card.type == Card.TypeEquip and player:getMark("@shanjia") < 7
-      else
-        return data == self and player.room:getTag("RoundCount")
-      end
+    if event == fk.AfterCardsMove then
+      return player:hasSkill(self, true) and player:getMark("@shanjia") > 0
+    else
+      return data == self and target == player
     end
   end,
   on_refresh = function (self, event, target, player, data)
     local room = player.room
-    if event == fk.CardUsing then
-      room:addPlayerMark(player, "@shanjia", 1)
+    if event == fk.AfterCardsMove then
+      local i = 0
+      for _, move in ipairs(data) do
+        if move.from == player.id then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerEquip then
+              i = i + 1
+            end
+          end
+        end
+      end
+      if i > 0 then
+        room:removePlayerMark(player, "@shanjia", i)
+      end
     elseif event == fk.EventAcquireSkill then
-      local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 7, function(e)
-        local use = e.data[1]
-        return use.from == player.id and use.card.type == Card.TypeEquip
-      end, Player.HistoryGame)
-      n = math.min(n, 7)
-      room:setPlayerMark(player, "@shanjia", n)
+      room:setPlayerMark(player, "@shanjia", 3)
     elseif event == fk.EventLoseSkill then
-      room:addPlayerMark(player, "@shanjia", 0)
+      room:setPlayerMark(player, "@shanjia", 0)
     end
   end,
 }
@@ -346,9 +336,12 @@ Fk:loadTranslationTable{
   ["#caochun"] = "虎豹骑首",
   ["illustrator:caochun"] = "depp",
   ["shanjia"] = "缮甲",
-  [":shanjia"] = "出牌阶段开始时，你可以摸X张牌，然后弃置等量的牌（X为你于本局游戏内使用过的装备牌数且至多为7）。若你以此法弃置了装备区内的牌，"..
-  "视为你使用一张无距离次数限制的【杀】。",
-  ["@shanjia"] = "缮甲",
+  [":shanjia"] = "出牌阶段开始时，你可以摸三张牌，然后弃置三张牌（你每失去过一张装备区里的牌便少弃置一张），"..
+  "若没有弃置不为装备牌的牌，你可以视为使用【杀】。",
+
+  ["@shanjia"] = "缮甲弃牌",
+  ["#shanjia-discard"] = "缮甲：你须弃置%arg张牌，只弃装备牌可免费出【杀】",
+  ["#shanjia-slash"] = "缮甲：你可以视为对一名角色使用【杀】",
 
   ["$shanjia1"] = "缮甲厉兵，伺机而行。",
   ["$shanjia2"] = "战，当取精锐之兵，而弃驽钝也。",

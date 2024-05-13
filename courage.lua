@@ -699,19 +699,18 @@ local chongjianBuff = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.Damage},
   can_trigger = function (self, event, target, player, data)
-    if data.to:isAlive() and #data.to:getCardIds(Player.Equip) > 0 then
+    if not player.dead and not data.to.dead and #data.to:getCardIds(Player.Equip) > 0 then
       local parentUseData = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
       return parentUseData and (parentUseData.data[1].extra_data or {}).chongjianUser == player.id
     end
   end,
+  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
     local equipsNum = #data.to:getCardIds(Player.Equip)
     local num = math.min(equipsNum, data.damage)
     local cards = room:askForCardsChosen(player, data.to, num, num, "e", self.name)
-    local pack = Fk:cloneCard("slash")
-    pack:addSubcards(cards)
-    room:obtainCard(player, pack, true, fk.ReasonPrey)
+    room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, self.name)
   end,
 
   refresh_events = {fk.TargetSpecified, fk.CardUseFinished},

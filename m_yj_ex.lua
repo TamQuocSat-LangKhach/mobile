@@ -1157,10 +1157,10 @@ local m_ex__danshou = fk.CreateTriggerSkill{
   mute = true,
   can_trigger = function(self, event, target, player, data)
     return target and target.phase == Player.Finish and target ~= player and player:hasSkill(self) and
-    #player:getCardIds{ Player.Hand, Player.Equip } >= player:getMark("m_ex__danshou_count-turn")
+    #player:getCardIds{ Player.Hand, Player.Equip } >= player:getMark("@m_ex__danshou_count-turn")
   end,
   on_cost = function(self, event, target, player, data)
-    local x = player:getMark("m_ex__danshou_count-turn")
+    local x = player:getMark("@m_ex__danshou_count-turn")
     self.cost_data = {}
     if x == 0 then return true
     elseif #player:getCardIds{ Player.Hand, Player.Equip } >= x then
@@ -1195,14 +1195,12 @@ local m_ex__danshou = fk.CreateTriggerSkill{
 
   refresh_events = {fk.TargetConfirmed},
   can_refresh = function(self, event, target, player, data)
-    return target == player and (data.card.type == Card.TypeBasic or data.card.type == Card.TypeTrick)
+    return target == player and player:hasSkill(self, true) and
+    (data.card.type == Card.TypeBasic or data.card.type == Card.TypeTrick) and
+    data.from ~= player.id and data.from == player.room.current.id
   end,
   on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    room:addPlayerMark(player, "m_ex__danshou_count-turn")
-    if player:hasSkill(self, true) and player.phase == Player.NotActive then
-      room:setPlayerMark(player, "@m_ex__danshou_count-turn", player:getMark("m_ex__danshou_count-turn"))
-    end
+    player.room:addPlayerMark(player, "@m_ex__danshou_count-turn")
   end,
 }
 
@@ -1824,11 +1822,11 @@ Fk:loadTranslationTable{
 chenqun:addSkill(m_ex__dingpin)
 
 Fk:loadTranslationTable{
-  ["$faen_m_ex__chenqun1"] = "法不可容之事，情或能原宥。",
-  ["$faen_m_ex__chenqun2"] = "严刑峻法，万望慎行。",
+  ["$nos__faen_m_ex__chenqun1"] = "法不可容之事，情或能原宥。",
+  ["$nos__faen_m_ex__chenqun2"] = "严刑峻法，万望慎行。",
 }
 
-chenqun:addSkill("faen")
+chenqun:addSkill("nos__faen")
 --[[
 
 local zhoucang = General(extension, "m_ex__zhoucang", "shu", 4)

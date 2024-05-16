@@ -17,9 +17,7 @@ local mobile__yinju = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id
   end,
@@ -663,7 +661,7 @@ local chuhai = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:getQuestSkillState(self.name)
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
   end,
@@ -735,7 +733,7 @@ local chuhai_trigger = fk.CreateTriggerSkill{
       end
     end
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.AfterCardsMove then
@@ -769,7 +767,7 @@ local chuhai_delay = fk.CreateTriggerSkill{
       return data.reason == chuhai.name and data.from == player and #player.player_cards[Player.Equip] < 4
     end
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.Damage then
@@ -955,7 +953,7 @@ local heji_delay = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return not player.dead and data.extra_data and data.extra_data.hejiDrawer == player.id
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if #room.draw_pile > 0 then

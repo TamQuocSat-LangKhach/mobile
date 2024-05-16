@@ -28,7 +28,7 @@ local m_ex__ganlu = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     if #selected == 0 then
       return #Fk:currentRoom():getPlayerById(to_select).player_cards[Player.Equip] > 0
@@ -139,7 +139,7 @@ Fk:loadTranslationTable{
   ["m_ex__xusheng"] = "界徐盛",
   ["#m_ex__xusheng"] = "江东的铁壁",
   ["cv:m_ex__xusheng"] = "金垚",
-	["illustrator:m_ex__xusheng"] = "铁杵文化",
+  ["illustrator:m_ex__xusheng"] = "铁杵文化",
   ["~m_ex__xusheng"] = "盛只恨，不能再为主公，破敌致胜了。",
 }
 
@@ -220,7 +220,7 @@ local m_ex__xianzhen = fk.CreateActiveSkill{
   can_use = function(self, player)
     return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id and Self:canPindian(Fk:currentRoom():getPlayerById(to_select))
   end,
@@ -384,7 +384,7 @@ Fk:loadTranslationTable{
 
 local m_ex__jieyue_select = fk.CreateActiveSkill{
   name = "m_ex__jieyue_select",
-  can_use = function() return false end,
+  can_use = Util.FalseFunc,
   target_num = 0,
   card_num = function()
     local x = 0
@@ -945,7 +945,7 @@ local m_ex__anxu = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     if #selected == 1 and Fk:currentRoom():getPlayerById(to_select):isNude() then return false end
     return #selected < 2 and to_select ~= Self.id
@@ -1072,7 +1072,7 @@ Fk:loadTranslationTable{
 
 local m_ex__jiangchi_select = fk.CreateActiveSkill{
   name = "#m_ex__jiangchi_select",
-  can_use = function() return false end,
+  can_use = Util.FalseFunc,
   target_num = 0,
   max_card_num = 1,
   min_card_num = 0,
@@ -1275,7 +1275,7 @@ local manchong = General(extension, "m_ex__manchong", "wei", 3)
 Fk:loadTranslationTable{
   ["m_ex__manchong"] = "界满宠",
   ["#m_ex__manchong"] = "政法兵谋",
-	["designer:m_ex__manchong"] = "Loun老萌",
+  ["designer:m_ex__manchong"] = "Loun老萌",
   ["illustrator:m_ex__manchong"] = "YanBai",
   ["~m_ex__manchong"] = "宠一生为公，无愧忠俭之节。",
 }
@@ -2127,7 +2127,7 @@ Fk:loadTranslationTable{
   [":m_ex__qieting"] = "其他角色的回合结束后，若其没有于此回合内对另一名角色造成过伤害，则你可以选择一项：1.观看其两张手牌并获得其中一张牌；2.将其装备区里的一张牌置入你的装备区；3.摸一张牌。",
   ["m_ex__qieting_pry"] = "观看其两张手牌并获得其中一张",
   ["m_ex__qieting_move"] = "移动其装备区里的一张牌",
-  ["$m_ex__qieting1"] = "密言？哼！早已入我耳中。	",
+  ["$m_ex__qieting1"] = "密言？哼！早已入我耳中。",
   ["$m_ex__qieting2"] = "此子不除，久必为患！",
 }
 
@@ -2297,7 +2297,7 @@ local m_ex__benxi_delay = fk.CreateTriggerSkill{
       return data.damageDealt
     end
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.AfterCardTargetDeclared then
@@ -2535,7 +2535,7 @@ local m_ex__yanzhu = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isAllNude()
   end,

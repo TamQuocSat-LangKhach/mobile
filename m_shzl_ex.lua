@@ -59,7 +59,7 @@ xiahoudun:addSkill(qingjian)
 Fk:loadTranslationTable{
   ["m_ex__xiahoudun"] = "界夏侯惇",
   ["#m_ex__xiahoudun"] = "独眼的罗刹",
-	["illustrator:m_ex__xiahoudun"] = "木美人", -- 浴血奋战
+  ["illustrator:m_ex__xiahoudun"] = "木美人", -- 浴血奋战
   ["m_ex__qingjian"] = "清俭",
   [":m_ex__qingjian"] = "①每回合限一次，当你于你的摸牌阶段外获得牌后，你可以将任意张手牌扣置于你的武将牌上；"..
   "<br>②一名角色的结束阶段，若你的武将牌上有“清俭”牌，你将这些牌分配给其他角色，若交出的牌大于一张，你摸一张牌。",
@@ -244,10 +244,10 @@ Fk:loadTranslationTable{
 
   ["$m_ex__duanliang1"] = "粮不三载，敌军已犯行军大忌。",
   ["$m_ex__duanliang2"] = "断敌粮秣，此战可胜。",
-  ["$m_ex__jiezi1"] = "因粮于敌，敌军食可足也。	",
+  ["$m_ex__jiezi1"] = "因粮于敌，敌军食可足也。",
   ["$m_ex__jiezi2"] = "食敌一钟，当吾二十钟。",
   ["~m_ex__xuhuang"] = "敌军防备周全，是吾轻敌……",
-}	
+}
 
 local dengai = General(extension, "m_ex__dengai", "wei", 4)
 local tuntian = fk.CreateTriggerSkill{
@@ -595,7 +595,7 @@ Fk:loadTranslationTable{
   ["m_ex__niepan"] = "涅槃",
   [":m_ex__niepan"] = "限定技，出牌阶段，或当你处于濒死状态时，你可以弃置你区域里所有的牌，摸三张牌，将体力值回复至3点，复原武将牌。",
   ["#m_ex__niepan_trigger"] = "涅槃",
-  
+
   ["$m_ex__lianhuan1"] = "将多兵众，不可以敌，使其自累，以杀其势。",
   ["$m_ex__lianhuan2"] = "善用兵者，运巧必防损，立谋虑中变。",
   ["$m_ex__niepan1"] = "凤凰折翅，涅槃再生。",

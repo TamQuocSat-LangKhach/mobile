@@ -11,7 +11,7 @@ Fk:loadTranslationTable{
 ---@param target ServerPlayer @ 执行整肃的玩家
 ---@param skillName string @ 技能名
 ---@param prompt string @ 提示信息
---发起整肃
+--- 发起整肃
 local function StartZhengsu(player, target, skillName, prompt)
   skillName = skillName or ""
   prompt = prompt or ""
@@ -32,7 +32,7 @@ end
 ---@param target ServerPlayer @ 获得奖励的玩家
 ---@param reward string|null @ 要获得的奖励（"draw2"|"recover"）
 ---@param skillName string @ 技能名
---获得整肃奖励
+--- 获得整肃奖励
 local function RewardZhengsu(player, target, reward, skillName)
   reward = reward or "draw2"
   local room = player.room
@@ -50,7 +50,7 @@ local function RewardZhengsu(player, target, reward, skillName)
   end
 end
 
---整肃记录技能
+--- 整肃记录技能
 local mobileZhengsuTrigger = fk.CreateTriggerSkill{
   name = "mobile_zhengsu_trigger",
   global = true,
@@ -470,9 +470,7 @@ local mobile__jincui = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id
   end,
@@ -1017,13 +1015,13 @@ local yangjie = fk.CreateActiveSkill{
       if #targets == 0 then return false end
       local tos = room:askForChoosePlayers(player, table.map(targets, function (p)
         return p.id end), 1, 1, "#yangjie-choose::" .. effect.tos[1], self.name, true, true)
-       if #tos > 0 then
+      if #tos > 0 then
         room:useCard({
           from = tos[1],
           tos = {effect.tos},
           card = slash,
         })
-       end
+      end
     end
   end,
 }
@@ -1079,9 +1077,7 @@ local houfeng_delay = fk.CreateTriggerSkill{
     table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
       return target:getMark(name) ~= 0 and table.contains(target:getMark(name), player.id) end)
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:notifySkillInvoked(player, "houfeng")

@@ -80,6 +80,7 @@ Fk:loadTranslationTable{
   ["RFA_frontal"] = "正兵",
   ["#RFA-response"] = "正兵：未出闪，%src获得你牌；奇兵：未出杀，你受到其伤害",
   ["#RFA-choose"] = "正兵：%dest不出闪，你获得其牌；奇兵：其不出杀，其受到伤害",
+  ["slash,jink"] = "杀或闪", -- FIXME
 }
 
 extension:addCards({

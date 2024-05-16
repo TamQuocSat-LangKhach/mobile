@@ -255,7 +255,7 @@ miheng:addSkill(mobile__shejian)
 Fk:loadTranslationTable{
   ["miheng"] = "祢衡",
   ["#miheng"] = "鸷鹗啄孤凤",
-	["designer:miheng"] = "千幻",
+  ["designer:miheng"] = "千幻",
   ["illustrator:miheng"] = "Thinking",
 
   ["mobile__kuangcai"] = "狂才",
@@ -1188,7 +1188,7 @@ Fk:addSkill(mxing__xuhuang_win)
 Fk:loadTranslationTable{
   ["mxing__xuhuang"] = "星徐晃",
   ["#mxing__xuhuang"] = "沉详性严",
-	["illustrator:mxing__xuhuang"] = "王强",
+  ["illustrator:mxing__xuhuang"] = "王强",
   ["mxing__zhiyan"] = "治严",
   [":mxing__zhiyan"] = "出牌阶段每项各限一次，你可以：1.将手牌摸至体力上限，然后你于此阶段内不能对其他角色使用牌；2.将多于体力值的手牌交给一名其他角色。",
   ["mxing__zhiyan_draw"] = "将手牌摸至体力上限",
@@ -1825,7 +1825,7 @@ local changshiChiyanDelay = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return data.to == Player.NotActive and #player:getPile("changshi__chiyan") > 0
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:obtainCard(player.id, player:getPile("changshi__chiyan"), false)
   end,
@@ -2077,7 +2077,7 @@ local changshiKuiji = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) < 1
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
   end,
@@ -2221,7 +2221,7 @@ local changshiNiqu = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) < 1
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0 and to_select ~= Self.id
   end,
@@ -2313,7 +2313,7 @@ local changshiMiaoyuDiscard = fk.CreateTriggerSkill{
     return target == player and table.contains(data.card.skillNames, "changshi__miaoyu") and #data.card.subcards == 2 and
       Fk:getCardById(data.card.subcards[1]).color == Card.Black
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if not room.current:isNude() then

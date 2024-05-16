@@ -234,7 +234,7 @@ Fk:loadTranslationTable{
   ["mobile__gaolan"] = "高览",
   ["#mobile__gaolan"] = "绝击坚营",
   ["cv:mobile__gaolan"] = "曹真",
-	["illustrator:mobile__gaolan"] = "兴游",
+  ["illustrator:mobile__gaolan"] = "兴游",
   ["~mobile__gaolan"] = "满腹忠肝，难抵一句谮言……唉！",
 }
 

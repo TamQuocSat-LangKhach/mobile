@@ -24,6 +24,7 @@ local chengzhao = fk.CreateTriggerSkill{
             n = n + #move.moveInfo
           end
         end
+        return false
       end, Player.HistoryTurn)
       return n >= 2
     end
@@ -1325,7 +1326,7 @@ Fk:loadTranslationTable{
   ["$mobile__zhouxuan2"] = "群雄逐鹿之际，唯有洞明时势方有所成。",
   ["$mobile__fengji1"] = "巡土田之宜，尽凿溉之利。",
   ["$mobile__fengji2"] = "养耆育孤，视民如伤，以丰定徐州。",
-  ["~mobile__chendeng"] = "诸卿何患无令君乎？",	
+  ["~mobile__chendeng"] = "诸卿何患无令君乎？",
 }
 
 local zhangyi = General(extension, "mobile__zhangyiy", "shu", 4)
@@ -1342,7 +1343,7 @@ local zhiyi_viewas = fk.CreateViewAsSkill{
       return UI.ComboBox {choices = names, all_choices = mark }
     end
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   view_as = function(self, cards)
     if not self.interaction.data then return end
     local card = Fk:cloneCard(self.interaction.data)
@@ -1552,7 +1553,7 @@ Fk:loadTranslationTable{
 local zhouqun = General(extension, "zhouqun", "shu", 3)
 local tiansuanProhibit = fk.CreateProhibitSkill{
   name = "#tiansuan_prohibit",
-  is_prohibited = function() return false end,
+  is_prohibited = Util.FalseFunc,
   prohibit_use = function(self, player, card)
     return (card.trueName == "peach" or card.trueName == "analeptic")
       and player:getMark("@tiansuan") == "tiansuanC"
@@ -1665,7 +1666,7 @@ Fk:addSkill(zhouqun_win)
 Fk:loadTranslationTable{
   ['zhouqun'] = '周群',
   ["#zhouqun"] = "后圣",
-	["illustrator:zhouqun"] = "张帅",
+  ["illustrator:zhouqun"] = "张帅",
   ['tiansuan'] = '天算',
   ['#tiansuan_trig'] = '天算',
   [':tiansuan'] = '每轮限一次，出牌阶段，你可以抽取一个“命运签”' ..
@@ -2755,7 +2756,7 @@ Fk:loadTranslationTable{
   ["zhaotongzhaoguang"] = "赵统赵广",
   ["#zhaotongzhaoguang"] = "翊赞季兴",
   ["designer:zhaotongzhaoguang"] = "Loun老萌",
-	["illustrator:zhaotongzhaoguang"] = "蛋费鸡丁",
+  ["illustrator:zhaotongzhaoguang"] = "蛋费鸡丁",
 
   ["yizan"] = "翊赞",
   [":yizan"] = "你可以将两张牌（其中至少一张是基本牌）当任意基本牌使用或打出。",
@@ -2868,7 +2869,7 @@ Fk:loadTranslationTable{
   ["mobile__liuye"] = "刘晔",
   ["#mobile__liuye"] = "佐世之才",
   ["designer:mobile__liuye"] = "荼蘼",
-	["illustrator:mobile__liuye"] = "Thinking",
+  ["illustrator:mobile__liuye"] = "Thinking",
 
   ["polu"] = "破橹",
   [":polu"] = "锁定技，①回合开始时，你获得游戏外的【霹雳车】并使用之；②当你受到1点伤害后，若你的装备区里没有【霹雳车】，你摸一张牌，然后随机从"..
@@ -2884,7 +2885,7 @@ Fk:loadTranslationTable{
   ["$polu2"] = "霹雳之声，震丧敌胆。",
   ["$choulue1"] = "依此计行，可安军心。",
   ["$choulue2"] = "破袁之策，吾已有计。",
-  ["~mobile__liuye"] = "唉，于上不能佐君主，于下不能亲同僚，吾愧为佐世人臣。",	
+  ["~mobile__liuye"] = "唉，于上不能佐君主，于下不能亲同僚，吾愧为佐世人臣。",  
 }
 
 local lifeng = General(extension, "lifeng", "shu", 3)
@@ -3226,7 +3227,7 @@ local hongyi = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
-  card_filter = function() return false end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected, selected_cards)
     return #selected == 0 and to_select ~= Self.id
   end,
@@ -3247,7 +3248,7 @@ local hongyi_delay = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and target:getMark("@@hongyi") > 0
   end,
-  on_cost = function() return true end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local judge = {
@@ -3345,7 +3346,7 @@ yanghuiyu:addSkill(quanfeng)
 Fk:loadTranslationTable{
   ["mobile__yanghuiyu"] = "羊徽瑜",
   ["#mobile__yanghuiyu"] = "温慧母仪",
-	["designer:mobile__yanghuiyu"] = "Loun老萌",
+  ["designer:mobile__yanghuiyu"] = "Loun老萌",
   ["illustrator:mobile__yanghuiyu"] = "石蝉",
 
   ["hongyi"] = "弘仪",
@@ -3495,7 +3496,7 @@ Fk:loadTranslationTable{
   ["#yangbiao"] = "德彰海内",
   ["cv:yangbiao"] = "袁国庆",
   ["designer:yangbiao"] = "Loun老萌",
-	["illustrator:yangbiao"] = "木美人",
+  ["illustrator:yangbiao"] = "木美人",
 
   ["zhaohan"] = "昭汉",
   [":zhaohan"] = "锁定技，准备阶段开始时，若X：小于4，你加1点体力上限并回复1点体力；不小于4且小于7，你减1点体力上限（X为你发动过本技能的次数）。",
@@ -5915,7 +5916,7 @@ Fk:loadTranslationTable{
   ["mobile__xurong"] = "徐荣",
   ["#mobile__xurong"] = "玄菟战魔",
   ["cv:mobile__xurong"] = "曹真",
-	["designer:mobile__xurong"] = "Loun老萌",
+  ["designer:mobile__xurong"] = "Loun老萌",
   ["illustrator:mobile__xurong"] = "青岛磐蒲",-- 烬灭神骇*徐荣 of 三国杀·移动版
   ["mobile__xionghuo"] = "凶镬",
   [":mobile__xionghuo"] = "游戏开始时，你获得3个“暴戾”标记。出牌阶段，你可以交给一名其他角色一个“暴戾”标记，"..

@@ -6180,25 +6180,15 @@ local xuetu = fk.CreateActiveSkill{
   name = "xuetu",
   anim_type = "support",
   switch_skill_name = "xuetu",
+  card_num = 0,
   target_num = 1,
   prompt = function(self)
     return "#xuetu_" .. Self:getSwitchSkillState(self.name, false, true)
   end,
-  card_num = function(self)
-    return Self:getSwitchSkillState(self.name) == fk.SwitchYang and 1 or 0
-  end,
   can_use = function(self, player)
-    return 
-      player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
-      not (player:getSwitchSkillState(self.name) == fk.SwitchYin and player.hp < 1)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 
   end,
-  card_filter = function(self, to_select, selected)
-    if Self:getSwitchSkillState(self.name) == fk.SwitchYang then
-      return #selected == 0 and not Self:prohibitDiscard(Fk:getCardById(to_select))
-    end
-
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     return
       #selected == 0 and
@@ -6208,8 +6198,7 @@ local xuetu = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     
-    if #effect.cards > 0 then
-      room:throwCard(effect.cards, self.name, player, player)
+    if player:getSwitchSkillState(self.name, true) == fk.SwitchYang then
       room:recover{
         who = target,
         num = 1,
@@ -6217,18 +6206,17 @@ local xuetu = fk.CreateActiveSkill{
         skillName = self.name,
       }
     else
-      room:loseHp(player, 1, self.name)
       target:drawCards(2, self.name)
     end
   end,
 }
 Fk:loadTranslationTable{
   ["xuetu"] = "血途",
-  [":xuetu"] = "转换技，出牌阶段限一次，你可以：阳，弃置一张牌并令一名角色回复1点体力；阴，失去1点体力并令一名角色摸两张牌。" ..
+  [":xuetu"] = "转换技，出牌阶段限一次，你可以：阳，令一名角色回复1点体力；阴，令一名角色摸两张牌。" ..
   "<br><strong>二级</strong>：出牌阶段各限一次，你可以选择一项：1.令一名角色回复1点体力；2.令一名角色摸两张牌。" ..
   "<br><strong>三级</strong>：转换技，出牌阶段限一次，你可以：阳，回复1点体力并令一名角色弃置两张牌；阴，摸一张牌并对一名角色造成1点伤害。",
-  ["#xuetu_yang"] = "血途：你可弃一张牌令一名角色回复1点体力",
-  ["#xuetu_yin"] = "血途：你可失去1点体力令一名角色摸两张牌",
+  ["#xuetu_yang"] = "血途：你可令一名角色回复1点体力",
+  ["#xuetu_yin"] = "血途：你可令一名角色摸两张牌",
 
   ["$xuetu1"] = "天子仪仗在此，逆贼安扰圣驾。",
   ["$xuetu2"] = "末将救驾来迟，还望陛下恕罪。",

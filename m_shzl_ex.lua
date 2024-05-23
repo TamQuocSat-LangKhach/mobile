@@ -690,8 +690,7 @@ local chanyuan = fk.CreateInvaliditySkill {
   name = "chanyuan",
   invalidity_func = function(self, from, skill)
     --- FIXME:无法在此处判断“缠怨”的isEffectable，会导致自我嵌套死循环
-    return from:hasSkill(self, true) and from.hp == 1
-    and not (skill:isEquipmentSkill() or skill.name:endsWith("&"))
+    return from:hasSkill(self, true) and from.hp == 1 and skill:isPlayerSkill(from)
   end
 }
 local chanyuan_audio = fk.CreateTriggerSkill{

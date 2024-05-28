@@ -15,7 +15,7 @@ GraphicsBox {
   property var deputyGenerals: []
   property string disabledGeneral: ""
 
-  title.text: Backend.translate("$JieDang")
+  title.text: luatr("$JieDang")
   // TODO: Adjust the UI design in case there are more than 7 cards
   width: 460
   height: 360
@@ -44,7 +44,7 @@ GraphicsBox {
           anchors.fill: parent
           width: 20
           height: 100
-          text: Backend.translate("mainGeneral")
+          text: luatr("mainGeneral")
           color: "white"
           font.family: fontLibian.name
           font.pixelSize: 18
@@ -70,7 +70,7 @@ GraphicsBox {
         }
 
         onClicked: {
-          descriptionTip.show(Backend.translate(`:${mainGeneral}-specificSkillDesc`));
+          descriptionTip.show(luatr(`:${mainGeneral}-specificSkillDesc`));
         }
       }
     }
@@ -87,7 +87,7 @@ GraphicsBox {
           anchors.fill: parent
           width: 20
           height: 100
-          text: Backend.translate("deputyGeneral")
+          text: luatr("deputyGeneral")
           color: "white"
           font.family: fontLibian.name
           font.pixelSize: 18
@@ -162,7 +162,7 @@ GraphicsBox {
             }
 
             onClicked: {
-              descriptionTip.show(Backend.translate(`:${modelData}-specificSkillDesc`));
+              descriptionTip.show(luatr(`:${modelData}-specificSkillDesc`));
             }
 
             onSelectedChanged: {
@@ -193,7 +193,7 @@ GraphicsBox {
 
       MetroButton {
         Layout.fillWidth: true
-        text: Backend.translate("OK")
+        text: luatr("OK")
         enabled: selectedItem.length
 
         onClicked: {
@@ -219,7 +219,7 @@ GraphicsBox {
       const disabledIndex = deputyGenerals.findIndex(general => general === disabledGeneral);
       const itemFound = deputyGeneralsRepeater.itemAt(disabledIndex);
       itemFound.z = 2;
-      itemFound.addTaunt(Backend.translate(`$${disabledGeneral}_taunt1`));
+      itemFound.addTaunt(luatr(`$${disabledGeneral}_taunt1`));
 
       const path = `./packages/mobile/audio/skill/${disabledGeneral}_taunt1`;
       if (Backend.exists(path + ".mp3")) {

@@ -676,7 +676,7 @@ local mobile__shangyi = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     room:throwCard(effect.cards, self.name, player, player)
     if player.dead or target.dead or player:isKongcheng() or target:isKongcheng() then return end
-    U.viewCards(target, player:getCardIds("h"), self.name)
+    U.viewCards(target, player:getCardIds("h"), self.name, "$ViewCardsFrom:"..player.id)
     local id = room:askForCardChosen(player, target, { card_data = { { "$Hand", target:getCardIds(Player.Hand) }  } }, self.name)
     room:obtainCard(player, id, false, fk.ReasonPrey)
   end,

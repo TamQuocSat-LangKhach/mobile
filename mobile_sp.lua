@@ -949,6 +949,7 @@ local beizhu = fk.CreateActiveSkill{
   card_num = 0,
   card_filter = Util.FalseFunc,
   target_num = 1,
+  prompt = "#beizhu-prompt",
   target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id and not Fk:currentRoom():getPlayerById(to_select):isKongcheng()
   end,
@@ -959,20 +960,22 @@ local beizhu = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
     room:notifySkillInvoked(player, self.name, "control")
-    player:broadcastSkillInvoke(self.name, 1)
+    player:broadcastSkillInvoke(self.name, math.random(2))
+    target:filterHandcards()
     local ids = table.filter(target:getCardIds("h"), function(id) return Fk:getCardById(id).trueName == "slash" end)
     if #ids > 0 then
-      room:askForCardsChosen(player, target, 0, 0, { card_data = { { "WatchHand", target:getCardIds("h") } } }, self.name)
-      player:broadcastSkillInvoke(self.name, 3)
+      U.viewCards(player, target:getCardIds("h"), self.name, "$ViewCardsFrom:"..target.id)
       room:setPlayerMark(player, "beizhu_slash", ids)
       for _, id in ipairs(ids) do
         local card = Fk:getCardById(id)
         if room:getCardOwner(id) == target and room:getCardArea(id) == Card.PlayerHand and card.trueName == "slash" and
-          not player.dead and not target:isProhibited(player, card) then
+          not player.dead and not target:isProhibited(player, card) and not target:prohibitUse(card) then
           room:useCard({
             from = target.id,
             tos = {{player.id}},
             card = card,
+            extra_data = {beizhu_from = player.id},
+            extraUse = true,
           })
         end
       end
@@ -982,12 +985,11 @@ local beizhu = fk.CreateActiveSkill{
       if #target:getCardIds("e") > 0 then
         table.insert(card_data, { "$Equip", target:getCardIds("e") })
       end
-      local throw = room:askForCardChosen(player, target, { card_data = card_data }, self.name)
+      local throw = room:askForCardChosen(player, target, { card_data = card_data }, self.name, "#beizhu-throw:"..target.id)
       room:throwCard({throw}, self.name, target, player)
-      player:broadcastSkillInvoke(self.name, 2)
       local slash = room:getCardsFromPileByRule("slash")
       if #slash > 0 and not target.dead and not player.dead and room:askForSkillInvoke(player, self.name, nil, "#beizhu-draw:"..target.id) then
-        room:obtainCard(target, slash[1], true, fk.ReasonDraw)
+        room:obtainCard(target, slash[1], true, fk.ReasonJustMove, target.id, self.name)
       end
     end
   end,
@@ -997,11 +999,17 @@ local beizhu_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill("beizhu") and data.card and
-      type(player:getMark("beizhu_slash")) == "table" and table.contains(player:getMark("beizhu_slash"), data.card:getEffectiveId())
+    if target == player and not player.dead and data.card then
+      local e = player.room.logic:getCurrentEvent():findParent(GameEvent.CardEffect)
+      if e then
+        local use = e.data[1]
+        return use.card == data.card and use.extra_data and use.extra_data.beizhu_from == player.id
+      end
+    end
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, _, player, data)
+    player:broadcastSkillInvoke("beizhu", 3)
     player:drawCards(1, "beizhu")
   end,
 }
@@ -1015,6 +1023,8 @@ Fk:loadTranslationTable{
   "你摸一张牌），否则你弃置其一张牌并可以令其从牌堆中获得一张【杀】。",
   ["WatchHand"] = "观看手牌",
   ["#beizhu-draw"] = "备诛：你可令 %src 从牌堆中获得一张【杀】",
+  ["#beizhu-throw"] = "备诛：请弃置 %src 一张牌",
+  ["#beizhu-prompt"] = "备诛：你可以观看其他角色的手牌，若有【杀】，其对你使用【杀】；否则你弃置其牌",
 
   ["$beizhu1"] = "检阅士卒，备将行之役。",
   ["$beizhu2"] = "点选将校，讨乱汉之贼。",

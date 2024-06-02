@@ -13,7 +13,7 @@ GraphicsBox {
   property var selectedItem: []
   property string titleName: ""
 
-  title.text: Backend.translate(titleName)
+  title.text: luatr(titleName)
   // TODO: Adjust the UI design in case there are more than 7 cards
   width: photoRow.width + 10
   height: 300
@@ -124,7 +124,7 @@ GraphicsBox {
 
       MetroButton {
         Layout.fillWidth: true
-        text: Backend.translate("OK")
+        text: luatr("OK")
         enabled: true
 
         onClicked: {
@@ -143,7 +143,7 @@ GraphicsBox {
       MetroButton {
         id: detailBtn
         enabled: selectedItem.length
-        text: Backend.translate("Show General Detail")
+        text: luatr("Show General Detail")
         onClicked: {
           const { general, deputyGeneral } = selectedItem[0];
           const generals = [general];

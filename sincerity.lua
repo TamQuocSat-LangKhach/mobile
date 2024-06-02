@@ -676,7 +676,7 @@ local chuhai = fk.CreateActiveSkill{
     if pindian.results[target.id].winner == player then
       local cards = target.player_cards[Player.Hand]
       if #cards > 0 then
-        U.viewCards(player, cards, self.name)
+        U.viewCards(player, cards, self.name, "$ViewCardsFrom:"..target.id)
         local types = {}
         for _, id in ipairs(cards) do
           table.insertIfNeed(types, Fk:getCardById(id):getTypeString())

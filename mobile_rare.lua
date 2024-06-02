@@ -1548,7 +1548,7 @@ local aosi = fk.CreateTriggerSkill{
   events = {fk.Damage},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player.phase == Player.Play and
-      not data.to.dead and player:inMyAttackRange(data.to)
+    data.to:getMark("@@aosi-phase") == 0 and not data.to.dead and player:inMyAttackRange(data.to)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room

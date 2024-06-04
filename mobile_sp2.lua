@@ -1,10 +1,11 @@
-local extension = Package("mobile_test")
+local extension = Package("mobile_sp2")
 extension.extensionName = "mobile"
 
 local U = require "packages/utility/utility"
 
 Fk:loadTranslationTable{
-  ["mobile_test"] = "手杀-测试服",
+  ["mobile_sp2"] = "手杀-SP2",
+  ["mob_sp"] = "手杀SP",
 }
 
 local simafu = General(extension, "simafu", "wei", 3)
@@ -149,7 +150,7 @@ Fk:loadTranslationTable{
   [":panxiang"] = "当一名角色受到伤害时，你可以选择一项（不能选择上次对该角色发动时选择的选项）：1.令此伤害-1，然后伤害来源摸两张牌；"..
   "2.令此伤害+1，然后其摸三张牌。",
   ["mobile__chenjie"] = "臣节",
-  [":mobile__chenjie"] = "若你有〖蹒襄〗，当一名成为过〖蹒襄〗目标的角色死亡后，你弃置你区域内所有牌，然后摸四张牌。",
+  [":mobile__chenjie"] = "若你有“蹒襄”，当一名成为过“蹒襄”目标的角色死亡后，你弃置你区域内所有牌，然后摸四张牌。",
 
   ["#panxiang-invoke"] = "蹒襄：是否改变 %dest 受到的伤害？",
   ["panxiang1"] = "伤害-1，伤害来源摸两张牌",
@@ -1249,7 +1250,7 @@ Fk:loadTranslationTable{
   ["~yangfeng"] = "刘备！本共图吕布，何设鸿门相欺！",
 }
 
-local guanqiujian = General(extension, "mobile__guanqiujian", "wei", 4)
+local guanqiujian = General(extension, "mob_sp__guanqiujian", "wei", 4)
 local cuizhen = fk.CreateTriggerSkill{
   name = "cuizhen",
   anim_type = "control",
@@ -1336,24 +1337,24 @@ local kuili = fk.CreateTriggerSkill{
 guanqiujian:addSkill(cuizhen)
 guanqiujian:addSkill(kuili)
 Fk:loadTranslationTable{
-  ["mobile__guanqiujian"] = "毌丘俭",
-  ["#mobile__guanqiujian"] = "才识拔干",
-  --["illustrator:mobile__guanqiujian"] = "",
+  ["mob_sp__guanqiujian"] = "毌丘俭",
+  ["#mob_sp__guanqiujian"] = "才识拔干",
+  --["illustrator:mob_sp__guanqiujian"] = "",
 
   ["cuizhen"] = "摧阵",
-  [":cuizhen"] = "游戏开始时，你可以指定至多两名其他角色，废除其武器区。（若不为身份模式则不能发动）<br>"..
-  "出牌阶段，当你使用【杀】或伤害类锦囊牌指定一名其他角色为目标后，若其手牌数不小于体力值，则你可以废除其武器区。<br>"..
-  "摸牌阶段，你额外摸X张牌（X为场上被废除的武器区数，至多为2）。",
+  [":cuizhen"] = "游戏开始时，若不为身份模式，则你可以选择至多两名其他角色，废除其武器栏；"..
+  "当你于出牌阶段内使用【杀】或伤害类锦囊牌指定其他角色为目标后，若其手牌数不小于体力值，则你可以废除其武器栏；"..
+  "摸牌阶段，你额外摸X张牌（X为场上被废除的武器栏数，且至多为2）。",
   ["kuili"] = "溃离",
-  [":kuili"] = "锁定技，当你受到伤害后，你弃置X张手牌（X为伤害值）；若伤害来源的武器区被废除，则恢复之。",
-  ["#cuizhen-choose"] = "摧阵：你可以废除至多两名角色的武器区！",
-  ["#cuizhen-invoke"] = "摧阵：是否废除 %dest 的武器区？",
+  [":kuili"] = "锁定技，当你受到伤害后，你弃置X张手牌（X为伤害值）；若伤害来源的武器栏被废除，则恢复之。",
+  ["#cuizhen-choose"] = "摧阵：你可以废除至多两名角色的武器栏！",
+  ["#cuizhen-invoke"] = "摧阵：是否废除 %dest 的武器栏？",
 
-  ["$cuizhen1"] = "全军大进，誓讨司马乱贼！",
-  ["$cuizhen2"] = "欲活命者，还不弃兵卸甲！",
-  ["$kuili1"] = "	此犹有转胜之机，吾等切不可自乱。",
-  ["$kuili2"] = "不思败战于人，但恐军心已溃啊。",
-  ["~mobile__guanqiujian"] = "汝不讨篡权逆臣，何杀吾讨贼义军……",
+  ["$cuizhen1"] = "欲活命者，还不弃兵卸甲！",
+  ["$cuizhen2"] = "全军大进，誓讨司马乱贼！",
+  ["$kuili1"] = "此犹有转胜之机，吾等切不可自乱。",
+  ["$kuili2"] = "不患败战于人，但恐军心已溃啊。",
+  ["~mob_sp__guanqiujian"] = "汝不讨篡权逆臣，何杀吾讨贼义军……",
 }
 
 local lizhaojiaobo = General(extension, "lizhaojiaobo", "wei", 4)
@@ -1426,10 +1427,10 @@ Fk:loadTranslationTable{
   --["illustrator:lizhaojiaobo"] = "",
 
   ["zuoyou"] = "佐佑",
-  [":zuoyou"] = "转换技，出牌阶段限一次，阳：你可以令一名角色摸两张牌，然后其弃置一张手牌；阴：你可以令一名角色弃置两张手牌，"..
+  [":zuoyou"] = "转换技，出牌阶段限一次，阳：你可以令一名角色摸两张牌，然后其弃置一张手牌；阴：你可以令一名角色弃置两张手牌，" ..
   "然后其获得1点护甲。",
   ["shishoul"] = "侍守",
-  [":shishoul"] = "锁定技，当其他角色执行了〖佐佑〗的一项后，你执行〖佐佑〗的另一项。",
+  [":shishoul"] = "锁定技，当其他角色执行了“佐佑”的一项后，你执行“佐佑”的另一项。",
   ["#zuoyou-yang"] = "佐佑：你可以令一名角色摸两张牌，然后其弃置一张手牌",
   ["#zuoyou-yin"] = "佐佑：你可以令一名角色弃置两张手牌，然后其获得1点护甲",
 
@@ -1514,17 +1515,17 @@ Fk:loadTranslationTable{
   --["illustrator:chengjiw"] = "",
 
   ["kuangli"] = "狂戾",
-  [":kuangli"] = "锁定技，出牌阶段开始时，场上随机任意名其他角色获得“狂戾”标记直到回合结束。出牌阶段限两次，当你使用牌指定一名拥有“狂戾”标记的"..
-  "角色为目标后，你与其各随机弃置一张牌，然后你摸一张牌。",
+  [":kuangli"] = "锁定技，出牌阶段开始时，场上随机任意名其他角色获得“狂戾”标记直到回合结束；每阶段限两次，" ..
+  "当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你与其各随机弃置一张牌，然后你摸一张牌。",
   ["xiongsi"] = "凶肆",
   [":xiongsi"] = "限定技，出牌阶段，若你的手牌不少于三张，你可以弃置所有手牌，然后令所有其他角色各失去1点体力。",
   ["@@kuangli-turn"] = "狂戾",
   ["#xiongsi-active"] = "凶肆：你可以弃置所有手牌，令所有其他角色各失去1点体力！",
 
-  ["$kuangli1"] = "谁再聚众作乱，我就将其杀之！	",
-  ["$kuangli2"] = "我已受命弑君，汝等还不散去！",
-  ["$xiongsi1"] = "贾充！你不仁就别怪我不义！	",
-  ["$xiongsi2"] = "既想杀人灭口，那就同归于尽！",
+  ["$kuangli1"] = "我已受命弑君，汝等还不散去！	",
+  ["$kuangli2"] = "谁再聚众作乱，我就将其杀之！",
+  ["$xiongsi1"] = "既想杀人灭口，那就同归于尽！	",
+  ["$xiongsi2"] = "贾充！你不仁就别怪我不义！",
   ["~chengjiw"] = "汝等要卸磨杀驴吗？呃啊……",
 }
 

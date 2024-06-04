@@ -1,6 +1,6 @@
 local mobile_rare = require "packages/mobile/mobile_rare"
 local mobile_sp = require "packages/mobile/mobile_sp"
-local mobile_test = require "packages/mobile/mobile_test"
+local mobile_sp2 = require "packages/mobile/mobile_sp2"
 local wisdom = require "packages/mobile/wisdom"
 local sincerity = require "packages/mobile/sincerity"
 local benevolence = require "packages/mobile/benevolence"
@@ -15,7 +15,7 @@ Fk:loadTranslationTable(require 'packages/mobile/i18n/en_US', 'en_US')
 return {
   mobile_rare,
   mobile_sp,
-  mobile_test,
+  mobile_sp2,
   wisdom,
   sincerity,
   benevolence,

@@ -352,11 +352,10 @@ local yajun = fk.CreateTriggerSkill{
           table.insertIfNeed(ids, pindian.results[to.id].toCard:getEffectiveId())
         end
         if #ids == 0 then return end
-        local result = room:askForGuanxing(player, ids, {0, 1}, {}, self.name, true, {"yajun_top", "pile_discard"})
-        if #result.top == 1 then
+        local result = U.askforChooseCardsAndChoice(player, ids, {"yajun_top"}, self.name, "#yajun-put", {"Cancel"}, 1, 1)
+        if #result == 1 then
           room:moveCards({
-            ids = result.top,
-            fromArea = Card.DiscardPile,
+            ids = result,
             toArea = Card.DrawPile,
             moveReason = fk.ReasonPut,
             skillName = self.name,
@@ -419,6 +418,7 @@ Fk:loadTranslationTable{
   ["#yajun-use"] = "雅俊：你可以用一张本回合获得的牌与一名其他角色拼点",
   ["#zundi"] = "尊嫡：弃置一张手牌指定一名角色，你判定，黑色其摸三张牌，红色则其可以移动场上一张牌",
   ["yajun_top"] = "置于牌堆顶",
+  ["#yajun-put"] = "雅俊：可选择其中一张牌置于牌堆顶",
   ["#zundi-move"] = "尊嫡：你可以移动场上一张牌",
 
   ["$yajun1"] = "君子如珩，缨绂有容！",

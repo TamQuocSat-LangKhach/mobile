@@ -434,7 +434,8 @@ local zhenting = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.TargetConfirming},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and data.from and data.from ~= player.id and
+    return player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
+      and data.from and data.from ~= player.id and
       (data.card.trueName == "slash" or data.card.sub_type == Card.SubtypeDelayedTrick) and
       not table.contains(AimGroup:getAllTargets(data.tos), player.id) and player:inMyAttackRange(target) and
       U.canTransferTarget(player, data)
@@ -466,6 +467,7 @@ local mobile__jincui = fk.CreateActiveSkill{
   anim_type = "special",
   card_num = 0,
   target_num = 1,
+  frequency = Skill.Limited,
   prompt = "#mobile__jincui",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
@@ -477,9 +479,9 @@ local mobile__jincui = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    local n = math.min(math.abs(player.seat - target.seat), player.hp)
     room:swapSeat(player, target)
-    room:loseHp(player, n, self.name)
+    if player.dead or player.hp < 1 then return end
+    room:loseHp(player, player.hp, self.name)
   end,
 }
 jiangwan:addSkill(zhenting)
@@ -491,7 +493,7 @@ Fk:loadTranslationTable{
   [":zhenting"] = "每回合限一次，当你攻击范围内的一名角色成为【杀】或延时锦囊牌的目标时，若你不为此牌的使用者或目标，"..
   "你可以代替其成为此牌的目标，然后选择一项：1.弃置此牌使用者的一张牌；2.摸一张牌。",
   ["mobile__jincui"] = "尽瘁",
-  [":mobile__jincui"] = "限定技，出牌阶段，你可以与一名其他角色交换座次，然后你失去X点体力（X为你与其座次的距离且至多为你的体力值）。",
+  [":mobile__jincui"] = "限定技，出牌阶段，你可以与一名其他角色交换座次，然后你失去X点体力（X为你的体力值）。",
   ["#zhenting-invoke"] = "镇庭：你可以将对 %dest 使用的%arg转移给你，然后你弃置使用者一张牌或摸一张牌",
   ["zhenting_discard"] = "弃置其一张牌",
   ["#zhenting-choice"] = "镇庭：选择对 %dest 执行的一项",

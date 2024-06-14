@@ -1259,10 +1259,10 @@ local cuizhen = fk.CreateTriggerSkill{
     local room = player.room
     if player:hasSkill(self) then
       if event == fk.GameStart then
-        return table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and
-          table.find(room:getOtherPlayers(player), function(p)
-            return #p:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
-          end)
+        -- return table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and
+        return table.find(room:getOtherPlayers(player), function(p)
+          return #p:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
+        end)
       elseif event == fk.TargetSpecified and target == player and player.phase == Player.Play and data.card.is_damage_card then
         local to = player.room:getPlayerById(data.to)
         return not to.dead and to:getHandcardNum() >= to.hp and #to:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
@@ -1342,7 +1342,7 @@ Fk:loadTranslationTable{
   --["illustrator:mob_sp__guanqiujian"] = "",
 
   ["cuizhen"] = "摧阵",
-  [":cuizhen"] = "游戏开始时，若为身份模式，则你可以选择至多两名其他角色，废除其武器栏；"..
+  [":cuizhen"] = "游戏开始时，你可以选择至多两名其他角色，废除其武器栏；"..
   "当你于出牌阶段内使用【杀】或伤害类锦囊牌指定其他角色为目标后，若其手牌数不小于体力值，则你可以废除其武器栏；"..
   "摸牌阶段，你额外摸X张牌（X为场上被废除的武器栏数，且至多为2）。",
   ["kuili"] = "溃离",
@@ -1361,13 +1361,13 @@ local lizhaojiaobo = General(extension, "lizhaojiaobo", "wei", 4)
 local function DoZuoyou(player, status)
   local room = player.room
   if status == "yang" then
-    player:drawCards(2, "zuoyou")
+    player:drawCards(3, "zuoyou")
     if not player.dead and not player:isKongcheng() then
-      room:askForDiscard(player, 1, 1, false, "zuoyou", false)
+      room:askForDiscard(player, 2, 2, false, "zuoyou", false)
     end
   else
-    if player:getHandcardNum() > 1 then
-      room:askForDiscard(player, 2, 2, false, "zuoyou", false)
+    if player:getHandcardNum() > 0 then
+      room:askForDiscard(player, 1, 1, false, "zuoyou", false)
       if not player.dead then
         room:changeShield(player, 1)
       end
@@ -1395,7 +1395,7 @@ local zuoyou = fk.CreateActiveSkill{
     if Self:getSwitchSkillState(self.name, false) == fk.SwitchYang then
       return #selected == 0
     else
-      return #selected == 0 and Fk:currentRoom():getPlayerById(to_select):getHandcardNum() > 1
+      return #selected == 0 and Fk:currentRoom():getPlayerById(to_select):getHandcardNum() > 0
     end
   end,
   on_use = function(self, room, effect)
@@ -1427,8 +1427,8 @@ Fk:loadTranslationTable{
   --["illustrator:lizhaojiaobo"] = "",
 
   ["zuoyou"] = "佐佑",
-  [":zuoyou"] = "转换技，出牌阶段限一次，阳：你可以令一名角色摸两张牌，然后其弃置一张手牌；阴：" ..
-  "你可以令一名手牌数不少于2的角色弃置两张手牌，然后其获得1点护甲。",
+  [":zuoyou"] = "转换技，出牌阶段限一次，阳：你可以令一名角色摸三张牌，然后其弃置两张手牌；阴：" ..
+  "你可以令一名手牌数不少于1的角色弃置一张手牌，然后其获得1点护甲。",
   ["shishoul"] = "侍守",
   [":shishoul"] = "锁定技，当其他角色执行了“佐佑”的一项后，你执行“佐佑”的另一项。",
   ["#zuoyou-yang"] = "佐佑：你可以令一名角色摸两张牌，然后其弃置一张手牌",

@@ -1279,7 +1279,8 @@ local cuizhen = fk.CreateTriggerSkill{
       local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
         return #p:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
       end), Util.IdMapper)
-      local tos = room:askForChoosePlayers(player, targets, 1, 2, "#cuizhen-choose", self.name)
+      local max = table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and 3 or 2
+      local tos = room:askForChoosePlayers(player, targets, 1, max , "#cuizhen-choose:::" .. max, self.name)
       if #tos > 0 then
         self.cost_data = tos
         return true
@@ -1312,7 +1313,9 @@ local cuizhen = fk.CreateTriggerSkill{
           end
         end
       end
-      data.n = data.n + math.min(n, 2)
+
+      local roleMode = table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode)
+      data.n = data.n + math.min(roleMode and n + 1 or n + 2, 4)
     end
   end,
 }
@@ -1345,12 +1348,12 @@ Fk:loadTranslationTable{
   --["illustrator:mob_sp__guanqiujian"] = "",
 
   ["cuizhen"] = "摧阵",
-  [":cuizhen"] = "游戏开始时，你可以选择至多两名其他角色，废除其武器栏；"..
+  [":cuizhen"] = "游戏开始时，你可以选择至多两名其他角色（若为身份模式，则改为至多三名），废除其武器栏；"..
   "当你于出牌阶段内使用【杀】或伤害类锦囊牌指定其他角色为目标后，若其手牌数不小于体力值，则你可以废除其武器栏；"..
-  "摸牌阶段，你额外摸X张牌（X为场上被废除的武器栏数，且至多为2）。",
+  "摸牌阶段，你额外摸X张牌（X为场上被废除的武器栏数+2，若为身份模式则改为+1，且至多为4）。",
   ["kuili"] = "溃离",
   [":kuili"] = "锁定技，当你受到伤害后，你恢复伤害来源的武器栏。",
-  ["#cuizhen-choose"] = "摧阵：你可以废除至多两名角色的武器栏！",
+  ["#cuizhen-choose"] = "摧阵：你可以废除至多 %arg 名角色的武器栏！",
   ["#cuizhen-invoke"] = "摧阵：是否废除 %dest 的武器栏？",
 
   ["$cuizhen1"] = "欲活命者，还不弃兵卸甲！",
@@ -1462,7 +1465,10 @@ local kuangli = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(self) then
       if event == fk.EventPhaseStart then
-        return player.phase == Player.Play and #player.room.alive_players > 1
+        return
+          player.phase == Player.Play and
+          #player.room.alive_players > 1 and
+          math.random(0, #player.room.alive_players - 1) > 0
       elseif event == fk.TargetSpecified and player.phase == Player.Play then
         local to = player.room:getPlayerById(data.to)
         return not to.dead and to:getMark("@@kuangli-turn") > 0 and player:getMark("kuangli-phase") < 2
@@ -1487,10 +1493,10 @@ local kuangli = fk.CreateTriggerSkill{
       end
       if not to:isNude() and not to.dead then
         local id = table.random(to:getCardIds("he"))
-        room:throwCard(id, self.name, to, to)
+        room:throwCard(id, self.name, to, player)
       end
       if not player.dead then
-        player:drawCards(1, self.name)
+        player:drawCards(2, self.name)
       end
     end
   end,
@@ -1528,7 +1534,7 @@ Fk:loadTranslationTable{
 
   ["kuangli"] = "狂戾",
   [":kuangli"] = "锁定技，出牌阶段开始时，场上随机任意名其他角色获得“狂戾”标记直到回合结束；每阶段限两次，" ..
-  "当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你与其各随机弃置一张牌，然后你摸一张牌。",
+  "当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你随机弃置你与其各一张牌，然后你摸两张牌。",
   ["xiongsi"] = "凶肆",
   [":xiongsi"] = "限定技，出牌阶段，若你的手牌不少于三张，你可以弃置所有手牌，然后令所有其他角色各失去1点体力。",
   ["@@kuangli-turn"] = "狂戾",

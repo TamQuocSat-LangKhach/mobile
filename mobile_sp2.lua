@@ -1267,9 +1267,7 @@ local cuizhen = fk.CreateTriggerSkill{
         local to = player.room:getPlayerById(data.to)
         return not to.dead and to:getHandcardNum() >= to.hp and #to:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
       elseif event == fk.DrawNCards and target == player then
-        return table.find(player.room.alive_players, function(p)
-          return table.contains(p.sealedSlots, Player.WeaponSlot)
-        end)
+        return true
       end
     end
   end,

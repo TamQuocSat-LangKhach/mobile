@@ -1582,9 +1582,9 @@ local qianlong = fk.CreateTriggerSkill{
     if event == fk.GameStart then
       num = 20
     elseif event == fk.Damage then
-      num = 15
+      num = 15 * data.damage
     elseif event == fk.Damaged then
-      num = 10
+      num = 10 * data.damage
     else
       num = 5
     end

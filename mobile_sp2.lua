@@ -1892,16 +1892,18 @@ local juejin = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 0,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   card_filter = Util.FalseFunc,
   target_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     for _, p in ipairs(room:getAlivePlayers()) do
-      if p:isAlive() and p.hp ~= 1 then
+      if p:isAlive() then
         local diff = 1 - p.hp
-        room:changeHp(p, diff, nil, self.name)
+        if diff ~= 0 then
+          room:changeHp(p, diff, nil, self.name)
+        end
         if p == player then
           diff = math.min(diff, 0) - 2
         end

@@ -1595,11 +1595,14 @@ local qianlong = fk.CreateTriggerSkill{
       room:setPlayerMark(player, "@mobile__qianlong_daoxin", daoxin + num)
       if player:getMark("@mobile__qianlong_daoxin") >= 25 and not player:hasSkill("mobile_qianlong__qingzheng") then
         room:handleAddLoseSkills(player, "mobile_qianlong__qingzheng")
-      elseif player:getMark("@mobile__qianlong_daoxin") >= 50 and not player:hasSkill("mobile_qianlong__jiushi") then
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 50 and not player:hasSkill("mobile_qianlong__jiushi") then
         room:handleAddLoseSkills(player, "mobile_qianlong__jiushi")
-      elseif player:getMark("@mobile__qianlong_daoxin") >= 75 and not player:hasSkill("mobile_qianlong__fangzhu") then
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 75 and not player:hasSkill("mobile_qianlong__fangzhu") then
         room:handleAddLoseSkills(player, "mobile_qianlong__fangzhu")
-      elseif player:getMark("@mobile__qianlong_daoxin") >= 99 and not player:hasSkill("juejin") then
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 99 and not player:hasSkill("juejin") then
         room:handleAddLoseSkills(player, "juejin")
       end
     end
@@ -1960,17 +1963,24 @@ local weitong = fk.CreateTriggerSkill{
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local num = #table.filter(room.alive_players, function(p) return p ~= player and p.kingdom == "wei" end)
+    local num = #table.filter(room.alive_players, function(p) return p ~= player and p.kingdom == "wei" end) * 20
+
     local daoxin = player:getMark("@mobile__qianlong_daoxin")
-    room:setPlayerMark(player, "@mobile__qianlong_daoxin", num * 20 + daoxin)
-    if player:getMark("@mobile__qianlong_daoxin") >= 25 and not player:hasSkill("mobile_qianlong__qingzheng") then
-      room:handleAddLoseSkills(player, "mobile_qianlong__qingzheng")
-    elseif player:getMark("@mobile__qianlong_daoxin") >= 50 and not player:hasSkill("mobile_qianlong__jiushi") then
-      room:handleAddLoseSkills(player, "mobile_qianlong__jiushi")
-    elseif player:getMark("@mobile__qianlong_daoxin") >= 75 and not player:hasSkill("mobile_qianlong__fangzhu") then
-      room:handleAddLoseSkills(player, "mobile_qianlong__fangzhu")
-    elseif player:getMark("@mobile__qianlong_daoxin") >= 99 and not player:hasSkill("juejin") then
-      room:handleAddLoseSkills(player, "juejin")
+    num = math.min(99 - daoxin, num)
+    if num > 0 then
+      room:setPlayerMark(player, "@mobile__qianlong_daoxin", daoxin + num)
+      if player:getMark("@mobile__qianlong_daoxin") >= 25 and not player:hasSkill("mobile_qianlong__qingzheng") then
+        room:handleAddLoseSkills(player, "mobile_qianlong__qingzheng")
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 50 and not player:hasSkill("mobile_qianlong__jiushi") then
+        room:handleAddLoseSkills(player, "mobile_qianlong__jiushi")
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 75 and not player:hasSkill("mobile_qianlong__fangzhu") then
+        room:handleAddLoseSkills(player, "mobile_qianlong__fangzhu")
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 99 and not player:hasSkill("juejin") then
+        room:handleAddLoseSkills(player, "juejin")
+      end
     end
   end,
 }

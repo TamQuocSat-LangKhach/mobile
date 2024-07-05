@@ -293,12 +293,15 @@ Fk:loadTranslationTable{
 
   ["ex_nioh_shield"] = "仁王金刚盾",
   [":ex_nioh_shield"] = '装备牌·防具<br /><b>防具技能</b>：锁定技，黑色【杀】和<font color="red">♥</font>【杀】对你无效。',
+  ["#ex_nioh_shield_skill"] = "仁王金刚盾",
 
   ["ex_vine"] = "桐油百韧甲",
   [":ex_vine"] = "装备牌·防具<br /><b>防具技能</b>：锁定技。【南蛮入侵】、【万箭齐发】和普通【杀】对你无效。你不能被横置。每当你受到火焰伤害时，此伤害+1。",
+  ["#ex_vine_skill"] = "桐油百韧甲",
 
   ["ex_silver_lion"] = "照月狮子盔",
   [":ex_silver_lion"] = "装备牌·防具<br /><b>防具技能</b>：锁定技。每当你受到伤害时，若此伤害大于1点，防止多余的伤害。每当你失去装备区里的【照月狮子盔】后，你回复1点体力并摸两张牌。",
+  ["#ex_silver_lion_skill"] = "照月狮子盔",
 }
 
 local mobile__catapult_skill = fk.CreateTriggerSkill{

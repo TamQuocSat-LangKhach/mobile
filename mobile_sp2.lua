@@ -1607,6 +1607,36 @@ local qianlong = fk.CreateTriggerSkill{
       end
     end
   end,
+
+  refresh_events = {fk.EventAcquireSkill, fk.EventLoseSkill},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and data == self
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventAcquireSkill then
+      if player:getMark("@mobile__qianlong_daoxin") >= 25 and not player:hasSkill("mobile_qianlong__qingzheng") then
+        room:handleAddLoseSkills(player, "mobile_qianlong__qingzheng")
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 50 and not player:hasSkill("mobile_qianlong__jiushi") then
+        room:handleAddLoseSkills(player, "mobile_qianlong__jiushi")
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 75 and not player:hasSkill("mobile_qianlong__fangzhu") then
+        room:handleAddLoseSkills(player, "mobile_qianlong__fangzhu")
+      end
+      if player:getMark("@mobile__qianlong_daoxin") >= 99 and not player:hasSkill("juejin") then
+        room:handleAddLoseSkills(player, "juejin")
+      end
+    else
+      local toLose = {
+        "-mobile_qianlong__qingzheng",
+        "-mobile_qianlong__jiushi",
+        "-mobile_qianlong__fangzhu",
+        "-juejin",
+      }
+      room:handleAddLoseSkills(player, table.concat(toLose, "|"))
+    end
+  end,
 }
 Fk:loadTranslationTable{
   ["mobile__qianlong"] = "潜龙",

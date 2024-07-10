@@ -2036,6 +2036,7 @@ weitong.permanent_skill = true
 caomao:addSkill(weitong)
 
 local zhangbu = General(extension, "zhangbu", "wu", 4)
+zhangbu.total_hidden = true
 local chengxiong = fk.CreateTriggerSkill{
   name = "chengxiong",
   anim_type = "offensive",
@@ -2123,6 +2124,7 @@ Fk:loadTranslationTable{
 }
 
 local wangjing = General(extension, "wangjing", "wei", 3)
+wangjing.total_hidden = true
 local zujin = fk.CreateViewAsSkill{
   name = "zujin",
   pattern = "slash,jink,nullification",

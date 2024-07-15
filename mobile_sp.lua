@@ -3183,6 +3183,7 @@ local zhujian = fk.CreateActiveSkill{
   anim_type = "drawcard",
   min_target_num = 2,
   max_target_num = 999,
+  prompt = "#zhujian",
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
@@ -3193,15 +3194,19 @@ local zhujian = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local tos = table.simpleClone(effect.tos)
     room:sortPlayersByAction(tos)
-    local targets = table.map(effect.tos, function(pId) return room:getPlayerById(pId) end)
+    local targets = table.map(tos, Util.Id2PlayerMapper)
     for _, p in ipairs(targets) do
-      p:drawCards(1, self.name)
+      if not p.dead then
+        p:drawCards(1, self.name)
+      end
     end
   end,
 }
 local duansuo = fk.CreateActiveSkill{
   name = "duansuo",
   anim_type = "offensive",
+  prompt = "#duansuo",
+  min_target_num = 1,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
@@ -3212,18 +3217,20 @@ local duansuo = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local tos = table.simpleClone(effect.tos)
     room:sortPlayersByAction(tos)
-    local targets = table.map(effect.tos, function(pId) return room:getPlayerById(pId) end)
+    local targets = table.map(tos, Util.Id2PlayerMapper)
     for _, p in ipairs(targets) do
       p:setChainState(false)
     end
     for _, p in ipairs(targets) do
-      room:damage({
-        from = room:getPlayerById(effect.from),
-        to = p,
-        damage = 1,
-        damageType = fk.FireDamage,
-        skillName = self.name,
-      })
+      if not p.dead then
+        room:damage({
+          from = room:getPlayerById(effect.from),
+          to = p,
+          damage = 1,
+          damageType = fk.FireDamage,
+          skillName = self.name,
+        })
+      end
     end
   end,
 }
@@ -3232,10 +3239,13 @@ wangjun:addSkill(duansuo)
 Fk:loadTranslationTable{
   ["wangjun"] = "王濬",
   ["#wangjun"] = "首下石城",
+  ["illustrator:wangjun"] = "凝聚永恒",
   ["zhujian"] = "筑舰",
   [":zhujian"] = "出牌阶段限一次，你可以令至少两名装备区里有牌的角色各摸一张牌。",
+  ["#zhujian"] = "筑舰：令至少两名装备区里有牌的角色各摸一张牌",
   ["duansuo"] = "断索",
   [":duansuo"] = "出牌阶段限一次，你可以重置至少一名角色，然后对这些角色各造成1点火焰伤害。",
+  ["#duansuo"] = "断索：重置至少一名角色，对这些角色各造成1点火焰伤害",
   ["$zhujian1"] = "修橹筑楼舫，伺时补金瓯。",
   ["$zhujian2"] = "连舫披金甲，王气自可收。",
   ["$duansuo1"] = "吾心如炬，无碍寒江铁索。",

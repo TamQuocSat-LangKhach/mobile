@@ -1459,10 +1459,7 @@ local kuangli = fk.CreateTriggerSkill{
     local room = player.room
     if target == player and player:hasSkill(self) then
       if event == fk.EventPhaseStart then
-        return
-          player.phase == Player.Play and
-          #room.alive_players > 1 and
-          math.random(0, #room.alive_players - 1) > 0
+        return player.phase == Player.Play and #room.alive_players > 1
       elseif event == fk.TargetSpecified and player.phase == Player.Play then
         local to = room:getPlayerById(data.to)
         return
@@ -1530,8 +1527,8 @@ Fk:loadTranslationTable{
   --["illustrator:chengjiw"] = "",
 
   ["kuangli"] = "狂戾",
-  [":kuangli"] = "锁定技，出牌阶段开始时，场上随机任意名其他角色获得“狂戾”标记直到回合结束；每阶段限两次（若为斗地主，则改为限一次），" ..
-  "当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你随机弃置你与其各一张牌，然后你摸两张牌。",
+  [":kuangli"] = "锁定技，出牌阶段开始时，令随机数量（至少为一）名其他角色获得“狂戾”标记直到回合结束；每阶段限两次" ..
+  "（若为斗地主，则改为限一次），当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你随机弃置你与其各一张牌，然后你摸两张牌。",
   ["xiongsi"] = "凶肆",
   [":xiongsi"] = "限定技，出牌阶段，若你的手牌不少于三张，你可以弃置所有手牌，然后令所有其他角色各失去1点体力。",
   ["@@kuangli-turn"] = "狂戾",

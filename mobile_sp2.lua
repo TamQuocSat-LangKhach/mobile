@@ -1465,7 +1465,7 @@ local kuangli = fk.CreateTriggerSkill{
         return
           not to.dead and to:getMark("@@kuangli-turn") > 0 and
           player:getMark("kuangli-phase") <
-            (table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, room.settings.gameMode) and 1 or 2)
+            (table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) and 1 or 2)
       end
     end
   end,

@@ -1032,7 +1032,7 @@ Fk:loadTranslationTable{
 local yangfeng = General(extension, "yangfeng", "qun", 4)
 local xuetu = fk.CreateActiveSkill{
   name = "xuetu",
-  anim_type = "support",
+  anim_type = "switch",
   switch_skill_name = "xuetu",
   card_num = 0,
   target_num = 1,
@@ -1107,7 +1107,7 @@ local xuetuV2 = fk.CreateActiveSkill{
 }
 local xuetuV3 = fk.CreateActiveSkill{
   name = "xuetu_v3",
-  anim_type = "offensive",
+  anim_type = "switch",
   switch_skill_name = "xuetu_v3",
   card_num = 0,
   target_num = 1,

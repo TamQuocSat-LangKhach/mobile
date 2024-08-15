@@ -554,8 +554,9 @@ local quedi = fk.CreateTriggerSkill{
     if not to:isKongcheng() then
       table.insert(choices, "quedi-prey")
     end
-
-    local choice = room:askForChoice(player, choices, self.name, nil, nil,
+    local prompt = "#quedi-choice::"..data.to..":"..player:usedSkillTimes(self.name, Player.HistoryTurn)..":"
+    ..(1 + player:getMark("choujue_buff-turn"))
+    local choice = room:askForChoice(player, choices, self.name, prompt, nil,
     {"beishui", "quedi-prey", "quedi-offense", "Cancel"})
     if choice ~= "Cancel" then
       self.cost_data = choice
@@ -593,6 +594,7 @@ Fk:loadTranslationTable{
   ["quedi-prey"] = "获得其手牌",
   ["quedi-offense"] = "弃基本牌令此伤害+1",
   ["#quedi-discard"] = "却敌：可以弃置1张基本牌，令此【%arg】伤害+1",
+  ["#quedi-choice"] = "你可以对 %dest 发动“却敌”（已用：%arg/%arg2）",
 
   ["$quedi1"] = "力摧敌阵，如视天光破云！",
   ["$quedi2"] = "让尔等有命追，无命回！",
@@ -603,6 +605,9 @@ wenyang:addSkill(quedi)
 local chuifeng = fk.CreateViewAsSkill{
   name = "chuifeng",
   anim_type = "offensive",
+  prompt = function (self)
+    return "#chuifeng-prompt:::"..Self:usedSkillTimes(self.name, Player.HistoryPhase)
+  end,
   enabled_at_play = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) < 2 and player.hp > 0 and player:getMark("chuifeng_nullified-phase") == 0
   end,
@@ -640,6 +645,7 @@ Fk:loadTranslationTable{
   ["#chuifeng_defence"] = "椎锋",
   [":chuifeng"] = "魏势力技，出牌阶段限两次，你可以失去1点体力，并视为使用一张【决斗】。当你受到以此法使用的【决斗】造成的伤害时，防止此伤害，"..
   "本技能于此阶段内失效。",
+  ["#chuifeng-prompt"] = "椎锋：失去1点体力，并视为使用一张【决斗】（已用：%arg/2）",
 
   ["$chuifeng1"] = "率军冲锋，不惧刀枪所阻！",
   ["$chuifeng2"] = "登锋履刃，何妨马革裹尸！",
@@ -649,6 +655,7 @@ wenyang:addSkill(chuifeng)
 
 local chongjian = fk.CreateViewAsSkill{
   name = "chongjian",
+  prompt = "#chongjian-prompt",
   interaction = function()
     local names = {}
     for name, _ in pairs(Fk.all_card_types) do
@@ -687,6 +694,7 @@ Fk:loadTranslationTable{
   [":chongjian"] = "吴势力技，你可以将装备牌当【酒】或无距离限制且无视防具的任意一种【杀】使用。当你以此法使用的【杀】对一名角色造成伤害后，"..
   "你获得其装备区里的X张牌（X为伤害值）。",
   ["#chongjian_buff"] = "冲坚",
+  ["#chongjian-prompt"] = "冲坚：将装备牌当【酒】或无距离限制且无视防具的任意一种【杀】使用",
 
   ["$chongjian1"] = "尔等良将，于我不堪一击！",
   ["$chongjian2"] = "此等残兵，破之何其易也！",

@@ -247,9 +247,20 @@ local luanqun = fk.CreateActiveSkill{
     local my_card = Fk:getCardById(player:getMark("luanqun-tmp"))
     local available_cards = table.filter(all_cards, function(id) return Fk:getCardById(id).color == my_card.color end)
     table.removeOne(available_cards, my_card.id)
-    local cards, choice = U.askforChooseCardsAndChoice(player, available_cards, {"OK"}, self.name, "#luanqun-get", {"Cancel"}, 1, 1, all_cards)
+    local maxNum = table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and 4 or 2
+    local cards, choice = U.askforChooseCardsAndChoice(
+      player,
+      available_cards,
+      {"OK"},
+      self.name,
+      "#luanqun-get:::" .. maxNum,
+      {"Cancel"},
+      1,
+      maxNum,
+      all_cards
+    )
     if choice ~= "Cancel" then
-      room:moveCardTo(Fk:getCardById(cards[1]), Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
+      room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
     end
     local mark = U.getMark(player, self.name)
     for _, p in ipairs(targets) do
@@ -316,11 +327,11 @@ Fk:loadTranslationTable{
   ["laishou"] = "来寿",
   [":laishou"] = "锁定技，当你受到致命伤害时，若你的体力上限小于9，防止此伤害并增加等量的体力上限。准备阶段，若你的体力上限不小于9，你死亡。",
   ["luanqun"] = "乱群",
-  [":luanqun"] = "出牌阶段限一次，若你有手牌，你可以令所有角色同时展示一张手牌，然后你可以获得其中一张与你展示牌颜色相同的牌。令所有与你"..
-  "展示牌颜色不同的角色于其下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
+  [":luanqun"] = "出牌阶段限一次，若你有手牌，你可以令所有角色同时展示一张手牌，然后你可以获得其中至多两张（若为身份模式，则改为至多四张）"..
+  "与你展示牌颜色相同的牌。令所有与你展示牌颜色不同的角色于其下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
   ["#luanqun"] = "乱群：令所有角色展示一张手牌，你可以获得其中一张与你展示颜色相同的牌",
   ["#luanqun-card"] = "乱群：请展示一张手牌",
-  ["#luanqun-get"] = "乱群：你可以获得其中一张牌",
+  ["#luanqun-get"] = "乱群：你可以获得其中至多%arg张牌",
 
   ["$laishou1"] = "黄耇鲐背，谓之永年。",
   ["$laishou2"] = "养怡和之福，得乔松之寿。",

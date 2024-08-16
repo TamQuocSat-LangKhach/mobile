@@ -861,6 +861,20 @@ local taoluanh = fk.CreateTriggerSkill{
       room.logic:getCurrentEvent():addExitFunc(function()
         e:shutdown()
       end)
+      local parent = e.parent
+      if parent and parent.event == GameEvent.CardEffect then
+        local effect = parent.data[1]
+        if effect.card.sub_type == Card.SubtypeDelayedTrick and room:getCardArea(effect.card:getEffectiveId()) == Card.Processing then
+          local card = effect.card
+          if card:isVirtual() then
+            card = Fk:cloneCard(card.name)
+            card:addSubcards(effect.card.subcards)
+            card.skillNames = effect.card.skillNames
+            target:addVirtualEquip(card)
+          end
+          room:moveCardTo(card, Player.Judge, target, fk.ReasonJustMove, self.name)
+        end
+      end
     end
     if self.cost_data == "taoluanh_prey" then
       room:doIndicate(player.id, {target.id})
@@ -887,7 +901,7 @@ local shiji = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {data.to.id})
-    U.viewCards(player, data.to:getCardIds("h"))
+    U.viewCards(player, data.to:getCardIds("h"), self.name, "$ViewCardsFrom:"..data.to.id)
     local ids = {}
     for _, id in ipairs(data.to:getCardIds("h")) do
       if Fk:getCardById(id).color == Card.Red then
@@ -958,7 +972,7 @@ Fk:loadTranslationTable{
   ["#mobile__huangfusong"] = "铁血柔肠",
   ["taoluanh"] = "讨乱",
   [":taoluanh"] = "每回合限一次，当一名角色判定牌生效前，若判定结果为♠，你可以终止此次判定并选择一项：1.你获得此判定牌；2.若进行判定的角色不是你，你视为对其使用一张无距离和次数限制的火【杀】。"..
-  "<br><font color='red'>注：延时锦囊被终止判定后直接消失，不会回到判定区",
+  "<br><font color='red'>村：终止判定会中断进行此判定的技能，若为延时锦囊的判定，将此牌移动回原判定区",
   ["shiji"] = "势击",
   [":shiji"] = "当你对其他角色造成属性伤害时，若你的手牌数不为全场唯一最多，你可以观看其手牌并弃置其中所有的红色牌，然后你摸等量的牌。",
   ["zhengjun"] = "整军",

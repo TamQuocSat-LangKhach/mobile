@@ -864,7 +864,9 @@ local taoluanh = fk.CreateTriggerSkill{
       local parent = e.parent
       if parent and parent.event == GameEvent.CardEffect then
         local effect = parent.data[1]
-        if effect.card.sub_type == Card.SubtypeDelayedTrick and room:getCardArea(effect.card:getEffectiveId()) == Card.Processing then
+        if effect.card.sub_type == Card.SubtypeDelayedTrick and room:getCardArea(effect.card:getEffectiveId()) == Card.Processing
+          and not target.dead and not target:hasDelayedTrick(effect.card.name) and not table.contains(target.sealedSlots, Player.JudgeSlot)
+          then
           local card = effect.card
           if card:isVirtual() then
             card = Fk:cloneCard(card.name)

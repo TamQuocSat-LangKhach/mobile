@@ -93,33 +93,42 @@ local panxiang = fk.CreateTriggerSkill{
     return player:hasSkill(self)
   end,
   on_cost = function(self, event, target, player, data)
-    local all_choices = {"panxiang1", "panxiang2", "Cancel"}
+    local all_choices = {"panxiang2"}
+    if data.from and not data.from.dead then
+      table.insert(all_choices, 1, "panxiang1-from:" .. data.from.id)
+    else
+      table.insert(all_choices, 1, "panxiang1")
+    end
+    table.insert(all_choices, "Cancel")
     local choices = table.simpleClone(all_choices)
-    if player:getMark("panxiang_"..target.id) ~= 0 then
-      table.removeOne(choices, player:getMark("panxiang_"..target.id))
+    local mark = target:getMark("@panxiang")
+    if type(mark) == "string" then
+      local n = string.match(mark, "mkpanxiang(%d)")
+      if n then table.remove(choices, n) end
     end
     local choice = player.room:askForChoice(player, choices, self.name, "#panxiang-invoke::"..target.id, false, all_choices)
     if choice ~= "Cancel" then
-      self.cost_data = choice
+      self.cost_data = {choice, table.indexOf(all_choices, choice)}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(player, "panxiang_"..target.id, self.cost_data)
+    room:setPlayerMark(target, "@panxiang", "mkpanxiang" .. self.cost_data[2])
     room:notifySkillInvoked(player, self.name, "support")
     room:doIndicate(player.id, {target.id})
-    if self.cost_data == "panxiang1" then
-      player:broadcastSkillInvoke(self.name, math.random(3, 4))
-      data.damage = data.damage - 1
-      if data.from and not data.from.dead then
-        room:drawCards(data.from, 2, self.name)
-      end
-    else
+    if self.cost_data[1] == "panxiang2" then
       player:broadcastSkillInvoke(self.name, math.random(1, 2))
       data.damage = data.damage + 1
       if not target.dead then
         room:drawCards(target, 3, self.name)
+      end
+    else
+      player:broadcastSkillInvoke(self.name, math.random(3, 4))
+      data.damage = data.damage - 1
+      if data.from and not data.from.dead then
+        room:drawCards(data.from, 2, self.name)
       end
     end
   end,
@@ -153,9 +162,13 @@ Fk:loadTranslationTable{
   ["mobile__chenjie"] = "臣节",
   [":mobile__chenjie"] = "若你有“蹒襄”，当一名成为过“蹒襄”目标的角色死亡后，你弃置你区域内所有牌，然后摸四张牌。",
 
-  ["#panxiang-invoke"] = "蹒襄：是否改变 %dest 受到的伤害？",
-  ["panxiang1"] = "伤害-1，伤害来源摸两张牌",
+  ["#panxiang-invoke"] = "蹒襄：你可以选择一项：",
+  ["panxiang1"] = "伤害-1",
+  ["panxiang1-from"] = "伤害-1，%src摸两张牌",
   ["panxiang2"] = "伤害+1，其摸三张牌",
+  ["@panxiang"] = "蹒襄",
+  ["mkpanxiang1"] = "其一",
+  ["mkpanxiang2"] = "其二",
 
   ["$panxiang1"] = "殿下当以国事为重，奈何效匹夫之孝乎？",
   ["$panxiang2"] = "诸卿当早拜嗣君，以镇海内，而但哭邪？",

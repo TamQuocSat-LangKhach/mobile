@@ -195,9 +195,7 @@ local mibei = fk.CreateTriggerSkill{
       return table.every(nums, function(num) return num > 1 end)
     end
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     player:broadcastSkillInvoke(self.name, 1)
@@ -231,9 +229,7 @@ local mibei_trigger = fk.CreateTriggerSkill{
     return target == player and player:hasSkill("mibei", true) and player.phase == Player.Discard and
       player:getMark("@$wangling_bei") == 0 and player:getMark("mibei_fail-turn") > 0 and not player:getQuestSkillState("mibei")
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     player:broadcastSkillInvoke("mibei", 2)
@@ -1264,9 +1260,7 @@ local rongbei = fk.CreateActiveSkill{
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
-  card_filter = function(self, to_select, selected)
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
     local target = Fk:currentRoom():getPlayerById(to_select)
     return #selected == 0 and #target:getCardIds("e") < #target:getAvailableEquipSlots()

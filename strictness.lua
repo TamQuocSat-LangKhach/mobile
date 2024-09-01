@@ -7,25 +7,125 @@ Fk:loadTranslationTable{
   ["strictness"] = "手杀-始计篇·严",
 }
 
+--- 整肃记录技能
+local mobile_zhengsu_recorder = fk.CreateTriggerSkill{
+  name = "mobile_zhengsu_recorder",
+
+  refresh_events = {fk.CardUsing, fk.AfterCardsMove, fk.EventPhaseEnd},
+  can_refresh = function(self, event, target, player, data)
+    if player.dead then return end
+    local mark1, mark2, mark3 = "@zhengsu_bianzhen-turn", "@zhengsu_leijin-turn", "@zhengsu_mingzhi-turn"
+    local check_play = player.phase == Player.Play and
+    ((player:getMark(mark1) ~= 0 and player:getMark(mark1) ~= "zhengsu_failure")
+    or (player:getMark(mark2) ~= 0 and player:getMark(mark2) ~= "zhengsu_failure"))
+    local check_discard = player.phase == Player.Discard and
+    (player:getMark(mark3) ~= 0 and player:getMark(mark3) ~= "zhengsu_failure")
+    if event == fk.CardUsing then
+      return target == player and check_play
+    elseif event == fk.AfterCardsMove then
+      return check_discard
+    else
+      return target == player and (check_play or check_discard)
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    local broadcastFailure = function (p, choice)
+      room:setPlayerMark(p, "@"..choice.."-turn", "zhengsu_failure")
+      for _, v in ipairs(p:getTableMark("zhengsu_skill-turn")) do
+        if choice == v[3] then
+          room:getPlayerById(v[1]):broadcastSkillInvoke(v[2], 3)
+        end
+      end
+    end
+    if event == fk.CardUsing then
+      local mark = player:getMark("@zhengsu_leijin-turn")
+      if (mark ~= 0 and mark ~= "zhengsu_failure") and data.card.number > 1 then
+        if mark == "" then mark = {} end
+        table.insert(mark, data.card.number)
+        if #mark > 3 then table.remove(mark, 1) end
+        if #mark > 1 and mark[#mark] <= mark[#mark-1] then
+          broadcastFailure(player, "zhengsu_leijin")
+        else
+          room:setPlayerMark(player, "@zhengsu_leijin-turn", mark)
+        end
+      end
+      mark = player:getMark("@zhengsu_bianzhen-turn")
+      if (mark ~= 0 and mark ~= "zhengsu_failure") then
+        local suit = data.card:getSuitString(true)
+        if suit ~= "log_nosuit" then
+          if mark == "" then mark = {} end
+          if table.find(mark, function(v) return v ~= suit end) then
+            broadcastFailure(player, "zhengsu_bianzhen")
+            return
+          elseif #mark < 2 then
+            table.insert(mark, suit)
+          end
+          room:setPlayerMark(player, "@zhengsu_bianzhen-turn", mark)
+        end
+      end
+    elseif event == fk.AfterCardsMove then
+      local mark = player:getTableMark("@zhengsu_mingzhi-turn")
+      for _, move in ipairs(data) do
+        if move.from == player.id and move.skillName == "game_rule" then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand then
+              local suit = Fk:getCardById(info.cardId):getSuitString(true)
+              if not table.insertIfNeed(mark, suit) then
+                broadcastFailure(player, "zhengsu_mingzhi")
+                return
+              end
+            end
+          end
+        end
+      end
+      room:setPlayerMark(player, "@zhengsu_mingzhi-turn", mark)
+    elseif event == fk.EventPhaseEnd then
+      local mark1, mark2, mark3 = "@zhengsu_bianzhen-turn", "@zhengsu_leijin-turn", "@zhengsu_mingzhi-turn"
+      if player.phase == Player.Play then
+        if player:getMark(mark1) ~= 0 then
+          if #player:getTableMark(mark1) >= 2 then
+            room:setPlayerMark(player, mark1, "zhengsu_success")
+          else
+            broadcastFailure(player, "zhengsu_bianzhen")
+          end
+        end
+        if player:getMark(mark2) ~= 0 then
+          if #player:getTableMark(mark2) >= 3 then
+            room:setPlayerMark(player, mark2, "zhengsu_success")
+          else
+            broadcastFailure(player, "zhengsu_leijin")
+          end
+        end
+      else
+        if #player:getTableMark(mark3) >= 2 then
+          room:setPlayerMark(player, mark3, "zhengsu_success")
+        else
+          broadcastFailure(player, "zhengsu_mingzhi")
+        end
+      end
+    end
+  end,
+}
+Fk:addSkill(mobile_zhengsu_recorder)
+
 ---@param player ServerPlayer @ 发起整肃的玩家
 ---@param target ServerPlayer @ 执行整肃的玩家
 ---@param skillName string @ 技能名
 ---@param prompt string @ 提示信息
 --- 发起整肃
-local function StartZhengsu(player, target, skillName, prompt)
+local function startZhengsu(player, target, skillName, prompt)
   skillName = skillName or ""
   prompt = prompt or ""
   local room = player.room
   local choices = {"zhengsu_leijin", "zhengsu_bianzhen", "zhengsu_mingzhi"}
   local choice = room:askForChoice(player, choices, skillName, prompt, true)
-  local mark = target:getMark("@" .. choice .. "-turn")
-  if mark == 0 then mark = {} end
-  table.insertIfNeed(mark, skillName)
-  room:setPlayerMark(target, "@" .. choice .. "-turn", mark)
-  mark = target:getMark(choice .. "-turn")
-  if mark == 0 then mark = {} end
-  table.insertIfNeed(mark, player.id)
-  room:setPlayerMark(target, choice .. "-turn", mark)
+  local mark_name = "@" .. choice .. "-turn"
+  if target:getMark(mark_name) == 0 then
+    room:setPlayerMark(target, mark_name, "")
+  end
+  room:addTableMark(target, "zhengsu_skill-turn", {player.id, skillName, choice})
+  room.logic:addTriggerSkill(mobile_zhengsu_recorder)
 end
 
 ---@param player ServerPlayer @ 发起整肃的玩家
@@ -50,109 +150,19 @@ local function RewardZhengsu(player, target, reward, skillName)
   end
 end
 
---- 整肃记录技能
-local mobileZhengsuTrigger = fk.CreateTriggerSkill{
-  name = "mobile_zhengsu_trigger",
-  global = true,
+---@param player ServerPlayer @ 发起整肃的玩家
+---@param target ServerPlayer @ 执行整肃的玩家
+---@param skillName string @ 技能名
+--- 检查整肃成功
+local function checkZhengsu(player, target, skillName)
+  for _, v in ipairs(target:getTableMark("zhengsu_skill-turn")) do
+    if v[2] == skillName and v[1] == player.id then
+      return target:getMark("@" .. v[3].. "-turn") == "zhengsu_success"
+    end
+  end
+  return false
+end
 
-  refresh_events = {fk.CardUsing, fk.AfterCardsMove, fk.EventPhaseEnd},
-  can_refresh = function(self, event, target, player, data)
-    if event == fk.CardUsing and target == player and player.phase == Player.Play then
-      return player:getMark("zhengsu_leijin-turn") ~= 0 or player:getMark("zhengsu_bianzhen-turn") ~= 0
-    elseif event == fk.AfterCardsMove and player.phase == Player.Discard then
-      return player:getMark("zhengsu_mingzhi-turn") ~= 0
-    elseif event == fk.EventPhaseEnd and target == player and player.phase == Player.Discard then
-      return true
-    end
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.CardUsing then
-      if player:getMark("zhengsu_leijin-turn") ~= 0 then
-        local x = data.card.number
-        if x > 0 then
-          room:addPlayerMark(player, "zhengsu_leijin_times-turn")
-          if player:getMark("zhengsu_point-turn") < x then
-            room:setPlayerMark(player, "zhengsu_point-turn", x)
-          else
-            for _, skill in ipairs(player:getMark("@zhengsu_leijin-turn")) do
-              player:broadcastSkillInvoke(skill, 3)
-            end
-            room:setPlayerMark(player, "zhengsu_leijin-turn", 0)
-            room:setPlayerMark(player, "@zhengsu_leijin-turn", "zhengsu_failure")
-          end
-        end
-      end
-      if player:getMark("zhengsu_bianzhen-turn") ~= 0 then
-        local suit = data.card:getSuitString()
-        if suit ~= "nosuit" then
-          room:addPlayerMark(player, "zhengsu_bianzhen_times-turn")
-          if (player:getMark("zhengsu_suit-turn") == 0 or player:getMark("zhengsu_suit-turn") == suit) then
-            room:setPlayerMark(player, "zhengsu_suit-turn", suit)
-          else
-            for _, skill in ipairs(player:getMark("@zhengsu_bianzhen-turn")) do
-              player:broadcastSkillInvoke(skill, 3)
-            end
-            room:setPlayerMark(player, "zhengsu_bianzhen-turn", 0)
-            room:setPlayerMark(player, "@zhengsu_bianzhen-turn", "zhengsu_failure")
-          end
-        end
-      end
-    elseif event == fk.AfterCardsMove then
-      local discarded = type(player:getMark("zhengsu_mingzhi_discard-turn")) == "table" and player:getMark("zhengsu_mingzhi_discard-turn") or {}
-      for _, move in ipairs(data) do
-        if move.from == player.id and move.skillName == "game_rule" then
-          for _, info in ipairs(move.moveInfo) do
-            if info.fromArea == Card.PlayerHand then
-              table.insert(discarded, info.cardId)
-            end
-          end
-        end
-      end
-      room:setPlayerMark(player, "zhengsu_mingzhi_discard-turn", discarded)
-    elseif event == fk.EventPhaseEnd then
-      if player:getMark("zhengsu_leijin-turn") ~= 0 and player:getMark("zhengsu_leijin_times-turn") < 3 then
-        for _, skill in ipairs(player:getMark("@zhengsu_leijin-turn")) do
-          player:broadcastSkillInvoke(skill, 3)
-        end
-        room:setPlayerMark(player, "zhengsu_leijin-turn", 0)
-        room:setPlayerMark(player, "@zhengsu_leijin-turn", "zhengsu_failure")
-      end
-      if player:getMark("zhengsu_bianzhen-turn") ~= 0 and player:getMark("zhengsu_bianzhen_times-turn") < 2 then
-        for _, skill in ipairs(player:getMark("@zhengsu_bianzhen-turn")) do
-          player:broadcastSkillInvoke(skill, 3)
-        end
-        room:setPlayerMark(player, "zhengsu_bianzhen-turn", 0)
-        room:setPlayerMark(player, "@zhengsu_bianzhen-turn", "zhengsu_failure")
-      end
-      if player:getMark("zhengsu_mingzhi-turn") ~= 0 then
-        local discarded = player:getMark("zhengsu_mingzhi_discard-turn")
-        if type(discarded) == "table" and #discarded > 1 then
-          local suits = {}
-          for _, id in ipairs(discarded) do
-            if Fk:getCardById(id).suit ~= Card.NoSuit then
-              table.insertIfNeed(suits, Fk:getCardById(id).suit)
-            end
-          end
-          if #suits < #discarded then
-            for _, skill in ipairs(player:getMark("@zhengsu_mingzhi-turn")) do
-              player:broadcastSkillInvoke(skill, 3)
-            end
-            room:setPlayerMark(player, "zhengsu_mingzhi-turn", 0)
-            room:setPlayerMark(player, "@zhengsu_mingzhi-turn", "zhengsu_failure")
-          end
-        else
-          for _, skill in ipairs(player:getMark("@zhengsu_mingzhi-turn")) do
-            player:broadcastSkillInvoke(skill, 3)
-          end
-          room:setPlayerMark(player, "zhengsu_mingzhi-turn", 0)
-          room:setPlayerMark(player, "@zhengsu_mingzhi-turn", "zhengsu_failure")
-        end
-      end
-    end
-  end,
-}
-Fk:addSkill(mobileZhengsuTrigger)
 Fk:loadTranslationTable{
   ["zhengsu_leijin"] = "擂进",
   ["@zhengsu_leijin-turn"] = "擂进",
@@ -164,7 +174,15 @@ Fk:loadTranslationTable{
   ["@zhengsu_mingzhi-turn"] = "鸣止",
   [":zhengsu_mingzhi"] = "弃牌阶段内，至少弃置2张牌，弃置牌花色均不同",
   ["zhengsu_failure"] = "失败",
+  ["zhengsu_success"] = "成功",
 }
+
+local zhengsu_desc = "<br><font color='grey'><b>#整肃：</b>"..
+"<br>技能发动者从擂进、变阵、鸣止中选择一项令目标执行，若本回合“整肃”成功，则弃牌阶段结束时获得“整肃奖励”。"..
+"<br><b>擂进：</b>出牌阶段内，使用的所有牌点数需递增，且至少使用三张牌。"..
+"<br><b>变阵：</b>出牌阶段内，使用的所有牌花色需相同，且至少使用两张牌。"..
+"<br><b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同，且至少弃置两张牌。"..
+"<br><b>整肃奖励：</b>摸两张牌或回复1点体力。</font>"
 
 local zhangchangpu = General(extension, "mobile__zhangchangpu", "wei", 3, 3, General.Female)
 local difei = fk.CreateTriggerSkill{
@@ -762,15 +780,14 @@ local yanji = fk.CreateTriggerSkill{
   name = "yanji",
   events = {fk.EventPhaseStart, fk.EventPhaseEnd},
   anim_type = "support",
+  mute = true,
   can_trigger = function(self, event, target, player, data)
     if target == player then
       if event == fk.EventPhaseStart then
         return player:hasSkill(self) and player.phase == Player.Play
       else
         return player.phase == Player.Discard and not player.dead and
-        player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 and
-        table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
-          return player:getMark(name) ~= 0 and table.contains(player:getMark(name), player.id) end)
+        checkZhengsu(player, target, self.name)
       end
     end
   end,
@@ -782,8 +799,10 @@ local yanji = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
+    player.room:notifySkillInvoked(player, self.name)
+    player:broadcastSkillInvoke(self.name, math.random(2))
     if event == fk.EventPhaseStart then
-      StartZhengsu(player, player, self.name, "#yanji-choice")
+      startZhengsu(player, player, self.name, "#yanji-choice")
     else
       local choices = {"draw2"}
       if player:isWounded() then
@@ -806,13 +825,7 @@ Fk:loadTranslationTable{
   ["mobile__diancai"] = "典财",
   [":mobile__diancai"] = "其他角色的出牌阶段结束时，若你于此阶段失去了至少X张牌（X为你的体力值），则你可以将手牌摸至体力上限。",
   ["yanji"] = "严纪",
-  [":yanji"] = "出牌阶段开始时，你可以进行“整肃”。"..
-  "<br/><font color='grey'>#\"<b>整肃</b>\"<br/>"..
-  "技能发动者从擂进、变阵、鸣止中选择一项令目标执行，若本回合“整肃”成功，则弃牌阶段结束后获得“整肃奖励”。<br/>"..
-  "<b>擂进：</b>出牌阶段内，使用的所有牌点数需递增，且至少使用三张牌。<br/>"..
-  "<b>变阵：</b>出牌阶段内，使用的所有牌花色需相同，且至少使用两张牌。<br/>"..
-  "<b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同，且至少弃置两张牌。<br/>"..
-  "<b>整肃奖励：</b>选择一项：1.摸两张牌；2.回复1点体力。",
+  [":yanji"] = "出牌阶段开始时，你可以进行“整肃”。"..zhengsu_desc,
   ["#mobile__diaodu-move"] = "调度：你可以移动场上一张装备牌，失去牌的角色摸一张牌",
   ["@mobile__diancai-phase"] = "典财",
   ["#mobile__diancai-invoke"] = "典财：你可以将手牌摸至体力上限",
@@ -922,15 +935,14 @@ local zhengjun = fk.CreateTriggerSkill{
   name = "zhengjun",
   events = {fk.EventPhaseStart, fk.EventPhaseEnd},
   anim_type = "support",
+  mute = true,
   can_trigger = function(self, event, target, player, data)
     if target == player then
       if event == fk.EventPhaseStart then
         return player:hasSkill(self) and player.phase == Player.Play
       else
         return player.phase == Player.Discard and not player.dead and
-        player:usedSkillTimes(self.name, Player.HistoryTurn) > 0 and
-        table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
-          return player:getMark(name) ~= 0 and table.contains(player:getMark(name), player.id) end)
+        checkZhengsu(player, target, self.name)
       end
     end
   end,
@@ -942,18 +954,20 @@ local zhengjun = fk.CreateTriggerSkill{
     end
   end,
   on_use = function(self, event, target, player, data)
+    local room = player.room
+    player:broadcastSkillInvoke(self.name, math.random(2))
+    room:notifySkillInvoked(player, self.name)
     if event == fk.EventPhaseStart then
-      StartZhengsu(player, player, self.name, "#zhengjun-choice")
+      startZhengsu(player, player, self.name, "#zhengjun-choice")
     else
-      local room = player.room
       local choices = {"draw2"}
       if player:isWounded() then
         table.insert(choices, 1, "recover")
       end
       local reward = room:askForChoice(player, choices, self.name, "#zhengjun-reward", false, {"draw2", "recover"})
       RewardZhengsu(player, player, reward, self.name)
-      local to = room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), function (p)
-        return p.id end), 1, 1, "#zhengjun-choose", self.name, true)
+      local to = room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper),
+      1, 1, "#zhengjun-choose", self.name, true)
       if #to > 0 then
         to = room:getPlayerById(to[1])
         choices = {"draw2"}
@@ -978,13 +992,7 @@ Fk:loadTranslationTable{
   ["shiji"] = "势击",
   [":shiji"] = "当你对其他角色造成属性伤害时，若你的手牌数不为全场唯一最多，你可以观看其手牌并弃置其中所有的红色牌，然后你摸等量的牌。",
   ["zhengjun"] = "整军",
-  [":zhengjun"] = "出牌阶段开始时，你可以进行“整肃”，弃牌阶段结束后，若“整肃”成功，你获得“整肃”奖励，然后你可以令一名其他角色也获得“整肃”奖励。"..
-  "<br/><font color='grey'>#\"<b>整肃</b>\"<br/>"..
-  "技能发动者从擂进、变阵、鸣止中选择一项令目标执行，若本回合“整肃”成功，则弃牌阶段结束后获得“整肃奖励”。<br/>"..
-  "<b>擂进：</b>出牌阶段内，使用的所有牌点数需递增，且至少使用三张牌。<br/>"..
-  "<b>变阵：</b>出牌阶段内，使用的所有牌花色需相同，且至少使用两张牌。<br/>"..
-  "<b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同，且至少弃置两张牌。<br/>"..
-  "<b>整肃奖励：</b>摸两张牌或回复1点体力。",
+  [":zhengjun"] = "出牌阶段开始时，你可以进行“整肃”，弃牌阶段结束后，若“整肃”成功，你获得“整肃”奖励，然后你可以令一名其他角色也获得“整肃”奖励。"..zhengsu_desc,
   ["#taoluanh-invoke"] = "讨乱：%dest 的判定即将生效，你可以终止此判定并执行一项！",
   ["taoluanh_prey"] = "获得判定牌",
   ["taoluanh_slash"] = "视为对其使用火【杀】",
@@ -1031,13 +1039,14 @@ local yangjie = fk.CreateActiveSkill{
         return not (p == player or p == target or p:prohibitUse(slash) or p:isProhibited(target, slash))
       end)
       if #targets == 0 then return false end
-      local tos = room:askForChoosePlayers(player, table.map(targets, function (p)
-        return p.id end), 1, 1, "#yangjie-choose::" .. effect.tos[1], self.name, true, true)
+      local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper),
+      1, 1, "#yangjie-choose::" .. effect.tos[1], self.name, true, true)
       if #tos > 0 then
         room:useCard({
           from = tos[1],
           tos = {effect.tos},
           card = slash,
+          extraUse = true,
         })
       end
     end
@@ -1074,14 +1083,14 @@ local houfeng = fk.CreateTriggerSkill{
     target.phase == Player.Play and not target.dead and player:inMyAttackRange(target)
   end,
   on_cost = function(self, event, target, player, data)
+    self.cost_data = {tos = {target.id}}
     return player.room:askForSkillInvoke(player, self.name, nil, "#houfeng-invoke::"..target.id)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:notifySkillInvoked(player, self.name)
-    player:broadcastSkillInvoke(self.name, 1)
-    room:doIndicate(player.id, {target.id})
-    StartZhengsu(player, target, self.name, "#houfeng-choice::"..target.id)
+    room:notifySkillInvoked(player, self.name, 1)
+    player:broadcastSkillInvoke(self.name)
+    startZhengsu(player, target, self.name, "#houfeng-choice::"..target.id)
     room:setPlayerMark(player, "@houfeng-turn", target.general)
   end,
 }
@@ -1091,9 +1100,7 @@ local houfeng_delay = fk.CreateTriggerSkill{
   mute = true,
   can_trigger = function(self, event, target, player, data)
     return target.phase == Player.Discard and not target.dead and not player.dead and
-    player:usedSkillTimes("houfeng", Player.HistoryTurn) > 0 and
-    table.find({"zhengsu_leijin-turn", "zhengsu_bianzhen-turn", "zhengsu_mingzhi-turn"}, function(name)
-      return target:getMark(name) ~= 0 and table.contains(target:getMark(name), player.id) end)
+    checkZhengsu(player, target, "houfeng")
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -1121,13 +1128,7 @@ Fk:loadTranslationTable{
   ["yangjie"] = "佯解",
   [":yangjie"] = "出牌阶段限一次，你可以与一名角色拼点。若你没赢，你可以令另一名其他角色视为对与你拼点的角色使用一张无距离限制的火【杀】。",
   ["houfeng"] = "厚俸",
-  [":houfeng"] = "每轮限一次，你攻击范围内一名角色出牌阶段开始时，你可以令其“整肃”；你与其共同获得“整肃”奖励。"..
-  "<br/><font color='grey'>#\"<b>整肃</b>\"<br/>"..
-  "技能发动者从擂进、变阵、鸣止中选择一项令目标执行，若本回合“整肃”成功，则弃牌阶段结束后获得“整肃奖励”。<br/>"..
-  "<b>擂进：</b>出牌阶段内，使用的所有牌点数需递增，且至少使用三张牌。<br/>"..
-  "<b>变阵：</b>出牌阶段内，使用的所有牌花色需相同，且至少使用两张牌。<br/>"..
-  "<b>鸣止：</b>弃牌阶段内，弃置的所有牌花色均不同，且至少弃置两张牌。<br/>"..
-  "<b>整肃奖励：</b>摸两张牌或回复1点体力。",
+  [":houfeng"] = "每轮限一次，你攻击范围内一名角色出牌阶段开始时，你可以令其“整肃”；你与其共同获得“整肃”奖励。"..zhengsu_desc,
   ["zj__juxiang"] = "拒降",
   [":zj__juxiang"] = "限定技，当一名其他角色的濒死结算结束后，你可对其造成1点伤害。",
   ["#yangjie-active"] = "佯解：你可以拼点，若没赢，你可以令另一名角色视为对拼点角色使用火【杀】",

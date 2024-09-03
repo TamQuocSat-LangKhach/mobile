@@ -16,10 +16,10 @@ local mobile_zhengsu_recorder = fk.CreateTriggerSkill{
     if player.dead then return end
     local mark1, mark2, mark3 = "@zhengsu_bianzhen-turn", "@zhengsu_leijin-turn", "@zhengsu_mingzhi-turn"
     local check_play = player.phase == Player.Play and
-    ((player:getMark(mark1) ~= 0 and player:getMark(mark1) ~= "zhengsu_failure")
-    or (player:getMark(mark2) ~= 0 and player:getMark(mark2) ~= "zhengsu_failure"))
+    ((player:getMark(mark1) == "" or type(player:getMark(mark1)) == "table")
+    or (player:getMark(mark2) == "" or type(player:getMark(mark2)) == "table"))
     local check_discard = player.phase == Player.Discard and
-    (player:getMark(mark3) ~= 0 and player:getMark(mark3) ~= "zhengsu_failure")
+    (player:getMark(mark3) == "" or type(player:getMark(mark3)) == "table")
     if event == fk.CardUsing then
       return target == player and check_play
     elseif event == fk.AfterCardsMove then
@@ -40,18 +40,23 @@ local mobile_zhengsu_recorder = fk.CreateTriggerSkill{
     end
     if event == fk.CardUsing then
       local mark = player:getMark("@zhengsu_leijin-turn")
-      if (mark ~= 0 and mark ~= "zhengsu_failure") and data.card.number > 1 then
-        if mark == "" then mark = {} end
+      if (mark == "" or type(mark) == "table") and data.card.number > 0 then
+        if mark == "" then
+          mark = {}
+        else
+          mark = table.map(mark, function(v) return Card:strToNumber(v) end)
+        end
         table.insert(mark, data.card.number)
         if #mark > 3 then table.remove(mark, 1) end
         if #mark > 1 and mark[#mark] <= mark[#mark-1] then
           broadcastFailure(player, "zhengsu_leijin")
         else
+          mark = table.map(mark, function(v) return Card:getNumberStr(v) end)
           room:setPlayerMark(player, "@zhengsu_leijin-turn", mark)
         end
       end
       mark = player:getMark("@zhengsu_bianzhen-turn")
-      if (mark ~= 0 and mark ~= "zhengsu_failure") then
+      if (mark == "" or type(mark) == "table") then
         local suit = data.card:getSuitString(true)
         if suit ~= "log_nosuit" then
           if mark == "" then mark = {} end
@@ -1061,10 +1066,10 @@ local zj__juxiang = fk.CreateTriggerSkill{
     return target ~= player and player:hasSkill(self) and not target.dead and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
   end,
   on_cost = function(self, event, target, player, data)
+    self.cost_data = {tos = {target.id}}
     return player.room:askForSkillInvoke(player, self.name, nil, "#zj__juxiang-invoke::"..target.id)
   end,
   on_use = function(self, event, target, player, data)
-    player.room:doIndicate(player.id, {target.id})
     player.room:damage{
       from = player,
       to = target,
@@ -1083,13 +1088,12 @@ local houfeng = fk.CreateTriggerSkill{
     target.phase == Player.Play and not target.dead and player:inMyAttackRange(target)
   end,
   on_cost = function(self, event, target, player, data)
-    self.cost_data = {tos = {target.id}}
     return player.room:askForSkillInvoke(player, self.name, nil, "#houfeng-invoke::"..target.id)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:notifySkillInvoked(player, self.name, 1)
-    player:broadcastSkillInvoke(self.name)
+    room:notifySkillInvoked(player, self.name, "support", {target.id})
+    player:broadcastSkillInvoke(self.name, 1)
     startZhengsu(player, target, self.name, "#houfeng-choice::"..target.id)
     room:setPlayerMark(player, "@houfeng-turn", target.general)
   end,
@@ -1132,9 +1136,9 @@ Fk:loadTranslationTable{
   ["zj__juxiang"] = "拒降",
   [":zj__juxiang"] = "限定技，当一名其他角色的濒死结算结束后，你可对其造成1点伤害。",
   ["#yangjie-active"] = "佯解：你可以拼点，若没赢，你可以令另一名角色视为对拼点角色使用火【杀】",
-  ["#yangjie-choose"] = "佯解：你可以选择一名角色，视为其对%dest使用火【杀】",
+  ["#yangjie-choose"] = "佯解：你可以选择一名角色，视为其对 %dest 使用火【杀】",
   ["#houfeng_delay"] = "厚俸",
-  ["#houfeng-invoke"] = "厚俸：你可令 %dest 整肃，若未失败则获得整肃奖励",
+  ["#houfeng-invoke"] = "厚俸：你可令 %dest “整肃”，若未失败则你与其获得整肃奖励",
   ["@houfeng-turn"] = "厚俸",
   ["#houfeng-choice"] = "厚俸：为 %dest 选择一项整肃条件",
   ["#houfeng-reward"] = "厚俸：整肃未失败，你与 %src 共同执行整肃奖励",

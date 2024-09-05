@@ -78,14 +78,7 @@ local buqi = fk.CreateTriggerSkill{
       local cards = room:askForCard(player, 2, 2, false, self.name, false, ".|.|.|huaxin_ren", "#buqi-invoke", "huaxin_ren")
       player:broadcastSkillInvoke(self.name)
       room:notifySkillInvoked(player, self.name, "support")
-      room:moveCards({
-        from = player.id,
-        ids = cards,
-        toArea = Card.DiscardPile,
-        moveReason = fk.ReasonPutIntoDiscardPile,
-        skillName = self.name,
-        specialName = "huaxin_ren",
-      })
+      room:moveCardTo(cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
       room:doIndicate(player.id, {target.id})
       if not target.dead and target:isWounded() then
         room:recover{
@@ -98,14 +91,8 @@ local buqi = fk.CreateTriggerSkill{
     else
       player:broadcastSkillInvoke(self.name)
       room:notifySkillInvoked(player, self.name, "negative")
-      room:moveCards({
-        from = player.id,
-        ids = player:getPile("huaxin_ren"),
-        toArea = Card.DiscardPile,
-        moveReason = fk.ReasonPutIntoDiscardPile,
-        skillName = self.name,
-        specialName = self.name,
-      })
+      room:moveCardTo(player:getPile("huaxin_ren"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true,
+        player.id)
     end
   end,
 }
@@ -189,7 +176,7 @@ local shuchen = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {target.id})
-    U.GetCardFromRenPile(room, player, U.GetRenPile(room), self.name)
+    room:moveCardTo(U.GetRenPile(room), Card.PlayerHand, player, fk.ReasonJustMove, self.name, nil, true, player.id)
     if not target.dead and target:isWounded() then
       room:recover{
         who = target,
@@ -230,14 +217,15 @@ local sheyi = fk.CreateTriggerSkill{
       player:usedSkillTimes(self.name, Player.HistoryRound) == 0
   end,
   on_cost = function(self, event, target, player, data)
-    local cards = player.room:askForCard(player, player.hp, 999, true, self.name, true, ".", "#sheyi-invoke::"..target.id..":"..player.hp)
+    local cards = player.room:askForCard(player, player.hp, 999, true, self.name, true, ".",
+      "#sheyi-invoke::"..target.id..":"..player.hp)
     if #cards >= player.hp then
-      self.cost_data = cards
+      self.cost_data = {tos = {target.id}, cards = cards}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:obtainCard(target, self.cost_data, false, fk.ReasonGive, player.id)
+    player.room:moveCardTo(self.cost_data.cards, Card.PlayerHand, target, fk.ReasonGive, self.name, nil, false, player.id)
     return true
   end,
 }
@@ -271,31 +259,11 @@ local tianyin = fk.CreateTriggerSkill{
     for _, type in ipairs(types) do
       local card = room:getCardsFromPileByRule(".|.|.|.|.|"..type)
       if card then
-        table.insertIfNeed(cards, card[1])
+        table.insert(cards, card[1])
       end
     end
-    room:moveCards({
-      ids = cards,
-      to = player.id,
-      toArea = Card.PlayerHand,
-      moveReason = fk.ReasonJustMove,
-      proposer = player.id,
-      skillName = self.name,
-    })
-  end,
-
-  refresh_events = {fk.CardUsing},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player.phase ~= Player.NotActive
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    local mark = player:getMark("tianyin-turn")
-    if mark == 0 then mark = {} end
-    table.insertIfNeed(mark, data.card:getTypeString())
-    room:setPlayerMark(player, "tianyin-turn", mark)
-    if player:hasSkill(self) then
-      room:setPlayerMark(player, "@tianyin-turn", #mark)
+    if #cards > 0 then
+      room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonJustMove, self.name, nil, false, player.id)
     end
   end,
 }
@@ -438,14 +406,7 @@ local muzhen = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
     room:setPlayerMark(player, self.interaction.data.."-phase", 1)
     if self.interaction.data == "muzhen1" then
-      room:moveCards({
-        ids = effect.cards,
-        from = effect.from,
-        to = effect.tos[1],
-        toArea = Card.PlayerEquip,
-        skillName = self.name,
-        moveReason = fk.ReasonPut,
-      })
+      room:moveCardTo(effect.cards, Card.PlayerEquip, target, fk.ReasonPut, self.name, nil, true, player.id)
       if not (player.dead or target.dead or target:isKongcheng()) then
         local id = room:askForCardChosen(player, target, "h", self.name)
         room:obtainCard(player, id, false, fk.ReasonPrey)
@@ -467,8 +428,8 @@ Fk:loadTranslationTable{
   ["cv:xiangchong"] = "虞晓旭",
   ["illustrator:xiangchong"] = "凝聚永恒",
   ["guying"] = "固营",
-  [":guying"] = "锁定技，每回合限一次，当你于回合外因使用、打出或弃置一次性仅失去一张牌后，当前回合角色须选择一项：1.你获得此牌（若为装备则使用之）；"..
-  "2.交给你一张牌。准备阶段，你须弃置X张牌（X为本技能发动次数），然后重置此技能发动次数。",
+  [":guying"] = "锁定技，每回合限一次，当你于回合外因使用、打出或弃置一次性仅失去一张牌后，当前回合角色须选择一项："..
+  "1.你获得此牌（若为装备则使用之）；2.交给你一张牌。准备阶段，你须弃置X张牌（X为本技能发动次数），然后重置此技能发动次数。",
   ["muzhen"] = "睦阵",
   [":muzhen"] = "出牌阶段各限一次，你可以：将一张装备牌置于一名其他角色装备区内，然后获得其一张手牌；交给一名装备区内有牌的其他角色两张牌，"..
   "然后获得其装备区内一张牌。",
@@ -509,16 +470,19 @@ local mobile__songshu = fk.CreateTriggerSkill{
     return player:hasSkill(self) and target.phase == Player.Draw and target.hp > player.hp and #U.GetRenPile(player.room) > 0
   end,
   on_cost = function(self, event, target, player, data)
-    return player.room:askForSkillInvoke(player, self.name, nil, "#mobile__songshu-invoke::"..target.id)
+    if player.room:askForSkillInvoke(player, self.name, nil, "#mobile__songshu-invoke::"..target.id) then
+      self.cost_data = {tos = {target.id}}
+      return true
+    end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:doIndicate(player.id, {target.id})
     room:setPlayerMark(target, "@@mobile__songshu-turn", 1)
     local n = math.min(player.hp, 5, #U.GetRenPile(room))
     local all_cards = U.GetRenPile(room)
-    local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name, "#mobile__songshu-choose:::"..n, nil, n, n, all_cards)
-    U.GetCardFromRenPile(room, target, cards, self.name)
+    local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name,
+      "#mobile__songshu-choose:::"..n, nil, n, n, all_cards)
+    room:moveCardTo(cards, Card.PlayerHand, target, fk.ReasonJustMove, self.name, nil, true, target.id)
     return true
   end,
 }
@@ -540,8 +504,8 @@ Fk:loadTranslationTable{
   "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
   "仁区是一个存于场上，用于存放牌的公共区域。<br>仁区中的牌上限为6张。<br>当仁区中的牌超过6张时，最先置入仁区中的牌将置入弃牌堆。",
   ["mobile__songshu"] = "颂蜀",
-  [":mobile__songshu"] = "一名体力值大于你的其他角色摸牌阶段开始时，若“仁”区有牌，你可以令其放弃摸牌，然后获得X张“仁”区牌（X为你的体力值，且最大为5）。"..
-  "若如此做，本回合其使用牌时不能指定其他角色为目标。",
+  [":mobile__songshu"] = "一名体力值大于你的其他角色摸牌阶段开始时，若“仁”区有牌，你可以令其放弃摸牌，改为获得X张“仁”区牌"..
+  "（X为你的体力值，且最大为5）。若如此做，本回合其使用牌时不能指定其他角色为目标。",
   ["#mobile__songshu-invoke"] = "颂蜀：你可以令 %dest 放弃摸牌，改为获得“仁”，且其本回合其使用牌不能指定其他角色为目标",
   ["@@mobile__songshu-turn"] = "颂蜀",
   ["#mobile__songshu-choose"] = "颂蜀：获得%arg张“仁”区牌",
@@ -708,16 +672,17 @@ Fk:loadTranslationTable{
   ["qiaogong"] = "桥公",
   ["#qiaogong"] = "高风硕望",
   ["yizhu"] = "遗珠",
-  [":yizhu"] = "结束阶段，你摸两张牌，然后选择两张牌作为「遗珠」并记录之，随机洗入牌堆顶前2X张牌中（X为场上存活角色数）。其他角色使用「遗珠」牌指定唯一目标后，你可以取消之，然后你将此牌从记录中移除。",
+  [":yizhu"] = "结束阶段，你摸两张牌，然后选择两张牌作为“遗珠”并记录之，随机洗入牌堆顶前2X张牌中（X为场上存活角色数）。"..
+  "其他角色使用“遗珠”牌指定唯一目标后，你可以取消之，然后你将此牌从记录中移除。",
   ["luanchou"] = "鸾俦",
-  [":luanchou"] = "出牌阶段限一次，你可以移除场上所有「姻」标记并选择两名角色，令其获得「姻」。有「姻」的角色视为拥有技能〖共患〗。",
+  [":luanchou"] = "出牌阶段限一次，你可以移除场上所有“姻”标记并选择两名角色，令其获得“姻”。有“姻”的角色视为拥有技能〖共患〗。",
   ["gonghuan"] = "共患",
-  [":gonghuan"] = "锁定技，每回合限一次，当另一名拥有「姻」的角色受到伤害时，若其体力值小于你，将此伤害转移给你；然后移除双方的「姻」标记。",
+  [":gonghuan"] = "锁定技，每回合限一次，当另一名拥有“姻”的角色受到伤害时，若其体力值小于你，将此伤害转移给你；然后移除双方的“姻”标记。",
   ["#yizhu-card"] = "遗珠：将两张牌作为“遗珠”洗入牌堆",
   ["yizhu_cards"] = "遗珠",
   ["#yizhu-invoke"] = "遗珠：你可以取消 %dest 使用的%arg",
   ["#yizhu_trigger"] = "遗珠",
-  ["#luanchou"] = "鸾俦：令两名角色获得「姻」标记并获得技能〖共患〗",
+  ["#luanchou"] = "鸾俦：令两名角色获得“姻”标记并获得技能〖共患〗",
   ["@@luanchou"] = "姻",
 
   ["$yizhu1"] = "老夫有二女，视之如明珠。",
@@ -734,15 +699,11 @@ local jishi = fk.CreateTriggerSkill{
   name = "jishi",
   mute = true,
   frequency = Skill.Compulsory,
-  events = {fk.CardUseFinished, "fk.BeforeRenMove"},
+  events = {fk.CardUseFinished, "fk.AfterRenMove"},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
       if event == fk.CardUseFinished then
-        if target == player and not data.damageDealt then
-          local room = player.room
-          local subcards = data.card:isVirtual() and data.card.subcards or {data.card.id}
-          return #subcards > 0 and table.every(subcards, function(id) return room:getCardArea(id) == Card.Processing end)
-        end
+        return target == player and not data.damageDealt and player.room:getCardArea(data.card) == Card.Processing
       else
         return data.skillName ~= "ren_overflow"
       end
@@ -778,17 +739,20 @@ local liaoyi = fk.CreateTriggerSkill{
     else
       prompt = "#liaoyi2-invoke::"..target.id..":"..math.min(n, 4)
     end
-    return player.room:askForSkillInvoke(player, self.name, nil, prompt)
+    if player.room:askForSkillInvoke(player, self.name, nil, prompt) then
+      self.cost_data = {tos = {target.id}}
+      return true
+    end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:doIndicate(player.id, {target.id})
     local n = target:getHandcardNum() - target.hp
     if n < 0 then
       n = math.min(-n, 4)
       local all_cards = U.GetRenPile(room)
-      local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name, "#liaoyi-choose:::"..n, nil, n, n, all_cards)
-      U.GetCardFromRenPile(room, target, cards, self.name)
+      local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name,
+        "#liaoyi-choose:::"..n, nil, n, n, all_cards)
+      room:moveCardTo(cards, Card.PlayerHand, target, fk.ReasonJustMove, self.name, nil, true, target.id)
     else
       n = math.min(n, 4)
       local cards = room:askForCard(target, n, n, true, self.name, false, ".", "#liaoyi-put:::"..n)
@@ -815,7 +779,7 @@ local binglun = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    U.DiscardCardFromRenPile(room, player, effect.cards, self.name)
+    room:moveCardTo(effect.cards, Card.DiscardPile, nil, fk.ReasonDiscard, self.name, nil, true, player.id)
     if target.dead then return end
     local choices = {"draw1", "binglun_recover"}
     local choice = room:askForChoice(target, choices, self.name)
@@ -874,7 +838,7 @@ Fk:loadTranslationTable{
   ["#zhangzhongjing"] = "医理圣哲",
   ["illustrator:zhangzhongjing"] = "鬼画府",
   ["jishi"] = "济世",
-  [":jishi"] = "锁定技，你使用牌结算结束后置入弃牌堆前，若此牌没有造成伤害，则将之置入“仁”区；当“仁”牌不因溢出而离开“仁”区时，你摸一张牌。"..
+  [":jishi"] = "锁定技，你使用牌结算结束后置入弃牌堆前，若此牌没有造成伤害，则将之置入“仁”区；当“仁”牌不因溢出而离开“仁”区后，你摸一张牌。"..
   "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
   "仁区是一个存于场上，用于存放牌的公共区域。<br>仁区中的牌上限为6张。<br>当仁区中的牌超过6张时，最先置入仁区中的牌将置入弃牌堆。",
   ["liaoyi"] = "疗疫",
@@ -997,7 +961,8 @@ local yaohu_trigger = fk.CreateTriggerSkill{
         AimGroup:cancelTarget(data, player.id)
         return true
       else
-        local cards = room:askForCard(target, 2, 2, true, "yaohu", true, ".", "#yaohu-give:"..player.id.."::"..data.card:toLogString())
+        local cards = room:askForCard(target, 2, 2, true, "yaohu", true, ".",
+          "#yaohu-give:"..player.id.."::"..data.card:toLogString())
         if #cards == 2 then
           room:obtainCard(player.id, cards, false, fk.ReasonGive, target.id)
         else
@@ -1258,7 +1223,9 @@ local youyi = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 0,
   prompt = "#youyi",
-  expand_pile = function () return U.getMark(Self, "$RenPile") end,
+  expand_pile = function ()
+    return U.getMark(Self, "$RenPile")
+  end,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #U.getMark(player, "$RenPile") > 0
   end,
@@ -1266,14 +1233,14 @@ local youyi = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     room:doIndicate(player.id, table.map(room.alive_players, Util.IdMapper))
-    U.DiscardCardFromRenPile(room, player, U.GetRenPile(room), self.name)
+    room:moveCardTo(U.GetRenPile(room), Card.DiscardPile, nil, fk.ReasonDiscard, self.name, nil, true, player.id)
     for _, p in ipairs(room:getAlivePlayers()) do
       if not p.dead and p:isWounded() then
         room:recover{
           who = p,
           num = 1,
           recoverBy = player,
-          skillName = self.name
+          skillName = self.name,
         }
       end
     end

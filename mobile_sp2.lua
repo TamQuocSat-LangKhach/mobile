@@ -136,13 +136,12 @@ local panxiang = fk.CreateTriggerSkill{
 local mobile__chenjie = fk.CreateTriggerSkill{
   name = "mobile__chenjie",
   anim_type = "drawcard",
+  frequency = Skill.Compulsory,
   events = {fk.Deathed},
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(self) and player:hasSkill("panxiang", true) and player:getMark("panxiang_"..target.id) ~= 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    local room = player.room
     player:throwAllCards("hej")
     if not player.dead then
       player:drawCards(4, self.name)
@@ -160,7 +159,7 @@ Fk:loadTranslationTable{
   [":panxiang"] = "当一名角色受到伤害时，你可以选择一项（不能选择上次对该角色发动时选择的选项）：1.令此伤害-1，然后伤害来源摸两张牌；"..
   "2.令此伤害+1，然后其摸三张牌。",
   ["mobile__chenjie"] = "臣节",
-  [":mobile__chenjie"] = "若你有“蹒襄”，当一名成为过“蹒襄”目标的角色死亡后，你弃置你区域内所有牌，然后摸四张牌。",
+  [":mobile__chenjie"] = "锁定技，若你有〖蹒襄〗，当一名成为过蹒襄目标的角色死亡后，你弃置你区域内所有牌，然后摸四张牌。",
 
   ["#panxiang-invoke"] = "蹒襄：你可以选择一项：",
   ["panxiang1"] = "伤害-1",

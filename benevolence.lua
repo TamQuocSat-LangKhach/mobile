@@ -7,160 +7,6 @@ Fk:loadTranslationTable{
   ["benevolence"] = "手杀-始计篇·仁",
 }
 
----@param room Room @ 房间
----@return integer[]
-local function GetRenPile(room)
-  room.tag["ren"] = room.tag["ren"] or {}
-  return table.simpleClone(room.tag["ren"])
-end
-
-local function NotifyRenPile(room)
-  room:sendLog{
-    type = "#NotifyRenPile",
-    arg = #GetRenPile(room),
-    card = GetRenPile(room),
-  }
-  room:setBanner("@$RenPile", table.simpleClone(room.tag["ren"]))
-end
-
----@param room Room @ 房间
----@param card integer|integer[]|Card|Card[] @ 要加入仁区的牌/id/intList
----@param skillName string @ 移动的技能名
----@param proposer integer @ 移动操作者的id
-local function AddToRenPile(room, card, skillName, proposer)
-  local ids = Card:getIdList(card)
-  room.tag["ren"] = room.tag["ren"] or {}
-  local add, remove = {}, {}
-  local ren_cards = table.simpleClone(room.tag["ren"])
-  local ren_limit = 6
-  for i = 1, ren_limit do
-    local id = ids[i]
-    if not id then break end
-    table.insert(ren_cards, id)
-    table.insert(add, id)
-  end
-  if #ren_cards > ren_limit then
-    for i = #ren_cards - ren_limit, 1, -1 do
-      table.insert(remove, table.remove(room.tag["ren"], i))
-    end
-  end
-  local moveInfos = {}
-  if #add > 0 then
-    table.insertTable(room.tag["ren"], add)
-    table.insert(moveInfos, {
-      ids = add,
-      from = room.owner_map[add[1]],
-      toArea = Card.Void,
-      moveReason = fk.ReasonJustMove,
-      skillName = skillName,
-      moveVisible = true,
-      proposer = proposer,
-    })
-    room:sendLog{
-      type = "#AddToRenPile",
-      arg = #add,
-      card = add,
-    }
-  end
-  if #remove > 0 then
-    table.insert(moveInfos, {
-      ids = remove,
-      toArea = Card.DiscardPile,
-      moveReason = fk.ReasonPutIntoDiscardPile,
-      skillName = "ren_overflow",
-      moveVisible = true,
-    })
-    room:sendLog{
-      type = "#OverflowFromRenPile",
-      arg = #remove,
-      card = remove,
-    }
-  end
-  if #moveInfos > 0 then
-    room:moveCards(table.unpack(moveInfos))
-  end
-
-  NotifyRenPile(room)
-end
-
----@param room Room @ 房间
----@param player ServerPlayer @ 获得牌的角色
----@param cid integer | integer[] | Card | Card[] @ 要获得的牌
----@param skillName string @ 技能名
-local function GetCardFromRenPile(room, player, cid, skillName)
-  skillName = skillName or ""
-  cid = Card:getIdList(cid)
-  if #cid == 0 then return end
-  local move = {
-    ids = cid,
-    to = player.id,
-    toArea = Card.PlayerHand,
-    moveReason = fk.ReasonJustMove,
-    proposer = player.id,
-    moveVisible = true,
-    skillName = skillName,
-  }
-  room.logic:trigger("fk.BeforeRenMove", nil, move)
-  room:moveCards(move)
-  room.logic:trigger("fk.AfterRenMove", nil, move)
-  for _, id in ipairs(cid) do
-    table.removeOne(room.tag["ren"], id)
-  end
-  room:sendLog{
-    type = "#GetCardFromRenPile",
-    from = player.id,
-    arg = #cid,
-    card = cid,
-  }
-  NotifyRenPile(room)
-end
-
----@param room Room @ 房间
----@param player ServerPlayer @ 弃置牌的角色
----@param ids integer|integer[] @ 要弃置的id/idList
----@param skillName string @ 技能名
-local function DiscardCardFromRenPile(room, player, ids, skillName)
-  skillName = skillName or ""
-  if type(ids) ~= "number" then
-    ids = ids
-  else
-    ids = {ids}
-  end
-  if #ids == 0 then return end
-  local move = {
-    ids = ids,
-    toArea = Card.DiscardPile,
-    moveReason = fk.ReasonDiscard,
-    proposer = player.id,
-    moveVisible = true,
-    skillName = skillName,
-  }
-  room.logic:trigger("fk.BeforeRenMove", nil, move)
-  room:moveCards(move)
-  room.logic:trigger("fk.AfterRenMove", nil, move)
-  for _, id in ipairs(ids) do
-    table.removeOne(room.tag["ren"], id)
-  end
-  room:sendLog{
-    type = "#DiscardCardFromRenPile",
-    from = player.id,
-    arg = #ids,
-    card = ids,
-  }
-  NotifyRenPile(room)
-end
-
-Fk:loadTranslationTable{
-  ["#NotifyRenPile"] = "“仁”区现有 %arg 张牌 %card",
-  ["RenPileToast"] = "仁区：",
-  ["#AddToRenPile"] = "%arg 张牌被移入“仁”区 %card",
-  ["#OverflowFromRenPile"] = "%arg 张牌从“仁”区溢出 %card",
-  ["#GetCardFromRenPile"] = "%from 从“仁”区获得 %arg 张牌 %card",
-  ["#DiscardCardFromRenPile"] = "%from 弃置了“仁”区 %arg 张牌 %card",
-  ["$RenPile"] = "仁区",
-  ["@$RenPile"] = "仁区",
-}
-
 local nos__huaxin = General(extension, "nos__huaxin", "wei", 3)
 local renshih = fk.CreateActiveSkill{
   name = "renshih",
@@ -329,7 +175,7 @@ local yuanqing = fk.CreateTriggerSkill{
       table.insert(cards, table.random(table.filter(ids, function(id) return Fk:getCardById(id).type == type end)))
     end
     table.shuffle(cards)
-    AddToRenPile(room, cards, self.name, player.id)
+    U.AddToRenPile(room, cards, self.name, player.id)
   end,
 }
 local shuchen = fk.CreateTriggerSkill{
@@ -338,18 +184,18 @@ local shuchen = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.EnterDying},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and #GetRenPile(player.room) > 3
+    return player:hasSkill(self) and #U.GetRenPile(player.room) > 3
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player.id, {target.id})
-    GetCardFromRenPile(room, player, GetRenPile(room), self.name)
+    U.GetCardFromRenPile(room, player, U.GetRenPile(room), self.name)
     if not target.dead and target:isWounded() then
       room:recover{
         who = target,
         num = 1,
         recoverBy = player,
-        skillName = self.name
+        skillName = self.name,
       }
     end
   end,
@@ -652,7 +498,7 @@ local gebo = fk.CreateTriggerSkill{
   end,
   on_use = function (self, event, target, player, data)
     local room = player.room
-    AddToRenPile(room, room:getNCards(1), self.name, player.id)
+    U.AddToRenPile(room, room:getNCards(1), self.name, player.id)
   end,
 }
 local mobile__songshu = fk.CreateTriggerSkill{
@@ -660,7 +506,7 @@ local mobile__songshu = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and target.phase == Player.Draw and target.hp > player.hp and #GetRenPile(player.room) > 0
+    return player:hasSkill(self) and target.phase == Player.Draw and target.hp > player.hp and #U.GetRenPile(player.room) > 0
   end,
   on_cost = function(self, event, target, player, data)
     return player.room:askForSkillInvoke(player, self.name, nil, "#mobile__songshu-invoke::"..target.id)
@@ -669,10 +515,10 @@ local mobile__songshu = fk.CreateTriggerSkill{
     local room = player.room
     room:doIndicate(player.id, {target.id})
     room:setPlayerMark(target, "@@mobile__songshu-turn", 1)
-    local n = math.min(player.hp, 5, #GetRenPile(room))
-    local all_cards = GetRenPile(room)
+    local n = math.min(player.hp, 5, #U.GetRenPile(room))
+    local all_cards = U.GetRenPile(room)
     local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name, "#mobile__songshu-choose:::"..n, nil, n, n, all_cards)
-    GetCardFromRenPile(room, target, cards, self.name)
+    U.GetCardFromRenPile(room, target, cards, self.name)
     return true
   end,
 }
@@ -898,7 +744,7 @@ local jishi = fk.CreateTriggerSkill{
           return #subcards > 0 and table.every(subcards, function(id) return room:getCardArea(id) == Card.Processing end)
         end
       else
-        return true
+        return data.skillName ~= "ren_overflow"
       end
     end
   end,
@@ -907,7 +753,7 @@ local jishi = fk.CreateTriggerSkill{
     player:broadcastSkillInvoke(self.name)
     if event == fk.CardUseFinished then
       room:notifySkillInvoked(player, self.name, "special")
-      AddToRenPile(room, data.card, self.name, player.id)
+      U.AddToRenPile(room, data.card, self.name, player.id)
     else
       room:notifySkillInvoked(player, self.name, "drawcard")
       player:drawCards(1, self.name)
@@ -921,7 +767,7 @@ local liaoyi = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and target ~= player then
       local n = target:getHandcardNum() - target.hp
-      return n ~= 0 and #GetRenPile(player.room) >= math.min(-n, 4)
+      return n ~= 0 and #U.GetRenPile(player.room) >= math.min(-n, 4)
     end
   end,
   on_cost = function(self, event, target, player, data)
@@ -940,13 +786,13 @@ local liaoyi = fk.CreateTriggerSkill{
     local n = target:getHandcardNum() - target.hp
     if n < 0 then
       n = math.min(-n, 4)
-      local all_cards = GetRenPile(room)
+      local all_cards = U.GetRenPile(room)
       local cards = U.askforChooseCardsAndChoice(target, all_cards, {"OK"}, self.name, "#liaoyi-choose:::"..n, nil, n, n, all_cards)
-      GetCardFromRenPile(room, target, cards, self.name)
+      U.GetCardFromRenPile(room, target, cards, self.name)
     else
       n = math.min(n, 4)
       local cards = room:askForCard(target, n, n, true, self.name, false, ".", "#liaoyi-put:::"..n)
-      AddToRenPile(room, cards, self.name, target.id)
+      U.AddToRenPile(room, cards, self.name, target.id)
     end
   end,
 }
@@ -969,7 +815,7 @@ local binglun = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    DiscardCardFromRenPile(room, player, effect.cards, self.name)
+    U.DiscardCardFromRenPile(room, player, effect.cards, self.name)
     if target.dead then return end
     local choices = {"draw1", "binglun_recover"}
     local choice = room:askForChoice(target, choices, self.name)
@@ -1016,7 +862,7 @@ local binglun_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    room:setPlayerMark(player, "$RenPile", GetRenPile(room))
+    room:setPlayerMark(player, "$RenPile", U.GetRenPile(room))
   end,
 }
 binglun:addRelatedSkill(binglun_trigger)
@@ -1420,7 +1266,7 @@ local youyi = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     room:doIndicate(player.id, table.map(room.alive_players, Util.IdMapper))
-    DiscardCardFromRenPile(room, player, GetRenPile(room), self.name)
+    U.DiscardCardFromRenPile(room, player, U.GetRenPile(room), self.name)
     for _, p in ipairs(room:getAlivePlayers()) do
       if not p.dead and p:isWounded() then
         room:recover{
@@ -1473,7 +1319,7 @@ local youyi_trigger = fk.CreateTriggerSkill{
       end
     end, Player.HistoryPhase)
     table.shuffle(ids)
-    AddToRenPile(room, ids, self.name, player.id)
+    U.AddToRenPile(room, ids, self.name, player.id)
   end,
 
   refresh_events = {fk.StartPlayCard},
@@ -1482,7 +1328,7 @@ local youyi_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    room:setPlayerMark(player, "$RenPile", GetRenPile(room))
+    room:setPlayerMark(player, "$RenPile", U.GetRenPile(room))
   end,
 }
 wuling:addRelatedSkill(wuling_trigger)

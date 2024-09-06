@@ -2555,10 +2555,13 @@ local mobile__mutao = fk.CreateActiveSkill{
     for _ = 1, num do
       if #cids < 1 then break end
       to = to:getNextAlive()
-      local id = table.remove(cids, math.random(1, #cids))
+      local id = table.random(cids)
       if to ~= target then
         room:moveCardTo(id, Player.Hand, to, fk.ReasonGive, self.name, nil, false)
       end
+      cids = table.filter(cids, function(i)
+        return table.contains(target:getCardIds(Player.Hand), i)
+      end)
     end
     room:damage{
       from = target,

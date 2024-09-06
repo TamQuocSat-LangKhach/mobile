@@ -2548,15 +2548,17 @@ local mobile__mutao = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local target = room:getPlayerById(effect.tos[1])
     local to = target
-    while true do -- 判断有没有没有杀，又要考虑给出杀后又来杀的情况
-      local cids = table.filter(target:getCardIds(Player.Hand), function(id)
-        return Fk:getCardById(id).trueName == "slash"
-      end)
+    local cids = table.filter(target:getCardIds(Player.Hand), function(id)
+      return Fk:getCardById(id).trueName == "slash"
+    end)
+    local num = #cids -- ……
+    for _ = 1, num do
       if #cids < 1 then break end
       to = to:getNextAlive()
-      if to == target then to = to:getNextAlive() end
-      local id = cids[math.random(1, #cids)]
-      room:moveCardTo(id, Player.Hand, to, fk.ReasonGive, self.name, nil, false)
+      local id = table.remove(cids, math.random(1, #cids))
+      if to ~= target then
+        room:moveCardTo(id, Player.Hand, to, fk.ReasonGive, self.name, nil, false)
+      end
     end
     room:damage{
       from = target,
@@ -2587,7 +2589,6 @@ local mobile__yimou = fk.CreateTriggerSkill{
       self.cost_data = choice
       return true
     end
-    return false
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -2618,7 +2619,7 @@ Fk:loadTranslationTable{
   ["designer:mobile__baoxin"] = "jcj熊",
 
   ["mobile__mutao"] = "募讨",
-  [":mobile__mutao"] = "出牌阶段限一次，你可选择一名角色，令其将手牌中的（系统选择）每一张【杀】依次交给由其下家开始的除其以外的角色，然后其对最后一名角色造成X点伤害（X为最后一名角色手牌中【杀】的数量且至多为2）。",
+  [":mobile__mutao"] = "出牌阶段限一次，你可选择一名角色，令其将手牌中的（系统选择）每一张【杀】依次交给由其下家开始的每一名角色，然后其对最后一名角色造成X点伤害（X为最后一名角色手牌中【杀】的数量且至多为2）。",
   ["mobile__yimou"] = "毅谋",
   [":mobile__yimou"] = "当至你距离1以内的角色受到伤害后，你可选择一项：1.令其从牌堆获得一张【杀】；2.令其将一张手牌交给另一名角色，摸一张牌。",
 

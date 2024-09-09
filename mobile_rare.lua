@@ -106,32 +106,24 @@ local fenyin = fk.CreateTriggerSkill{
   anim_type = "drawcard",
   events = {fk.CardUsing},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and
-      player.phase < Player.NotActive and self.can_fenyin
+    return target == player and player:hasSkill(self) and (data.extra_data or {}).can_fenyin
   end,
   on_use = function(self, event, target, player, data)
     player:drawCards(1, self.name)
   end,
 
-  refresh_events = {fk.CardUsing, fk.EventPhaseStart},
+  refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
-    if not (target == player and player:hasSkill(self)) then return end
-    if event == fk.EventPhaseStart then
-      return player.phase == Player.NotActive
-    else
-      return player.phase < Player.NotActive -- FIXME: this is a bug of FK 0.0.2!!
-    end
+    return target == player and player:hasSkill(self) and data.card.color ~= Card.NoColor and player.phase ~= Player.NotActive
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.EventPhaseStart then
-      room:setPlayerMark(player, self.name, 0)
-      room:setPlayerMark(player, "@" .. self.name, 0)
-    else
-      self.can_fenyin = data.card.color ~= player:getMark(self.name) and player:getMark(self.name) ~= 0
-      room:setPlayerMark(player, self.name, data.card.color)
-      room:setPlayerMark(player, "@" .. self.name, data.card:getColorString())
+    local mark = player:getMark("@fenyin-turn")
+    if mark ~= 0 and mark ~= data.card:getColorString() then
+      data.extra_data = data.extra_data or {}
+      data.extra_data.can_fenyin = true
     end
+    room:setPlayerMark(player, "@fenyin-turn", data.card:getColorString())
   end,
 }
 liuzan:addSkill(fenyin)
@@ -144,7 +136,7 @@ Fk:loadTranslationTable{
 
   ["fenyin"] = "奋音",
   [":fenyin"] = "你的回合内，当你使用和上一张牌颜色不同的牌时，你可以摸一张牌。",
-  ["@fenyin"] = "奋音",
+  ["@fenyin-turn"] = "奋音",
 
   ["$fenyin1"] = "吾军杀声震天，则敌心必乱！",
   ["$fenyin2"] = "阵前亢歌，以振军心！",

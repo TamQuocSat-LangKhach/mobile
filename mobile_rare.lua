@@ -2834,5 +2834,256 @@ Fk:loadTranslationTable{
   ["~nanhualaoxian"] = "天机求而近，执而远……",
 }
 
+local mobileGodsimayi = General(extension, "mobile__godsimayi", "god", 4)
+Fk:loadTranslationTable{
+  ["mobile__godsimayi"] = "神司马懿",
+  ["#mobile__godsimayi"] = "三分一统",
+  ["illustrator:mobile__godsimayi"] = "深圳枭瞳",
+  ["~mobile__godsimayi"] = "洛水滔滔，难诉吾一生坎坷……",
+}
+
+local mobileRenjie = fk.CreateTriggerSkill{
+  name = "mobile__renjie",
+  anim_type = "support",
+  frequency = Skill.Compulsory,
+  events = {fk.AfterAskForCardUse, fk.AfterAskForCardResponse, fk.AfterAskForNullification},
+  can_trigger = function(self, event, target, player, data)
+    if
+      not player:hasSkill(self) or
+      not data.eventData or
+      data.eventData.from == player.id or
+      (data.result and data.result.from == player.id) or
+      player:usedSkillTimes(self.name, Player.HistoryRound) > 3
+    then
+      return false
+    end
+
+    return event == fk.AfterAskForNullification or target == player
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:addPlayerMark(player, "@mobile__renjie_ren")
+  end,
+}
+Fk:loadTranslationTable{
+  ["mobile__renjie"] = "忍戒",
+  [":mobile__renjie"] = "锁定技，每轮限四次，当你需要响应一张牌时，若你不为使用者且未响应，你获得一枚“忍”标记。",
+  ["@mobile__renjie_ren"] = "忍",
+  ["$mobile__renjie1"] = "朝中大小事宜，自有大将军定夺。",
+  ["$mobile__renjie2"] = "朝论政事，老夫唯大将军马首是瞻。",
+}
+
+mobileGodsimayi:addSkill(mobileRenjie)
+
+local mobileBaiyin = fk.CreateTriggerSkill{
+  name = "mobile__baiyin",
+  anim_type = "support",
+  frequency = Skill.Wake,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self) and
+      player.phase == Player.Start and
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function (self, event, target, player, data)
+    return player:getMark("@mobile__renjie_ren") > 3
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:changeMaxHp(player, -1)
+    room:handleAddLoseSkills(player, "mobile__jilue")
+  end,
+}
+Fk:loadTranslationTable{
+  ["mobile__baiyin"] = "拜印",
+  [":mobile__baiyin"] = "觉醒技，准备阶段开始时，若你的“忍”标记数不少于4，你减1点体力上限，然后获得“极略”。",
+  ["$mobile__baiyin1"] = "乱世已尽，老夫当再开万世河山！",
+  ["$mobile__baiyin2"] = "明出地上，自昭天德，此为晋也！",
+}
+
+mobileGodsimayi:addSkill(mobileBaiyin)
+
+local mobileJilueSkills = {
+  "guicai",
+  "fangzhu",
+  "jizhi",
+  "zhiheng",
+  "wansha",
+}
+
+local mobileJilue = fk.CreateTriggerSkill{
+  name = "mobile__jilue",
+  anim_type = "support",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self) and
+      player.phase == Player.Play and
+      player:getMark("@mobile__renjie_ren") > 0
+  end,
+  on_cost = function (self, event, target, player, data)
+    local room = player.room
+    local cost = math.max(player:getMark("mobile__jilue_option1") + 1, 2)
+    local optionOne = "mobile__jilue_skill:::" .. cost
+    local choiceList = { "mobile__jilue_draw", "Cancel" }
+
+    local availableJilueSkills = table.filter(mobileJilueSkills, function(skill) return not player:hasSkill(skill, true, true) end)
+    if
+      player:getMark("@mobile__renjie_ren") >= cost and
+      #availableJilueSkills > 0
+    then
+      table.insert(choiceList, 1, optionOne)
+    end
+
+    local choice = room:askForChoice(player, choiceList, self.name, nil, false, { optionOne, "mobile__jilue_draw", "Cancel" })
+    if choice == "Cancel" then
+      return false
+    elseif choice == "mobile__jilue_draw" then
+      if player:getMark("@mobile__renjie_ren") > 1 then
+        choice = room:askForChoice(player, { "1", "2" }, self.name)
+      else
+        choice = "1"
+      end
+
+      choice = "mobile__jilue_draw:" .. choice
+    else
+      choice = room:askForChoice(player, availableJilueSkills, self.name)
+      choice = "mobile__jilue_skill:" .. choice
+    end
+
+    self.cost_data = choice
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local choice = self.cost_data
+    if choice:startsWith("mobile__jilue_skill") then
+      room:removePlayerMark(player, "@mobile__renjie_ren", math.max(player:getMark("mobile__jilue_option1") + 1, 2))
+      room:addPlayerMark(player, "mobile__jilue_option1")
+      room:handleAddLoseSkills(player, self.cost_data:split(":")[2])
+    else
+      local cost = tonumber(self.cost_data:split(":")[2])
+      room:removePlayerMark(player, "@mobile__renjie_ren", cost)
+      player:drawCards(cost, self.name)
+    end
+  end,
+
+  refresh_events = {fk.EventAcquireSkill},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and data == self
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local toAcquire = "guicai"
+    local kingdom = player.kingdom
+    if kingdom == "wei" then
+      toAcquire = toAcquire .. "|fangzhu"
+    elseif kingdom == "shu" then
+      toAcquire = toAcquire .. "|jizhi"
+    elseif kingdom == "wu" then
+      toAcquire = toAcquire .. "|zhiheng"
+    elseif kingdom == "qun" then
+      toAcquire = toAcquire .. "|wansha"
+    end
+
+    player.room:handleAddLoseSkills(player, toAcquire)
+  end,
+}
+Fk:loadTranslationTable{
+  ["mobile__jilue"] = "极略",
+  [":mobile__jilue"] = "当你获得此技能时，你获得“鬼才”，然后根据你的势力获得对应技能：魏，“放逐”；蜀，“集智”；" ..
+  "吴，“制衡”；群，“完杀”。出牌阶段开始时，你可以选择一项：1.移去X枚“忍”标记，选择并获得一项你未拥有的“极略”中的技能" ..
+  "（X为你选择过此项的次数+1，且至少为2）；2.移去至多两枚“忍”标记，然后摸等量的牌。",
+  ["mobile__jilue_skill"] = "移去%arg枚“忍”标记，获得一项极略技能",
+  ["mobile__jilue_draw"] = "移去至多两枚“忍”标记，摸等量的牌",
+  ["$mobile__jilue1"] = "三分一统，天下归一！",
+  ["$mobile__jilue2"] = "大权独揽，朝野皆平！",
+
+  ["$guicai_mobile__godsimayi"] = "天地造化，不过老夫一念之间！",
+  ["$fangzhu_mobile__godsimayi"] = "此非老夫不仁，实乃汝咎由自取！",
+  ["$jizhi_mobile__godsimayi"] = "一策一划，皆为成吾之远图！",
+  ["$zhiheng_mobile__godsimayi"] = "轮回不止，因果不休！",
+  ["$wansha_mobile__godsimayi"] = "连诛其族，翦其党羽，以夷后患！",
+}
+
+mobileGodsimayi:addRelatedSkill(mobileJilue)
+
+local mobileLianpo = fk.CreateTriggerSkill{
+  name = "mobile__lianpo",
+  anim_type = "support",
+  events = {fk.Deathed},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target ~= player and
+      player:hasSkill(self) and
+      data.damage and
+      data.damage.from == player and
+      (
+        player:getMark("@@mobile__lianpo-turn") == 0 or
+        (
+          player:hasSkill("mobile__jilue", true, true) and
+          table.find(mobileJilueSkills, function(skill) return not player:hasSkill(skill, true, true) end)
+        )
+      )
+  end,
+  on_cost = function (self, event, target, player, data)
+    local room = player.room
+    local choiceList = { "Cancel" }
+
+    if player:getMark("@@mobile__lianpo-turn") == 0 then
+      table.insert(choiceList, 1, "mobile__lianpo_turn")
+    end
+
+    local availableJilueSkills = table.filter(mobileJilueSkills, function(skill) return not player:hasSkill(skill, true, true) end)
+    if #availableJilueSkills > 0 and player:hasSkill("mobile__jilue", true, true) then
+      table.insert(choiceList, 2, "mobile__lianpo_skill")
+    end
+
+    local choice = room:askForChoice(
+      player,
+      choiceList,
+      self.name,
+      nil,
+      false,
+      { "mobile__lianpo_turn", "mobile__lianpo_skill", "Cancel" }
+    )
+    if choice == "Cancel" then
+      return false
+    elseif choice == "mobile__lianpo_skill" then
+      choice = room:askForChoice(player, availableJilueSkills, self.name)
+      choice = "mobile__lianpo_skill:" .. choice
+    end
+
+    self.cost_data = choice
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local choice = self.cost_data
+    if choice:startsWith("mobile__lianpo_skill") then
+      room:handleAddLoseSkills(player, self.cost_data:split(":")[2])
+    else
+      room:setPlayerMark(player, "@@mobile__lianpo-turn", 1)
+      player:gainAnExtraTurn(true, self.name)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["mobile__lianpo"] = "连破",
+  [":mobile__lianpo"] = "当你杀死其他角色后，你可以选择一项：1.于此回合结束后获得一个额外的回合（每回合限一次）；" ..
+  "2.若你有“极略”，则你选择并获得一项你未拥有的“极略”中的技能。",
+  ["mobile__lianpo_turn"] = "获得一个额外回合",
+  ["mobile__lianpo_skill"] = "选择获得一项极略技能",
+  ["@@mobile__lianpo-turn"] = "连破",
+  ["$mobile__lianpo1"] = "能战当战，不能战当死尔！",
+  ["$mobile__lianpo2"] = "连下诸城以筑京观，足永平辽东之患。",
+}
+
+mobileGodsimayi:addSkill(mobileLianpo)
+
+for _, jilueSkill in ipairs(mobileJilueSkills) do
+  mobileGodsimayi:addRelatedSkill(jilueSkill)
+end
 
 return extension

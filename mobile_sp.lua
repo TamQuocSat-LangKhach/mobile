@@ -2169,6 +2169,7 @@ local tiansuanTrig = fk.CreateTriggerSkill{
 local tiansuan = fk.CreateActiveSkill{
   name = "tiansuan",
   card_filter = Util.FalseFunc,
+  prompt = "#tiansuan",
   interaction = UI.ComboBox {
     choices = { "tiansuanNone", "tiansuanSSR", "tiansuanS", "tiansuanA", "tiansuanB", "tiansuanC" }
   },
@@ -2197,21 +2198,24 @@ local tiansuan = fk.CreateActiveSkill{
     local tgt = room:getPlayerById(tos[1])
     room:setPlayerMark(tgt, "@tiansuan", result)
 
-    if tgt == player then return end
     if result == "tiansuanSSR" then
-      if tgt:isKongcheng() then return end
-      local cids = tgt.player_cards[Player.Hand]
-      room:fillAG(player, cids)
-
-      local id = room:askForAG(player, cids, false, self.name)
-      room:closeAG(player)
-
-      if not id then return false end
-      room:obtainCard(player, id, false)
+      local card_data = {}
+      if not tgt:isKongcheng() and tgt ~= player then
+        table.insert(card_data, { "$Hand", tgt.player_cards[Player.Hand] })
+      end
+      if #tgt.player_cards[Player.Equip] > 0 then
+        table.insert(card_data, { "$Equip", tgt.player_cards[Player.Equip] })
+      end
+      if #tgt.player_cards[Player.Judge] > 0 then
+        table.insert(card_data, { "$Judge", tgt.player_cards[Player.Judge] })
+      end
+      if #card_data == 0 then return end
+      local id = room:askForCardChosen(player, tgt, { card_data = card_data }, self.name)
+      room:obtainCard(player, id, false, fk.ReasonPrey, player.id, self.name)
     elseif result == "tiansuanS" then
       if tgt:isNude() then return end
       local id = room:askForCardChosen(player, tgt, "he", self.name)
-      room:obtainCard(player, id, false)
+      room:obtainCard(player, id, false, fk.ReasonPrey, player.id, self.name)
     end
   end,
 }
@@ -2240,7 +2244,8 @@ Fk:loadTranslationTable{
     '<br/>中签：受到伤害时，将伤害改为火焰伤害，若此伤害值大于1，则将伤害值改为1。' ..
     '<br/>下签：受到伤害时，伤害值+1。' ..
     '<br/>下下签：受到伤害时，伤害值+1；不能使用【桃】和【酒】。 ',
-  ['tiansuanNone'] = '我足够会玩了，不需要作弊',
+  ["#tiansuan"] = "天算：你可以抽取一个“命运签”（你可额外放入一个任意签）",
+  ['tiansuanNone'] = '不作弊',
   ['tiansuanSSR'] = '上上签',
   ['tiansuanS'] = '上签',
   ['tiansuanA'] = '中签',

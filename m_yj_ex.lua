@@ -849,7 +849,7 @@ local m_ex__yicong = fk.CreateDistanceSkill{
 }
 gongsunzan:addSkill(m_ex__yicong)
 Fk:loadTranslationTable{
-  ["m_ex__gongsunzan"] = "公孙瓒",
+  ["m_ex__gongsunzan"] = "界公孙瓒",
   ["#m_ex__gongsunzan"] = "白马将军",
   ["illustrator:m_ex__gongsunzan"] = "fingerling",
 

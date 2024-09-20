@@ -4706,13 +4706,15 @@ local jiebing = fk.CreateTriggerSkill{
   events = {fk.Damaged},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and
-      table.filter(player.room:getOtherPlayers(player), function(p)
+      table.find(player.room:getOtherPlayers(player), function(p)
         return not p:isNude() and data.from ~= p
       end)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local targets = table.filter(room:getOtherPlayers(player), function(p) return not p:isNude() and p ~= data.from end)
+    local targets = table.filter(room:getOtherPlayers(player), function(p)
+      return not p:isNude() and p ~= data.from
+    end)
     local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#jiebing-choose", self.name, false)
     local to = room:getPlayerById(tos[1])
     local id = table.random(to:getCardIds("he"))

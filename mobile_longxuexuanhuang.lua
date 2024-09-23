@@ -939,8 +939,8 @@ Fk:loadTranslationTable{
   ["panxiang1-from"] = "伤害-1，%src摸两张牌",
   ["panxiang2"] = "伤害+1，其摸三张牌",
   ["@panxiang"] = "蹒襄",
-  ["mkpanxiang1"] = "其一",
-  ["mkpanxiang2"] = "其二",
+  ["mkpanxiang1"] = "－",
+  ["mkpanxiang2"] = "＋",
 
   ["$panxiang1"] = "殿下当以国事为重，奈何效匹夫之孝乎？",
   ["$panxiang2"] = "诸卿当早拜嗣君，以镇海内，而但哭邪？",

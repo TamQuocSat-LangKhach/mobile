@@ -159,15 +159,15 @@ local QLqingzheng = fk.CreateTriggerSkill{
       local to = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1,
       "#mobile_qianlong__qingzheng-choose", self.name, true)
       if #to > 0 then
-        self.cost_data = {choices, to[1]}
+        self.cost_data = {choice = choices, tos = to}
         return true
       end
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local choices = self.cost_data[1]
-    local to = room:getPlayerById(self.cost_data[2])
+    local choices = self.cost_data.choice
+    local to = room:getPlayerById(self.cost_data.tos[1])
     local my_throw = table.filter(player.player_cards[Player.Hand], function (id)
       return not player:prohibitDiscard(Fk:getCardById(id)) and table.contains(choices, Fk:getCardById(id):getSuitString(true))
     end)
@@ -259,7 +259,7 @@ local QLjiushiTrigger = fk.CreateTriggerSkill{
     else
       local cards = player.room:getCardsFromPileByRule(".|.|.|.|.|trick")
       if #cards > 0 then
-        room:obtainCard(player, cards[1], true, fk.ReasonPrey)
+        room:obtainCard(player, cards[1], false, fk.ReasonPrey)
       end
     end
   end,

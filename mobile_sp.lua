@@ -4192,7 +4192,7 @@ local rangjie = fk.CreateTriggerSkill{
     if type(self.cost_data) == "string" then
       local cardIds = room:getCardsFromPileByRule(".|.|.|.|.|" .. self.cost_data)
       if #cardIds > 0 then
-        room:obtainCard(player, cardIds[1], true, fk.ReasonPrey)
+        room:obtainCard(player, cardIds[1], false, fk.ReasonPrey)
       end
     else
       local targets = table.map(self.cost_data, function(pId)

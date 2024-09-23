@@ -514,7 +514,7 @@ local m_ex__jiushi_trigger = fk.CreateTriggerSkill{
     if not player.dead then
       local cards = player.room:getCardsFromPileByRule(".|.|.|.|.|trick")
       if #cards > 0 then
-        room:obtainCard(player, cards[1], true, fk.ReasonJustMove)
+        room:obtainCard(player, cards[1], false, fk.ReasonJustMove, player.id, m_ex__jiushi.name)
       end
     end
   end,
@@ -582,7 +582,7 @@ local m_ex__chengzhang = fk.CreateTriggerSkill{
 
 Fk:loadTranslationTable{
   ["m_ex__chengzhang"] = "成章",
-  [":m_ex__chengzhang"] = "觉醒技，准备阶段，若你造成的伤害与受到的伤害值之和累计7点或以上，则你回复1点体力并摸1张牌，然后修改〖酒诗〗。",
+  [":m_ex__chengzhang"] = "觉醒技，准备阶段，若你造成的伤害与受到的伤害值之和累计7点或以上，则你回复1点体力并摸1张牌，然后修改〖酒诗〗（删去获得锦囊牌的效果）。",
   ["@m_ex__chengzhang"] = "成章",
   ["$m_ex__chengzhang1"] = "弦急悲声发，聆我慷慨言。",
   ["$m_ex__chengzhang2"] = "盛时不再来，百年忽我遒。",

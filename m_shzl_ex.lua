@@ -7,15 +7,80 @@ Fk:loadTranslationTable{
 
 local U = require "packages/utility/utility"
 
+local zhangfei = General(extension, "m_ex__zhangfei", "shu", 4)
+local liyong = fk.CreateTriggerSkill{
+  name = "liyong",
+  anim_type = "offensive",
+  frequency = Skill.Compulsory,
+  events = {fk.CardEffectCancelledOut},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.card.trueName == "slash" and player.phase == Player.Play
+  end,
+  on_use = function(self, event, target, player, data)
+    player.room:setPlayerMark(player, "@@liyong-phase", 1)
+  end,
+}
+local liyong_delay = fk.CreateTriggerSkill{
+  name = "#liyong_delay",
+  mute = true,
+  frequency = Skill.Compulsory,
+  events = {fk.TargetSpecified, fk.DamageCaused, fk.Damage},
+  can_trigger = function(self, event, target, player, data)
+    if target and target == player then
+      if event == fk.TargetSpecified then
+        return data.card.trueName == "slash" and player:getMark("@@liyong-phase") > 0
+      elseif data.card and data.card.trueName == "slash" then
+        if player.room.logic:damageByCardEffect() then
+          local use_event = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
+          if use_event == nil then return end
+          local use = use_event.data[1]
+          if use.extra_data and use.extra_data.liyong then
+            if event == fk.Damage then
+              return true
+            else
+              return use.extra_data.liyong == player.id and not data.to.dead and not player.dead
+            end
+          end
+        end
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TargetSpecified then
+      player:broadcastSkillInvoke("liyong")
+      room:notifySkillInvoked(player, "liyong", "offensive")
+      room:setPlayerMark(player, "@@liyong-phase", 0)
+      data.extra_data = data.extra_data or {}
+      data.extra_data.liyong = player.id
+      data.disresponsiveList = data.disresponsiveList or {}
+      for _, id in ipairs(AimGroup:getAllTargets(data.tos)) do
+        local p = room:getPlayerById(id)
+        if not p.dead then
+          room:addPlayerMark(p, MarkEnum.UncompulsoryInvalidity.."-turn", 1)
+          table.insertIfNeed(data.disresponsiveList, id)
+        end
+      end
+    elseif event == fk.DamageCaused then
+      data.damage = data.damage + 1
+    elseif event == fk.Damage then
+      room:loseHp(player, 1, "liyong")
+    end
+  end,
+}
+liyong:addRelatedSkill(liyong_delay)
+zhangfei:addSkill("os_ex__paoxiao")
+zhangfei:addSkill(liyong)
 Fk:loadTranslationTable{
   ["m_ex__zhangfei"] = "界张飞",
   ["#m_ex__zhangfei"] = "万夫不当",
   ["illustrator:m_ex__zhangfei"] = "木美人",
 
-  --os_ex__paoxiao
   ["liyong"] = "厉勇",
   [":liyong"] = "锁定技，当你于出牌阶段使用的【杀】被【闪】抵消后，你本阶段使用下一张【杀】指定目标后，目标非锁定技失效直到回合结束，此【杀】"..
   "不可被响应且对目标角色造成伤害+1；此【杀】造成伤害后，若目标角色未死亡，你失去1点体力。",
+  ["@@liyong-phase"] = "厉勇",
+  ["#liyong_delay"] = "厉勇",
 }
 
 local xiahoudun = General(extension, "m_ex__xiahoudun", "wei", 4)
@@ -140,9 +205,105 @@ Fk:loadTranslationTable{
   ["~m_ex__huatuo"] = "生老病死，命不可违。",
 }
 
+local yuanshu = General(extension, "m_ex__yuanshu", "qun", 4)
+local yongsi = fk.CreateTriggerSkill{
+  name = "m_ex__yongsi",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.DrawNCards, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) then
+      if event == fk.DrawNCards then
+        return true
+      else
+        return player.phase == Player.Discard
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.DrawNCards then
+      local kingdoms = {}
+      for _, p in ipairs(room.alive_players) do
+        table.insertIfNeed(kingdoms, p.kingdom)
+      end
+      data.n = #kingdoms
+    else
+      if player:isNude() or #room:askForDiscard(player, 1, 1, true, self.name, true, nil, "#m_ex__yongsi-discard") == 0 then
+        room:loseHp(player, 1, self.name)
+      end
+    end
+  end,
+}
+local jixiy = fk.CreateTriggerSkill{
+  name = "jixiy",
+  frequency = Skill.Wake,
+  events = {fk.AfterTurnEnd},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0
+  end,
+  can_wake = function(self, event, target, player, data)
+    local room = player.room
+    local dat = {}
+    local turn_events = room.logic:getEventsByRule(GameEvent.Turn, 3, function (e)
+      if e.data[1] == player then
+        if e.end_id < 0 then
+          table.insert(dat, {e.id, room.logic.current_event_id + 1})  --当前回合的end_id还是-1……
+        else
+          table.insert(dat, {e.id, e.end_id})
+        end
+        return true
+      end
+    end, 1)
+    if #turn_events < 3 then return end
+    return #room.logic:getEventsByRule(GameEvent.LoseHp, 1, function (e)
+      if e.data[1] == player and table.find(dat, function (ids)
+        return e.id > ids[1] and e.id < ids[2]
+      end) then
+        return true
+      end
+    end, dat[1][1]) == 0
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:changeMaxHp(player, 1)
+    if player.dead then return end
+    if player:isWounded() then
+      room:recover{
+        who = player,
+        num = 1,
+        skillName = self.name,
+      }
+    end
+    if player.dead then return end
+    local choice = room:askForChoice(player, {"jixiy1", "jixiy2"}, self.name)
+    if choice == "jixiy1" then
+      room:handleAddLoseSkills(player, "wangzun", nil, true, false)
+    else
+      player:drawCards(2, self.name)
+      if player.dead then return end
+      local skills = {}
+      for _, p in ipairs(room.alive_players) do
+        if p ~= player and p.role == "lord" then
+          for _, s in ipairs(p.player_skills) do
+            if s.lordSkill and not player:hasSkill(s, true)  then
+              table.insert(skills, s.name)
+            end
+          end
+        end
+      end
+      if #skills > 0 then
+        room:handleAddLoseSkills(player, table.concat(skills, "|"), nil)
+      end
+    end
+  end,
+}
+yuanshu:addSkill(yongsi)
+yuanshu:addSkill(jixiy)
+yuanshu:addRelatedSkill("wangzun")
 Fk:loadTranslationTable{
   ["m_ex__yuanshu"] = "界袁术",
-  ["#m_ex__yuanshu"] = "苦口良药",
+  ["#m_ex__yuanshu"] = "仲家帝",
   ["illustrator:m_ex__yuanshu"] = "魔奇士",
 
   ["m_ex__yongsi"] = "庸肆",
@@ -150,6 +311,9 @@ Fk:loadTranslationTable{
   ["jixiy"] = "觊玺",
   [":jixiy"] = "觉醒技，回合结束后，若你连续三个自己的回合未失去过体力，你加1点体力上限，回复1点体力，然后选择一项：1.获得技能〖妄尊〗；"..
   "2.摸两张牌，然后获得主公的主公技。",
+  ["#m_ex__yongsi-discard"] = "庸肆：你需弃置一张牌，否则失去1点体力",
+  ["jixiy1"] = "获得技能“妄尊”",
+  ["jixiy2"] = "摸两张牌，获得主公的主公技",
 
   ["$m_ex__yongsi1"] = "乱世之中，必出枭雄。",
   ["$m_ex__yongsi2"] = "得此玉玺，是为天助！",

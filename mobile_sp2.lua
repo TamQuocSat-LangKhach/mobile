@@ -833,7 +833,7 @@ local daizui = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if data.card and data.from:isAlive() and U.hasFullRealCard(room, data.card) then
+    if data.card and data.from and data.from:isAlive() and U.hasFullRealCard(room, data.card) then
       data.from:addToPile("daizui_shi", data.card, true, self.name)
     end
     return true

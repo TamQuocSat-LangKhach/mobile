@@ -335,4 +335,517 @@ Fk:loadTranslationTable{
   ["#mobile__catapult-invoke"] = "霹雳车：你可以弃置 %dest 装备区内的所有牌",
 }
 
+local offensiveSiegeEngineSkill = fk.CreateTriggerSkill{
+  name = "#offensive_siege_engine_skill",
+  attached_equip = "offensive_siege_engine",
+  events = {fk.AfterCardsMove, fk.BeforeCardsMove, fk.DamageCaused},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) then
+      return false
+    end
+
+    if event == fk.AfterCardsMove then
+      return
+        #player:getCardIds("e") > 1 and
+        table.find(
+          data,
+          function(move)
+            return
+              move.to == player.id and
+              move.toArea == Card.PlayerEquip and
+              table.find(
+                move.moveInfo,
+                function(info)
+                  return
+                    Fk:getCardById(info.cardId).name == "offensive_siege_engine" and
+                    not player:prohibitDiscard(info.cardId)
+                end
+              )
+          end
+        )
+    elseif event == fk.BeforeCardsMove then
+      return
+        table.find(
+          data,
+          function(move)
+            return
+              (move.to == player.id and move.toArea == Card.PlayerEquip) or
+              (
+                move.skillName ~= "quchong" and
+                move.skillName ~= "gamerule_aborted" and
+                move.skillName ~= self.name and
+                move.from == player.id and
+                table.find(
+                  move.moveInfo,
+                  function(info)
+                    return
+                      Fk:getCardById(info.cardId).name == "offensive_siege_engine" and
+                      info.fromArea == Card.PlayerEquip
+                  end
+                )
+              )
+          end
+        )
+    end
+
+    return target == player
+  end,
+  on_cost = function(self, event, target, player, data)
+    if event == fk.DamageCaused then
+      local room = player.room
+      return
+        room:askForSkillInvoke(
+          player,
+          self.name,
+          data,
+          "#offensive_siege_engine-invoke::" .. data.to.id .. ":" .. math.min(room:getTag("RoundCount"), 3)
+        )
+    end
+
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterCardsMove then
+      local toRemove = table.filter(
+        player:getCardIds("e"),
+        function(id) return Fk:getCardById(id).name ~= "offensive_siege_engine" end
+      )
+
+      room:throwCard(toRemove, self.name, player, player)
+    elseif event == fk.BeforeCardsMove then
+      local toVoid = {}
+      local toRemoveIndex = {}
+      for index, move in ipairs(data) do
+        if move.to == player.id and move.toArea == Card.PlayerEquip then
+          move.to = nil
+          move.toArea = Card.DiscardPile
+        end
+
+        if
+          move.skillName ~= "quchong" and
+          move.skillName ~= "gamerule_aborted" and
+          move.skillName ~= self.name and
+          move.from == player.id
+        then
+          local newMoveInfos = {}
+          for _, info in ipairs(move.moveInfo) do
+            if
+              Fk:getCardById(info.cardId).name == "offensive_siege_engine" and
+              info.fromArea == Card.PlayerEquip
+            then
+              local durability = player:getMark("@offensive_siege_engine_durability")
+              durability = math.max(durability - 1, 0)
+              room:setPlayerMark(player, "@offensive_siege_engine_durability", durability)
+              if durability < 1 then
+                table.insert(toVoid, info)
+              end
+            else
+              table.insert(newMoveInfos, info)
+            end
+          end
+
+          if #move.moveInfo > #newMoveInfos then
+            move.moveInfo = newMoveInfos
+            if #newMoveInfos == 0 then
+              table.insert(toRemoveIndex, index)
+            end
+          end
+        end
+      end
+
+      if #toRemoveIndex > 0 then
+        for i, index in ipairs(toRemoveIndex) do
+          table.remove(data, index - (i - 1))
+        end
+      end
+
+      if #toVoid > 0 then
+        room:sendLog{ type = "#destructDerivedCards", card = table.map(toVoid, function(info) return info.cardId end) }
+        local newMoveData = {
+          moveInfo = toVoid,
+          from = player.id,
+          toArea = Card.Void,
+          moveReason = fk.ReasonPut,
+          skillName = self.name,
+        }
+        table.insert(data, newMoveData)
+      end
+
+      if #data == 0 then
+        return true
+      end
+    else
+      local durability = player:getMark("@offensive_siege_engine_durability")
+      durability = math.max(durability - 1, 0)
+      room:setPlayerMark(player, "@offensive_siege_engine_durability", durability)
+      if durability < 1 then
+        local siegeEngines = table.filter(
+          player:getCardIds("e"),
+          function(id) return Fk:getCardById(id).name == "offensive_siege_engine" end
+        )
+        room:sendLog{ type = "#destructDerivedCards", card = siegeEngines }
+        room:moveCards{
+          ids = siegeEngines,
+          from = player.id,
+          toArea = Card.Void,
+          skillName = self.name,
+          moveReason = fk.ReasonJustMove
+        }
+      end
+
+      data.damage = data.damage + math.min(room:getTag("RoundCount"), 3)
+    end
+  end,
+
+  refresh_events = {fk.BeforeCardsMove},
+  can_refresh = function (self, event, target, player, data)
+    return
+      table.find(
+        data,
+        function(move)
+          return
+            (
+              (move.skillName == "quchong" and move.moveReason == fk.ReasonRecast) or
+              move.skillName == "gamerule_aborted" or
+              not player:hasSkill(self)
+            ) and
+            move.from == player.id and
+            move.toArea ~= Card.Void and
+            table.find(
+              move.moveInfo,
+              function(info)
+                return
+                  Fk:getCardById(info.cardId).name == "offensive_siege_engine" and
+                  info.fromArea == Card.PlayerEquip
+              end
+            )
+        end
+      )
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local mirror_moves = {}
+    local to_void = {}
+    for _, move in ipairs(data) do
+      if move.from == player.id and move.toArea ~= Card.Void then
+        local move_info = {}
+        local mirror_info = {}
+        for _, info in ipairs(move.moveInfo) do
+          local id = info.cardId
+          if Fk:getCardById(id).name == "offensive_siege_engine" and info.fromArea == Card.PlayerEquip then
+              table.insert(mirror_info, info)
+              table.insert(to_void, id)
+          else
+            table.insert(move_info, info)
+          end
+        end
+        move.moveInfo = move_info
+        if #mirror_info > 0 then
+          local mirror_move = table.clone(move)
+          mirror_move.to = nil
+          mirror_move.toArea = Card.Void
+          mirror_move.moveInfo = mirror_info
+          mirror_move.skillName = self.name
+          table.insert(mirror_moves, mirror_move)
+        end
+      end
+    end
+    if #to_void > 0 then
+      local room = player.room
+      table.insertTable(data, mirror_moves)
+      room:sendLog{ type = "#destructDerivedCards", card = to_void, }
+      room:setPlayerMark(player, "@offensive_siege_engine_durability", 0)
+      for _, id in ipairs(to_void) do
+        room:setCardMark(Fk:getCardById(id), "offensive_siege_engine_durability", 0)
+      end
+    end
+  end,
+}
+Fk:addSkill(offensiveSiegeEngineSkill)
+local offensiveSiegeEngine = fk.CreateWeapon{
+  name = "&offensive_siege_engine",
+  suit = Card.Diamond,
+  number = 1,
+  attack_range = 9,
+  equip_skill = offensiveSiegeEngineSkill,
+  on_install = function(self, room, player)
+    local cardMark = self:getMark("offensive_siege_engine_durability")
+    if cardMark == 0 then
+      room:setPlayerMark(player, "@offensive_siege_engine_durability", 2)
+      room:setCardMark(self, "offensive_siege_engine_durability", 2)
+    else
+      room:setPlayerMark(player, "@offensive_siege_engine_durability", cardMark)
+    end
+    Weapon.onInstall(self, room, player)
+  end,
+  on_uninstall = function(self, room, player)
+    room:setCardMark(self, "offensive_siege_engine_durability", player:getMark("@offensive_siege_engine_durability"))
+    room:setPlayerMark(player, "@offensive_siege_engine_durability", 0)
+    Weapon.onUninstall(self, room, player)
+  end,
+}
+extension:addCard(offensiveSiegeEngine)
+Fk:loadTranslationTable{
+  ["offensive_siege_engine"] = "大攻车·进击",
+  [":offensive_siege_engine"] = "装备牌·武器<br /><b>攻击范围</b>：9<br /><b>耐久度</b>：2<br />" ..
+  "<b>武器技能</b>：当此牌进入装备区后，弃置你装备区里的其他牌；当其他装备牌进入装备区前，改为将之置入弃牌堆；" ..
+  "当你造成伤害时，你可以令此牌减1点耐久度，令此伤害+X（X为游戏轮数且至多为3）；当此牌不因“渠冲”而离开装备区时，防止之，然后此牌-1点耐久度；" ..
+  "当此牌耐久度减至0时，销毁此牌。",
+  ["#offensive_siege_engine_skill"] = "大攻车·进击",
+  ["@offensive_siege_engine_durability"] = "进击耐久",
+  ["#offensive_siege_engine"] = "大攻车·进击",
+  ["#offensive_siege_engine-invoke"] = "大攻车·进击：你可令【大攻车】减一点耐久度，使对 %dest 造成的伤害+%arg",
+}
+
+local defensiveSiegeEngineSkill = fk.CreateTriggerSkill{
+  name = "#defensive_siege_engine_skill",
+  attached_equip = "defensive_siege_engine",
+  events = {fk.AfterCardsMove, fk.BeforeCardsMove, fk.DamageInflicted},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) then
+      return false
+    end
+
+    if event == fk.AfterCardsMove then
+      return
+        #player:getCardIds("e") > 1 and
+        table.find(
+          data,
+          function(move)
+            return
+              move.to == player.id and
+              move.toArea == Card.PlayerEquip and
+              table.find(
+                move.moveInfo,
+                function(info)
+                  return
+                    Fk:getCardById(info.cardId).name == "defensive_siege_engine" and
+                    not player:prohibitDiscard(info.cardId)
+                end
+              )
+          end
+        )
+    elseif event == fk.BeforeCardsMove then
+      return
+        table.find(
+          data,
+          function(move)
+            return
+              (move.to == player.id and move.toArea == Card.PlayerEquip) or
+              (
+                move.skillName ~= "quchong" and
+                move.skillName ~= "gamerule_aborted" and
+                move.skillName ~= self.name and
+                move.from == player.id and
+                table.find(
+                  move.moveInfo,
+                  function(info)
+                    return
+                      Fk:getCardById(info.cardId).name == "defensive_siege_engine" and
+                      info.fromArea == Card.PlayerEquip
+                  end
+                )
+              )
+          end
+        )
+    end
+
+    return target == player
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterCardsMove then
+      local toRemove = table.filter(
+        player:getCardIds("e"),
+        function(id) return Fk:getCardById(id).name ~= "defensive_siege_engine" end
+      )
+
+      room:throwCard(toRemove, self.name, player, player)
+    elseif event == fk.BeforeCardsMove then
+      local toVoid = {}
+      local toRemoveIndex = {}
+      for index, move in ipairs(data) do
+        if move.to == player.id and move.toArea == Card.PlayerEquip then
+          move.to = nil
+          move.toArea = Card.DiscardPile
+        end
+
+        if
+          move.skillName ~= "quchong" and
+          move.skillName ~= "gamerule_aborted" and
+          move.skillName ~= self.name and
+          move.from == player.id
+        then
+          local newMoveInfos = {}
+          for _, info in ipairs(move.moveInfo) do
+            if
+              Fk:getCardById(info.cardId).name == "defensive_siege_engine" and
+              info.fromArea == Card.PlayerEquip
+            then
+              local durability = player:getMark("@defensive_siege_engine_durability")
+              durability = math.max(durability - 1, 0)
+              room:setPlayerMark(player, "@defensive_siege_engine_durability", durability)
+              if durability < 1 then
+                table.insert(toVoid, info)
+              end
+            else
+              table.insert(newMoveInfos, info)
+            end
+          end
+
+          if #move.moveInfo > #newMoveInfos then
+            move.moveInfo = newMoveInfos
+            if #newMoveInfos == 0 then
+              table.insert(toRemoveIndex, index)
+            end
+          end
+        end
+      end
+
+      if #toRemoveIndex > 0 then
+        for i, index in ipairs(toRemoveIndex) do
+          table.remove(data, index - (i - 1))
+        end
+      end
+
+      if #toVoid > 0 then
+        room:sendLog{ type = "#destructDerivedCards", card = table.map(toVoid, function(info) return info.cardId end) }
+        local newMoveData = {
+          moveInfo = toVoid,
+          from = player.id,
+          toArea = Card.Void,
+          moveReason = fk.ReasonJustMove,
+          skillName = self.name,
+        }
+        table.insert(data, newMoveData)
+      end
+
+      if #data == 0 then
+        return true
+      end
+    else
+      local durability = player:getMark("@defensive_siege_engine_durability")
+      local newDurability = math.max(durability - data.damage, 0)
+      room:setPlayerMark(player, "@defensive_siege_engine_durability", newDurability)
+      if newDurability < 1 then
+        local siegeEngines = table.filter(
+          player:getCardIds("e"),
+          function(id) return Fk:getCardById(id).name == "defensive_siege_engine" end
+        )
+        room:sendLog{ type = "#destructDerivedCards", card = siegeEngines }
+        room:moveCards{
+          ids = siegeEngines,
+          from = player.id,
+          toArea = Card.Void,
+          skillName = self.name,
+          moveReason = fk.ReasonJustMove
+        }
+      end
+
+      data.damage = math.max(data.damage - durability, 0)
+      if data.damage < 1 then
+        return true
+      end
+    end
+  end,
+
+  refresh_events = {fk.BeforeCardsMove},
+  can_refresh = function (self, event, target, player, data)
+    return
+      table.find(
+        data,
+        function(move)
+          return
+            (
+              (move.skillName == "quchong" and move.moveReason == fk.ReasonRecast) or
+              move.skillName == "gamerule_aborted" or
+              not player:hasSkill(self)
+            ) and
+            move.from == player.id and
+            move.toArea ~= Card.Void and
+            table.find(
+              move.moveInfo,
+              function(info)
+                return
+                  Fk:getCardById(info.cardId).name == "defensive_siege_engine" and
+                  info.fromArea == Card.PlayerEquip
+              end
+            )
+        end
+      )
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local mirror_moves = {}
+    local to_void = {}
+    for _, move in ipairs(data) do
+      if move.from == player.id and move.toArea ~= Card.Void then
+        local move_info = {}
+        local mirror_info = {}
+        for _, info in ipairs(move.moveInfo) do
+          local id = info.cardId
+          if Fk:getCardById(id).name == "defensive_siege_engine" and info.fromArea == Card.PlayerEquip then
+            table.insert(mirror_info, info)
+            table.insert(to_void, id)
+          else
+            table.insert(move_info, info)
+          end
+        end
+        move.moveInfo = move_info
+        if #mirror_info > 0 then
+          local mirror_move = table.clone(move)
+          mirror_move.to = nil
+          mirror_move.toArea = Card.Void
+          mirror_move.moveInfo = mirror_info
+          mirror_move.skillName = self.name
+          table.insert(mirror_moves, mirror_move)
+        end
+      end
+    end
+    if #to_void > 0 then
+      local room = player.room
+      table.insertTable(data, mirror_moves)
+      room:sendLog{ type = "#destructDerivedCards", card = to_void, }
+      room:setPlayerMark(player, "@defensive_siege_engine_durability", 0)
+      for _, id in ipairs(to_void) do
+        room:setCardMark(Fk:getCardById(id), "defensive_siege_engine_durability", 0)
+      end
+    end
+  end,
+}
+Fk:addSkill(defensiveSiegeEngineSkill)
+local defensiveSiegeEngine = fk.CreateWeapon{
+  name = "&defensive_siege_engine",
+  suit = Card.Diamond,
+  number = 1,
+  attack_range = 9,
+  equip_skill = defensiveSiegeEngineSkill,
+  on_install = function(self, room, player)
+    local cardMark = self:getMark("defensive_siege_engine_durability")
+    if cardMark == 0 then
+      room:setPlayerMark(player, "@defensive_siege_engine_durability", 3)
+      room:setCardMark(self, "defensive_siege_engine_durability", 3)
+    else
+      room:setPlayerMark(player, "@defensive_siege_engine_durability", cardMark)
+    end
+    Weapon.onInstall(self, room, player)
+  end,
+  on_uninstall = function(self, room, player)
+    room:setCardMark(self, "defensive_siege_engine_durability", player:getMark("@defensive_siege_engine_durability"))
+    room:setPlayerMark(player, "@defensive_siege_engine_durability", 0)
+    Weapon.onUninstall(self, room, player)
+  end,
+}
+extension:addCard(defensiveSiegeEngine)
+Fk:loadTranslationTable{
+  ["defensive_siege_engine"] = "大攻车·守御",
+  [":defensive_siege_engine"] = "装备牌·武器<br /><b>攻击范围</b>：9<br /><b>耐久度</b>：3<br />" ..
+  "<b>武器技能</b>：当此牌进入装备区后，弃置你装备区里的其他牌；当其他装备牌进入装备区前，改为将之置入弃牌堆；" ..
+  "当你受到伤害时，此牌减等量点耐久度（不足则全减），令此伤害-X（X为减少的耐久度）；当此牌不因“渠冲”而离开装备区时，防止之，然后此牌减1点耐久度；" ..
+  "当此牌耐久度减至0时，销毁此牌。",
+  ["#defensive_siege_engine_skill"] = "大攻车·守御",
+  ["@defensive_siege_engine_durability"] = "守御耐久",
+  ["#defensive_siege_engine"] = "大攻车·守御",
+}
+
 return extension

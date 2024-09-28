@@ -3089,4 +3089,262 @@ for _, jilueSkill in ipairs(mobileJilueSkills) do
   mobileGodsimayi:addRelatedSkill(jilueSkill)
 end
 
+local zhangfen = General(extension, "mobile__zhangfen", "wu", 4)
+local zhangfenWin = fk.CreateActiveSkill{ name = "mobile__zhangfen_win_audio" }
+zhangfenWin.package = extension
+Fk:addSkill(zhangfenWin)
+
+Fk:loadTranslationTable{
+  ["mobile__zhangfen"] = "张奋",
+  ["#mobile__zhangfen"] = "究械菁杰",
+  --["illustrator:chengjiw"] = "",
+  ["$mobile__zhangfen_win_audio"] = "治于神者，众人当知其功！",
+  ["~mobile__zhangfen"] = "而立之年，未立功名，实憾也……",
+}
+
+local quchong = fk.CreateActiveSkill{
+  name = "quchong",
+  anim_type = "drawcard",
+  prompt = "#quchong-active",
+  card_num = 1,
+  target_num = 0,
+  can_use = function(self, player)
+    return true
+  end,
+  card_filter = function (self, to_select, selected)
+    return #selected == 0 and Fk:getCardById(to_select).type == Card.TypeEquip
+  end,
+  target_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    room:recastCard(effect.cards, room:getPlayerById(effect.from), self.name)
+  end,
+}
+local quchongTrigger = fk.CreateTriggerSkill{
+  name = "#quchong_trigger",
+  anim_type = "support",
+  main_skill = quchong,
+  events = {fk.TurnEnd, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) then
+      return false
+    end
+
+    if event == fk.TurnEnd then
+      return
+        table.find(
+          player.room.discard_pile,
+          function(id) return Fk:getCardById(id).type == Card.TypeEquip end
+        )
+    end
+
+    local numList = { 0, 5, 10, 10 }
+    if table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, player.room.settings.gameMode) then
+      numList = { 0, 2, 5, 5 }
+    end
+    local times = player:getMark("quchong_crafted") + 1
+
+    return
+      target == player and
+      player.phase == Player.Play and
+      (
+        table.find(
+          player.room.alive_players,
+          function(p)
+            return
+              table.find(
+                p:getCardIds("e"),
+                function(id)
+                  return table.contains({ "offensive_siege_engine", "defensive_siege_engine" }, Fk:getCardById(id).name)
+                end
+              )
+          end
+        ) or
+        (times < 5 and player:getMark("@quchong_casting_point") >= numList[times])
+      )
+  end,
+  on_cost = function (self, event, target, player, data)
+    if event == fk.EventPhaseStart then
+      local room = player.room
+      local siegeEngine
+      if
+        table.find(
+          room.alive_players,
+          function(p)
+            return
+              table.find(
+                p:getCardIds("e"),
+                function(id)
+                  siegeEngine = id
+                  return table.contains({ "offensive_siege_engine", "defensive_siege_engine" }, Fk:getCardById(id).name)
+                end
+              )
+          end
+        )
+      then
+        local targets = table.filter(room.alive_players, function(p) return p ~= room:getCardOwner(siegeEngine) end)
+        local tos = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1, "#quchong-choose", "quchong", true)
+        if #tos == 0 then
+          return false
+        end
+
+        self.cost_data = { tos[1], siegeEngine, "move" }
+      else
+        local _, ret = room:askForUseActiveSkill(player, "quchong_choose_siege_engine", "#choose_siege_engine-ask", true)
+        if not ret then
+          return false
+        end
+
+        self.cost_data = { ret.targets[1], ret.interaction, "use" }
+      end
+    end
+
+    player:broadcastSkillInvoke("quchong")
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TurnEnd then
+      local equips = table.filter(room.discard_pile, function(id) return Fk:getCardById(id).type == Card.TypeEquip end)
+      if #equips > 0 then
+        room:moveCards({
+          ids = equips,
+          toArea = Card.Void,
+          moveReason = fk.ReasonJustMove,
+          skillName = "quchong",
+          proposer = player.id,
+        })
+
+        room:addPlayerMark(player, "@quchong_casting_point", #equips)
+      end
+    else
+      if self.cost_data[3] == "use" then
+        local numList = { 0, 5, 10, 10 }
+        if table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, player.room.settings.gameMode) then
+          numList = { 0, 2, 5, 5 }
+        end
+        room:addPlayerMark(player, "quchong_crafted")
+        local times = player:getMark("quchong_crafted")
+        room:removePlayerMark(player, "@quchong_casting_point", numList[times])
+
+        local siegeEngine = table.find(room.void, function(id) return Fk:getCardById(id).name == self.cost_data[2] end)
+        if siegeEngine then
+          local user = room:getPlayerById(self.cost_data[1])
+          room:obtainCard(user, siegeEngine, true, fk.ReasonGive, player.id, "quchong")
+          if table.contains(user:getCardIds("h"), siegeEngine) and U.canUseCardTo(room, user, user, Fk:getCardById(siegeEngine)) then
+            room:useCard{
+              from = user.id,
+              card = Fk:getCardById(siegeEngine),
+              tos = { { user.id } },
+            }
+          end
+        end
+      else
+        local user = room:getPlayerById(self.cost_data[1])
+        local siegeEngine = self.cost_data[2]
+        room:obtainCard(user, siegeEngine, true, fk.ReasonGive, player.id, "quchong")
+        if table.contains(user:getCardIds("h"), siegeEngine) and U.canUseCardTo(room, user, user, Fk:getCardById(siegeEngine)) then
+          room:useCard{
+            from = user.id,
+            card = Fk:getCardById(siegeEngine),
+            tos = { { user.id } },
+          }
+        end
+      end
+    end
+  end,
+}
+local quchongChooseSiegeEngine = fk.CreateActiveSkill{
+  name = "quchong_choose_siege_engine",
+  card_num = 0,
+  target_num = 1,
+  interaction = function()
+    return UI.ComboBox { choices = { "offensive_siege_engine", "defensive_siege_engine" } }
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = Util.TrueFunc,
+}
+
+Fk:loadTranslationTable{
+  ["quchong"] = "渠冲",
+  [":quchong"] = "出牌阶段，你可以重铸一张装备牌；每个回合结束时，你将弃牌堆中的装备牌移出游戏并获得等量铸造值；" ..
+  "出牌阶段开始时，若场上没有【大攻车】（【大攻车·进击】、【大攻车·守御】），则你可按铸造的次数以0、5、10、10点铸造值" ..
+  "（若为2v2或斗地主模式，则改为0、2、5、5）选择一种大攻车并将之交给一名角色令其使用；否则你可以将场上的【大攻车】" ..
+  "交给另一名角色并令其使用。<br />" ..
+  "<font color='grey'>【大攻车·进击】<br />" ..
+  "装备牌·武器 <b>攻击范围</b>：9 <b>耐久度</b>：2<br />" ..
+  "<b>武器技能</b>：当此牌进入装备区后，弃置你装备区里的其他牌；当其他装备牌进入装备区前，改为将之置入弃牌堆；" ..
+  "当你造成伤害时，你可以令此牌减1点耐久度，令此伤害+X（X为游戏轮数且至多为3）；当此牌不因“渠冲”而离开装备区时，防止之，然后此牌-1点耐久度；" ..
+  "当此牌耐久度减至0时，销毁此牌。<br />" ..
+  "【大攻车·守御】<br />" ..
+  "装备牌·武器 <b>攻击范围</b>：9 <b>耐久度</b>：3<br />" ..
+  "<b>武器技能</b>：当此牌进入装备区后，弃置你装备区里的其他牌；当其他装备牌进入装备区前，改为将之置入弃牌堆；" ..
+  "当你受到伤害时，此牌减等量点耐久度（不足则全减），令此伤害-X（X为减少的耐久度）；当此牌不因“渠冲”而离开装备区时，防止之，然后此牌减1点耐久度；" ..
+  "当此牌耐久度减至0时，销毁此牌。</font>",
+  ["@quchong_casting_point"] = "铸造值",
+  ["#quchong-active"] = "渠冲：你可以重铸一张装备牌",
+  ["#quchong_trigger"] = "渠冲",
+  ["#quchong-choose"] = "渠冲：你可以将场上的【大攻车】交给除其拥有者外的一名角色并令其使用",
+  ["quchong_choose_siege_engine"] = "渠冲",
+  ["#choose_siege_engine-ask"] = "渠冲：请选择一种【大攻车】交给一名角色令其使用",
+  ["$quchong1"] = "器有九距之备，亦有九攻之变。",
+  ["$quchong2"] = "攻城之机变，于此车皆可解之！",
+  ["$quchong3"] = "大攻起兮，可辟山海之艰！",
+  ["$quchong4"] = "破坚如朽木，履高城如平地。",
+}
+
+Fk:addSkill(quchongChooseSiegeEngine)
+quchong:addRelatedSkill(quchongTrigger)
+zhangfen:addSkill(quchong)
+
+local mobileXunjie = fk.CreateTriggerSkill{
+  name = "mobile__xunjie",
+  anim_type = "defensive",
+  frequency = Skill.Compulsory,
+  events = {fk.DamageInflicted},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player:hasSkill(self) and
+      data.from and
+      data.from:isAlive() and
+      data.from.hp > player.hp and
+      not table.find(
+        player.room.alive_players,
+        function(p)
+          return
+            table.find(
+              p:getCardIds("e"),
+              function(id)
+                return table.contains({ "offensive_siege_engine", "defensive_siege_engine" }, Fk:getCardById(id).name)
+              end
+            )
+        end
+      )
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local judge = {
+      who = player,
+      reason = self.name,
+      pattern = ".|.|heart,diamond",
+    }
+    room:judge(judge)
+    if judge.card.color == Card.Red then
+      data.damage = data.damage - 1
+    end
+
+    return data.damage < 1
+  end,
+}
+Fk:loadTranslationTable{
+  ["mobile__xunjie"] = "逊节",
+  [":mobile__xunjie"] = "锁定技，当你受到伤害时，若场上没有【大攻车·进击】或【大攻车·守御】，且伤害来源的体力值大于你，" ..
+  "你进行判定，若结果为红色，则此伤害-1。",
+
+  ["$mobile__xunjie1"] = "藏于心者竭爱，动于身者竭恭。",
+  ["$mobile__xunjie2"] = "修身如藏器，大巧若无工。",
+}
+
+zhangfen:addSkill(mobileXunjie)
+
 return extension

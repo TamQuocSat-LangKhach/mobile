@@ -3226,7 +3226,12 @@ local quchongTrigger = fk.CreateTriggerSkill{
         local times = player:getMark("quchong_crafted")
         room:removePlayerMark(player, "@quchong_casting_point", numList[times])
 
-        local siegeEngine = table.find(room.void, function(id) return Fk:getCardById(id).name == self.cost_data[2] end)
+        local siegeEngine = table.find(
+          U.prepareDeriveCards(room, { { self.cost_data[2], Card.Diamond, 1 } }, "mobileSiegeEngine"),
+          function (id)
+            return room:getCardArea(id) == Card.Void
+          end
+        )
         if siegeEngine then
           local user = room:getPlayerById(self.cost_data[1])
           room:obtainCard(user, siegeEngine, true, fk.ReasonGive, player.id, "quchong")

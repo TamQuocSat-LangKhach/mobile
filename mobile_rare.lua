@@ -3227,7 +3227,7 @@ local quchongTrigger = fk.CreateTriggerSkill{
         room:removePlayerMark(player, "@quchong_casting_point", numList[times])
 
         local siegeEngine = table.find(
-          U.prepareDeriveCards(room, { { self.cost_data[2], Card.Diamond, 1 } }, "mobileSiegeEngine"),
+          U.prepareDeriveCards(room, { { self.cost_data[2], Card.Diamond, 1 } }, self.cost_data[2] .. "_tag"),
           function (id)
             return room:getCardArea(id) == Card.Void
           end

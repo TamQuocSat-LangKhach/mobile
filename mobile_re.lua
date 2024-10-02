@@ -31,8 +31,9 @@ local mobile__tongji = fk.CreateTriggerSkill{
   events = {fk.TargetConfirming},
   anim_type = "negative",
   can_trigger = function(self, event, target, player, data)
-    return target ~= player and player:hasSkill(self) and target:inMyAttackRange(player) and data.from ~= player
+    return target ~= player and player:hasSkill(self) and target:inMyAttackRange(player) and data.from ~= player.id
     and data.card and data.card.trueName == "slash" and not target:isNude()
+    and not table.contains(AimGroup:getAllTargets(data.tos), player.id)
   end,
   on_cost = function (self, event, target, player, data)
     local cards = player.room:askForDiscard(target, 1, 1, true, self.name, true, ".", "#mobile__tongji-cost:"..player.id, true)

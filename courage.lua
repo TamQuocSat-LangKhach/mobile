@@ -84,7 +84,7 @@ local shanxie = fk.CreateActiveSkill{
       card = {table.random(ids)}
     end
     if #card > 0 then
-      room:obtainCard(player.id, card[1], true, fk.ReasonPrey)
+      room:obtainCard(player.id, card[1], true, fk.ReasonPrey, player.id, self.name)
     end
   end,
 }
@@ -179,7 +179,7 @@ local fengjie = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if player.phase == Player.Start then
-      local targets = table.map(room:getOtherPlayers(player), function(p) return p.id end)
+      local targets = table.map(room:getOtherPlayers(player, false), Util.IdMapper)
       if #targets == 0 then return end
       local tos = room:askForChoosePlayers(player, targets, 1, 1, "#fengjie-choose", self.name, false)
       room:setPlayerMark(player, "@fengjie", room:getPlayerById(tos[1]).general)
@@ -218,7 +218,7 @@ Fk:loadTranslationTable{
   ["fengjie"] = "奉节",
   [":fengjie"] = "锁定技，准备阶段，你选择一名其他角色，直到你下回合开始，每名角色结束阶段，若你选择的角色存活，你将手牌摸或弃至与该角色的体力值相同（至多摸至四张）。",
   ["#qingjue-invoke"] = "请决：%src 对 %dest 使用%arg，你可以摸一张牌与 %src 拼点，若赢则取消之，若没赢则转移给你",
-  ["#fengjie-choose"] = "奉节：选择一名角色，每回合结束阶段你将手牌调整至与其相同",
+  ["#fengjie-choose"] = "奉节：选择一名角色，每回合结束阶段你将手牌调整至与其体力值相同",
   ["@fengjie"] = "奉节",
 
   ["$qingjue1"] = "兵者，凶器也，宜不得已而用之。",
@@ -769,6 +769,7 @@ local mobileChoujue = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:changeMaxHp(player, 1)
+    if player.dead then return false end
     room:drawCards(player, 2, self.name)
     room:addPlayerMark(player, "choujue_buff-turn", 1)
   end,

@@ -817,7 +817,7 @@ local godHuishi = fk.CreateActiveSkill{
           return card:getEffectiveId()
         end),
         toArea = Card.DiscardPile,
-        moveReason = fk.ReasonPutIntoDiscardPile,
+        moveReason = fk.ReasonJudge,
         skillName = self.name,
       })
     else

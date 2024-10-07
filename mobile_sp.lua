@@ -3984,16 +3984,17 @@ local hongyi = fk.CreateActiveSkill{
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = Util.FalseFunc,
-  target_filter = function(self, to_select, selected, selected_cards)
+  target_filter = function(self, to_select, selected)
     return #selected == 0 and to_select ~= Self.id
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local target = room:getPlayerById(effect.tos[1])
-    room:addPlayerMark(target, "@@hongyi")
-    local targetRecorded = type(player:getMark("hongyi_targets")) == "table" and player:getMark("hongyi_targets") or {}
-    table.insertIfNeed(targetRecorded, effect.tos[1])
-    room:setPlayerMark(player, "hongyi_targets", targetRecorded)
+    local targetRecorded = player:getTableMark("hongyi_targets")
+    if table.insertIfNeed(targetRecorded, target.id) then
+      room:addPlayerMark(target, "@@hongyi")
+      room:setPlayerMark(player, "hongyi_targets", targetRecorded)
+    end
   end,
 }
 local hongyi_delay = fk.CreateTriggerSkill{
@@ -4002,14 +4003,16 @@ local hongyi_delay = fk.CreateTriggerSkill{
   events = {fk.DamageCaused},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    return target == player and target:getMark("@@hongyi") > 0
+    return player:hasSkill(hongyi) and data.from
+    and table.contains(player:getTableMark("hongyi_targets"), data.from.id)
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    player:broadcastSkillInvoke(hongyi.name)
     local judge = {
-      who = player,
-      reason = self.name,
+      who = target,
+      reason = hongyi.name,
       pattern = ".",
     }
     room:judge(judge)
@@ -4022,8 +4025,9 @@ local hongyi_delay = fk.CreateTriggerSkill{
     end
   end,
 
-  refresh_events = {fk.TurnStart, fk.Death},
+  refresh_events = {fk.TurnStart, fk.BuryVictim, fk.EventLoseSkill},
   can_refresh = function(self, event, target, player, data)
+    if event == fk.EventLoseSkill and data ~= hongyi then return false end
     return player == target and type(player:getMark("hongyi_targets")) == "table"
   end,
   on_refresh = function(self, event, target, player, data)
@@ -4113,7 +4117,7 @@ Fk:loadTranslationTable{
   [":quanfeng"] = "限定技，当一名其他角色死亡后，你可以<u>追思</u>该角色，失去“弘仪”，然后获得其武将牌上的所有技能（主公技除外），"..
   "你加1点体力上限并回复1点体力；当你处于濒死状态时，你可以加2点体力上限，回复4点体力。" ..
   "<br/><font color='grey'>#\"<b>追思</b>\"：被追思过的角色本局游戏不能再成为追思的目标。",
-  ["#hongyi-active"] = "发动弘仪，选择一名其他角色",
+  ["#hongyi-active"] = "弘仪：选择一名其他角色，其造成伤害时判定，判红受伤角色摸牌，判黑伤害-1",
   ["@@hongyi"] = "弘仪",
   ["#quanfeng1-invoke"] = "劝封：可失去弘仪并获得%dest的所有技能，然后加1点体力上限和体力",
   ["#quanfeng2-invoke"] = "劝封：是否加2点体力上限，回复4点体力",

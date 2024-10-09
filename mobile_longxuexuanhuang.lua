@@ -1201,27 +1201,14 @@ local bifengDelay = fk.CreateTriggerSkill{
       return false
     end
 
-    if 
-      #U.getEventsByRule(
-        room,
-        GameEvent.UseCard,
-        1,
-        function(e)
-          local use = e.data[1]
-          return use.from ~= player.id and use.responseToEvent.card == data.card
-        end,
-        useEvent.id
-      ) > 0 or
-      #U.getEventsByRule(
-        room,
-        GameEvent.RespondCard,
-        1,
-        function(e)
-          local response = e.data[1]
-          return response.from ~= player.id and response.responseToEvent.card == data.card
-        end,
-        useEvent.id
-      ) > 0
+    if #room.logic:getEventsByRule(GameEvent.UseCard, 1, function(e)
+        local use = e.data[1]
+        return use.from ~= player.id and use.responseToEvent.card == data.card
+      end, useEvent.id) > 0 or
+      #room.logic:getEventsByRule(GameEvent.RespondCard, 1, function(e)
+        local response = e.data[1]
+        return response.from ~= player.id and response.responseToEvent.card == data.card
+      end, useEvent.id) > 0
     then
       player:drawCards(2, self.name)
     else
@@ -1261,22 +1248,21 @@ local suwang = fk.CreateTriggerSkill{
       local room = player.room
       if table.contains({ "m_2v2_mode" }, room.settings.gameMode) then
         local damageNum = 0
-        U.getActualDamageEvents(
-          room,
-          1,
-          function(e)
-            local damage = e.data[1]
-            if damage.to == player then
-              damageNum = damageNum + damage.damage
-            end
-
-            return damageNum > 1
+        room.logic:getActualDamageEvents(1, function(e)
+          local damage = e.data[1]
+          if damage.to == player then
+            damageNum = damageNum + damage.damage
           end
+
+          return damageNum > 1
+        end
         )
 
         return damageNum < 2
       else
-        return #U.getActualDamageEvents(room, 1, function(e) return e.data[1].to == player end) == 0
+        return #room.logic:getActualDamageEvents(1, function(e)
+          return e.data[1].to == player
+        end) == 0
       end
     end
 

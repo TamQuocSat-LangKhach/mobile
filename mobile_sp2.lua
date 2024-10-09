@@ -509,7 +509,9 @@ local shoufa = fk.CreateTriggerSkill{
 
     local room = player.room
     if event == fk.Damage then
-      return U.getActualDamageEvents(room, 1, function(e) return e.data[1].from == player end)[1].data[1] == data
+      return room.logic:getActualDamageEvents(1, function(e)
+        return e.data[1].from == player
+      end)[1].data[1] == data
     else
       return
         player:usedSkillTimes(self.name, Player.HistoryTurn) < (5 + player:getMark("shoufa_damage_triggered-turn")) and
@@ -1449,9 +1451,168 @@ Fk:loadTranslationTable{
 
   ["$mobile__mutao1"] = "董贼暴乱，天下定当奋节讨之！",
   ["$mobile__mutao2"] = "募州郡义士，讨祸国逆贼！",
-  ["$mobile__yimou1"] = "今畜士众之力，据其要害，贼可破之。",
+  ["$mobile__yimou1"] = "今蓄士众之力，据其要害，贼可破之。",
   ["$mobile__yimou2"] = "绍因权专利，久必生变，不若屯军以观。",
   ["~mobile__baoxin"] = "区区黄巾流寇，如何挡我？呃啊……",
+}
+
+local zhenji = General(extension, "mob_sp__zhenji", "qun", 3, 3, General.Female)
+local bojian = fk.CreateTriggerSkill {
+  name = "bojian",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.EventPhaseEnd},
+  can_trigger = function(self, event, target, player, data)
+    if target == player and player:hasSkill(self) and player.phase == Player.Play then
+      local room = player.room
+      local id, end_id = 1, 1
+      room.logic:getEventsByRule(GameEvent.Phase, 1, function (e)
+        if e.data[1] == player and e.data[2] == Player.Play and e.id < room.logic:getCurrentEvent().id then
+          id, end_id = e.id, e.end_id
+          return true
+        end
+      end, 1)
+      if id > 1 then
+        local n1, suit1 = 0, {}
+        room.logic:getEventsByRule(GameEvent.UseCard, 1, function (e)
+          if e.id <= end_id then
+            local use = e.data[1]
+            if use.from == player.id then
+              n1 = n1 + 1
+              table.insertIfNeed(suit1, use.card.suit)
+            end
+          end
+        end, id)
+        local n2, suit2 = 0, {}
+        room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+          local use = e.data[1]
+          if use.from == player.id then
+            n2 = n2 + 1
+            table.insertIfNeed(suit2, use.card.suit)
+          end
+        end, Player.HistoryPhase)
+        table.removeOne(suit1, Card.NoSuit)
+        table.removeOne(suit2, Card.NoSuit)
+        if n1 ~= n2 and #suit1 ~= #suit2 then
+          return true
+        else
+          if #room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+            local use = e.data[1]
+            return use.from == player.id and not (use.card:isVirtual() and #use.card.subcards ~= 1) and
+              table.contains(room.discard_pile, use.card:getEffectiveId())
+          end, Player.HistoryPhase) > 0 then
+            self.cost_data = 2
+            return true
+          end
+        end
+      else
+        self.cost_data = 1
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if self.cost_data == 1 then
+      player:drawCards(2, self.name)
+    else
+      local room = player.room
+      local cards = {}
+      room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)
+        local use = e.data[1]
+        if use.from == player.id and not (use.card:isVirtual() and #use.card.subcards ~= 1) and
+          table.contains(room.discard_pile, use.card:getEffectiveId()) then
+          table.insertIfNeed(cards, use.card:getEffectiveId())
+        end
+      end, Player.HistoryPhase)
+      local card = U.askforChooseCardsAndChoice(player, cards, {"OK"}, self.name, "#bojian-ask")
+      local to = room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper), 1, 1,
+        "#bojian-choose:::"..Fk:getCardById(card[1]):toLogString(), self.name, false)
+      to = room:getPlayerById(to[1])
+      room:moveCardTo(card, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, true, player.id)
+    end
+  end,
+}
+local jiwei = fk.CreateTriggerSkill {
+  name = "jiwei",
+  anim_type = "drawcard",
+  frequency = Skill.Compulsory,
+  events = {fk.TurnEnd, fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) then
+      if event == fk.TurnEnd and target ~= player then
+        local n = 0
+        if #player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+          for _, move in ipairs(e.data) do
+            if move.from then
+              for _, info in ipairs(move.moveInfo) do
+                if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+                  return true
+                end
+              end
+            end
+          end
+        end, Player.HistoryTurn) > 0 then
+          n = n + 1
+        end
+        if #player.room.logic:getActualDamageEvents(1, Util.TrueFunc, Player.HistoryTurn) > 0 then
+          n = n + 1
+        end
+        if n > 0 then
+          self.cost_data = n
+          return true
+        end
+      elseif event == fk.EventPhaseStart then
+        return target == player and player.phase == Player.Start and player:getHandcardNum() >= #player.room.alive_players and
+          player:getHandcardNum() >= player.hp and #player.room:getOtherPlayers(player) > 0
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    if event == fk.TurnEnd then
+      player:drawCards(self.cost_data, self.name)
+    else
+      local room = player.room
+      local red = table.filter(player:getCardIds("h"), function (id)
+        return Fk:getCardById(id).color == Card.Red
+      end)
+      local black = table.filter(player:getCardIds("h"), function (id)
+        return Fk:getCardById(id).color == Card.Black
+      end)
+      local color = ""
+      if #red > #black then
+        color = "red"
+      elseif #red < #black then
+        color = "black"
+      else
+        if #red == 0 then return end
+        color = room:askForChoice(player, {"red", "black"}, self.name, "#jiwei-choice")
+      end
+      local cards = red
+      if color == "black" then
+        cards = black
+      end
+      room:askForYiji(player, cards, room:getOtherPlayers(player), self.name, #cards, #cards, "#jiwei-give:::"..color)
+    end
+  end,
+}
+zhenji:addSkill(bojian)
+zhenji:addSkill(jiwei)
+Fk:loadTranslationTable{
+  ["mob_sp__zhenji"] = "甄姬",
+  ["#mob_sp__zhenji"] = "",
+  ["illustrator:mob_sp__zhenji"] = "",
+
+  ["bojian"] = "博鉴",
+  [":bojian"] = "锁定技，出牌阶段结束时，若你本阶段使用的牌数与花色数与你上个出牌阶段均不同，则你摸两张牌；否则你选择弃牌堆中你本阶段使用过"..
+  "的一张牌，将之交给一名角色。",
+  ["jiwei"] = "济危",
+  [":jiwei"] = "锁定技，其他角色的回合结束时，此回合每满足一项，你便摸一张牌：<br>"..
+  "1.有角色失去过牌；<br>2.有角色受到过伤害。<br>"..
+  "准备阶段，若你的手牌数不小于场上存活人数且不小于你的体力值，则你须将手牌中数量较多颜色的牌全部分配给其他角色（若数量相同则选择一种颜色）。",
+  ["#bojian-ask"] = "博鉴：请选择其中一张牌",
+  ["#bojian-choose"] = "博鉴：将%arg交给一名角色",
+  ["#jiwei-choice"] = "济危：请选择一种颜色，将此颜色的手牌分配给其他角色",
+  ["#jiwei-give"] = "济危：请将%arg手牌分配给其他角色",
 }
 
 return extension

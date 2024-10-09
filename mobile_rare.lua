@@ -1621,9 +1621,10 @@ local quesong = fk.CreateTriggerSkill{
   anim_type = "support",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self) and target.phase == Player.Finish then
-      return #U.getActualDamageEvents(player.room, 1, function(e) return e.data[1].to == player end) > 0
-    end
+    return player:hasSkill(self) and target.phase == Player.Finish and
+      #player.room.logic:getActualDamageEvents(1, function(e)
+        return e.data[1].to == player
+      end) > 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room

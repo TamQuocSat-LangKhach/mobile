@@ -1365,7 +1365,7 @@ local m_ex__qiaoshui_delay = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(player, "@@m_ex__qiaoshui-phase", 0)
-    local targets = U.getUseExtraTargets(room, data)
+    local targets = room:getUseExtraTargets(data)
     table.insertTableIfNeed(targets, TargetGroup:getRealTargets(data.tos))
     if #targets == 0 then return false end
     local tos = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__qiaoshui-choose:::"..data.card:toLogString(), self.name, true)
@@ -1993,11 +1993,11 @@ local m_ex__zenhui = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
       (data.card.trueName == "slash" or (data.card.color == Card.Black and data.card:isCommonTrick())) and data.firstTarget and
-      U.isOnlyTarget(player.room:getPlayerById(data.to), data, event) and #U.getUseExtraTargets(player.room, data, true, true) > 0
+      U.isOnlyTarget(player.room:getPlayerById(data.to), data, event) and #player.room:getUseExtraTargets(data, true, true) > 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local to = room:askForChoosePlayers(player, U.getUseExtraTargets(room, data, true, true), 1, 1,
+    local to = room:askForChoosePlayers(player, room:getUseExtraTargets(data, true, true), 1, 1,
     "#m_ex__zenhui-choose:::"..data.card:toLogString(), self.name, true)
     if #to > 0 then
       self.cost_data = to[1]
@@ -2307,7 +2307,7 @@ local m_ex__benxi_delay = fk.CreateTriggerSkill{
       if (data.card.name == "collateral") then return end
       local n = player:getMark("@m_ex__benxi-phase")
 
-      local tos = room:askForChoosePlayers(player, table.filter(U.getUseExtraTargets(room, data), function (pid)
+      local tos = room:askForChoosePlayers(player, table.filter(room:getUseExtraTargets(data), function (pid)
         return player:distanceTo(room:getPlayerById(pid)) == 1
       end), 1, n, "#m_ex__benxi-choose:::"..data.card:toLogString()..":"..tostring(n), m_ex__benxi.name, true)
 

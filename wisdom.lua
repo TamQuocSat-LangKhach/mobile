@@ -852,7 +852,9 @@ local tianyi = fk.CreateTriggerSkill{
   end,
   can_wake = function(self, event, target, player, data)
     return table.every(player.room.alive_players, function(p)
-      return #U.getActualDamageEvents(player.room, 1, function(e) return e.data[1].to == p end, Player.HistoryGame) > 0
+      return #player.room.logic:getActualDamageEvents(1, function(e)
+        return e.data[1].to == p
+      end, Player.HistoryGame) > 0
     end)
   end,
   on_use = function(self, event, target, player, data)

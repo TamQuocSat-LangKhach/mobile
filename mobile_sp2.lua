@@ -926,7 +926,7 @@ local xuetuV2 = fk.CreateActiveSkill{
   mute = true,
   interaction = function()
     local options = { "xuetu_v2_recover", "xuetu_v2_draw" }
-    local choices = table.filter(options, function(option) return not table.contains(U.getMark(Self, "xuetu_v2_used-phase"), option) end)
+    local choices = table.filter(options, function(option) return not table.contains(Self:getTableMark("xuetu_v2_used-phase"), option) end)
     return UI.ComboBox {choices = choices, all_choices = options }
   end,
   can_use = function(self, player)
@@ -1209,7 +1209,7 @@ local zujin = fk.CreateViewAsSkill{
   end,
   interaction = function()
     local all_names = {"slash", "jink", "nullification"}
-    local names = U.getViewAsCardNames(Self, "zujin", all_names, {}, U.getMark(Self, "zujin-turn"))
+    local names = U.getViewAsCardNames(Self, "zujin", all_names, {}, Self:getTableMark("zujin-turn"))
     if #names > 0 then
       return UI.ComboBox { choices = names, all_choices = all_names }
     end

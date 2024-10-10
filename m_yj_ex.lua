@@ -1727,6 +1727,90 @@ Fk:loadTranslationTable{
 
 fuhuanghou:addSkill(m_ex__qiuyuan)
 
+local yufan = General(extension, "m_ex__yufan", "wu", 3)
+local zongxuan = fk.CreateActiveSkill{
+  name = "m_ex__zongxuan",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 0,
+  can_use = function(self, player)
+    return player:getMark("m_ex__zongxuan-phase") == 0
+  end,
+  prompt = "#m_ex__zongxuan",
+  card_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    room:setPlayerMark(player, "m_ex__zongxuan-phase", 1)
+    player:drawCards(1, self.name)
+    if not player:isNude() then
+      local cards = room:askForCard(player, 1, 1, true, self.name, false, ".", "#m_ex__zongxuan-put")
+      room:moveCards({
+        from = player.id,
+        ids = cards,
+        toArea = Card.DrawPile,
+        moveReason = fk.ReasonPut,
+        skillName = self.name,
+        proposer = player.id,
+      })
+    end
+  end,
+}
+local zongxuan_trigger = fk.CreateTriggerSkill{
+  name = "#m_ex__zongxuan_trigger",
+  anim_type = "control",
+  main_skill = zongxuan,
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) then
+      local cards = {}
+      for _, move in ipairs(data) do
+        if move.from == player.id and move.toArea == Card.DiscardPile and move.moveReason == fk.ReasonDiscard then
+          for _, info in ipairs(move.moveInfo) do
+            if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
+              if player.room:getCardArea(info.cardId) == Card.DiscardPile then
+                table.insertIfNeed(cards, info.cardId)
+              end
+            end
+          end
+        end
+      end
+      cards = U.moveCardsHoldingAreaCheck(player.room, cards)
+      if #cards > 0 then
+        self.cost_data = cards
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local cards = table.simpleClone(self.cost_data)
+    if #cards > 1 then
+      cards = room:askForGuanxing(player, cards, {1, #cards}, nil, self.name, true, {"Top", "zongxuanNoput"}).top
+    end
+    room:moveCards({
+      ids = table.reverse(cards),
+      toArea = Card.DrawPile,
+      moveReason = fk.ReasonPut,
+      skillName = self.name,
+      proposer = player.id,
+    })
+  end,
+}
+zongxuan:addRelatedSkill(zongxuan_trigger)
+yufan:addSkill(zongxuan)
+yufan:addSkill("zhiyan")
+Fk:loadTranslationTable{
+  ["m_ex__yufan"] = "虞翻",
+  ["#m_ex__yufan"] = "狂直之士",
+  ["m_ex__zongxuan"] = "纵玄",
+  [":m_ex__zongxuan"] = "①当你的牌因弃置而置入弃牌堆时，你可以将其中任意张牌置于牌堆顶；②出牌阶段限一次，你可以摸一张牌，然后将一张牌置于牌堆顶。",
+  ["#m_ex__zongxuan"] = "你可以摸一张牌，然后将一张牌置于牌堆顶",
+  ["#m_ex__zongxuan_trigger"] = "纵玄",
+  ["#m_ex__zongxuan-put"] = "纵玄：将一张牌置于牌堆顶",
+}
+
+-- yj2014
+
 local chenqun = General(extension, "m_ex__chenqun", "wei", 3)
 
 Fk:loadTranslationTable{
@@ -1745,10 +1829,10 @@ local m_ex__dingpin = fk.CreateActiveSkill{
   card_filter = function(self, to_select, selected)
     if #selected > 0 then return false end
     local card = Fk:getCardById(to_select)
-    return not (Self:prohibitDiscard(card) or table.contains(U.getMark(Self, "m_ex__dingpin_types-turn"), card:getTypeString()))
+    return not (Self:prohibitDiscard(card) or table.contains(Self:getTableMark("m_ex__dingpin_types-turn"), card:getTypeString()))
   end,
   target_filter = function(self, to_select, selected)
-    return #selected == 0 and not table.contains(U.getMark(Self, "m_ex__dingpin_target-turn"), to_select)
+    return #selected == 0 and not table.contains(Self:getTableMark("m_ex__dingpin_target-turn"), to_select)
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)

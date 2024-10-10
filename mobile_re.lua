@@ -565,7 +565,7 @@ Fk:loadTranslationTable{
 
 -- SP
 
-local zhanggong = General(extension, "mobile_zhanggong", "wei", 3)
+local zhanggong = General(extension, "mobile__zhanggong", "wei", 3)
 
 local mobile__qianxinz = fk.CreateActiveSkill{
   name = "mobile__qianxinz",
@@ -639,10 +639,10 @@ zhanggong:addSkill(mobile__qianxinz)
 zhanggong:addSkill("zhenxing")
 
 Fk:loadTranslationTable{
-  ["mobile_zhanggong"] = "张恭",
-  ["#mobile_zhanggong"] = "西域长歌",
-  ["illustrator:mobile_zhanggong"] = "B_LEE",
-  ["designer:mobile_zhanggong"] = "笔枔",
+  ["mobile__zhanggong"] = "张恭",
+  ["#mobile__zhanggong"] = "西域长歌",
+  ["illustrator:mobile__zhanggong"] = "B_LEE",
+  ["designer:mobile__zhanggong"] = "笔枔",
 
   ["mobile__qianxinz"] = "遣信",
   [":mobile__qianxinz"] = "出牌阶段限一次，你可以将至多两张手牌随机分配给等量名其他角色各一张，称为“信”，然后该角色的下个准备阶段，若其有“信”，其选择一项：1.令你摸两张牌；2.本回合的手牌上限-2。",
@@ -656,7 +656,7 @@ Fk:loadTranslationTable{
   ["$mobile__qianxinz2"] = "临危之际，速速来援！",
   --["$zhenxing1"] = "东征西讨，募军百里挑一。",
   --["$zhenxing2"] = "众口铄金，积毁销骨。",
-  ["~mobile_zhanggong"] = "大漠孤烟，孤立无援啊……",
+  ["~mobile__zhanggong"] = "大漠孤烟，孤立无援啊……",
 }
 
 

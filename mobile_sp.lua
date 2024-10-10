@@ -424,28 +424,22 @@ local mobile__gongsun = fk.CreateTriggerSkill{
     local room = player.room
     local _, dat = room:askForUseActiveSkill(player, "mobile__gongsun_vs", "#mobile__gongsun-choose")
     if dat then
-      self.cost_data = {dat.cards, dat.targets[1]}
+      self.cost_data = {cards = dat.cards, tos = dat.targets}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room:throwCard(self.cost_data[1], self.name, player, player)
-    local names = {}
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if (card:isCommonTrick() or card.type == Card.TypeBasic) and not card.is_derived then
-        table.insertIfNeed(names, card.trueName)
-      end
-    end
-    if player.dead or #names == 0 then return end
-    local to = room:getPlayerById(self.cost_data[2])
-    local choice = room:askForChoice(player, names, self.name, "#mobile__gongsun-name:" .. to.id)
-    local tos = U.getMark(player, "_mobile__gongsun")
+    local to = room:getPlayerById(self.cost_data.tos[1])
+    room:throwCard(self.cost_data.cards, self.name, player, player)
+    local names = U.getAllCardNames("bt", true)
+    if player.dead or #names == 0 or to.dead then return end
+    local choice = U.askForChooseCardNames(room, player, names, 1, 1, self.name, "#mobile__gongsun-name:" .. to.id)[1]
+    local tos = player:getTableMark("_mobile__gongsun")
     table.insertIfNeed(tos, to.id)
     room:setPlayerMark(player, "_mobile__gongsun", tos)
     for _, p in ipairs({player, to}) do
-      local record = U.getMark(p, "@mobile__gongsun")
+      local record = p:getTableMark("@mobile__gongsun")
       table.insert(record, choice)
       room:setPlayerMark(p, "@mobile__gongsun", record)
     end
@@ -468,19 +462,19 @@ local mobile__gongsun = fk.CreateTriggerSkill{
 local mobile__gongsun_prohibit = fk.CreateProhibitSkill{
   name = "#mobile__gongsun_prohibit",
   prohibit_use = function(self, player, card)
-    local mark = U.getMark(player, "@mobile__gongsun")
+    local mark = player:getTableMark("@mobile__gongsun")
     local cards = card:isVirtual() and card.subcards or {card.id}
     return table.contains(mark, card.trueName) and
     table.every(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
   end,
   prohibit_response = function(self, player, card)
-    local mark = U.getMark(player, "@mobile__gongsun")
+    local mark = player:getTableMark("@mobile__gongsun")
     local cards = card:isVirtual() and card.subcards or {card.id}
     return table.contains(mark, card.trueName) and
     table.every(cards, function(id) return table.contains(player.player_cards[Player.Hand], id) end)
   end,
   prohibit_discard = function(self, player, card)
-    local mark = U.getMark(player, "@mobile__gongsun")
+    local mark = player:getTableMark("@mobile__gongsun")
     return table.contains(mark, card.trueName) and table.contains(player.player_cards[Player.Hand], card.id)
   end,
 }
@@ -506,8 +500,8 @@ Fk:loadTranslationTable{
 
   ["mobile__gongsun"] = "共损",
   [":mobile__gongsun"] = "出牌阶段开始时，你可以弃置两张牌并选择一名其他角色，然后你声明一种基本牌或普通锦囊牌的牌名。若如此做，直到你的下个回合开始或你死亡时，你与其均不能使用、打出或弃置此牌名的手牌。",
-  ["#mobile__gongsun-choose"] = "共损：弃置两张牌并选择一名其他角色",
-  ["#mobile__gongsun-name"] = "共损：选择一种基本牌或普通锦囊牌的牌名，直至你下个回合开始前，你和 %src 无法使用、打出或弃置该牌名的手牌。",
+  ["#mobile__gongsun-choose"] = "共损：弃置两张牌并选择一名其他角色，封印你与其一种牌名的手牌",
+  ["#mobile__gongsun-name"] = "选择牌名，你和 %src 无法使用/打出/弃置该牌名的手牌直至你下个回合",
   ["@mobile__gongsun"] = "共损",
   ["mobile__gongsun_vs"] = "共损",
 
@@ -1388,7 +1382,7 @@ local xionghuo_record = fk.CreateTriggerSkill{
           skillName = "mobile__xionghuo",
         }
         if not (player.dead or target.dead) then
-          local mark = U.getMark(target, "mobile__xionghuo_prohibit-turn")
+          local mark = target:getTableMark("mobile__xionghuo_prohibit-turn")
           table.insert(mark, player.id)
           room:setPlayerMark(target, "mobile__xionghuo_prohibit-turn", mark)
         end
@@ -1429,7 +1423,7 @@ local xionghuo_record = fk.CreateTriggerSkill{
 local xionghuo_prohibit = fk.CreateProhibitSkill{
   name = "#mobile__xionghuo_prohibit",
   is_prohibited = function(self, from, to, card)
-    return card.trueName == "slash" and table.contains(U.getMark(from, "mobile__xionghuo_prohibit-turn") ,to.id)
+    return card.trueName == "slash" and table.contains(from:getTableMark("mobile__xionghuo_prohibit-turn"), to.id)
   end,
 }
 local shajue = fk.CreateTriggerSkill{
@@ -1785,12 +1779,12 @@ local mobile__zhouxuan_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.CardUsing, fk.CardResponding},
   can_trigger = function(self, event, target, player, data)
-    return table.find(U.getMark(player, "mobile__zhouxuan"), function(m) return m[1] == target.id end)
+    return table.find(player:getTableMark("mobile__zhouxuan"), function(m) return m[1] == target.id end)
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local mark = U.getMark(player, "mobile__zhouxuan")
+    local mark = player:getTableMark("mobile__zhouxuan")
     local can_invoke
     for i = #mark, 1, -1 do
       if mark[i][1] == target.id then
@@ -4412,9 +4406,9 @@ local yijin = fk.CreateTriggerSkill{
       if event == fk.GameStart then
         return true
       elseif event == fk.TurnStart then
-        return target == player and #U.getMark(player, "@[:]yijin_owner") == 0
+        return target == player and #player:getTableMark("@[:]yijin_owner") == 0
       else
-        return target == player and player.phase == Player.Play and #U.getMark(player, "@[:]yijin_owner") > 0
+        return target == player and player.phase == Player.Play and #player:getTableMark("@[:]yijin_owner") > 0
       end
     end
   end,
@@ -4455,7 +4449,7 @@ local yijin_active = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 1,
   interaction = function()
-    return UI.ComboBox {choices = U.getMark(Self, "@[:]yijin_owner") }
+    return UI.ComboBox {choices = Self:getTableMark("@[:]yijin_owner") }
   end,
   prompt = function (self)
     return self.interaction.data and Fk:translate(":"..self.interaction.data) or ""

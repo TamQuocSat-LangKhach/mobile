@@ -372,12 +372,19 @@ local qinzheng = fk.CreateTriggerSkill{
     end
   end,
 
-  refresh_events = {fk.PreCardUse, fk.PreCardRespond},
+  refresh_events = {fk.CardUsing, fk.CardResponding, fk.EventLoseSkill},
   can_refresh = function(self, event, target, player, data)
+    if event == fk.EventLoseSkill then
+      return target == player and data == self
+    end
     return player:hasSkill(self) and target == player
   end,
   on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "@" .. self.name, 1)
+    if event == fk.EventLoseSkill then
+      player.room:setPlayerMark(player, "@" .. self.name, 0)
+    else
+      player.room:addPlayerMark(player, "@" .. self.name, 1)
+    end
   end,
 }
 luotong:addSkill(qinzheng)

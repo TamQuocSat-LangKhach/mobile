@@ -784,4 +784,116 @@ Fk:loadTranslationTable{
 
 wenyang:addSkill(mobileChoujue)
 
+local sunyi = General(extension, "sunyi", "wu", 4)
+local zaoli = fk.CreateTriggerSkill{
+  name = "zaoli",
+  anim_type = "drawcard",
+  events = {fk.TurnStart, fk.CardUsing, fk.CardResponding},
+  frequency = Skill.Compulsory,
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.TurnStart then
+      return player:hasSkill(self) and target == player and player:getMark("@zaoli") > 0
+    else
+      return player:hasSkill(self) and target == player and U.IsUsingHandcard(player, data) and player:getMark("@zaoli") < 4
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.TurnStart then
+      local n = player:getMark("@zaoli")
+      local cards = {}
+      if not player:isNude() then
+        cards = room:askForDiscard(player, 1, 9999, true, self.name, false, ".", "#zaoli-discard", true)
+      end
+      room:setPlayerMark(player, "@zaoli", 0)
+      if #cards > 0 then
+        room:throwCard(cards, self.name, player, player)
+      end
+      if not player.dead then
+        player:drawCards(n + #cards, self.name)
+        if n > 2 and not player.dead then
+          room:loseHp(player, 1, self.name)
+        end
+      end
+    else
+      room:addPlayerMark(player, "@zaoli")
+    end
+  end,
+
+  refresh_events = {fk.AfterCardsMove, fk.EventAcquireSkill},
+  can_refresh = function(self, event, target, player, data)
+    if not player:hasSkill(self, true) or player.phase == Player.NotActive or player:isKongcheng() then return false end
+    if event == fk.AfterCardsMove then
+      local room = player.room
+      for _, move in ipairs(data) do
+        if move.to == player.id and move.toArea == Player.Hand then
+          return true
+        end
+      end
+    else
+      return target == player and data == self
+    end
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local room = player.room
+    local record_data = {}
+    if event == fk.AfterCardsMove then
+      record_data = {data}
+    else
+      room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)
+        table.insert(record_data, e.data)
+      end, Player.HistoryTurn)
+    end
+    local handcards = player.player_cards[Player.Hand]
+    local to_mark = {}
+    for _, _data in ipairs(record_data) do
+      for _, move in ipairs(_data) do
+        if move.to == player.id and move.toArea == Player.Hand then
+          for _, info in ipairs(move.moveInfo) do
+            if table.contains(handcards, info.cardId) then
+              table.insertIfNeed(to_mark, info.cardId)
+            end
+          end
+        end
+      end
+    end
+    for _, cid in ipairs(to_mark) do
+      room:setCardMark(Fk:getCardById(cid), "@@zaoli-turn-inhand", 1)
+    end
+  end,
+}
+local zaoli_prohibit = fk.CreateProhibitSkill{
+  name = "#zaoli_prohibit",
+  prohibit_use = function(self, from, card)
+    if from:hasSkill(zaoli) and from.phase == Player.Play then
+      local cardIds = Card:getIdList(card)
+      return table.find(cardIds, function(id)
+        return Fk:getCardById(id):getMark("@@zaoli-turn-inhand") == 0 and table.contains(from.player_cards[Player.Hand], id)
+      end)
+    end
+  end,
+  prohibit_response = function(self, from, card)
+    if from:hasSkill(zaoli) and from.phase == Player.Play then
+      local cardIds = Card:getIdList(card)
+      return table.find(cardIds, function(id)
+        return Fk:getCardById(id):getMark("@@zaoli-turn-inhand") == 0 and table.contains(from.player_cards[Player.Hand], id)
+      end)
+    end
+  end,
+}
+zaoli:addRelatedSkill(zaoli_prohibit)
+sunyi:addSkill(zaoli)
+
+Fk:loadTranslationTable{
+  ["sunyi"] = "孙翊",
+  ["#sunyi"] = "骁悍激躁",
+  ["zaoli"] = "躁厉",
+  [":zaoli"] = "锁定技，①你于出牌阶段内只能使用或打出本回合进入你手牌区的牌；②当你使用或打出手牌时，若你的“厉”标记数小于4，你获得1个“厉”标记；③回合开始时，若你有“厉”标记，你移去所有“厉”标记并弃置任意张牌（若有牌则至少弃置一张牌），然后你摸X张牌（X为你移去的“厉”标记数与弃置牌数之和）。若你移去的“厉”标记数大于2，你失去1点体力。",
+
+  ["@@zaoli-turn-inhand"] = "躁厉",
+  ["@zaoli"] = "厉",
+  ["#zaoli-discard"] = "躁厉：选择至少一张牌，你弃置这些牌和所有“厉”，摸等量张牌",
+}
+
+
 return extension

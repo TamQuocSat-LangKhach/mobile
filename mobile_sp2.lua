@@ -1452,6 +1452,10 @@ Fk:loadTranslationTable{
 }
 
 local zhenji = General(extension, "mob_sp__zhenji", "qun", 3, 3, General.Female)
+local zhenjiWin = fk.CreateActiveSkill{ name = "mob_sp__zhenji_win_audio" }
+zhenjiWin.package = extension
+Fk:addSkill(zhenjiWin)
+
 local bojian = fk.CreateTriggerSkill {
   name = "bojian",
   anim_type = "drawcard",
@@ -1594,8 +1598,10 @@ zhenji:addSkill(bojian)
 zhenji:addSkill(jiwei)
 Fk:loadTranslationTable{
   ["mob_sp__zhenji"] = "甄姬",
-  ["#mob_sp__zhenji"] = "",
+  ["#mob_sp__zhenji"] = "明珠锦玉",
   ["illustrator:mob_sp__zhenji"] = "",
+  ["~mob_sp__zhenji"] = "悔入帝王家，万愿皆成空……",
+  ["$mob_sp__zhenji_win_audio"] = "昔见百姓十室九空，更惜今日安居乐业。",
 
   ["bojian"] = "博鉴",
   [":bojian"] = "锁定技，出牌阶段结束时，若你本阶段使用的牌数与花色数与你上个出牌阶段均不同，则你摸两张牌；否则你选择弃牌堆中你本阶段使用过"..
@@ -1608,6 +1614,14 @@ Fk:loadTranslationTable{
   ["#bojian-choose"] = "博鉴：将%arg交给一名角色",
   ["#jiwei-choice"] = "济危：请选择一种颜色，将此颜色的手牌分配给其他角色",
   ["#jiwei-give"] = "济危：请将%arg手牌分配给其他角色",
+
+  ["$bojian1"] = "闻古者贤女，未有不学前世成败而以为己诫。",
+  ["$bojian2"] = "视字辄识，方知何为礼义。",
+
+  ["$jiwei1"] = "乱世之宝，非金银田产，而在仁心。",
+  ["$jiwei2"] = "匹夫怀璧为罪，更况吾豪门大族。",
+  ["$jiwei3"] = "左右乡邻，当共力时艰。",
+  ["$jiwei4"] = "民不逢时，吾又何忍视其饥苦。",
 }
 
 return extension

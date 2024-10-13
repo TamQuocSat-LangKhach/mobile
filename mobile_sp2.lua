@@ -104,7 +104,7 @@ local luanqun = fk.CreateActiveSkill{
     if choice ~= "Cancel" then
       room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
     end
-    local mark = U.getMark(player, self.name)
+    local mark = player:getTableMark(self.name)
     for _, p in ipairs(targets) do
       if not p.dead and p:getMark("luanqun-tmp") ~= 0 then
         local card = Fk:getCardById(p:getMark("luanqun-tmp"))
@@ -135,7 +135,7 @@ local luanqun_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.TurnStart then
-      local mark = U.getMark(player, "luanqun")
+      local mark = player:getTableMark("luanqun")
       table.removeOne(mark, target.id)
       room:setPlayerMark(player, "luanqun", mark)
       room:setPlayerMark(target, "luanqun"..player.id.."-turn", 1)
@@ -187,55 +187,37 @@ local huban = General(extension, "mobile__huban", "wei", 4)
 local yilie = fk.CreateTriggerSkill{
   name = "mobile__yilie",
   frequency = Skill.Compulsory,
-  events = {fk.GameStart},
+  events = {fk.GameStart, fk.DamageInflicted, fk.Damage, fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and table.find(player.room.alive_players, function(p) return p ~= player end)
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = room:askForChoosePlayers(
-      player,
-      table.map(room:getOtherPlayers(player), Util.IdMapper),
-      1,
-      1,
-      "#mobile__yilie-choose",
-      self.name,
-      false
-    )[1]
-
-    local toPlayer = room:getPlayerById(to)
-    local yiliePlayers = U.getMark(toPlayer, "@@mobile__yilie")
-    table.insertIfNeed(yiliePlayers, player.id)
-    room:setPlayerMark(toPlayer, "@@mobile__yilie", yiliePlayers)
-  end,
-}
-local yilieDelay = fk.CreateTriggerSkill{
-  name = "#yilie_delay",
-  events = {fk.DamageInflicted, fk.Damage, fk.EventPhaseStart},
-  mute = true,
-  can_trigger = function(self, event, target, player, data)
-    if not player:isAlive() then
-      return false
-    end
-
-    if event == fk.DamageInflicted then
-      return table.contains(U.getMark(target, "@@mobile__yilie"), player.id) and player:getMark("@mobile__yilie_lie") == 0
+    if not player:hasSkill(self) then return false end
+    if event == fk.GameStart then
+      return table.find(player.room.alive_players, function(p) return p ~= player end)
+    elseif event == fk.DamageInflicted then
+      return table.contains(target:getTableMark("@@mobile__yilie"), player.id) and player:getMark("@mobile__yilie_lie") == 0
     elseif event == fk.Damage then
-      if not target then return end
-      return table.contains(U.getMark(target, "@@mobile__yilie"), player.id) and data.to ~= player and player:isWounded()
+      return target and table.contains(target:getTableMark("@@mobile__yilie"), player.id) and data.to ~= player and player:isWounded()
     else
       return target == player and player.phase == Player.Finish and player:getMark("@mobile__yilie_lie") > 0
     end
   end,
-  on_cost = function(self, event, target, player, data)
-    player.room:notifySkillInvoked(player, "mobile__yilie", "support")
-    player:broadcastSkillInvoke("mobile__yilie")
-
-    return true
-  end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.DamageInflicted then
+    if event == fk.GameStart then
+      local tos = room:askForChoosePlayers(
+        player,
+        table.map(room:getOtherPlayers(player), Util.IdMapper),
+        1,
+        1,
+        "#mobile__yilie-choose",
+        self.name,
+        false
+      )
+      local to = room:getPlayerById(tos[1])
+      local yiliePlayers = to:getTableMark("@@mobile__yilie")
+      if table.insertIfNeed(yiliePlayers, player.id) then
+        room:setPlayerMark(to, "@@mobile__yilie", yiliePlayers)
+      end
+    elseif event == fk.DamageInflicted then
       room:setPlayerMark(player, "@mobile__yilie_lie", data.damage)
       return true
     elseif event == fk.Damage then
@@ -247,12 +229,25 @@ local yilieDelay = fk.CreateTriggerSkill{
       })
     else
       player:drawCards(1, self.name)
-      room:loseHp(player, player:getMark("@mobile__yilie_lie"), self.name)
-      room:setPlayerMark(player, "@mobile__yilie_lie", 0)
+      if not player.dead then
+        room:loseHp(player, player:getMark("@mobile__yilie_lie"), self.name)
+        room:setPlayerMark(player, "@mobile__yilie_lie", 0)
+      end
+    end
+  end,
+
+  refresh_events = {fk.BuryVictim, fk.EventLoseSkill},
+  can_refresh = function (self, event, target, player, data)
+    if event == fk.EventLoseSkill and data ~= self then return false end
+    return table.contains(player:getTableMark("@@mobile__yilie"), target.id)
+  end,
+  on_refresh = function (self, event, target, player, data)
+    player.room:removeTableMark(player, "@@mobile__yilie", target.id)
+    if event == fk.EventLoseSkill then
+      player.room:setPlayerMark(target, "@mobile__yilie_lie", 0)
     end
   end,
 }
-yilie:addRelatedSkill(yilieDelay)
 huban:addSkill(yilie)
 Fk:loadTranslationTable{
   ["mobile__huban"] = "胡班",
@@ -263,7 +258,7 @@ Fk:loadTranslationTable{
   "然后防止此伤害；当该角色对其他角色造成伤害后，你回复1点体力；结束阶段开始时，若你有“烈”标记，则你摸一张牌并失去X点体力（X为你的“烈”标记数），" ..
   "然后移去你的所有“烈”标记。",
   ["#yilie_delay"] = "义烈",
-  ["@@mobile__yilie"] = "义烈",
+  ["@@mobile__yilie"] = "被义烈",
   ["@mobile__yilie_lie"] = "烈",
   ["#mobile__yilie-choose"] = "义烈：请选择一名其他角色，你为其抵挡伤害，且其造成伤害后你回复体力",
 
@@ -426,7 +421,7 @@ local zhouxian = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local ids = room:getNCards(3)
-    room:moveCardTo(ids, Card.Processing, nil, fk.ReasonJustMove, self.name)
+    room:moveCardTo(ids, Card.Processing, nil, fk.ReasonJustMove, self.name, nil, true, player.id)
     local types = {}
     for _, id in ipairs(ids) do
       table.insertIfNeed(types, Fk:getCardById(id):getTypeString())
@@ -444,7 +439,7 @@ local zhouxian = fk.CreateTriggerSkill{
     )
 
     local from = room:getPlayerById(data.from)
-    if from:isAlive() then
+    if from:isAlive() and not from:isNude() then
       local toDiscard = room:askForDiscard(
         from,
         1,
@@ -930,7 +925,7 @@ local xuetuV2 = fk.CreateActiveSkill{
     return UI.ComboBox {choices = choices, all_choices = options }
   end,
   can_use = function(self, player)
-    return #U.getMark(player, "xuetu_v2_used-phase") < 2
+    return #player:getTableMark("xuetu_v2_used-phase") < 2
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
@@ -944,7 +939,7 @@ local xuetuV2 = fk.CreateActiveSkill{
     room:notifySkillInvoked(player, self.name, "support")
     local target = room:getPlayerById(effect.tos[1])
 
-    local xuetuUsed = U.getMark(player, "xuetu_v2_used-phase")
+    local xuetuUsed = player:getTableMark("xuetu_v2_used-phase")
     table.insertIfNeed(xuetuUsed, self.interaction.data)
     room:setPlayerMark(player, "xuetu_v2_used-phase", xuetuUsed)
 
@@ -1015,7 +1010,7 @@ local weiming = fk.CreateTriggerSkill{
       return
         target == player and
         player.phase == Player.Play and
-        table.find(room.alive_players, function(p) return p ~= player and not table.contains(U.getMark(p, "@@weiming"), player.id) end)
+        table.find(room.alive_players, function(p) return p ~= player and not table.contains(p:getTableMark("@@weiming"), player.id) end)
     end
 
     return table.contains(player.tag["weimingTargets"] or {}, data.who) or (data.damage and data.damage.from == player)
@@ -1030,7 +1025,7 @@ local weiming = fk.CreateTriggerSkill{
       local targets = table.map(
         table.filter(
           room.alive_players,
-          function(p) return p ~= player and not table.contains(U.getMark(p, "@@weiming"), player.id) end
+          function(p) return p ~= player and not table.contains(p:getTableMark("@@weiming"), player.id) end
         ),
         Util.IdMapper
       )
@@ -1045,12 +1040,12 @@ local weiming = fk.CreateTriggerSkill{
       table.insertIfNeed(weimingTargets, toId)
       player.tag["weimingTargets"] = weimingTargets
 
-      local weimingOwners = U.getMark(to, "@@weiming")
+      local weimingOwners = to:getTableMark("@@weiming")
       table.insertIfNeed(weimingOwners, player.id)
       room:setPlayerMark(to, "@@weiming", weimingOwners)
     else
       for _, p in ipairs(room.alive_players) do
-        local weimingOwners = U.getMark(p, "@@weiming")
+        local weimingOwners = p:getTableMark("@@weiming")
         table.removeOne(weimingOwners, player.id)
         room:setPlayerMark(p, "@@weiming", #weimingOwners > 0 and weimingOwners or 0)
       end
@@ -1225,12 +1220,12 @@ local zujin = fk.CreateViewAsSkill{
     return card
   end,
   before_use = function(self, player)
-    local mark = U.getMark(player, "zujin-turn")
+    local mark = player:getTableMark("zujin-turn")
     table.insert(mark, Fk:cloneCard(self.interaction.data).trueName)
     player.room:setPlayerMark(player, "zujin-turn", mark)
   end,
   enabled_at_play = function(self, player)
-    return not table.contains(U.getMark(player, "zujin-turn"), "slash") and
+    return not table.contains(player:getTableMark("zujin-turn"), "slash") and
       (not player:isWounded() or table.find(Fk:currentRoom().alive_players, function(p)
         return p ~= player and p.hp <= player.hp
       end))
@@ -1240,7 +1235,7 @@ local zujin = fk.CreateViewAsSkill{
       for _, name in ipairs({"slash", "jink", "nullification"}) do
         local card = Fk:cloneCard(name)
         card.skillName = self.name
-        if not table.contains(U.getMark(player, "zujin-turn"), name) and Exppattern:Parse(Fk.currentResponsePattern):match(card) then
+        if not table.contains(player:getTableMark("zujin-turn"), name) and Exppattern:Parse(Fk.currentResponsePattern):match(card) then
           if name == "slash" then
             return not player:isWounded() or table.find(Fk:currentRoom().alive_players, function(p)
               return p.hp < player.hp

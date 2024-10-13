@@ -1185,7 +1185,7 @@ local mobile__mingfa = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.EventPhaseStart then
       player:showCards(self.cost_data)
-      local mark = U.getMark(player, "@$mobile__mingfa_cards")
+      local mark = player:getTableMark("@$mobile__mingfa_cards")
       table.insertIfNeed(mark, self.cost_data[1])
       room:setPlayerMark(player, "@$mobile__mingfa_cards", mark)
     else
@@ -1202,12 +1202,12 @@ local mobile__mingfa_delay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player.phase == Player.Play and #U.getMark(player, "mobile__mingfa-turn") > 0
+    return target == player and player.phase == Player.Play and #player:getTableMark("mobile__mingfa-turn") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local ids = table.filter(U.getMark(player, "mobile__mingfa-turn"), function(id) return table.contains(player:getCardIds("he"), id) end)
+    local ids = table.filter(player:getTableMark("mobile__mingfa-turn"), function(id) return table.contains(player:getCardIds("he"), id) end)
     room:setPlayerMark(player, "mobile__mingfa-turn", 0)
     if #ids == 0 then return end
     local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return player:canPindian(p) end), Util.IdMapper)

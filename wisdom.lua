@@ -1074,7 +1074,7 @@ local lingce = fk.CreateTriggerSkill{
       not data.card:isVirtual() and
       (
         table.contains(zhinang, data.card.trueName) or
-        table.contains(U.getMark(player, "@$dinghan"), data.card.trueName) or
+        table.contains(player:getTableMark("@$dinghan"), data.card.trueName) or
         data.card.trueName == "raid_and_frontal_attack"
       )
   end,

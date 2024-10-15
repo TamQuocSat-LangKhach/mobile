@@ -981,15 +981,13 @@ local beiming = fk.CreateTriggerSkill{
     if #tos == 0 then
       return false
     end
-
-    self.cost_data = tos
+    room:sortPlayersByAction(tos)
+    self.cost_data = {tos = tos}
     return true
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local targets = self.cost_data
-    room:sortPlayersByAction(targets)
-    for _, toId in ipairs(targets) do
+    for _, toId in ipairs(self.cost_data.tos) do
       local to = room:getPlayerById(toId)
       if to:isAlive() then
         local suits = {}
@@ -1061,12 +1059,12 @@ local choumang = fk.CreateTriggerSkill{
       return false
     end
 
-    self.cost_data = choice
+    self.cost_data = {choice = choice, tos = {data.from == player.id and data.to or data.from}}
     return true
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local choice = self.cost_data
+    local choice = self.cost_data.choice
 
     if choice == "beishui" then
       local players = { data.from, data.to }
@@ -1086,7 +1084,8 @@ local choumang = fk.CreateTriggerSkill{
 
     if choice == "beishui" or choice == "choumang_prey" then
       data.extra_data = data.extra_data or {}
-      data.extra_data.choumangPreyPlayers = { player.id, data.from == player.id and data.to or data.from }
+      data.extra_data.choumangPreyPlayers = data.extra_data.choumangPreyPlayers or {}
+      table.insert(data.extra_data.choumangPreyPlayers, { player.id, self.cost_data.tos[1] })
     end
   end,
 }
@@ -1099,14 +1098,16 @@ local choumangDelay = fk.CreateTriggerSkill{
       player:isAlive() and
       data.card.trueName == "slash" and
       (data.extra_data or {}).choumangPreyPlayers and
-      data.extra_data.choumangPreyPlayers[1] == player.id
+      table.find(data.extra_data.choumangPreyPlayers, function(info) return info[1] == player.id end)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
+    local to = table.find(data.extra_data.choumangPreyPlayers, function(info) return info[1] == player.id end)[2]
+    to = room:getPlayerById(to)
     local targets = {}
     for _, p in ipairs(room:getOtherPlayers(player)) do
-      local to = room:getPlayerById(data.extra_data.choumangPreyPlayers[2])
-      if not p:isAllNude() and ((player:isAlive() and player:distanceTo(p) <= 1) or (to:isAlive() and to:distanceTo(p) <= 1)) then
+      if not p:isAllNude() and not p:isRemoved()
+      and ((player:distanceTo(p) <= 1) or (to:isAlive() and to:distanceTo(p) <= 1)) then
         table.insert(targets, p.id)
       end
     end
@@ -1115,9 +1116,9 @@ local choumangDelay = fk.CreateTriggerSkill{
       return false
     end
 
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#choumang_delay-choose", self.name, true)
-    if #to > 0 then
-      self.cost_data = to[1]
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#choumang_delay-choose", self.name, true)
+    if #tos > 0 then
+      self.cost_data = tos[1]
       return true
     end
 
@@ -1132,7 +1133,7 @@ local choumangDelay = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["choumang"] = "仇铓",
   [":choumang"] = "当你使用【杀】指定唯一目标后或当你成为【杀】的唯一目标后，你可以选择一项：1.令此【杀】伤害+1；" ..
-  "2.令此【杀】被抵消后，你获得你与其距离为1以内的一名其他角色区域内的一张牌。背水：弃置你与其装备区里的武器牌（你或其装备区里有武器牌才可选择）。",
+  "2.令此【杀】被抵消后，你可以获得你与其距离为1以内的一名其他角色区域内的一张牌。背水：弃置你与其装备区里的武器牌（你或其装备区里有武器牌才可选择）。",
   ["#choumang_delay"] = "仇铓",
   ["choumang_damage"] = "此【杀】伤害+1",
   ["choumang_prey"] = "此【杀】被抵消后你获得角色牌",

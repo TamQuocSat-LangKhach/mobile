@@ -1207,13 +1207,13 @@ local mobile__xushen = fk.CreateActiveSkill{
   frequency = Skill.Limited,
   can_use = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and player.hp > 0
-    and table.find(Fk:currentRoom().alive_players, function(p) return U.isMale(p) end)
+    and table.find(Fk:currentRoom().alive_players, function(p) return p:isMale() end)
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
     local n = 0
     for _, p in ipairs(room.alive_players) do
-      if U.isMale(p) then
+      if p:isMale() then
         n = n + 1
       end
     end
@@ -2231,7 +2231,7 @@ local taomie = fk.CreateTriggerSkill{
         local id = room:askForCardChosen(player, data.to, "hej", self.name)
         room:obtainCard(player.id, id, false, fk.ReasonPrey)
         if player.dead then return end
-        local targets = table.map(room:getOtherPlayers(data.to), function(p) return p.id end)
+        local targets = table.map(room:getOtherPlayers(data.to), Util.IdMapper)
         if #targets == 0 or room:getCardOwner(id) ~= player or room:getCardArea(id) ~= Card.PlayerHand then return end
         local to = room:askForChoosePlayers(player, targets, 1, 1, "#taomie-choose:::"..Fk:getCardById(id):toLogString(), self.name, true)
         if #to > 0 then
@@ -2791,7 +2791,7 @@ local bingqing = fk.CreateTriggerSkill{
       prompt = "#bingqing-damage"
     end
     if #targets == 0 then return end
-    targets = table.map(targets, function(p) return p.id end)
+    targets = table.map(targets, Util.IdMapper)
     local to = room:askForChoosePlayers(player, targets, 1, 1, prompt, self.name, true)
     if #to > 0 then
       self.cost_data = to[1]

@@ -1847,12 +1847,12 @@ local m_ex__dingpin = fk.CreateActiveSkill{
     if judge.card.color == Card.Black then
       if not target.dead and target.hp > 0 then
         target:drawCards(math.min(3, target.hp))
-        local targetRecorded = U.getMark(player, "m_ex__dingpin_target-turn")
+        local targetRecorded = player:getTableMark("m_ex__dingpin_target-turn")
         table.insert(targetRecorded, target.id)
         room:setPlayerMark(player, "m_ex__dingpin_target-turn", targetRecorded)
       end
     elseif judge.card.suit == Card.Heart then
-      local typesRecorded = U.getMark(player, "m_ex__dingpin_types-turn")
+      local typesRecorded = player:getTableMark("m_ex__dingpin_types-turn")
       table.removeOne(typesRecorded, Fk:getCardById(effect.cards[1]):getTypeString())
       room:setPlayerMark(player, "m_ex__dingpin_types-turn", typesRecorded)
     elseif judge.card.suit == Card.Diamond then
@@ -1887,7 +1887,7 @@ local m_ex__dingpin_record = fk.CreateTriggerSkill{
     end
   end,
   on_refresh = function(self, event, target, player, data)
-    local typesRecorded = U.getMark(player, "m_ex__dingpin_types-turn")
+    local typesRecorded = player:getTableMark("m_ex__dingpin_types-turn")
     table.forEach(self.cost_data, function (type_string)
       table.insertIfNeed(typesRecorded, type_string)
     end)
@@ -2121,7 +2121,7 @@ local m_ex__jiaojin = fk.CreateTriggerSkill{
   events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and data.from and not player:isNude()
-    and (data.from.gender == General.Male or data.from.gender == General.Bigender)
+    and (data.from:isMale())
   end,
   on_cost = function(self, event, target, player, data)
     local cards = player.room:askForDiscard(player, 1, 1, true, self.name, true, ".|.|.|.|.|equip", "#m_ex__jiaojin-discard", true)
@@ -2897,7 +2897,7 @@ local m_ex__anguo = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.GameStart then
-      local targets = table.map(room:getOtherPlayers(player), function(p) return p.id end)
+      local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
       local tos = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__anguo-choose", self.name, false)
       local to
       if #tos > 0 then

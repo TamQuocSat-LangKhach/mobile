@@ -531,7 +531,7 @@ local yizhu = fk.CreateTriggerSkill{
     player:drawCards(2, self.name)
     if player.dead or player:isNude() then return end
     local cards = room:askForCard(player, math.min(#player:getCardIds("he"), 2), 2, true, self.name, false, ".", "#yizhu-card")
-    local mark = U.getMark(player, "yizhu_cards")
+    local mark = player:getTableMark("yizhu_cards")
     local moves = {}
     for _, id in ipairs(cards) do
       table.insertIfNeed(mark, id)
@@ -554,7 +554,7 @@ local yizhu_trigger = fk.CreateTriggerSkill{
   events = {fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill("yizhu") then
-      local mark = U.getMark(player, "yizhu_cards")
+      local mark = player:getTableMark("yizhu_cards")
       if #mark > 0 and target ~= player and #AimGroup:getAllTargets(data.tos) == 1 then
         local cardlist = Card:getIdList(data.card)
         return table.find(cardlist, function(id) return table.contains(mark, id) end)
@@ -570,7 +570,7 @@ local yizhu_trigger = fk.CreateTriggerSkill{
     room:notifySkillInvoked(player, "yizhu", "control")
     room:doIndicate(player.id, {data.to})
     AimGroup:cancelTarget(data, data.to)
-    local mark = U.getMark(player, "yizhu_cards")
+    local mark = player:getTableMark("yizhu_cards")
     local cardlist = Card:getIdList(data.card)
     for _, id in ipairs(Card:getIdList(data.card)) do
       if table.contains(mark, id) then
@@ -582,7 +582,7 @@ local yizhu_trigger = fk.CreateTriggerSkill{
 
   refresh_events = {fk.AfterCardsMove},
   can_refresh = function(self, event, target, player, data)
-    local mark = U.getMark(player, "yizhu_cards")
+    local mark = player:getTableMark("yizhu_cards")
     if #mark > 0 then
       for _, move in ipairs(data) do
         if move.toArea == Card.DiscardPile then
@@ -597,7 +597,7 @@ local yizhu_trigger = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    local mark = U.getMark(player, "yizhu_cards")
+    local mark = player:getTableMark("yizhu_cards")
     for _, move in ipairs(data) do
       if move.toArea == Card.DiscardPile then
         for _, info in ipairs(move.moveInfo) do
@@ -766,12 +766,12 @@ local binglun = fk.CreateActiveSkill{
   card_num = 1,
   target_num = 1,
   prompt = "#binglun",
-  expand_pile = function () return U.getMark(Self, "$RenPile") end,
+  expand_pile = function () return Self:getTableMark("$RenPile") end,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #U.getMark(player, "$RenPile") > 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #player:getTableMark("$RenPile") > 0
   end,
   card_filter = function (self, to_select, selected)
-    return #selected == 0 and table.contains(U.getMark(Self, "$RenPile"), to_select)
+    return #selected == 0 and table.contains(Self:getTableMark("$RenPile"), to_select)
   end,
   target_filter = function(self, to_select, selected)
     return #selected == 0
@@ -786,7 +786,7 @@ local binglun = fk.CreateActiveSkill{
     if choice == "draw1" then
       target:drawCards(1, self.name)
     else
-      local mark = U.getMark(target, self.name)
+      local mark = target:getTableMark(self.name)
       table.insert(mark, player.id)
       room:setPlayerMark(target, self.name, mark)
     end
@@ -797,12 +797,12 @@ local binglun_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.TurnEnd},
   can_trigger = function (self, event, target, player, data)
-    return target == player and #U.getMark(player, "binglun") > 0
+    return target == player and #player:getTableMark("binglun") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
-    local mark = U.getMark(player, "binglun")
+    local mark = player:getTableMark("binglun")
     room:setPlayerMark(player, "binglun", 0)
     for _, pid in ipairs(mark) do
       if player.dead or not player:isWounded() then break end
@@ -934,7 +934,7 @@ local yaohu_trigger = fk.CreateTriggerSkill{
       room:obtainCard(target.id, id, true, fk.ReasonPrey)
       if player.dead or target.dead then return end
       local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
-        return target:inMyAttackRange(p) end), function(p) return p.id end)
+        return target:inMyAttackRange(p) end), Util.IdMapper)
       if #targets == 0 then
         room:setPlayerMark(target, "@@yaohu-phase", player.id)
       else
@@ -1224,10 +1224,10 @@ local youyi = fk.CreateActiveSkill{
   target_num = 0,
   prompt = "#youyi",
   expand_pile = function ()
-    return U.getMark(Self, "$RenPile")
+    return Self:getTableMark("$RenPile")
   end,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #U.getMark(player, "$RenPile") > 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and #player:getTableMark("$RenPile") > 0
   end,
   card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)

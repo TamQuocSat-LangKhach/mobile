@@ -772,9 +772,9 @@ local zhengjing_active = fk.CreateActiveSkill{
   mute = true,
   min_card_num = 1,
   target_num = 1,
-  expand_pile = function() return U.getMark(Self, "zhengjing") end,
+  expand_pile = function() return Self:getTableMark("zhengjing") end,
   card_filter = function(self, to_select, selected)
-    return table.contains(U.getMark(Self, "zhengjing"), to_select)
+    return table.contains(Self:getTableMark("zhengjing"), to_select)
   end,
   target_filter = function(self, to_select, selected, cards)
     return #selected == 0 and #cards > 0
@@ -1379,7 +1379,7 @@ local shidi = fk.CreateTriggerSkill{
   on_refresh = function(self, event, target, player, data)
     data.disresponsiveList = data.disresponsiveList or {}
     if player:getSwitchSkillState(self.name) == fk.SwitchYang then
-      table.insertTable(data.disresponsiveList, table.map(player.room.alive_players, function(p) return p.id end))
+      table.insertTable(data.disresponsiveList, table.map(player.room.alive_players, Util.IdMapper))
     else
       table.insertIfNeed(data.disresponsiveList, player.id)
     end

@@ -2275,7 +2275,7 @@ local m_ex__jianying = fk.CreateViewAsSkill{
     return card
   end,
   enabled_at_play = function(self, player)
-    return player:getMark("m_ex__jianying-used-phase") == 0 and not player:isNude()
+    return player:getMark("m_ex__jianying-used-phase") == 0
   end,
 }
 local m_ex__jianying_trigger = fk.CreateTriggerSkill{
@@ -2284,18 +2284,18 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
   mute = true,
   main_skill = m_ex__jianying,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Play and
+    return target == player and player:hasSkill(m_ex__jianying) and player.phase == Player.Play and
     (data.extra_data or {}).m_ex__jianying_triggerable
   end,
   on_use = function(self, event, target, player, data)
     player:broadcastSkillInvoke(m_ex__jianying.name)
     player.room:notifySkillInvoked(player, m_ex__jianying.name, "drawcard")
-    player:drawCards(1, self.name)
+    player:drawCards(1, m_ex__jianying.name)
   end,
 
   refresh_events = {fk.AfterCardUseDeclared},
   can_refresh = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self, true) and player.phase == Player.Play
+    return target == player and player:hasSkill(m_ex__jianying, true) and player.phase == Player.Play
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room

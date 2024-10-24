@@ -15,7 +15,7 @@ local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
     return user ~= to_select
   end,
   on_effect = function(self, room, effect)
-    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), "raid_and_frontal_attack", "slash,jink", "#RFA-response:" .. effect.from, false, nil, effect)
+    local cardResponded = room:askForResponse(room:getPlayerById(effect.to), "raid_and_frontal_attack", "slash,jink", "#RFA-response:" .. effect.from, true, nil, effect)
 
     if cardResponded then
       room:responseCard({

@@ -103,6 +103,7 @@ local qianlong = fk.CreateTriggerSkill{
         room:handleAddLoseSkills(player, "juejin")
       end
     else
+      room:setPlayerMark(player, "@mobile__qianlong_daoxin", 0)
       local toLose = {
         "-mobile_qianlong__qingzheng",
         "-mobile_qianlong__jiushi",

@@ -4899,7 +4899,6 @@ local changeDaming = function (player, n)
   local mark = type(player:getMark("@daming")) == "string" and 0 or player:getMark("@daming")
   mark = mark + n
   room:setPlayerMark(player, "@daming", mark == 0 and "0" or mark)
-  room:broadcastProperty(player, "MaxCards")
 end
 local daming = fk.CreateTriggerSkill{
   name = "daming",
@@ -4912,11 +4911,10 @@ local daming = fk.CreateTriggerSkill{
   on_use = function (self, event, target, player, data)
     changeDaming (player, 1)
   end,
-  refresh_events = {fk.GameStart, fk.EventAcquireSkill, fk.EventLoseSkill, fk.Deathed},
+
+  refresh_events = {fk.EventAcquireSkill, fk.EventLoseSkill, fk.BuryVictim},
   can_refresh = function(self, event, target, player, data)
-    if event == fk.GameStart then
-      return player:hasSkill(self, true)
-    elseif event == fk.EventAcquireSkill or event == fk.EventLoseSkill then
+    if event == fk.EventAcquireSkill or event == fk.EventLoseSkill then
       return data == self and target == player
     else
       return target == player and player:hasSkill(self, true, true)
@@ -4924,22 +4922,26 @@ local daming = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    local targets = room:getOtherPlayers(player)
-    if event == fk.GameStart or event == fk.EventAcquireSkill then
-      if player:hasSkill(self, true) then
-        table.forEach(targets, function(p)
-          room:handleAddLoseSkills(p, "daming_other&", nil, false, true)
-        end)
+    local targets = room:getOtherPlayers(player, false)
+    if event == fk.EventAcquireSkill then
+      for _, p in ipairs(targets) do
+        room:handleAddLoseSkills(p, "daming_other&", nil, false, true)
       end
-    elseif event == fk.EventLoseSkill or event == fk.Deathed then
-      table.forEach(targets, function(p)
-        room:handleAddLoseSkills(p, "-daming_other&", nil, false, true)
-      end)
+    else
+      if event == fk.EventLoseSkill then
+        room:setPlayerMark(player, "@daming", 0)
+      end
+      if table.every(targets, function(p) return not p:hasSkill(self, true) end) then
+        for _, p in ipairs(targets) do
+          room:handleAddLoseSkills(p, "-daming_other&", nil, false, true)
+        end
+      end
     end
   end,
 }
 local daming_other = fk.CreateActiveSkill{
   name = "daming_other&",
+  prompt = "#daming_other",
   mute = true,
   can_use = function(self, player)
     if player:usedSkillTimes(self.name, Player.HistoryPhase) < 1 and not player:isNude() then
@@ -4987,16 +4989,15 @@ pengyang:addSkill(daming)
 Fk:addSkill(daming_other)
 local xiaoni = fk.CreateViewAsSkill{
   name = "xiaoni",
-  interaction = function()
-    local names = {}
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if (card.trueName == "slash" or(card.type == Card.TypeTrick and card.is_damage_card)) and not card.is_derived and
-        ((Fk.currentResponsePattern == nil and Self:canUse(card)) or
-        (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
-        table.insertIfNeed(names, card.name)
-      end
-    end
+  prompt = "#xiaoni",
+  interaction = function(self)
+    local all_names = U.getAllCardNames("btd")
+    local names = table.filter(all_names, function (name)
+      local card = Fk:cloneCard(name)
+      card.skillName = self.name
+      return Self:canUse(card) and not Self:prohibitUse(card)
+      and (card.trueName == "slash" or (card.type == Card.TypeTrick and card.is_damage_card) or card.name == "lightning")
+    end)
     if #names == 0 then return end
     return UI.ComboBox {choices = names}
   end,
@@ -5011,13 +5012,13 @@ local xiaoni = fk.CreateViewAsSkill{
     return card
   end,
   enabled_at_play = function(self, player)
-    return not player:isNude() and player:usedSkillTimes(self.name, Player.HistoryPhase) < 1 and
-      type(player:getMark("@daming")) == "number" and player:getMark("@daming") > 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) < 1 and
+      tonumber(player:getMark("@daming")) > 0
   end,
 }
 local xiaoni_trigger = fk.CreateTriggerSkill{
   name = "#xiaoni_trigger",
-  refresh_events = {fk.CardUseFinished},
+  refresh_events = {fk.CardUsing},
   can_refresh = function(self, event, target, player, data)
     return player == target and table.contains(data.card.skillNames, "xiaoni")
   end,
@@ -5041,18 +5042,21 @@ Fk:loadTranslationTable{
   ["pengyang"] = "彭羕",
   ["#pengyang"] = "难别菽麦",
   ["illustrator:pengyang"] = "铁杵文化",
+
   ["daming"] = "达命",
   [":daming"] = "①游戏开始时，你获得1点“达命”值；②其他角色的出牌阶段限一次，其可以交给你一张牌，然后你选择另一名其他角色。若后者有相同类型的牌，"..
   "则后者须交给前者一张相同类型的牌且你获得1点“达命”值，否则你将以此法获得的牌交给前者。",
   ["@daming"] = "达命",
-  ["daming_other&"] = "达命[给牌]",
+  ["daming_other&"] = "达命",
   [":daming_other&"] = "出牌阶段限一次，你可以交给彭羕一张牌，然后其选择另一名其他角色。若该角色有相同类型的牌，则该角色须交给你一张相同类型的牌且"..
   "彭羕获得1点“达命”值，否则彭羕将获得的牌交还给你。",
   ["#daming-choose"] = "达命：选择一名其他角色，若其有%arg，则须交给%dest一张%arg且你获得1点“达命”值，否则你将%arg2交给%dest",
   ["#daming-give"] = "达命：你须交给%dest一张%arg",
+  ["#daming_other"] = "达命：你可以交给有“达命”的角色一张牌，令其选择其他角色交给你同类型牌",
   ["xiaoni"] = "嚣逆",
-  [":xiaoni"] = "①出牌阶段限一次，若你的“达命”值大于0，你可以将一张牌当任意一种【杀】或伤害类锦囊牌使用，然后你减少此牌目标数点“达命”值。<br>"..
+  [":xiaoni"] = "①出牌阶段限一次，若你的“达命”值大于0，你可以将一张牌当任意一种【杀】或伤害类锦囊牌使用，并减少此牌目标数点“达命”值。<br>"..
   "②你的手牌上限等于X（X为“达命”值，且至多为你的体力值）。",
+  ["#xiaoni"] = "嚣逆：你可以消耗“达命”值(可减至到负值)将一张牌当伤害牌使用！",
 
   ["$daming1"] = "幸蒙士元斟酌，诣公于葭萌，达命于蜀川。",
   ["$daming2"] = "论治图王，助吾主成就大业。",

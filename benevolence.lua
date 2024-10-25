@@ -34,26 +34,27 @@ local debao = fk.CreateTriggerSkill{
   name = "debao",
   anim_type = "special",
   frequency = Skill.Compulsory,
+  derived_piles = "$huaxin_ren",
   events = {fk.AfterCardsMove, fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
-      if event == fk.AfterCardsMove and #player:getPile("huaxin_ren") < player.maxHp then
+      if event == fk.AfterCardsMove and #player:getPile("$huaxin_ren") < player.maxHp then
         for _, move in ipairs(data) do
           if move.from == player.id and move.to and move.to ~= player.id and move.toArea == Card.PlayerHand then
             return true
           end
         end
       elseif event == fk.EventPhaseStart then
-        return target == player and player.phase == Player.Start and #player:getPile("huaxin_ren") > 0
+        return target == player and player.phase == Player.Start and #player:getPile("$huaxin_ren") > 0
       end
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.AfterCardsMove then
-      player:addToPile("huaxin_ren", room:getNCards(1)[1], false, self.name)
+      player:addToPile("$huaxin_ren", room:getNCards(1)[1], false, self.name)
     else
-      room:obtainCard(player.id, player:getPile("huaxin_ren"), false, fk.ReasonJustMove)
+      room:obtainCard(player.id, player:getPile("$huaxin_ren"), false, fk.ReasonJustMove)
     end
   end,
 }
@@ -62,20 +63,20 @@ local buqi = fk.CreateTriggerSkill{
   mute = true,
   frequency = Skill.Compulsory,
   events = {fk.EnterDying, fk.Deathed},
-  expand_pile = "huaxin_ren",
+  expand_pile = "$huaxin_ren",
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
       if event == fk.EnterDying then
-        return #player:getPile("huaxin_ren") > 1
+        return #player:getPile("$huaxin_ren") > 1
       else
-        return #player:getPile("huaxin_ren") > 0
+        return #player:getPile("$huaxin_ren") > 0
       end
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.EnterDying then
-      local cards = room:askForCard(player, 2, 2, false, self.name, false, ".|.|.|huaxin_ren", "#buqi-invoke", "huaxin_ren")
+      local cards = room:askForCard(player, 2, 2, false, self.name, false, ".|.|.|huaxin_ren", "#buqi-invoke", "$huaxin_ren")
       player:broadcastSkillInvoke(self.name)
       room:notifySkillInvoked(player, self.name, "support")
       room:moveCardTo(cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)
@@ -91,7 +92,7 @@ local buqi = fk.CreateTriggerSkill{
     else
       player:broadcastSkillInvoke(self.name)
       room:notifySkillInvoked(player, self.name, "negative")
-      room:moveCardTo(player:getPile("huaxin_ren"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true,
+      room:moveCardTo(player:getPile("$huaxin_ren"), Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true,
         player.id)
     end
   end,
@@ -110,7 +111,7 @@ Fk:loadTranslationTable{
   ["buqi"] = "不弃",
   [":buqi"] = "锁定技，一名角色进入濒死状态时，你移去两张“仁”，令其回复1点体力。当一名角色死亡后，你移去所有“仁”。",
   ["#renshih"] = "仁仕：你可以将一张手牌交给一名其他角色",
-  ["huaxin_ren"] = "仁",
+  ["$huaxin_ren"] = "仁",
   ["#buqi-invoke"] = "不弃：请移去两张“仁”",
 
   ["$renshih1"] = "吾既从大魏之仕，必当行君子之仁。",

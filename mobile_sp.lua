@@ -112,7 +112,7 @@ local shanxi = fk.CreateTriggerSkill{
     room:throwCard(self.cost_data.cards, self.name, player, player)
     if player.hp < 1 or to.dead or to:isNude() then return end
     local cards = room:askForCardsChosen(player, to, 1, player.hp, "he", self.name, "#mobile__shanxi-cards::"..to.id..":"..player.hp)
-    to:addToPile(self.name, cards, false, self.name)
+    to:addToPile("$mobile__shanxi", cards, false, self.name)
   end,
 }
 local shanxi_delay = fk.CreateTriggerSkill{
@@ -120,11 +120,11 @@ local shanxi_delay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    return #player:getPile("mobile__shanxi") > 0
+    return #player:getPile("$mobile__shanxi") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    player.room:moveCardTo(player:getPile("mobile__shanxi"), Card.PlayerHand, player, fk.ReasonJustMove, "mobile__shanxi")
+    player.room:moveCardTo(player:getPile("$mobile__shanxi"), Card.PlayerHand, player, fk.ReasonJustMove, "mobile__shanxi")
   end,
 }
 shanxi:addRelatedSkill(shanxi_delay)
@@ -145,6 +145,7 @@ Fk:loadTranslationTable{
   "本回合结束时其获得之。",
   ["#mobile__shanxi-choose"] = "闪袭：你可以弃置一张红色基本牌，将一名其他角色的牌扣置于其武将牌上直到回合结束",
   ["#mobile__shanxi-cards"] = "闪袭：将 %dest 至多%arg张牌扣置于其武将牌上直到回合结束",
+  ["$mobile__shanxi"] = "闪袭",
 
   ["$mobile__shanxi1"] = "有进无退，溃敌图克！",
   ["$mobile__shanxi2"] = "速破叛寇，不容敌守！",
@@ -908,16 +909,16 @@ local xugong = General(extension, "mobile__xugong", "wu", 3)
 local mobile__biaozhao = fk.CreateTriggerSkill{
   name = "mobile__biaozhao",
   mute = true,
-  derived_piles = "mobile__biaozhao_message",
+  derived_piles = "$mobile__biaozhao_message",
   events = {fk.EventPhaseStart, fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
     if not player:hasSkill(self) then return false end
     if event == fk.EventPhaseStart then
       return (player.phase == Player.Finish and not player:isNude()) or
-      (player.phase == Player.Start and #player:getPile("mobile__biaozhao_message") > 0)
-    elseif #player:getPile("mobile__biaozhao_message") > 0 then
+      (player.phase == Player.Start and #player:getPile("$mobile__biaozhao_message") > 0)
+    elseif #player:getPile("$mobile__biaozhao_message") > 0 then
       local numbers = {}
-      for _, id in ipairs(player:getPile("mobile__biaozhao_message")) do
+      for _, id in ipairs(player:getPile("$mobile__biaozhao_message")) do
         table.insertIfNeed(numbers, Fk:getCardById(id).number)
       end
       for _, move in ipairs(data) do
@@ -950,11 +951,11 @@ local mobile__biaozhao = fk.CreateTriggerSkill{
     if event == fk.EventPhaseStart then
       room:notifySkillInvoked(player, self.name, "support")
       if player.phase == Player.Finish then
-        player:addToPile("mobile__biaozhao_message", self.cost_data, false, self.name)
+        player:addToPile("$mobile__biaozhao_message", self.cost_data, false, self.name)
       else
         room:moveCards({
           from = player.id,
-          ids = player:getPile("mobile__biaozhao_message"),
+          ids = player:getPile("$mobile__biaozhao_message"),
           toArea = Card.DiscardPile,
           moveReason = fk.ReasonPutIntoDiscardPile,
           skillName = self.name,
@@ -974,7 +975,7 @@ local mobile__biaozhao = fk.CreateTriggerSkill{
       room:notifySkillInvoked(player, self.name, "negative")
       room:moveCards({
         from = player.id,
-        ids = player:getPile("mobile__biaozhao_message"),
+        ids = player:getPile("$mobile__biaozhao_message"),
         toArea = Card.DiscardPile,
         moveReason = fk.ReasonPutIntoDiscardPile,
         skillName = self.name,
@@ -992,7 +993,7 @@ Fk:loadTranslationTable{
   ["#mobile__xugong"] = "独计击流",
   ["mobile__biaozhao"] = "表召",
   [":mobile__biaozhao"] = "结束阶段，你可以将一张牌扣置于武将牌上，称为“表”。当一张与“表”点数相同的牌进入弃牌堆时，你移去“表”并失去1点体力。准备阶段，你移去“表”，然后令一名角色回复1点体力并摸三张牌。",
-  ["mobile__biaozhao_message"] = "表",
+  ["$mobile__biaozhao_message"] = "表",
   ["#mobile__biaozhao-cost"] = "表召：可以将一张牌作为表置于武将牌上",
   ["#mobile__biaozhao-choose"] = "表召：令一名角色回复1点体力并摸三张牌",
 
@@ -2559,8 +2560,8 @@ local mayuanyi = General(extension, "mayuanyi", "qun", 4)
 local jibing = fk.CreateViewAsSkill{
   name = "jibing",
   pattern = "slash,jink",
-  expand_pile = "mayuanyi_bing",
-  derived_piles = "mayuanyi_bing",
+  expand_pile = "$mayuanyi_bing",
+  derived_piles = "$mayuanyi_bing",
   prompt = "#jibing",
   interaction = function()
     local names = {}
@@ -2577,7 +2578,7 @@ local jibing = fk.CreateViewAsSkill{
     return UI.ComboBox {choices = names}
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0 and Self:getPileNameOfId(to_select) == "mayuanyi_bing"
+    return #selected == 0 and Self:getPileNameOfId(to_select) == "$mayuanyi_bing"
   end,
   view_as = function(self, cards)
     if #cards ~= 1 or self.interaction.data == nil then return end
@@ -2598,7 +2599,7 @@ local jibing_trigger = fk.CreateTriggerSkill{
       for _, p in ipairs(player.room.alive_players) do
         table.insertIfNeed(kingdoms, p.kingdom)
       end
-      return #player:getPile("mayuanyi_bing") < #kingdoms
+      return #player:getPile("$mayuanyi_bing") < #kingdoms
     end
   end,
   on_cost = function(self, event, target, player, data)
@@ -2607,7 +2608,7 @@ local jibing_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     player:broadcastSkillInvoke("jibing")
     player.room:notifySkillInvoked(player, "jibing", "special")
-    player:addToPile("mayuanyi_bing", player.room:getNCards(2), false, "jibing")
+    player:addToPile("$mayuanyi_bing", player.room:getNCards(2), false, "jibing")
     return true
   end,
 }
@@ -2661,7 +2662,7 @@ local moucuan = fk.CreateTriggerSkill{
     for _, p in ipairs(player.room.alive_players) do
       table.insertIfNeed(kingdoms, p.kingdom)
     end
-    return #player:getPile("mayuanyi_bing") >= #kingdoms
+    return #player:getPile("$mayuanyi_bing") >= #kingdoms
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -2740,7 +2741,7 @@ Fk:loadTranslationTable{
   [":binghuo"] = "一名角色结束阶段，若你本回合发动〖集兵〗使用或打出过“兵”，你可以令一名角色判定，若结果为黑色，你对其造成1点雷电伤害。",
   ["#jibing"] = "集兵：你可以将一张“兵”当【杀】或【闪】使用或打出",
   ["#jibing-invoke"] = "集兵：是否放弃摸牌，改为获得两张“兵”？",
-  ["mayuanyi_bing"] = "兵",
+  ["$mayuanyi_bing"] = "兵",
   ["#binghuo-choose"] = "兵祸：令一名角色判定，若为黑色，你对其造成1点雷电伤害",
 
   ["$jibing1"] = "集荆、扬精兵，而后共举大义！",

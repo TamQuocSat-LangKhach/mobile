@@ -168,7 +168,7 @@ local m_ex__pojun = fk.CreateTriggerSkill{
       room:doIndicate(player.id, {data.to})
       local to = room:getPlayerById(data.to)
       local cards = room:askForCardsChosen(player, to, 1, to.hp, "he", self.name)
-      to:addToPile(self.name, cards, false, self.name)
+      to:addToPile("$m_ex__pojun", cards, false, self.name)
     else
       data.damage = data.damage + 1
     end
@@ -180,11 +180,11 @@ local m_ex__pojun_delay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    return #player:getPile("m_ex__pojun") > 0
+    return #player:getPile("$m_ex__pojun") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    player.room:moveCardTo(player:getPile("m_ex__pojun"), Player.Hand, player, fk.ReasonPrey, "m_ex__pojun")
+    player.room:moveCardTo(player:getPile("$m_ex__pojun"), Player.Hand, player, fk.ReasonPrey, "m_ex__pojun")
   end,
 }
 
@@ -197,6 +197,7 @@ Fk:loadTranslationTable{
   [":m_ex__pojun"] = "①当你使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值）；若如此做，当前回合结束时，该角色获得这些牌。②当你使用【杀】对手牌数与装备区里的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
 
   ["#m_ex__pojun-invoke"] = "是否对%dest发动 破军",
+  ["$m_ex__pojun"] = "破军",
 
   ["$m_ex__pojun1"] = "犯大吴疆土者，盛必击而破之！",
   ["$m_ex__pojun2"] = "若敢来犯，必叫你大败而归！",

@@ -1236,6 +1236,7 @@ mobileSimazhou:addSkill(bifeng)
 local suwang = fk.CreateTriggerSkill{
   name = "suwang",
   anim_type = "drawcard",
+  derived_piles = "$suwang",
   events = {fk.TurnEnd, fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if not player:hasSkill(self) then
@@ -1278,9 +1279,9 @@ local suwang = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.TurnEnd then
-      player:addToPile("suwang", room:getNCards(1), false, self.name, player.id)
+      player:addToPile("$suwang", room:getNCards(1), false, self.name, player.id)
     else
-      room:obtainCard(player, player:getPile("suwang"), false, fk.ReasonPrey, player.id, self.name)
+      room:obtainCard(player, player:getPile("$suwang"), false, fk.ReasonPrey, player.id, self.name)
       local tos = room:askForChoosePlayers(
         player,
         table.map(room:getOtherPlayers(player), Util.IdMapper),
@@ -1316,6 +1317,7 @@ Fk:loadTranslationTable{
   ["suwang"] = "宿望",
   [":suwang"] = "一名角色的回合结束时，若其于此回合内使用牌时指定过你为目标且你未受到过伤害（若为2v2模式，则改为受到过的伤害值不大于1），" ..
   "则你将牌堆顶一张牌置于你的武将牌上，称为“宿望”；摸牌阶段，若你有“宿望”，则你可以改为获得你的所有“宿望”，然后你可令一名其他角色摸两张牌。",
+  ["$suwang"] = "宿望",
   ["#suwang-invoke"] = "宿望：你可获得你的“宿望”牌，然后可令一名其他角色摸两张牌",
   ["#suwang-choose"] = "宿望：你可令一名其他角色摸两张牌",
 

@@ -173,7 +173,7 @@ local qingjian = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     player:broadcastSkillInvoke("ex__qingjian")
-    player:addToPile(self.name, self.cost_data, false, self.name)
+    player:addToPile("$m_ex__qingjian", self.cost_data, false, self.name)
   end,
 }
 local qingjian_delay = fk.CreateTriggerSkill{
@@ -181,13 +181,13 @@ local qingjian_delay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target.phase == Player.Finish and #player:getPile("m_ex__qingjian") > 0 and #player.room:getOtherPlayers(player) > 0
+    return target.phase == Player.Finish and #player:getPile("$m_ex__qingjian") > 0 and #player.room:getOtherPlayers(player) > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local move = room:askForYiji(player, player:getPile("m_ex__qingjian"), room:getOtherPlayers(player), "m_ex__qingjian",
-    #player:getPile("m_ex__qingjian"), #player:getPile("m_ex__qingjian"), nil, "m_ex__qingjian", true)
+    local move = room:askForYiji(player, player:getPile("$m_ex__qingjian"), room:getOtherPlayers(player), "m_ex__qingjian",
+    #player:getPile("$m_ex__qingjian"), #player:getPile("$m_ex__qingjian"), nil, "m_ex__qingjian", true)
     local cards = room:doYiji(room, move, player.id, "m_ex__qingjian")
     player:broadcastSkillInvoke("ex__qingjian")
     if #cards > 1 and not player.dead then
@@ -208,6 +208,7 @@ Fk:loadTranslationTable{
   "有“清俭”牌，你将这些牌分配给其他角色，若交出的牌大于一张，你摸一张牌。",
   ["#m_ex__qingjian-cost"] = "清俭：你可以将任意张手牌扣置于你的武将牌上",
   ["#m_ex__qingjian_delay"] = "清俭",
+  ["$m_ex__qingjian"] = "清俭",
 }
 
 local huatuo = General(extension, "m_ex__huatuo", "qun", 3)

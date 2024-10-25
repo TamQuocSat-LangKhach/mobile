@@ -759,7 +759,7 @@ local zhengjing = fk.CreateActiveSkill{
     room:setPlayerMark(player, "zhengjing", cards)
     local _, dat = room:askForUseActiveSkill(player, "zhengjing_active", "#zhengjing-give", true)
     if dat then
-      room:getPlayerById(dat.targets[1]):addToPile("zhengxuan_jing", dat.cards, false, self.name, player.id, player.id)
+      room:getPlayerById(dat.targets[1]):addToPile("$zhengxuan_jing", dat.cards, false, self.name, player.id, player.id)
     end
     cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
     if #cards > 0 and not player.dead then
@@ -785,14 +785,14 @@ local zhengjing_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player.phase == Player.Start and #player:getPile("zhengxuan_jing") > 0
+    return target == player and player.phase == Player.Start and #player:getPile("$zhengxuan_jing") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     player:skip(Player.Judge)
     player:skip(Player.Draw)
-    room:moveCardTo(player:getPile("zhengxuan_jing"), Card.PlayerHand, player, fk.ReasonPrey, "zhengjing", nil, false, player.id)
+    room:moveCardTo(player:getPile("$zhengxuan_jing"), Card.PlayerHand, player, fk.ReasonPrey, "zhengjing", nil, false, player.id)
   end,
 }
 Fk:addSkill(zhengjing_active)
@@ -813,7 +813,7 @@ Fk:loadTranslationTable{
   ["#ZhengjingChoice"] = "%from 整理出了 %arg",
   ["zhengjing_active"] = "整经",
   ["#zhengjing-give"] = "整经：你可以将整理出的牌置为一名角色的“经”",
-  ["zhengxuan_jing"] = "经",
+  ["$zhengxuan_jing"] = "经",
   ["#zhengjing_trigger"] = "整经",
 
   ["$zhengjing1"] = "兼采今古，博学并蓄，择善以教之。",
@@ -1196,8 +1196,8 @@ local ganning = General(extension, "mxing__ganning", "qun", 4)
 local jinfan = fk.CreateTriggerSkill{
   name = "jinfan",
   anim_type = "drawcard",
-  expand_pile = "jinfan&",
-  derived_piles = "jinfan&",
+  expand_pile = "$jinfan&",
+  derived_piles = "$jinfan&",
   events = {fk.EventPhaseStart, fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
@@ -1207,7 +1207,7 @@ local jinfan = fk.CreateTriggerSkill{
         for _, move in ipairs(data) do
           if move.from == player.id then
             for _, info in ipairs(move.moveInfo) do
-              if info.fromSpecialName == "jinfan&" then
+              if info.fromSpecialName == "$jinfan&" then
                 return true
               end
             end
@@ -1229,14 +1229,14 @@ local jinfan = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     if event == fk.EventPhaseStart then
-      player:addToPile("jinfan&", self.cost_data, true, self.name)
+      player:addToPile("$jinfan&", self.cost_data, true, self.name)
     else
       local room = player.room
       local suits = {}
       for _, move in ipairs(data) do
         if move.from == player.id then
           for _, info in ipairs(move.moveInfo) do
-            if info.fromArea == Card.PlayerSpecial and info.fromSpecialName == "jinfan&" then
+            if info.fromArea == Card.PlayerSpecial and info.fromSpecialName == "$jinfan&" then
               table.insertIfNeed(suits, Fk:getCardById(info.cardId):getSuitString())
             end
           end
@@ -1258,7 +1258,7 @@ local jinfan_active = fk.CreateActiveSkill{
   min_card_num = 1,
   target_num = 0,
   card_filter = function(self, to_select, selected)
-    if Fk:currentRoom():getCardArea(to_select) == Player.Equip or table.find(Self:getPile("jinfan&"), function(id)
+    if Fk:currentRoom():getCardArea(to_select) == Player.Equip or table.find(Self:getPile("$jinfan&"), function(id)
       return Fk:getCardById(to_select).suit == Fk:getCardById(id).suit end) then return end
     if #selected == 0 then
       return true
@@ -1326,13 +1326,13 @@ Fk:loadTranslationTable{
   ["mxing__ganning"] = "星甘宁",
   ["#mxing__ganning"] = "铃震没羽",
   ["illustrator:mxing__ganning"] = "王强",
-  
+
   ["jinfan"] = "锦帆",
   [":jinfan"] = "弃牌阶段开始时，你可以将任意张手牌置于武将牌上，称为“铃”（每种花色限一张），你可以将“铃”如手牌般使用或打出；当“铃”离开你的武将牌时，"..
   "你从牌堆获得一张同花色的牌。",
   ["sheque"] = "射却",
   [":sheque"] = "一名其他角色的准备阶段，若其装备区有牌，你可以对其使用一张无距离限制的【杀】，此【杀】无视防具。",
-  ["jinfan&"] = "铃",
+  ["$jinfan&"] = "铃",
   ["jinfan_active"] = "锦帆",
   ["#jinfan-invoke"] = "锦帆：你可以将任意张手牌置为“铃”",
   ["#sheque-invoke"] = "射却：你可以对 %dest 使用一张无距离限制且无视防具的【杀】",
@@ -1804,7 +1804,7 @@ local changshiChiyan = fk.CreateTriggerSkill{
     if event == fk.TargetSpecified then
       local to = room:getPlayerById(data.to)
       local cards = room:askForCardsChosen(player, to, 1, 1, "he", self.name)
-      to:addToPile(self.name, cards, false, self.name)
+      to:addToPile("$changshi__chiyan", cards, false, self.name)
     else
       data.damage = data.damage + 1
     end
@@ -1816,11 +1816,11 @@ local changshiChiyanDelay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseChanging},
   can_trigger = function(self, event, target, player, data)
-    return data.to == Player.NotActive and #player:getPile("changshi__chiyan") > 0
+    return data.to == Player.NotActive and #player:getPile("$changshi__chiyan") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    player.room:obtainCard(player.id, player:getPile("changshi__chiyan"), false)
+    player.room:obtainCard(player.id, player:getPile("$changshi__chiyan"), false)
   end,
 }
 Fk:loadTranslationTable{
@@ -1828,6 +1828,7 @@ Fk:loadTranslationTable{
   [":changshi__chiyan"] = "当你使用【杀】指定目标后，你可以将其一张牌扣置于其武将牌旁，该角色于本回合结束时获得此牌；当你使用【杀】对手牌数和"..
   "装备区内的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
   ["#changshi__chiyan-invoke"] = "是否对%dest发动 鸱咽",
+  ["$changshi__chiyan"] = "鸱咽",
   ["$changshi__chiyan1"] = "逆臣乱党，都要受这啄心之刑。",
 }
 

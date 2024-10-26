@@ -1193,8 +1193,8 @@ local ganning = General(extension, "mxing__ganning", "qun", 4)
 local jinfan = fk.CreateTriggerSkill{
   name = "jinfan",
   anim_type = "drawcard",
-  expand_pile = "$jinfan&",
-  derived_piles = "$jinfan&",
+  expand_pile = "jinfan&",
+  derived_piles = "jinfan&",
   events = {fk.EventPhaseStart, fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
@@ -1204,7 +1204,7 @@ local jinfan = fk.CreateTriggerSkill{
         for _, move in ipairs(data) do
           if move.from == player.id then
             for _, info in ipairs(move.moveInfo) do
-              if info.fromSpecialName == "$jinfan&" then
+              if info.fromSpecialName == "jinfan&" then
                 return true
               end
             end
@@ -1226,14 +1226,14 @@ local jinfan = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     if event == fk.EventPhaseStart then
-      player:addToPile("$jinfan&", self.cost_data, true, self.name)
+      player:addToPile("jinfan&", self.cost_data, true, self.name)
     else
       local room = player.room
       local suits = {}
       for _, move in ipairs(data) do
         if move.from == player.id then
           for _, info in ipairs(move.moveInfo) do
-            if info.fromArea == Card.PlayerSpecial and info.fromSpecialName == "$jinfan&" then
+            if info.fromArea == Card.PlayerSpecial and info.fromSpecialName == "jinfan&" then
               table.insertIfNeed(suits, Fk:getCardById(info.cardId):getSuitString())
             end
           end
@@ -1255,7 +1255,7 @@ local jinfan_active = fk.CreateActiveSkill{
   min_card_num = 1,
   target_num = 0,
   card_filter = function(self, to_select, selected)
-    if Fk:currentRoom():getCardArea(to_select) == Player.Equip or table.find(Self:getPile("$jinfan&"), function(id)
+    if Fk:currentRoom():getCardArea(to_select) == Player.Equip or table.find(Self:getPile("jinfan&"), function(id)
       return Fk:getCardById(to_select).suit == Fk:getCardById(id).suit end) then return end
     if #selected == 0 then
       return true
@@ -1329,7 +1329,7 @@ Fk:loadTranslationTable{
   "你从牌堆获得一张同花色的牌。",
   ["sheque"] = "射却",
   [":sheque"] = "一名其他角色的准备阶段，若其装备区有牌，你可以对其使用一张无距离限制的【杀】，此【杀】无视防具。",
-  ["$jinfan&"] = "铃",
+  ["jinfan&"] = "铃",
   ["jinfan_active"] = "锦帆",
   ["#jinfan-invoke"] = "锦帆：你可以将任意张手牌置为“铃”",
   ["#sheque-invoke"] = "射却：你可以对 %dest 使用一张无距离限制且无视防具的【杀】",

@@ -1050,15 +1050,12 @@ local zhilve = fk.CreateActiveSkill{
         playerIds = { targetOne.id, targetTwo.id }
       }
       local command = "AskForMoveCardInBoard"
-      room:notifyMoveFocus(player, command)
-      local result = room:doRequest(player, command, json.encode(data))
-
-      if result == "" then
-        local randomIndex = math.random(1, #cards)
-        result = { cardId = cards[randomIndex], pos = cardsPosition[randomIndex] }
-      else
-        result = json.decode(result)
-      end
+      local req = Request:new(player, command)
+      req:setData(player, data)
+      local randomIndex = math.random(1, #cards)
+      req:setDefaultReply(player, { cardId = cards[randomIndex], pos = cardsPosition[randomIndex] })
+      req.focus_text = self.name
+      local result = req:getResult(player)
 
       local from, to
       if result.pos == 0 then

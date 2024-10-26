@@ -2673,7 +2673,11 @@ local m_ex__yaoming = fk.CreateActiveSkill{
 local m_ex__yaoming_trigger = fk.CreateTriggerSkill{
   name = "#m_ex__yaoming_trigger",
   mute = true,
+  main_skill = m_ex__yaoming,
   events = {fk.Damaged},
+  can_trigger = function (self, event, target, player, data)
+    return target == player and player:hasSkill(m_ex__yaoming)
+  end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -2685,13 +2689,14 @@ local m_ex__yaoming_trigger = fk.CreateTriggerSkill{
 
   refresh_events = {fk.EventAcquireSkill, fk.EventLoseSkill},
   can_refresh = function(self, event, target, player, data)
-    return data == self and target == player
+    return data == m_ex__yaoming and target == player
   end,
   on_refresh = function(self, event, target, player, data)
     if event == fk.EventAcquireSkill then
       U.skillCharged(player, 2, 4)
     else
       U.skillCharged(player, -2, -4)
+      player.room:setPlayerMark(player, "@m_ex__yaoming", 0)
     end
   end,
 }
@@ -2700,7 +2705,7 @@ quancong:addSkill(m_ex__yaoming)
 Fk:loadTranslationTable{
   ["m_ex__quancong"] = "界全琮",
   ["#m_ex__quancong"] = "慕势耀族",
-
+  ---FIXME: 邀名不是蓄力技，等谋诸葛瑾正式上限再测，先按蓄力技处理
   ["m_ex__yaoming"] = "邀名",
   [":m_ex__yaoming"] = "蓄力技（2/4），出牌阶段或当你受到伤害后，你可以减1点“蓄力”值并选择一项：1.弃置手牌数不小于你的一名其他角色的一张牌；"..
   "2.令手牌数不大于你的一名角色摸一张牌。若与你上次选择的选项不同，你获得1点“蓄力”值，并清除已记录的选项。每当你受到1点伤害后，你获得1点“蓄力”值。",

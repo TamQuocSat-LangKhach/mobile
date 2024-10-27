@@ -250,7 +250,7 @@ local fuhaiw = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local targets = room:getOtherPlayers(player)
     room:doIndicate(player.id, table.map(targets, Util.IdMapper))
-    local result = U.askForJointChoice(player, targets, {"mobile__fuhaiw1", "mobile__fuhaiw2"}, self.name,
+    local result = U.askForJointChoice(targets, {"mobile__fuhaiw1", "mobile__fuhaiw2"}, self.name,
       "#mobile__fuhaiw-choice:"..player.id, true)
 
     local n, str = 0, ""

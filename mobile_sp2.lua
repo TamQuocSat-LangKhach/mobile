@@ -52,33 +52,11 @@ local luanqun = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     room:doIndicate(player.id, table.map(room.alive_players, Util.IdMapper))
     local targets = table.filter(room.alive_players, function(p) return not p:isKongcheng() end)
-    local extraData = {
-      num = 1,
-      min_num = 1,
-      include_equip = false,
-      pattern = ".",
-      reason = self.name,
-    }
-    for _, p in ipairs(targets) do
-      p.request_data = json.encode({"choose_cards_skill", "#luanqun-card", true, extraData})
-    end
-    room:notifyMoveFocus(room.alive_players, self.name)
-    room:doBroadcastRequest("AskForUseActiveSkill", targets)
-    for _, p in ipairs(targets) do
-      local id
-      if p.reply_ready then
-        local replyCard = json.decode(p.client_reply).card
-        id = json.decode(replyCard).subcards[1]
-      else
-        id = table.random(p:getCardIds("h"))
-      end
-      room:setPlayerMark(p, "luanqun-tmp", id)
-    end
-
+    local result = U.askForJointCard(targets, 1, 1, false, self.name, false, nil, "#luanqun-card")
     local all_cards = {}
     for _, p in ipairs(targets) do
-      if not p.dead then
-        local id = p:getMark("luanqun-tmp")
+      local id = result[p.id][1]
+      if not p.dead and table.contains(p:getCardIds("h"), id) then
         p:showCards({id})
         if table.contains(p:getCardIds("h"), id) then
           table.insertIfNeed(all_cards, id)
@@ -86,29 +64,19 @@ local luanqun = fk.CreateActiveSkill{
       end
     end
     if player.dead or #all_cards == 0 then return end
-    local my_card = Fk:getCardById(player:getMark("luanqun-tmp"))
+    local my_card = Fk:getCardById(result[player.id][1])
     local available_cards = table.filter(all_cards, function(id) return Fk:getCardById(id).color == my_card.color end)
     table.removeOne(available_cards, my_card.id)
     local maxNum = table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and 4 or 2
-    local cards, choice = U.askforChooseCardsAndChoice(
-      player,
-      available_cards,
-      {"OK"},
-      self.name,
-      "#luanqun-get:::" .. maxNum,
-      {"Cancel"},
-      1,
-      maxNum,
-      all_cards
-    )
+    local cards, choice = U.askforChooseCardsAndChoice(player, available_cards, {"OK"}, self.name,
+      "#luanqun-get:::" .. maxNum, {"Cancel"}, 1, maxNum, all_cards)
     if choice ~= "Cancel" then
       room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
     end
     local mark = player:getTableMark(self.name)
     for _, p in ipairs(targets) do
-      if not p.dead and p:getMark("luanqun-tmp") ~= 0 then
-        local card = Fk:getCardById(p:getMark("luanqun-tmp"))
-        room:setPlayerMark(p, "luanqun-tmp", 0)
+      if not p.dead then
+        local card = Fk:getCardById(result[p.id][1])
         if card.color ~= my_card.color then
           table.insert(mark, p.id)
         end

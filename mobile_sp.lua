@@ -250,35 +250,15 @@ local fuhaiw = fk.CreateActiveSkill{
     local player = room:getPlayerById(effect.from)
     local targets = room:getOtherPlayers(player)
     room:doIndicate(player.id, table.map(targets, Util.IdMapper))
-    for _, p in ipairs(targets) do
-      local choices = {"mobile__fuhaiw1", "mobile__fuhaiw2"}
-      p.request_data = json.encode({choices, choices, self.name, "#mobile__fuhaiw-choice:"..player.id})
-    end
-    room:notifyMoveFocus(targets, self.name)
-    room:doBroadcastRequest("AskForChoice", targets)
-
-    for _, p in ipairs(targets) do
-      local choice
-      if p.reply_ready then
-        choice = p.client_reply
-      else
-        p.client_reply = "mobile__fuhaiw1"
-        choice = "mobile__fuhaiw1"
-      end
-      room:sendLog{
-        type = "#mobile__fuhaiw-quest",
-        from = p.id,
-        arg = choice,
-        toast = true,
-      }
-    end
+    local result = U.askForJointChoice(player, targets, {"mobile__fuhaiw1", "mobile__fuhaiw2"}, self.name,
+      "#mobile__fuhaiw-choice:"..player.id, true)
 
     local n, str = 0, ""
     for _, p in ipairs(targets) do
       if str == "" then
-        str = p.client_reply
+        str = result[p.id]
       end
-      if p.client_reply == str then
+      if result[p.id] == str then
         n = n + 1
       else
         break
@@ -301,7 +281,6 @@ Fk:loadTranslationTable{
   ["mobile__fuhaiw1"] = "潮起",
   ["mobile__fuhaiw2"] = "潮落",
   ["#mobile__fuhaiw-choice"] = "浮海：选择一项，有可能令 %src 摸牌",
-  ["#mobile__fuhaiw-quest"] = "%from 选择了 “%arg”",
 
   ["$mobile__fuhaiw1"] = "宦海沉浮，生死难料！",
   ["$mobile__fuhaiw2"] = "跨海南征，波涛起浮。",

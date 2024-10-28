@@ -1380,7 +1380,7 @@ local tamo = fk.CreateTriggerSkill{
           local p = room:getPlayerById(pid)
           return p.role_shown and p.role == "lord"
         end)
-      elseif table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) then
+      elseif room:isGameMode("1v2_mode") then
         local seat3Player = table.find(availablePlayerIds, function(pid)
           return room:getPlayerById(pid).seat == 3
         end)
@@ -1407,7 +1407,11 @@ local tamo = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    room.players = table.map(self.cost_data, function(playerId) return room:getPlayerById(playerId) end)
+    local players = table.simpleClone(room.players)
+    for seat, playerId in pairs(self.cost_data) do
+      players[seat] = room:getPlayerById(playerId)
+    end
+    room.players = players
     local player_circle = {}
     for i = 1, #room.players do
       room.players[i].seat = i

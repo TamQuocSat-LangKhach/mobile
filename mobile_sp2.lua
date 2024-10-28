@@ -481,7 +481,7 @@ local shoufa = fk.CreateTriggerSkill{
         table.find(
           room.alive_players,
           function(p)
-            local distance = table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode) and 0 or 1
+            local distance = room:isGameMode("1v2_mode") and 0 or 1
             return p ~= player and p:distanceTo(player) > distance
           end
         )
@@ -489,7 +489,7 @@ local shoufa = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local isDoudizhu = table.contains({"m_1v2_mode", "brawl_mode"}, room.settings.gameMode)
+    local isDoudizhu = room:isGameMode("1v2_mode")
     local targets = table.filter(
       room.alive_players,
       function(p)

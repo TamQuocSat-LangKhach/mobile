@@ -67,7 +67,7 @@ local luanqun = fk.CreateActiveSkill{
     local my_card = Fk:getCardById(result[player.id][1])
     local available_cards = table.filter(all_cards, function(id) return Fk:getCardById(id).color == my_card.color end)
     table.removeOne(available_cards, my_card.id)
-    local maxNum = table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and 4 or 2
+    local maxNum = room:isGameMode("role_mode") and 4 or 2
     local cards, choice = U.askforChooseCardsAndChoice(player, available_cards, {"OK"}, self.name,
       "#luanqun-get:::" .. maxNum, {"Cancel"}, 1, maxNum, all_cards)
     if choice ~= "Cancel" then

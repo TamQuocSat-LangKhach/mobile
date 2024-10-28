@@ -502,7 +502,7 @@ local cuizhen = fk.CreateTriggerSkill{
     local room = player.room
     if player:hasSkill(self) then
       if event == fk.GameStart then
-        -- return table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and
+        -- return room:isGameMode("role_mode") and
         return table.find(room:getOtherPlayers(player), function(p)
           return #p:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
         end)
@@ -520,7 +520,7 @@ local cuizhen = fk.CreateTriggerSkill{
       local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
         return #p:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
       end), Util.IdMapper)
-      --local max = table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) and 3 or 2
+      --local max = room:isGameMode("role_mode") and 3 or 2
       local tos = room:askForChoosePlayers(player, targets, 1, 3 , "#cuizhen-choose", self.name)
       if #tos > 0 then
         self.cost_data = tos

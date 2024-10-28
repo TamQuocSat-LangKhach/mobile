@@ -1375,7 +1375,7 @@ local tamo = fk.CreateTriggerSkill{
     if room:askForSkillInvoke(player, self.name, nil, "#tamo-invoke") then
       local availablePlayerIds = table.map(table.filter(room.players, function(p) return p.rest > 0 or not p.dead end), Util.IdMapper)
       local disabledPlayerIds = {}
-      if table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) then
+      if room:isGameMode("role_mode") then
         disabledPlayerIds = table.filter(availablePlayerIds, function(pid)
           local p = room:getPlayerById(pid)
           return p.role_shown and p.role == "lord"
@@ -1484,7 +1484,7 @@ local zhimeng = fk.CreateTriggerSkill{
       table.find(room.alive_players, function(p)
         return
           p ~= player and
-          (table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) or
+          (room:isGameMode("role_mode") or
           p:getHandcardNum() <= player:getHandcardNum() + 1)
       end)
   end,
@@ -1494,7 +1494,7 @@ local zhimeng = fk.CreateTriggerSkill{
       table.filter(room.alive_players, function(p)
         return
           p ~= player and
-          (table.contains({"aaa_role_mode", "aab_role_mode", "vanished_dragon"}, room.settings.gameMode) or
+          (room:isGameMode("role_mode") or
           p:getHandcardNum() <= player:getHandcardNum() + 1)
       end),
       Util.IdMapper

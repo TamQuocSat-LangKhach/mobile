@@ -1779,7 +1779,7 @@ local mobile__zhouxuan_trigger = fk.CreateTriggerSkill{
       player:broadcastSkillInvoke("mobile__zhouxuan")
       room:notifySkillInvoked(player, "mobile__zhouxuan", "drawcard")
       local cards = room:getNCards(3)
-      U.askForDistribution(player, cards, nil, self.name, 3, 3, nil, cards)
+      room:askForYiji(player, cards, nil, self.name, 3, 3, nil, cards)
     end
   end,
 }

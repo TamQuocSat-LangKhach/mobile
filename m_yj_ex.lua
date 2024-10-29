@@ -153,8 +153,8 @@ local m_ex__pojun = fk.CreateTriggerSkill{
         local to = player.room:getPlayerById(data.to)
         return not to.dead and to.hp > 0 and not to:isNude()
       elseif event == fk.DamageCaused then
-        return U.damageByCardEffect(player.room)
-        and #player:getCardIds(Player.Hand) >= #data.to:getCardIds(Player.Hand) and
+        return player.room.logic:damageByCardEffect()
+        and player:getHandcardNum() >= data.to:getHandcardNum() and
         #player:getCardIds(Player.Equip) >= #data.to:getCardIds(Player.Equip)
       end
     end

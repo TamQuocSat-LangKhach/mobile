@@ -1236,16 +1236,19 @@ local jiejianw = fk.CreateTriggerSkill{
     end
   end,
   on_cost = function(self, event, target, player, data)
+    local room = player.room
     if event == fk.EventPhaseStart then
       local cards = player:getCardIds("h")
-      local result = U.askForDistribution(player, cards, player.room:getOtherPlayers(player), self.name, 0, #cards,
+      local result = room:askForYiji(player, cards, room:getOtherPlayers(player), self.name, 0, #cards,
         "#jiejianw-give", nil, true)
-      if result then
-        self.cost_data = result
-        return true
+      for _, ids in pairs(result) do
+        if #ids > 0 then
+          self.cost_data = result
+          return true
+        end
       end
     else
-      return player.room:askForSkillInvoke(player, self.name, nil, "#jiejianw-invoke::"..target.id..":"..data.card:toLogString())
+      return room:askForSkillInvoke(player, self.name, nil, "#jiejianw-invoke::"..target.id..":"..data.card:toLogString())
     end
   end,
   on_use = function(self, event, target, player, data)
@@ -1257,7 +1260,7 @@ local jiejianw = fk.CreateTriggerSkill{
           room:setPlayerMark(p, "@jiejianw", tostring(math.max(p.hp, 0)))
         end
       end
-      U.doDistribution(room, self.cost_data, player.id, self.name)
+      room:doYiji(self.cost_data, player.id, self.name)
     else
       room:doIndicate(data.from, {player.id})
       AimGroup:cancelTarget(data, target.id)

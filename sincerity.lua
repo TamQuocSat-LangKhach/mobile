@@ -643,7 +643,7 @@ local xianghai = fk.CreateFilterSkill{
 local xianghai_maxcards = fk.CreateMaxCardsSkill{
   name = "#xianghai_maxcards",
   correct_func = function(self, player)
-    return - #table.filter(Fk:currentRoom().alive_players, function(p) return p:hasSkill(xianghai.name) and p ~= player end)
+    return - #table.filter(Fk:currentRoom().alive_players, function(p) return p:hasSkill(xianghai) and p ~= player end)
   end,
 }
 local chuhai = fk.CreateActiveSkill{
@@ -712,7 +712,7 @@ local chuhai_trigger = fk.CreateTriggerSkill{
   events = {fk.AfterCardsMove, fk.PindianResultConfirmed},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(chuhai.name) or player:getQuestSkillState(chuhai.name) then return false end
+    if not player:hasSkill(chuhai) or player:getQuestSkillState(chuhai.name) then return false end
     if event == fk.AfterCardsMove and #player.player_cards[Player.Equip] > 2 then
       for _, move in ipairs(data) do
         if move.to and move.to == player.id and move.toArea == Player.Equip then
@@ -858,7 +858,7 @@ local zhangming_trigger = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(zhangming.name) and
+    return target == player and player:hasSkill(zhangming) and
       (data.card.trueName == "slash" or data.card:isCommonTrick()) and data.card.suit == Card.Club
   end,
   on_use = function(self, event, target, player, data)
@@ -1394,7 +1394,7 @@ local pinghe = fk.CreateTriggerSkill{
     local tos, cardId = room:askForChooseCardAndPlayers(player, table.map(room:getOtherPlayers(player, false), function(p)
       return p.id end), 1, 1, ".|.|.|hand", "#pinghe-give", self.name, false, true )
     room:obtainCard(tos[1], cardId, false, fk.ReasonGive)
-    if player:hasSkill(yingba.name, true) and data.from:isAlive() then
+    if player:hasSkill(yingba, true) and data.from:isAlive() then
       room:addPlayerMark(data.from, "@yingba_pingding")
     end
     return true

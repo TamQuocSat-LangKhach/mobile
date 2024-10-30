@@ -444,8 +444,8 @@ local fangzong_prohibit = fk.CreateProhibitSkill{
   frequency = Skill.Compulsory,
   is_prohibited = function(self, from, to, card)
     return from and from:inMyAttackRange(to) and card.is_damage_card and
-      ((from:hasSkill(fangzong.name) and from:getMark("@@fangzong_invalidity-turn") == 0 and from.phase == Player.Play) or
-      (to:hasSkill(fangzong.name) and to:getMark("@@fangzong_invalidity-turn") == 0))
+      ((from:hasSkill(fangzong) and from:getMark("@@fangzong_invalidity-turn") == 0 and from.phase == Player.Play) or
+      (to:hasSkill(fangzong) and to:getMark("@@fangzong_invalidity-turn") == 0))
   end,
 }
 
@@ -497,7 +497,7 @@ local xizhan = fk.CreateTriggerSkill{
         room:useVirtualCard("fire__slash", nil, player, target, self.name, false)
       end
     else
-      if player:hasSkill(fangzong.name) then
+      if player:hasSkill(fangzong) then
         room:notifySkillInvoked(player, self.name, "defensive")
         player:broadcastSkillInvoke(self.name, 1)
       else

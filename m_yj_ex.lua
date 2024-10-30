@@ -333,7 +333,7 @@ local m_ex__jinjiu_trigger = fk.CreateTriggerSkill{
   events = {fk.DamageInflicted},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(m_ex__jinjiu.name) and data.card and data.card.trueName == "slash" then
+    if target == player and player:hasSkill(m_ex__jinjiu) and data.card and data.card.trueName == "slash" then
       local parentUseData = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
       if parentUseData then
         local drankBuff = parentUseData and (parentUseData.data[1].extra_data or {}).drankBuff or 0
@@ -356,7 +356,7 @@ local m_ex__jinjiu_prohibit = fk.CreateProhibitSkill{
   prohibit_use = function(self, player, card)
     if card.name == "analeptic" then
       return table.find(Fk:currentRoom().alive_players, function(p)
-        return p.phase ~= Player.NotActive and p:hasSkill(m_ex__jinjiu.name) and p ~= player
+        return p.phase ~= Player.NotActive and p:hasSkill(m_ex__jinjiu) and p ~= player
       end)
     end
   end,
@@ -493,7 +493,7 @@ local m_ex__jiushi_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.Damaged, fk.TurnedOver},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(m_ex__jiushi.name) then
+    if target == player and player:hasSkill(m_ex__jiushi) then
       if event == fk.Damaged then
         return not player.faceup and not (data.extra_data or {}).m_ex__jiushicheck
       elseif event == fk.TurnedOver then

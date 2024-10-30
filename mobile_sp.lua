@@ -4022,7 +4022,7 @@ local quanfeng = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 then
       if event == fk.Deathed then
-        return player:hasSkill(hongyi.name, true) and not table.contains(player.room:getBanner('memorializedPlayers') or {}, target.id)
+        return player:hasSkill(hongyi, true) and not table.contains(player.room:getBanner('memorializedPlayers') or {}, target.id)
       else
         return player == target and player.dying and player.hp < 1
       end

@@ -642,7 +642,7 @@ local gonghuan = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and target ~= player and target:hasSkill(self.name, true) and not data.gonghuan and
+    return player:hasSkill(self) and target ~= player and target:hasSkill(self, true) and not data.gonghuan and
       target.hp < player.hp and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
   end,
   on_use = function(self, event, target, player, data)

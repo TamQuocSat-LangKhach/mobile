@@ -72,7 +72,7 @@ local mobile_zhengsu_recorder = fk.CreateTriggerSkill{
     elseif event == fk.AfterCardsMove then
       local mark = player:getTableMark("@zhengsu_mingzhi-turn")
       for _, move in ipairs(data) do
-        if move.from == player.id and move.skillName == "game_rule" then
+        if move.from == player.id and move.skillName == "phase_discard" then
           for _, info in ipairs(move.moveInfo) do
             if info.fromArea == Card.PlayerHand then
               local suit = Fk:getCardById(info.cardId):getSuitString(true)

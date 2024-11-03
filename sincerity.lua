@@ -1635,6 +1635,19 @@ local powei = fk.CreateTriggerSkill{
       end
     end
   end,
+
+  on_lose = function (self, player)
+    local room = player.room
+    if table.every(room.alive_players, function (p)
+      return not p:hasSkill(self, true)
+    end) then
+      for _, p in ipairs(room.alive_players) do
+        if p:getMark("@@powei_wei") > 0 then
+          room:setPlayerMark(p, "@@powei_wei", 0)
+        end
+      end
+    end
+  end
 }
 Fk:loadTranslationTable{
   ["powei"] = "破围",

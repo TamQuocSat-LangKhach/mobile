@@ -662,7 +662,7 @@ local daoshu = fk.CreateActiveSkill{
       return false
     end
 
-    if table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, room.room_settings.gameMode) then
+    if Fk:currentRoom():isGameMode("2v2_mode") or Fk:currentRoom():isGameMode("1v2_mode") then
       return target.role ~= Self.role
     end
 

@@ -642,8 +642,7 @@ local zuoyou = fk.CreateActiveSkill{
     else
       return
         #selected == 0 and
-        (
-          table.contains({"m_2v2_mode"}, Fk:currentRoom().room_settings.gameMode) or
+        ( Fk:currentRoom():isGameMode("2v2_mode") or
           Fk:currentRoom():getPlayerById(to_select):getHandcardNum() > 0
         )
     end

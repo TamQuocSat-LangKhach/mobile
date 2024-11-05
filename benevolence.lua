@@ -76,7 +76,7 @@ local buqi = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.EnterDying then
-      local cards = room:askForCard(player, 2, 2, false, self.name, false, ".|.|.|huaxin_ren", "#buqi-invoke", "$huaxin_ren")
+      local cards = room:askForCard(player, 2, 2, false, self.name, false, ".|.|.|$huaxin_ren", "#buqi-invoke", "$huaxin_ren")
       player:broadcastSkillInvoke(self.name)
       room:notifySkillInvoked(player, self.name, "support")
       room:moveCardTo(cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, self.name, nil, true, player.id)

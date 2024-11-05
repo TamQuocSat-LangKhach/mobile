@@ -820,15 +820,15 @@ local chenjie = fk.CreateTriggerSkill{
     return player:hasSkill(self) and not player:isNude()
   end,
   on_cost = function(self, event, target, player, data)
-    local card = player.room:askForResponse(player, "", ".|.|"..data.card:getSuitString(),
-      "#chenjie-invoke::"..target.id..":"..data.card:getSuitString(true)..":"..data.reason, true)
-    if card then
-      self.cost_data = card
+    local cards = player.room:askForCard(player, 1, 1, true, self.name, true, ".|.|"..data.card:getSuitString(),
+    "#chenjie-invoke::"..target.id..":"..data.card:getSuitString(true)..":"..data.reason)
+    if #cards > 0 then
+      self.cost_data = cards[1]
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:retrial(self.cost_data, player, data, self.name, false)
+    player.room:retrial(Fk:getCardById(self.cost_data), player, data, self.name)
     if not player.dead then
       player:drawCards(2, self.name)
     end

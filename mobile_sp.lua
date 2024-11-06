@@ -1674,8 +1674,9 @@ local mobile__shuaiyan = fk.CreateTriggerSkill{
   anim_type = "control",
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and player.phase == Player.Discard and
-      table.find(player.room:getOtherPlayers(player), function(p) return not p:isNude() end)
+  return target == player and player:hasSkill(self) and player.phase == Player.Discard and
+    player:getHandcardNum() > 1 and 
+    table.find(player.room:getOtherPlayers(player), function(p) return not p:isNude() end)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room

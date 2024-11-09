@@ -144,7 +144,6 @@ Fk:loadTranslationTable{
 }
 
 local miheng = General(extension, "miheng", "qun", 3)
-miheng.hidden = true
 local mobile__kuangcai = fk.CreateTriggerSkill{
   name = "mobile__kuangcai",
   anim_type = "drawcard",
@@ -154,16 +153,7 @@ local mobile__kuangcai = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local original_timeout = room.timeout
-    local phase = room.logic:getCurrentEvent():findParent(GameEvent.Phase)
-    if phase ~= nil then
-      phase:addCleaner(function()
-        room.timeout = original_timeout
-      end)
-    end
     room:setPlayerMark(player, "mobile__kuangcai_timeout-phase", 5)
-    room.timeout = 5
-    --- FIXME: 会修改其他角色的响应时间，且qml框会按原时间关闭
   end,
 
   refresh_events = {fk.StartPlayCard},
@@ -171,7 +161,7 @@ local mobile__kuangcai = fk.CreateTriggerSkill{
     return target == player and player:usedSkillTimes(self.name, Player.HistoryPhase) > 0
   end,
   on_refresh = function (self, event, target, player, data)
-    player.room.timeout = player:getMark("mobile__kuangcai_timeout-phase")
+    data.timeout = player:getMark("mobile__kuangcai_timeout-phase")
   end,
 }
 local mobile__kuangcai_targetmod = fk.CreateTargetModSkill{
@@ -195,7 +185,6 @@ local mobile__kuangcai_trigger = fk.CreateTriggerSkill{
     local room = player.room
     player:drawCards(1, "mobile__kuangcai")
     room:removePlayerMark(player, "mobile__kuangcai_timeout-phase", 1)
-    room.timeout = player:getMark("mobile__kuangcai_timeout-phase")
   end,
 }
 local mobile__shejian = fk.CreateTriggerSkill{
@@ -251,7 +240,7 @@ Fk:loadTranslationTable{
   ["illustrator:miheng"] = "Thinking",
 
   ["mobile__kuangcai"] = "狂才",
-  [":mobile__kuangcai"] = "出牌阶段开始时，你可以令你此阶段内的主动出牌时间变为5秒，响应出牌时间也变为5秒。若如此做，本阶段你使用牌无距离次数限制，"..
+  [":mobile__kuangcai"] = "出牌阶段开始时，你可以令你此阶段内的主动出牌时间变为5秒，响应出牌时间也变为5秒（注：实际上响应事件难以修改所以没做）。若如此做，本阶段你使用牌无距离次数限制，"..
   "且当你使用牌时，你摸一张牌且主动出牌时间-1秒（每阶段至多以此法摸五张牌）。",
   ["mobile__shejian"] = "舌剑",
   [":mobile__shejian"] = "弃牌阶段结束时，若你本阶段弃置过至少两张牌且花色均不相同，你可以弃置一名其他角色一张牌。",

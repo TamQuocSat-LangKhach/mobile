@@ -181,15 +181,17 @@ local qingjian_delay = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    return target.phase == Player.Finish and #player:getPile("$m_ex__qingjian") > 0 and #player.room:getOtherPlayers(player) > 0
+    return target.phase == Player.Finish and #player:getPile("$m_ex__qingjian") > 0
+    and #player.room:getOtherPlayers(player, false) > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local move = room:askForYiji(player, player:getPile("$m_ex__qingjian"), room:getOtherPlayers(player), "m_ex__qingjian",
-    #player:getPile("$m_ex__qingjian"), #player:getPile("$m_ex__qingjian"), nil, "m_ex__qingjian", true)
-    local cards = room:doYiji(move, player.id, "m_ex__qingjian")
+    local cards = player:getPile("$m_ex__qingjian")
+    local move = room:askForYiji(player, cards, room:getOtherPlayers(player), "m_ex__qingjian",
+    #cards, #cards, nil, "$m_ex__qingjian", true)
     player:broadcastSkillInvoke("ex__qingjian")
+    cards = room:doYiji(move, player.id, "m_ex__qingjian")
     if #cards > 1 and not player.dead then
       player:drawCards(1, "m_ex__qingjian")
     end

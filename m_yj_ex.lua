@@ -1369,7 +1369,8 @@ local m_ex__qiaoshui_delay = fk.CreateTriggerSkill{
     local targets = room:getUseExtraTargets(data)
     table.insertTableIfNeed(targets, TargetGroup:getRealTargets(data.tos))
     if #targets == 0 then return false end
-    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__qiaoshui-choose:::"..data.card:toLogString(), self.name, true)
+    local tos = room:askForChoosePlayers(player, targets, 1, 1, "#m_ex__qiaoshui-choose:::"..data.card:toLogString(),
+    self.name, true, false, "addandcanceltarget_tip", TargetGroup:getRealTargets(data.tos))
     if #tos > 0 then
       local to = tos[1]
       if TargetGroup:includeRealTargets(data.tos, to) then

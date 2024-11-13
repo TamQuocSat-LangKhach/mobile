@@ -7,9 +7,8 @@ Fk:loadTranslationTable{
 
 local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
   name = "raid_and_frontal_attack_skill",
-  target_filter = function(self, to_select, selected, _, card)
-    return #selected == 0 and Self ~= Fk:currentRoom():getPlayerById(to_select)
-  end,
+  can_use = Util.CanUse,
+  target_filter = Util.TargetFilter,
   target_num = 1,
   mod_target_filter = function(self, to_select, selected, user, card)
     return user ~= to_select

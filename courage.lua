@@ -444,8 +444,7 @@ local fangzong_prohibit = fk.CreateProhibitSkill{
   frequency = Skill.Compulsory,
   is_prohibited = function(self, from, to, card)
     return from and from:inMyAttackRange(to) and card.is_damage_card and
-      ((from:hasSkill(fangzong) and from:getMark("@@fangzong_invalidity-turn") == 0 and from.phase == Player.Play) or
-      (to:hasSkill(fangzong) and to:getMark("@@fangzong_invalidity-turn") == 0))
+      ((from:hasSkill(fangzong) and from.phase == Player.Play) or to:hasSkill(fangzong))
   end,
 }
 
@@ -456,7 +455,6 @@ Fk:loadTranslationTable{
   [":fangzong"] = "锁定技，出牌阶段，你使用伤害牌不能指定你攻击范围内的角色为目标；攻击范围内含有你的其他角色使用伤害牌不能指定你为目标。"..
   "结束阶段，你将手牌摸至X张（X为场上存活人数）。",
 
-  ["@@fangzong_invalidity-turn"] = "芳踪失效",
   ["$fangzong1"] = "一战结缘难再许，痛为大义斩此情！",
   ["$fangzong2"] = "将军处处留情，小女芳心暗许。",
 }
@@ -486,7 +484,8 @@ local xizhan = fk.CreateTriggerSkill{
         player:broadcastSkillInvoke(self.name, index + 1)
       end
       room:throwCard(self.cost_data, self.name, player, player)
-      room:addPlayerMark(player, "@@fangzong_invalidity-turn")
+      if player.dead then return false end
+      room:invalidateSkill(player, "fangzong", "-turn")
       if index == 1 then
         room:useVirtualCard("analeptic", nil, target, target, self.name, false)
       elseif index == 2 then
@@ -511,8 +510,8 @@ local xizhan = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["xizhan"] = "嬉战",
   [":xizhan"] = "锁定技，其他角色回合开始时，你选择一项：1.弃置一张牌并令你本回合〖芳踪〗失效，根据弃置牌的花色执行效果："..
-  "{♠，其视为使用一张【酒】；<font color='red'>♥</font>，你视为使用一张【无中生有】；"..
-  "♣，你视为对其使用一张【铁索连环】；<font color='red'>♦</font>，你视为对其使用一张火【杀】。}；2.失去1点体力。",
+  "{♠，其视为使用【酒】；<font color='red'>♥</font>，你视为使用【无中生有】；"..
+  "♣，你视为对其使用【铁索连环】；<font color='red'>♦</font>，你视为对其使用火【杀】。}；2.失去1点体力。",
 
   ["#xizhan-invoke"] = "嬉战：%dest的回合，选择一张牌弃置并根据花色执行对应效果，或点取消则失去1点体力",
 
@@ -605,11 +604,14 @@ wenyang:addSkill(quedi)
 local chuifeng = fk.CreateViewAsSkill{
   name = "chuifeng",
   anim_type = "offensive",
+  times = function(self)
+    return 2 - Self:usedSkillTimes(self.name, Player.HistoryPhase)
+  end,
   prompt = function (self)
     return "#chuifeng-prompt:::"..Self:usedSkillTimes(self.name, Player.HistoryPhase)
   end,
   enabled_at_play = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) < 2 and player.hp > 0 and player:getMark("chuifeng_nullified-phase") == 0
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) < 2 and player.hp > 0
   end,
   card_filter = function()
     return false
@@ -630,11 +632,9 @@ local chuifengDefence = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and data.card and table.contains(data.card.skillNames, chuifeng.name)
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
-    player.room:setPlayerMark(player, "chuifeng_nullified-phase", 1)
+    player.room:invalidateSkill(player, "chuifeng", "-phase")
     return true
   end,
 }

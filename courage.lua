@@ -799,6 +799,7 @@ local zaoli = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    player:broadcastSkillInvoke("os__zaoli")
     if event == fk.TurnStart then
       local n = player:getMark("@zaoli")
       local cards = {}

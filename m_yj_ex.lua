@@ -1742,6 +1742,7 @@ local zongxuan = fk.CreateActiveSkill{
   card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)
+    player:broadcastSkillInvoke("ol_ex__zongxuan")
     room:setPlayerMark(player, "m_ex__zongxuan-phase", 1)
     player:drawCards(1, self.name)
     if not player:isNude() then
@@ -1785,6 +1786,7 @@ local zongxuan_trigger = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
+    player:broadcastSkillInvoke("ol_ex__zongxuan")
     local cards = table.simpleClone(self.cost_data)
     if #cards > 1 then
       cards = room:askForGuanxing(player, cards, {1, #cards}, nil, self.name, true, {"Top", "zongxuanNoput"}).top
@@ -1802,7 +1804,7 @@ zongxuan:addRelatedSkill(zongxuan_trigger)
 yufan:addSkill(zongxuan)
 yufan:addSkill("zhiyan")
 Fk:loadTranslationTable{
-  ["m_ex__yufan"] = "虞翻",
+  ["m_ex__yufan"] = "界虞翻",
   ["#m_ex__yufan"] = "狂直之士",
   ["m_ex__zongxuan"] = "纵玄",
   [":m_ex__zongxuan"] = "①当你的牌因弃置而置入弃牌堆时，你可以将其中任意张牌置于牌堆顶；②出牌阶段限一次，你可以摸一张牌，然后将一张牌置于牌堆顶。",

@@ -31,7 +31,7 @@ local yiyongw = fk.CreateTriggerSkill{
       local card = Fk:cloneCard("slash")
       card:addSubcards(subcards)
       card.skillName = self.name
-      if U.canUseCardTo(room, player, data.from, card, false, false) then
+      if player:canUseTo(card, data.from, {bypass_distances = true, bypass_times = true}) then
         local use = {
           from = player.id,
           tos = {{data.from.id}},
@@ -543,7 +543,7 @@ local quedi = fk.CreateTriggerSkill{
       player:hasSkill(self) and
       player:usedSkillTimes(self.name, Player.HistoryTurn) < (1 + player:getMark("choujue_buff-turn")) and
       table.contains({ "slash", "duel" }, data.card.trueName) and
-      U.isOnlyTarget(player.room:getPlayerById(data.to), data, event) and
+      AimGroup:isOnlyTarget(player.room:getPlayerById(data.to), data) and
       player.room:getPlayerById(data.to):isAlive()
   end,
   on_cost = function(self, event, target, player, data)

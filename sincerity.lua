@@ -53,7 +53,7 @@ local mobile__chijie = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.TargetConfirming},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and U.isOnlyTarget(player, data, event) and
+    return target == player and player:hasSkill(self) and AimGroup:isOnlyTarget(player, data) and
     data.from ~= player.id and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
   end,
   on_cost = function(self, event, target, player, data)

@@ -1033,7 +1033,7 @@ local choumang = fk.CreateTriggerSkill{
       target == player and
       data.card.trueName == "slash" and
       player:hasSkill(self) and
-      U.isOnlyTarget(player.room:getPlayerById(data.to), data, event) and
+      AimGroup:isOnlyTarget(player.room:getPlayerById(data.to), data) and
       player:usedSkillTimes(self.name) == 0
   end,
   on_cost = function (self, event, target, player, data)
@@ -1132,7 +1132,7 @@ local choumangDelay = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["choumang"] = "仇铓",
-  [":choumang"] = "当你使用【杀】指定唯一目标后或当你成为【杀】的唯一目标后，你可以选择一项：1.令此【杀】伤害+1；" ..
+  [":choumang"] = "每回合限一次，当你使用【杀】指定唯一目标后或当你成为【杀】的唯一目标后，你可以选择一项：1.令此【杀】伤害+1；" ..
   "2.令此【杀】被抵消后，你可以获得你与其距离为1以内的一名其他角色区域内的一张牌。背水：弃置你与其装备区里的武器牌（你或其装备区里有武器牌才可选择）。",
   ["#choumang_delay"] = "仇铓",
   ["choumang_damage"] = "此【杀】伤害+1",

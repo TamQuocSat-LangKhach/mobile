@@ -572,7 +572,7 @@ local mobile__tongdu = fk.CreateTriggerSkill{
   events = {fk.TargetConfirmed},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and data.from and data.from ~= player.id and
-      U.isOnlyTarget(player, data, event) and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and
+    AimGroup:isOnlyTarget(player, data) and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0 and
       table.find(player.room.alive_players, function(p) return not p:isNude() end)
   end,
   on_cost = function(self, event, target, player, data)
@@ -580,13 +580,13 @@ local mobile__tongdu = fk.CreateTriggerSkill{
       return not p:isNude() end), Util.IdMapper),
       1, 1, "#mobile__tongdu-choose", self.name, true)
     if #to > 0 then
-      self.cost_data = to[1]
+      self.cost_data = {tos = to}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local to = room:getPlayerById(self.cost_data)
+    local to = room:getPlayerById(self.cost_data.tos[1])
     local cards = room:askForCard(to, 1, 1, true, self.name, false, ".", "#mobile__tongdu-card:"..player.id)
     local card = Fk:getCardById(cards[1])
     room:moveCards({
@@ -603,10 +603,12 @@ local mobile__tongdu = fk.CreateTriggerSkill{
       card = cards,
       arg = self.name,
     }
-    if card.suit == Card.Heart or card.type == Card.TypeTrick then
-      to:drawCards(2, self.name)
-    else
-      to:drawCards(1, self.name)
+    if not to.dead then
+      if card.suit == Card.Heart or card.type == Card.TypeTrick then
+        to:drawCards(2, self.name)
+      else
+        to:drawCards(1, self.name)
+      end
     end
     if card.trueName == "ex_nihilo" and player:usedSkillTimes("duanbi", Player.HistoryGame) > 0 then
       player:setSkillUseHistory("duanbi", 0, Player.HistoryGame)

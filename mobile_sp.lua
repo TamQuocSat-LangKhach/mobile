@@ -2888,7 +2888,7 @@ local jueyong = fk.CreateTriggerSkill{
     if event == fk.TargetConfirming then
       return data.card.trueName ~= "peach" and data.card.trueName ~= "analeptic" and
       not (data.extra_data and data.extra_data.useByJueyong) and U.isPureCard(data.card) and
-      U.isOnlyTarget(player, data, event) and #player:getPile("jueyong_desperation") < player.hp
+      AimGroup:isOnlyTarget(player, data) and #player:getPile("jueyong_desperation") < player.hp
     elseif event == fk.EventPhaseStart then
       return player.phase == Player.Finish and #player:getPile("jueyong_desperation") > 0
     end
@@ -3537,7 +3537,7 @@ local polu = fk.CreateTriggerSkill{
       if not id then return end
       room:obtainCard(player, id, true, fk.ReasonPrey)
       local card = Fk:getCardById(id)
-      if table.contains(player:getCardIds("h"), id) and U.canUseCardTo(room, player, player, card) then
+      if table.contains(player:getCardIds("h"), id) and player:canUseTo(card, player) then
         room:useCard({from = player.id, tos = {{player.id}}, card = card})
       end
     else
@@ -3551,7 +3551,7 @@ local polu = fk.CreateTriggerSkill{
       local id = table.random(ids)
       room:obtainCard(player, id, true, fk.ReasonPrey)
       local card = Fk:getCardById(id)
-      if table.contains(player:getCardIds("h"), id) and U.canUseCardTo(room, player, player, card) then
+      if table.contains(player:getCardIds("h"), id) and player:canUseTo(card, player) then
         room:useCard({from = player.id, tos = {{player.id}}, card = card})
       end
     end

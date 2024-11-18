@@ -3223,7 +3223,7 @@ local quchongTrigger = fk.CreateTriggerSkill{
         if siegeEngine then
           local user = room:getPlayerById(self.cost_data[1])
           room:obtainCard(user, siegeEngine, true, fk.ReasonGive, player.id, "quchong")
-          if table.contains(user:getCardIds("h"), siegeEngine) and U.canUseCardTo(room, user, user, Fk:getCardById(siegeEngine)) then
+          if table.contains(user:getCardIds("h"), siegeEngine) and user:canUseTo(Fk:getCardById(siegeEngine), user) then
             room:useCard{
               from = user.id,
               card = Fk:getCardById(siegeEngine),
@@ -3235,7 +3235,7 @@ local quchongTrigger = fk.CreateTriggerSkill{
         local user = room:getPlayerById(self.cost_data[1])
         local siegeEngine = self.cost_data[2]
         room:obtainCard(user, siegeEngine, true, fk.ReasonGive, player.id, "quchong")
-        if table.contains(user:getCardIds("h"), siegeEngine) and U.canUseCardTo(room, user, user, Fk:getCardById(siegeEngine)) then
+        if table.contains(user:getCardIds("h"), siegeEngine) and user:canUseTo(Fk:getCardById(siegeEngine), user) then
           room:useCard{
             from = user.id,
             card = Fk:getCardById(siegeEngine),

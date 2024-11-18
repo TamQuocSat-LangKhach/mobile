@@ -2081,7 +2081,7 @@ local m_ex__zenhui = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and
       (data.card.trueName == "slash" or (data.card.color == Card.Black and data.card:isCommonTrick())) and data.firstTarget and
-      U.isOnlyTarget(player.room:getPlayerById(data.to), data, event) and #player.room:getUseExtraTargets(data, true, true) > 0
+      AimGroup:isOnlyTarget(player.room:getPlayerById(data.to), data) and #player.room:getUseExtraTargets(data, true, true) > 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room

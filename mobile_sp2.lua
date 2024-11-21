@@ -969,7 +969,7 @@ local weiming = fk.CreateTriggerSkill{
   frequency = Skill.Quest,
   events = {fk.EventPhaseStart, fk.Deathed},
   can_trigger = function(self, event, target, player, data)
-    if player:getQuestSkillState(self.name) or not player:hasSkill(self) then
+    if not player:hasSkill(self) then
       return false
     end
 
@@ -1028,6 +1028,7 @@ local weiming = fk.CreateTriggerSkill{
         room:updateQuestSkillState(player, self.name)
         room:handleAddLoseSkills(player, "-xuetu|-xuetu_v3|xuetu_v2")
       end
+      room:invalidateSkill(player, self.name)
     end
   end,
 }

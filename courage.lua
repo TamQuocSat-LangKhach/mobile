@@ -605,7 +605,7 @@ local chuifeng = fk.CreateViewAsSkill{
   name = "chuifeng",
   anim_type = "offensive",
   times = function(self)
-    return 2 - Self:usedSkillTimes(self.name, Player.HistoryPhase)
+    return Self.phase == Player.Play and 2 - Self:usedSkillTimes(self.name, Player.HistoryPhase) or -1
   end,
   prompt = function (self)
     return "#chuifeng-prompt:::"..Self:usedSkillTimes(self.name, Player.HistoryPhase)

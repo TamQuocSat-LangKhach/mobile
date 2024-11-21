@@ -179,7 +179,7 @@ local mibei = fk.CreateTriggerSkill{
   events = {fk.CardUseFinished},
   frequency = Skill.Quest,
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self) and not player:getQuestSkillState(self.name) and
+    if target == player and player:hasSkill(self) and
       player:getMark("@$wangling_bei") ~= 0 and #player:getMark("@$wangling_bei") > 5 then
       local nums = {0, 0, 0}
       for _, name in ipairs(player:getMark("@$wangling_bei")) do
@@ -219,6 +219,7 @@ local mibei = fk.CreateTriggerSkill{
     end
     room:handleAddLoseSkills(player, "mouli", nil, true, false)
     room:updateQuestSkillState(player, self.name, false)
+    room:invalidateSkill(player, self.name)
   end,
 }
 local mibei_trigger = fk.CreateTriggerSkill{
@@ -237,6 +238,7 @@ local mibei_trigger = fk.CreateTriggerSkill{
     room:changeMaxHp(player, -1)
     if not player.dead then
       room:updateQuestSkillState(player, "mibei", true)
+      room:invalidateSkill(player, "mibei")
     end
   end,
 
@@ -464,7 +466,7 @@ local qingyu_trigger = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.EventPhaseStart, fk.EnterDying},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill("qingyu", true) and not player:getQuestSkillState("qingyu") then
+    if target == player and player:hasSkill(qingyu, true) then
       if event == fk.EventPhaseStart then
         return player.phase == Player.Start and not player:isWounded() and player:isKongcheng()
       else
@@ -480,12 +482,14 @@ local qingyu_trigger = fk.CreateTriggerSkill{
       room:notifySkillInvoked(player, "qingyu", "special")
       room:handleAddLoseSkills(player, "xuancun", nil, true, false)
       room:updateQuestSkillState(player, "qingyu", false)
+      room:invalidateSkill(player, "qingyu")
     else
       player:broadcastSkillInvoke("qingyu", 2)
       room:notifySkillInvoked(player, "qingyu", "negative")
       room:changeMaxHp(player, -1)
       if not player.dead then
         room:updateQuestSkillState(player, "qingyu", true)
+        room:invalidateSkill(player, "qingyu")
       end
     end
   end,
@@ -655,7 +659,7 @@ local chuhai = fk.CreateActiveSkill{
   max_card_num = 0,
   target_num = 1,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:getQuestSkillState(self.name)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
@@ -735,7 +739,6 @@ local chuhai_trigger = fk.CreateTriggerSkill{
     if event == fk.AfterCardsMove then
       room:notifySkillInvoked(player, chuhai.name, "special")
       player:broadcastSkillInvoke(chuhai.name, 2)
-      room:updateQuestSkillState(player, chuhai.name, false)
       if player:isWounded() then
         room:recover({
           who = player,
@@ -743,12 +746,16 @@ local chuhai_trigger = fk.CreateTriggerSkill{
           recoverBy = player,
           skillName = chuhai.name
         })
+        if player.dead then return false end
       end
       room:handleAddLoseSkills(player, "-xianghai|zhangming")
+      room:updateQuestSkillState(player, chuhai.name, false)
+      room:invalidateSkill(player, chuhai.name)
     elseif event == fk.PindianResultConfirmed then
       room:notifySkillInvoked(player, chuhai.name, "negative")
       player:broadcastSkillInvoke(chuhai.name, 3)
       room:updateQuestSkillState(player, chuhai.name, true)
+      room:invalidateSkill(player, chuhai.name)
     end
   end,
 }
@@ -1499,7 +1506,7 @@ local powei = fk.CreateTriggerSkill{
   frequency = Skill.Quest,
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    if player:getQuestSkillState(self.name) or not player:hasSkill(self) then
+    if not player:hasSkill(self) then
       return false
     end
 
@@ -1584,8 +1591,9 @@ local powei = fk.CreateTriggerSkill{
         else
           room:notifySkillInvoked(player, self.name)
           player:broadcastSkillInvoke(self.name, 2)
-          room:updateQuestSkillState(player, self.name)
           room:handleAddLoseSkills(player, "shenzhuo")
+          room:updateQuestSkillState(player, self.name)
+          room:invalidateSkill(player, self.name)
         end
       end
 
@@ -1615,6 +1623,7 @@ local powei = fk.CreateTriggerSkill{
       room:notifySkillInvoked(player, self.name, "negative")
       player:broadcastSkillInvoke(self.name, 3)
       room:updateQuestSkillState(player, self.name, true)
+      room:invalidateSkill(player, self.name) --为了防止无限loop，提前无效此技能
       if player.hp < 1 then
         room:recover({
           who = player,

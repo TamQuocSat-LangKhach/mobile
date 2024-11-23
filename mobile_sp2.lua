@@ -1596,4 +1596,169 @@ Fk:loadTranslationTable{
   ["$jiwei4"] = "民不逢时，吾又何忍视其饥苦。",
 }
 
+local ganfuren = General(extension, "mobile__ganfuren", "shu", 3, 3, General.Female)
+
+Fk:loadTranslationTable{
+  ["mobile__ganfuren"] = "甘夫人",
+  ["#mobile__ganfuren"] = "昭烈皇后",
+  ["~mobile__ganfuren"] = "只愿夫君，大事可成，兴汉有期……",
+}
+
+local zhijie = fk.CreateTriggerSkill{
+  name = "zhijie",
+  anim_type = "support",
+  events = {fk.EventPhaseStart, fk.EventPhaseEnd},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) then return false end
+    if event == fk.EventPhaseStart then
+      return player:usedSkillTimes(self.name, Player.HistoryRound) == 0 and
+        target.phase == Player.Play and not (target.dead or target:isKongcheng())
+    else
+      if player:usedSkillTimes(self.name, Player.HistoryPhase) > 0 then
+        local mark = target:getMark("@zhijie-phase")
+        return type(mark) == "table" and #mark == 2 and mark[2] > target:getMark("zhijie_discard-phase")
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    return event == fk.EventPhaseEnd or player.room:askForSkillInvoke(player, self.name, nil, "#zhijie-invoke::"..target.id)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:doIndicate(player.id, {target.id})
+    if event == fk.EventPhaseStart then
+      local card = Fk:getCardById(room:askForCardChosen(player, target, "h", self.name))
+      local cardType = card:getTypeString()
+      target:showCards(card)
+      room:setPlayerMark(target, "@zhijie-phase", {cardType .. "_char", 0})
+    else
+      room:drawCards(player, 1, self.name)
+      if not target.dead then
+        room:drawCards(target, 1, self.name)
+      end
+    end
+  end,
+}
+
+local zhijieDelay = fk.CreateTriggerSkill{
+  name = "#zhijie_delay",
+  mute = true,
+  events = {fk.CardUsing},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and not player.dead and player:getMark("@zhijie-phase") ~= 0 and
+      data.card:getTypeString() .. "_char" == player:getMark("@zhijie-phase")[1]
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local mark = player:getMark("@zhijie-phase")
+    local x = mark[2]
+    mark[2] = x + 1
+    room:setPlayerMark(player, "@zhijie-phase", mark)
+    player:drawCards(1, "zhijie")
+    if not player.dead and x > 0 then
+      local cards = room:askForDiscard(player, x, x, true, "zhijie")
+      room:addPlayerMark(player, "zhijie_discard-phase", x)
+    end
+  end,
+}
+
+Fk:loadTranslationTable{
+  ["zhijie"] = "智诫",
+  [":zhijie"] = "每轮限一次，一名角色的出牌阶段开始时，你可以展示其一张手牌。"..
+  "当其于此阶段内使用于此牌类别相同的牌后，其摸一张牌并弃置X张牌（X为此效果发动的次数-1）；"..
+  "此阶段结束时，若其于此阶段内以此法摸牌的数量大于以此法弃置牌的数量，你与其各摸一张牌。",
+
+  ["#zhijie-invoke"] = "是否发动 智诫，展示%dest的一张手牌，其本阶段使用同类别牌将摸牌并弃牌",
+  ["@zhijie-phase"] = "智诫",
+
+  ["$zhijie1"] = "昔子罕不以玉为宝，《春秋》美之。",
+  ["$zhijie2"] = "今吴、魏未灭，安以妖玩继怀？",
+}
+
+zhijie:addRelatedSkill(zhijieDelay)
+ganfuren:addSkill(zhijie)
+
+local shushen = fk.CreateTriggerSkill{
+  name = "mobile__shushen",
+  anim_type = "support",
+  events = {fk.HpRecover, fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) then
+      if event == fk.AfterCardsMove then
+        if player:getMark("mobile__shushen_recover-turn") > 0 then return false end
+        local x = 0
+        for _, move in ipairs(data) do
+          if move.to == player.id and move.toArea == Player.Hand then
+            x = x + #move.moveInfo
+            if x > 1 then break end
+          end
+        end
+        return x > 1 and table.find(player.room.alive_players, function (p)
+          return p ~= player and p:isWounded()
+        end)
+      else
+        if player:getMark("mobile__shushen_draw2-turn") > 0 then return false end
+        return player == target and #player.room.alive_players > 1
+      end
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.HpRecover then
+      local to = room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player, false), Util.IdMapper), 1, 1,
+        "#mobile__shushen-draw2", self.name, true)
+      if #to > 0 then
+        self.cost_data = {tos = to}
+        return true
+      end
+    else
+      local to = room:askForChoosePlayers(player, table.map(table.filter(room.alive_players, function(p)
+        return p ~= player and p:isWounded()
+      end), Util.IdMapper), 1, 1, "#mobile__shushen-recover", self.name, true)
+      if #to > 0 then
+        self.cost_data = {tos = to}
+        return true
+      end
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data.tos[1])
+    if event == fk.HpRecover then
+      room:setPlayerMark(player, "mobile__shushen_draw2-turn", 1)
+      room:drawCards(to, 2, self.name)
+    else
+      room:setPlayerMark(player, "mobile__shushen_recover-turn", 1)
+      room:recover({
+        who = to,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name
+      })
+    end
+  end,
+
+  on_lose = function (self, player)
+    local room = player.room
+    room:setPlayerMark(player, "mobile__shushen_draw2-turn", 0)
+    room:setPlayerMark(player, "mobile__shushen_recover-turn", 0)
+  end,
+}
+Fk:loadTranslationTable{
+  ["mobile__shushen"] = "淑慎",
+  [":mobile__shushen"] = "每回合各限一次，当你回复体力后，你可以令一名其他角色摸两张牌；"..
+  "当你得到牌后，若这些牌的数量大于1，你可以令一名其他角色回复1点体力。",
+
+  ["#mobile__shushen-draw2"] = "是否发动 淑慎，令1名其他角色摸2张牌",
+  ["#mobile__shushen-recover"] = "是否发动 淑慎，令1名其他角色回复1点体力",
+
+  ["$mobile__shushen1"] = "此者国亡之象，夫君岂不知乎？",
+  ["$mobile__shushen2"] = "为人妻者，当为夫计。",
+}
+
+ganfuren:addSkill(shushen)
+
+
+
 return extension

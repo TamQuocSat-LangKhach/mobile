@@ -1155,21 +1155,25 @@ local dinghan = fk.CreateTriggerSkill{
 godxunyu:addSkill(tianzuo)
 godxunyu:addSkill(lingce)
 godxunyu:addSkill(dinghan)
+
 Fk:loadTranslationTable{
   ["godxunyu"] = "神荀彧",
   ["#godxunyu"] = "洞心先识",
   ["illustrator:godxunyu"] = "枭瞳",
   ["tianzuo"] = "天佐",
-  [":tianzuo"] = "锁定技，游戏开始时，将8张【奇正相生】加入牌堆；【奇正相生】对你无效。",
+  [":tianzuo"] = "锁定技，游戏开始时，将8张<a href='raid_and_frontal_attack_href'>【奇正相生】</a>加入牌堆；【奇正相生】对你无效。",
   ["lingce"] = "灵策",
-  [":lingce"] = "锁定技，当非虚拟且非转化的锦囊牌被使用时，若此牌的牌名属于智囊牌名、“定汉”已记录的牌名或【奇正相生】时，你摸一张牌。"..
-  "<br><font color='grey'>智囊牌：【过河拆桥】、【无中生有】、【无懈可击】",
+  [":lingce"] = "锁定技，当非虚拟且非转化的锦囊牌被使用时，若此牌的牌名属于<a href='bag_of_tricks'>智囊</a>牌名、〖定汉〗已记录的牌名或【奇正相生】时，你摸一张牌。",
   ["dinghan"] = "定汉",
-  [":dinghan"] = "当你成为锦囊牌的目标时，若此牌牌名未被“定汉”记录，则“定汉”记录此牌名，然后取消此目标；回合开始时，你可以为“定汉”记录增加或移除"..
-  "一种锦囊牌的牌名。",
+  [":dinghan"] = "当你成为锦囊牌的目标时，若此牌牌名未被记录，则记录此牌名，然后取消此目标；回合开始时，你可以增加或移除一种锦囊牌的牌名记录。",
   ["@$dinghan"] = "定汉",
   ["dinghan_addRecord"] = "增加牌名",
   ["dinghan_removeRecord"] = "移除牌名",
+
+  ["bag_of_tricks"] = "#\"<b>智囊</b>\" ：即【过河拆桥】【无懈可击】【无中生有】。",
+  ["raid_and_frontal_attack_href"] = "【<b>奇正相生</b>】（♠2/♠4/♠6/♠8/♣3/♣5/♣7/♣9） 锦囊牌<br/>" ..
+  "出牌阶段，对一名其他角色使用。当此牌指定目标后，你为其指定“奇兵”或“正兵”。"..
+  "目标角色可以打出一张【杀】或【闪】，然后若其为：“正兵”目标且未打出【杀】，你对其造成1点伤害；“奇兵”目标且未打出【闪】，你获得其一张牌。",
 
   ["$tianzuo1"] = "此时进之多弊，守之多利，愿主公熟虑。",
   ["$tianzuo2"] = "主公若不时定，待四方生心，则无及矣。",

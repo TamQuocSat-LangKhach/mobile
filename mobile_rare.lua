@@ -280,13 +280,9 @@ local shanjia = fk.CreateTriggerSkill{
     U.askForUseVirtualCard(room, player, "slash", {}, self.name, "#shanjia-slash", true, true, false, true)
   end,
 
-  refresh_events = {fk.AfterCardsMove, fk.EventAcquireSkill, fk.EventLoseSkill},
+  refresh_events = {fk.AfterCardsMove},
   can_refresh = function (self, event, target, player, data)
-    if event == fk.AfterCardsMove then
-      return player:hasSkill(self, true) and player:getMark("@shanjia") > 0
-    else
-      return data == self and target == player
-    end
+    return player:hasSkill(self, true) and player:getMark("@shanjia") > 0
   end,
   on_refresh = function (self, event, target, player, data)
     local room = player.room
@@ -304,11 +300,14 @@ local shanjia = fk.CreateTriggerSkill{
       if i > 0 then
         room:removePlayerMark(player, "@shanjia", i)
       end
-    elseif event == fk.EventAcquireSkill then
-      room:setPlayerMark(player, "@shanjia", 3)
-    elseif event == fk.EventLoseSkill then
-      room:setPlayerMark(player, "@shanjia", 0)
     end
+  end,
+
+  on_lose = function (self, player)
+    player.room:setPlayerMark(player, "@shanjia", 0)
+  end,
+  on_acquire = function (self, player)
+    player.room:setPlayerMark(player, "@shanjia", 3)
   end,
 }
 caochun:addSkill(shanjia)
@@ -3106,6 +3105,10 @@ local quchong = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     room:recastCard(effect.cards, room:getPlayerById(effect.from), self.name)
   end,
+
+  on_lose = function (self, player, is_death)
+    player.room:setPlayerMark(player, "@quchong_casting_point", 0)
+  end,
 }
 local quchongTrigger = fk.CreateTriggerSkill{
   name = "#quchong_trigger",
@@ -3113,7 +3116,7 @@ local quchongTrigger = fk.CreateTriggerSkill{
   main_skill = quchong,
   events = {fk.TurnEnd, fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self) then
+    if not player:hasSkill(quchong) then
       return false
     end
 
@@ -3126,7 +3129,7 @@ local quchongTrigger = fk.CreateTriggerSkill{
     end
 
     local numList = { 0, 5, 10, 10 }
-    if table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, player.room.settings.gameMode) then
+    if player.room:isGameMode("1v2_mode") or player.room:isGameMode("2v2_mode") then
       numList = { 0, 2, 5, 5 }
     end
     local times = player:getMark("quchong_crafted") + 1

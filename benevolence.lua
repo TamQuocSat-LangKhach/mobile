@@ -1424,7 +1424,7 @@ local tamo = fk.CreateTriggerSkill{
       room.players[i].next = room.players[i + 1]
     end
     room.players[#room.players].next = room.players[1]
-    room.current = room.players[1]
+    room:setCurrent(room.players[1])
     room:doBroadcastNotify("ArrangeSeats", json.encode(player_circle))
   end,
 }

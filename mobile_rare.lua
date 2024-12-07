@@ -1270,34 +1270,20 @@ local sheque = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local dat = self.cost_data
     dat.extra_data = dat.extra_data or {}
-    dat.extra_data.sheque = true
+    dat.extra_data.shequeUser = player.id
     player.room:useCard(self.cost_data)
   end,
 
-  refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
-  can_refresh = function (self, event, target, player, data)
-    if event == fk.TargetSpecified then
-      return target == player and data.extra_data and data.extra_data.sheque
-    else
-      return data.extra_data and data.extra_data.shequeNullified
-    end
-  end,
+  refresh_events = { fk.TargetSpecified },
   on_refresh = function (self, event, target, player, data)
-    local room = player.room
-    if event == fk.TargetSpecified then
-      room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
-      data.extra_data.shequeNullified = data.extra_data.shequeNullified or {}
-      data.extra_data.shequeNullified[tostring(data.to)] = (data.extra_data.shequeNullified[tostring(data.to)] or 0) + 1
-    else
-      for key, num in pairs(data.extra_data.shequeNullified) do
-        local p = room:getPlayerById(tonumber(key))
-        if p:getMark(fk.MarkArmorNullified) > 0 then
-          room:removePlayerMark(p, fk.MarkArmorNullified, num)
-        end
-      end
-      data.shequeNullified = nil
-    end
+    return not player.dead and (data.extra_data or {}).shequeUser == player.id
   end,
+  can_refresh = function (self, event, target, player, data)
+    local to = player.room:getPlayerById(data.to)
+    if not to.dead then
+      to:addQinggangTag(data)
+    end
+  end
 }
 Fk:addSkill(jinfan_active)
 ganning:addSkill(jinfan)
@@ -1454,50 +1440,19 @@ weiyan.shield = 1
 local guli = fk.CreateViewAsSkill{
   name = "guli",
   prompt = "#guli",
-  card_filter = function()
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   view_as = function(self, cards)
     local card = Fk:cloneCard("slash")
     card:addSubcards(Self:getCardIds("h"))
     card.skillName = self.name
     return card
   end,
+  before_use = function (self, player, useData)
+    useData.extra_data = useData.extra_data or {}
+    useData.extra_data.guliUser = player.id
+  end,
   enabled_at_play = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0 and not player:isKongcheng()
-  end,
-}
-local guli_record = fk.CreateTriggerSkill{
-  name = "#guli_record",
-  mute = true,
-  events = {fk.TargetSpecified},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and table.contains(data.card.skillNames, "guli")
-  end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
-    data.extra_data = data.extra_data or {}
-    data.extra_data.guli = data.extra_data.guli or {}
-    data.extra_data.guli[tostring(data.to)] = (data.extra_data.guli[tostring(data.to)] or 0) + 1
-  end,
-
-  refresh_events = {fk.CardUseFinished},
-  can_refresh = function(self, event, target, player, data)
-    return data.extra_data and data.extra_data.guli
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    for key, num in pairs(data.extra_data.guli) do
-      local p = room:getPlayerById(tonumber(key))
-      if p:getMark(fk.MarkArmorNullified) > 0 then
-        room:removePlayerMark(p, fk.MarkArmorNullified, num)
-      end
-    end
-    data.extra_data.guli = nil
   end,
 }
 local guli_trigger = fk.CreateTriggerSkill{
@@ -1517,6 +1472,17 @@ local guli_trigger = fk.CreateTriggerSkill{
     if player.dead or player:getHandcardNum() >= player.maxHp then return end
     player:drawCards(player.maxHp - player:getHandcardNum(), "guli")
   end,
+
+  refresh_events = { fk.TargetSpecified },
+  on_refresh = function (self, event, target, player, data)
+    return not player.dead and (data.extra_data or {}).guliUser == player.id
+  end,
+  can_refresh = function (self, event, target, player, data)
+    local to = player.room:getPlayerById(data.to)
+    if not to.dead then
+      to:addQinggangTag(data)
+    end
+  end
 }
 local aosi = fk.CreateTriggerSkill{
   name = "aosi",
@@ -1535,12 +1501,10 @@ local aosi = fk.CreateTriggerSkill{
 }
 local aosi_targetmod = fk.CreateTargetModSkill{
   name = "#aosi_targetmod",
-  frequency = Skill.Compulsory,
   bypass_times = function(self, player, skill, scope, card, to)
-    return player:hasSkill("aosi") and scope == Player.HistoryPhase and to:getMark("@@aosi-phase") > 0
+    return player:hasSkill(aosi) and scope == Player.HistoryPhase and to:getMark("@@aosi-phase") > 0
   end,
 }
-guli:addRelatedSkill(guli_record)
 guli:addRelatedSkill(guli_trigger)
 aosi:addRelatedSkill(aosi_targetmod)
 weiyan:addSkill(guli)

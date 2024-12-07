@@ -219,7 +219,7 @@ local m_ex__xianzhen = fk.CreateActiveSkill{
   card_num = 0,
   target_num = 1,
   can_use = function(self, player)
-    return not player:isKongcheng() and player:usedSkillTimes(self.name) == 0
+    return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, to_select, selected)
@@ -235,53 +235,20 @@ local m_ex__xianzhen = fk.CreateActiveSkill{
     end
     if pindian.results[target.id].winner == player then
       room:addPlayerMark(target, "@@m_ex__xianzhen-phase")
-      local targetRecorded = type(player:getMark("m_ex__xianzhen_target-phase")) == "table" and player:getMark("m_ex__xianzhen_target-phase") or {}
-      table.insertIfNeed(targetRecorded, target.id)
-      room:setPlayerMark(player, "m_ex__xianzhen_target-phase", targetRecorded)
+      room:addTableMark(player, "m_ex__xianzhen_target-phase", target.id)
+      room:addTableMark(player, fk.MarkArmorInvalidTo .. "-phase", target.id)
     else
       room:addPlayerMark(player, "m_ex__xianzhen_prohibit-phase")
     end
   end,
 }
-
-local m_ex__xianzhen_armor_invalidity = fk.CreateTriggerSkill{
-  name = "#m_ex__xianzhen_armor_invalidity",
-  mute = true,
-  frequency = Skill.Compulsory,
-
-  refresh_events = {fk.CardUsing},
-  can_refresh = function(self, event, target, player, data)
-    return player == target and type(player:getMark("m_ex__xianzhen_target-phase")) == "table"
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    local use_event = room.logic:getCurrentEvent():findParent(GameEvent.UseCard, true)
-    if use_event == nil then return end
-    local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
-    for _, id in ipairs(targetRecorded) do
-      room:addPlayerMark(room:getPlayerById(id), fk.MarkArmorNullified)
-    end
-    use_event:addCleaner(function()
-      for _, id in ipairs(targetRecorded) do
-        room:removePlayerMark(room:getPlayerById(id), fk.MarkArmorNullified)
-      end
-    end)
-  end,
-}
-
 local m_ex__xianzhen_targetmod = fk.CreateTargetModSkill{
   name = "#m_ex__xianzhen_targetmod",
   bypass_times = function(self, player, skill, scope, card, to)
-    if card and to then
-      local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
-      return type(targetRecorded) == "table" and table.contains(targetRecorded, to.id)
-    end
+    return card and to and table.contains(player:getTableMark("m_ex__xianzhen_target-phase"), to.id)
   end,
   bypass_distances = function(self, player, skill, card, to)
-    if card and to then
-      local targetRecorded = player:getMark("m_ex__xianzhen_target-phase")
-      return type(targetRecorded) == "table" and table.contains(targetRecorded, to.id)
-    end
+    return card and to and table.contains(player:getTableMark("m_ex__xianzhen_target-phase"), to.id)
   end,
 }
 local m_ex__xianzhen_prohibit = fk.CreateProhibitSkill{
@@ -297,17 +264,19 @@ local m_ex__xianzhen_maxcards = fk.CreateMaxCardsSkill{
   end,
 }
 
-m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_armor_invalidity)
 m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_targetmod)
 m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_prohibit)
 m_ex__xianzhen:addRelatedSkill(m_ex__xianzhen_maxcards)
 
 Fk:loadTranslationTable{
   ["m_ex__xianzhen"] = "陷阵",
-  [":m_ex__xianzhen"] = "出牌阶段限一次，你可以与一名角色拼点：若你赢，此出牌阶段你无视该角色的防具，对其使用牌没有距离和次数限制；若你没赢，此出牌阶段你不能使用【杀】。若你发动“陷阵”拼点的牌为【杀】，则本回合你的【杀】不计入手牌上限。",
+  [":m_ex__xianzhen"] = "出牌阶段限一次，你可以与一名角色拼点，若你：赢，你于此阶段内无视其防具，且对其使用牌无距离和次数限制；"..
+    "没赢，你于此阶段内不能使用【杀】。若你的拼点的牌为【杀】，你的【杀】于此回合内不计入手牌上限。",
+
   ["#m_ex__xianzhen-active"] = "发动陷阵，选择与你拼点的角色",
   ["@@m_ex__xianzhen-phase"] = "陷阵",
   ["@@m_ex__xianzhen_maxcards-turn"] = "陷阵",
+
   ["$m_ex__xianzhen1"] = "陷阵之志，有死无生！",
   ["$m_ex__xianzhen2"] = "攻则破城，战则克敌。",
 }
@@ -329,7 +298,6 @@ local m_ex__jinjiu = fk.CreateFilterSkill{
 
 local m_ex__jinjiu_trigger = fk.CreateTriggerSkill{
   name = "#m_ex__jinjiu_trigger",
-  frequency = Skill.Compulsory,
   events = {fk.DamageInflicted},
   mute = true,
   can_trigger = function(self, event, target, player, data)
@@ -367,7 +335,11 @@ m_ex__jinjiu:addRelatedSkill(m_ex__jinjiu_prohibit)
 
 Fk:loadTranslationTable{
   ["m_ex__jinjiu"] = "禁酒",
-  [":m_ex__jinjiu"] = "锁定技，你的【酒】均枧为【杀】；当你受到【酒】【杀】造成的伤害时，此伤害-X （X为增加此【杀】伤害的【酒】张数）。你的回合内，其他角色无法使用【酒】。",
+  [":m_ex__jinjiu"] = "锁定技，你的【酒】的牌名视为【杀】且此【杀】为普【杀】；"..
+  "当你受到渠道为因【酒】生效而伤害值基数增加的【杀】的伤害时，你令伤害值-X （X为因【酒】生效而增加的伤害值基数）；"..
+    "其他角色于你的回合内不能使用【酒】。",
+  ["#m_ex__jinjiu_trigger"] = "禁酒",
+
   ["$m_ex__jinjiu1"] = "耽此黄汤，岂不误事？",
   ["$m_ex__jinjiu2"] = "陷阵营中，不可饮酒。",
 }

@@ -630,7 +630,7 @@ local chuifengDefence = fk.CreateTriggerSkill{
   anim_type = "defensive",
   events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and data.card and table.contains(data.card.skillNames, chuifeng.name)
+    return target == player and player:hasSkill(chuifeng) and data.card and table.contains(data.card.skillNames, chuifeng.name)
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -643,8 +643,8 @@ chuifeng:addRelatedSkill(chuifengDefence)
 Fk:loadTranslationTable{
   ["chuifeng"] = "椎锋",
   ["#chuifeng_defence"] = "椎锋",
-  [":chuifeng"] = "魏势力技，出牌阶段限两次，你可以失去1点体力，并视为使用一张【决斗】。当你受到以此法使用的【决斗】造成的伤害时，防止此伤害，"..
-  "本技能于此阶段内失效。",
+  [":chuifeng"] = "魏势力技，出牌阶段限两次，你可以失去1点体力，并视为使用一张【决斗】。"..
+  "当你受到以此法使用的【决斗】造成的伤害时，防止此伤害，此技能于此阶段内无效。",
   ["#chuifeng-prompt"] = "椎锋：失去1点体力，并视为使用一张【决斗】（已用：%arg/2）",
 
   ["$chuifeng1"] = "率军冲锋，不惧刀枪所阻！",
@@ -691,7 +691,7 @@ local chongjian = fk.CreateViewAsSkill{
 }
 Fk:loadTranslationTable{
   ["chongjian"] = "冲坚",
-  [":chongjian"] = "吴势力技，你可以将装备牌当【酒】或无距离限制且无视防具的任意一种【杀】使用。当你以此法使用的【杀】对一名角色造成伤害后，"..
+  [":chongjian"] = "吴势力技，你可以将一张装备牌当【酒】或无距离限制且无视防具的任意一种【杀】使用。当你以此法使用的【杀】对一名角色造成伤害后，"..
   "你获得其装备区里的X张牌（X为伤害值）。",
   ["#chongjian_buff"] = "冲坚",
   ["#chongjian-prompt"] = "冲坚：将装备牌当【酒】或无距离限制且无视防具的任意一种【杀】使用",
@@ -707,7 +707,7 @@ local chongjianBuff = fk.CreateTriggerSkill{
   mute = true,
   events = {fk.Damage},
   can_trigger = function (self, event, target, player, data)
-    if not player.dead and not data.to.dead and #data.to:getCardIds(Player.Equip) > 0 then
+    if not (player.dead or data.to.dead) and #data.to:getCardIds(Player.Equip) > 0 then
       local parentUseData = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
       return parentUseData and (parentUseData.data[1].extra_data or {}).chongjianUser == player.id
     end
@@ -721,32 +721,18 @@ local chongjianBuff = fk.CreateTriggerSkill{
     room:obtainCard(player, cards, true, fk.ReasonPrey, player.id, self.name)
   end,
 
-  refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
-  can_refresh = function(self, event, target, player, data)
-    if event == fk.CardUseFinished then
-      return (data.extra_data or {}).chongjianNullified
-    else
-      return table.contains(data.card.skillNames, chongjian.name) and player.room:getPlayerById(data.to):isAlive()
-    end
+  refresh_events = { fk.TargetSpecified }, --不会和吹风自选，refresh好了
+  on_refresh = function (self, event, target, player, data)
+    return not player.dead and (data.extra_data or {}).chongjianUser == player.id
   end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.CardUseFinished then
-      for key, num in pairs(data.extra_data.chongjianNullified) do
-        local p = room:getPlayerById(tonumber(key))
-        if p:getMark(fk.MarkArmorNullified) > 0 then
-          room:removePlayerMark(p, fk.MarkArmorNullified, num)
-        end
-      end
-      data.chongjianNullified = nil
-    elseif event == fk.TargetSpecified then
-      room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
-      data.extra_data = data.extra_data or {}
-      data.extra_data.chongjianNullified = data.extra_data.chongjianNullified or {}
-      data.extra_data.chongjianNullified[tostring(data.to)] = (data.extra_data.chongjianNullified[tostring(data.to)] or 0) + 1
+  can_refresh = function (self, event, target, player, data)
+    local to = player.room:getPlayerById(data.to)
+    if not to.dead then
+      to:addQinggangTag(data)
     end
-  end,
+  end
 }
+
 chongjian:addRelatedSkill(chongjianBuff)
 
 local chongjianUnlimited = fk.CreateTargetModSkill{
@@ -755,7 +741,9 @@ local chongjianUnlimited = fk.CreateTargetModSkill{
     return card and table.contains(card.skillNames, chongjian.name)
   end,
 }
+
 chongjian:addRelatedSkill(chongjianUnlimited)
+
 wenyang:addSkill(chongjian)
 
 local mobileChoujue = fk.CreateTriggerSkill{

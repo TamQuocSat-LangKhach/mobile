@@ -189,36 +189,31 @@ local chengzhao = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data)
     local pindian = player:pindian({to}, self.name)
-    local winner = pindian.results[to.id].winner
-    if winner and winner == player then
-      room:useVirtualCard("slash", nil, player, to, self.name, true)
-    end
-  end,
-  refresh_events = {fk.TargetSpecified, fk.CardUseFinished},
-  can_refresh = function(self, event, target, player, data)
-    if event == fk.TargetSpecified then
-      return target == player and data.card and table.contains(data.card.skillNames, self.name)
-    else
-      return data.extra_data and data.extra_data.chengzhaoNullified
-    end
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.TargetSpecified then
-      room:addPlayerMark(room:getPlayerById(data.to), fk.MarkArmorNullified)
-      data.extra_data = data.extra_data or {}
-      data.extra_data.chengzhaoNullified = data.extra_data.chengzhaoNullified or {}
-      data.extra_data.chengzhaoNullified[tostring(data.to)] = (data.extra_data.chengzhaoNullified[tostring(data.to)] or 0) + 1
-    else
-      for key, num in pairs(data.extra_data.chengzhaoNullified) do
-        local p = room:getPlayerById(tonumber(key))
-        if p:getMark(fk.MarkArmorNullified) > 0 then
-          room:removePlayerMark(p, fk.MarkArmorNullified, num)
-        end
+    if pindian.results[to.id].winner == player and not (player.dead or to.dead) then
+      local slash = Fk:cloneCard("slash")
+      slash.skillName = self.name
+      if player:canUseTo(slash, to, { bypass_times = true, bypass_distances= true }) then
+        room:useCard{
+          from = player.id,
+          card = slash,
+          tos = { { to.id } },
+          extraUse = true,
+          extra_data = { chengzhaoUser = player.id }
+        }
       end
-      data.chengzhaoNullified = nil
     end
   end,
+
+  refresh_events = { fk.TargetSpecified },
+  on_refresh = function (self, event, target, player, data)
+    return not player.dead and (data.extra_data or {}).chengzhaoUser == player.id
+  end,
+  can_refresh = function (self, event, target, player, data)
+    local to = player.room:getPlayerById(data.to)
+    if not to.dead then
+      to:addQinggangTag(data)
+    end
+  end
 }
 mobile__dongcheng:addSkill(chengzhao)
 Fk:loadTranslationTable{

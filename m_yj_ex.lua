@@ -1396,7 +1396,6 @@ local m_ex__zongshij = fk.CreateTriggerSkill{
     end
     local get = room:askForCardChosen(player, player, { card_data = card_data }, self.name, "#m_ex__zongshij-card")
     if get ~= top[1] then
-      table.insert(room.draw_pile, 1, top[1])
       room:doBroadcastNotify("UpdateDrawPile", tostring(#room.draw_pile))
     end
     room:obtainCard(player, get, false, fk.ReasonPrey)

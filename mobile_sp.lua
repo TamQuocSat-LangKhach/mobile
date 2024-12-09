@@ -4870,6 +4870,7 @@ end
 local daming = fk.CreateTriggerSkill{
   name = "daming",
   anim_type = "control",
+  attached_skill_name = "daming_other&",
   events = {fk.GameStart},
   can_trigger = function (self, event, target, player, data)
     return player:hasSkill(self)
@@ -4877,33 +4878,6 @@ local daming = fk.CreateTriggerSkill{
   on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     changeDaming (player, 1)
-  end,
-
-  refresh_events = {fk.EventAcquireSkill, fk.EventLoseSkill, fk.BuryVictim},
-  can_refresh = function(self, event, target, player, data)
-    if event == fk.EventAcquireSkill or event == fk.EventLoseSkill then
-      return data == self and target == player
-    else
-      return target == player and player:hasSkill(self, true, true)
-    end
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    local targets = room:getOtherPlayers(player, false)
-    if event == fk.EventAcquireSkill then
-      for _, p in ipairs(targets) do
-        room:handleAddLoseSkills(p, "daming_other&", nil, false, true)
-      end
-    else
-      if event == fk.EventLoseSkill then
-        room:setPlayerMark(player, "@daming", 0)
-      end
-      if table.every(targets, function(p) return not p:hasSkill(self, true) end) then
-        for _, p in ipairs(targets) do
-          room:handleAddLoseSkills(p, "-daming_other&", nil, false, true)
-        end
-      end
-    end
   end,
 }
 local daming_other = fk.CreateActiveSkill{

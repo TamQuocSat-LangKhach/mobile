@@ -1268,7 +1268,7 @@ local suwang = fk.CreateTriggerSkill{
       end
     end
 
-    return target == player and player.phase == Player.Draw and #player:getPile("suwang") > 0
+    return target == player and player.phase == Player.Draw and #player:getPile("$suwang") > 0
   end,
   on_cost = function(self, event, target, player, data)
     return

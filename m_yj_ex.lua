@@ -976,9 +976,6 @@ local m_ex__dangxian = fk.CreateTriggerSkill{
   anim_type = "offensive",
   frequency = Skill.Compulsory,
   events = {fk.TurnStart},
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self)
-  end,
   on_use = function(self, event, target, player, data)
     local cards = player.room:getCardsFromPileByRule("slash", 1, "discardPile")
     if #cards > 0 then

@@ -4121,9 +4121,6 @@ local rangjie = fk.CreateTriggerSkill{
   name = "rangjie",
   events = {fk.Damaged},
   anim_type = "masochism",
-  can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self)
-  end,
   on_trigger = function(self, event, target, player, data)
     local ret
     for i = 1, data.damage do

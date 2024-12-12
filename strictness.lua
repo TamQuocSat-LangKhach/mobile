@@ -423,7 +423,7 @@ local zundi = fk.CreateActiveSkill{
     elseif judge.card.color == Card.Red and #room:canMoveCardInBoard() > 0 then
       local targets = room:askForChooseToMoveCardInBoard(target, "#zundi-move", self.name, true)
       if #targets > 1 then
-        targets = table.map(targets, function(id) return room:getPlayerById(id) end)
+        targets = table.map(targets, Util.Id2PlayerMapper)
         room:askForMoveCardInBoard(target, targets[1], targets[2], self.name)
       end
     end

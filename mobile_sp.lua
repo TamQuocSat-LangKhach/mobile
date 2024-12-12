@@ -427,9 +427,7 @@ local mobile__gongsun = fk.CreateTriggerSkill{
   on_refresh = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(player, "@mobile__gongsun", 0)
-    table.forEach(table.map(player:getMark("_mobile__gongsun"), function(pid)
-      return room:getPlayerById(pid)
-    end), function(p)
+    table.forEach(table.map(player:getMark("_mobile__gongsun"), Util.Id2PlayerMapper), function(p)
       room:setPlayerMark(p, "@mobile__gongsun", 0)
     end)
   end,
@@ -4160,9 +4158,7 @@ local rangjie = fk.CreateTriggerSkill{
         room:obtainCard(player, cardIds[1], false, fk.ReasonPrey)
       end
     else
-      local targets = table.map(self.cost_data, function(pId)
-        return room:getPlayerById(pId)
-      end)
+      local targets = table.map(self.cost_data, Util.Id2PlayerMapper)
       room:askForMoveCardInBoard(player, targets[1], targets[2], self.name)
     end
     player:drawCards(1, self.name)

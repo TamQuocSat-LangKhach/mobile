@@ -148,7 +148,7 @@ local QLqingzheng = fk.CreateTriggerSkill{
     local room = player.room
     local targets = table.filter(room:getOtherPlayers(player), function(p) return not p:isKongcheng() end)
     local listNames = {"log_spade", "log_club", "log_heart", "log_diamond"}
-    local listCards = {{}, {}, {}, {}}
+    local listCards = { {}, {}, {}, {} }
     for _, id in ipairs(player.player_cards[Player.Hand]) do
       local suit = Fk:getCardById(id).suit
       if suit ~= Card.NoSuit and not player:prohibitDiscard(id) then
@@ -176,7 +176,7 @@ local QLqingzheng = fk.CreateTriggerSkill{
     if player.dead then return end
     local to_throw = {}
     local listNames = {"log_spade", "log_club", "log_heart", "log_diamond"}
-    local listCards = {{}, {}, {}, {}}
+    local listCards = { {}, {}, {}, {} }
     local can_throw
     for _, id in ipairs(to.player_cards[Player.Hand]) do
       local suit = Fk:getCardById(id).suit

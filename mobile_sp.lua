@@ -4785,9 +4785,7 @@ local shihe_trigger = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target and target:getMark("@@shihe") ~= 0 and data.to == player and table.contains(target:getMark("@@shihe"), player.id)
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     player:broadcastSkillInvoke("shihe")

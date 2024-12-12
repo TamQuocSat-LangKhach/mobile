@@ -309,9 +309,7 @@ local jungongNullified = fk.CreateTriggerSkill{
       data.card and
       table.contains(data.card.skillNames, "jungong")
   end,
-  on_cost = function(self, event, target, player, data)
-    return true
-  end,
+  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:setPlayerMark(player, "jungong_nullified-turn", 1)
   end,

@@ -205,10 +205,10 @@ local chengzhao = fk.CreateTriggerSkill{
   end,
 
   refresh_events = { fk.TargetSpecified },
-  on_refresh = function (self, event, target, player, data)
+  can_refresh = function (self, event, target, player, data)
     return not player.dead and (data.extra_data or {}).chengzhaoUser == player.id
   end,
-  can_refresh = function (self, event, target, player, data)
+  on_refresh = function (self, event, target, player, data)
     local to = player.room:getPlayerById(data.to)
     if not to.dead then
       to:addQinggangTag(data)

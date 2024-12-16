@@ -1819,14 +1819,10 @@ local m_ex__dingpin = fk.CreateActiveSkill{
     if judge.card.color == Card.Black then
       if not target.dead and target.hp > 0 then
         target:drawCards(math.min(3, target.hp))
-        local targetRecorded = player:getTableMark("m_ex__dingpin_target-turn")
-        table.insert(targetRecorded, target.id)
-        room:setPlayerMark(player, "m_ex__dingpin_target-turn", targetRecorded)
+        room:addTableMark(player, "m_ex__dingpin_target-turn", target.id)
       end
     elseif judge.card.suit == Card.Heart then
-      local typesRecorded = player:getTableMark("m_ex__dingpin_types-turn")
-      table.removeOne(typesRecorded, Fk:getCardById(effect.cards[1]):getTypeString())
-      room:setPlayerMark(player, "m_ex__dingpin_types-turn", typesRecorded)
+      room:removeTableMark(player, "m_ex__dingpin_types-turn", Fk:getCardById(effect.cards[1]):getTypeString())
     elseif judge.card.suit == Card.Diamond then
       player:turnOver()
     end

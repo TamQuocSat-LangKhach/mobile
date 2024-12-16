@@ -703,7 +703,7 @@ local chuhai = fk.CreateActiveSkill{
         end
       end
       room:addPlayerMark(target, "@@chuhai-phase")
-      local targetRecorded = type(player:getMark("chuhai_target-phase")) == "table" and player:getMark("chuhai_target-phase") or {}
+      local targetRecorded = player:getTableMark("chuhai_target-phase")
       table.insertIfNeed(targetRecorded, target.id)
       room:setPlayerMark(player, "chuhai_target-phase", targetRecorded)
     end

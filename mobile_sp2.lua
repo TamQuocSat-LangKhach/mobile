@@ -103,9 +103,7 @@ local luanqun_trigger = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     if event == fk.TurnStart then
-      local mark = player:getTableMark("luanqun")
-      table.removeOne(mark, target.id)
-      room:setPlayerMark(player, "luanqun", mark)
+      room:removeTableMark(player, "luanqun", target.id)
       room:setPlayerMark(target, "luanqun"..player.id.."-turn", 1)
       room:setPlayerMark(target, "luanqun_target"..player.id.."-turn", 1)
     else

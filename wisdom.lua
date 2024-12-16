@@ -907,11 +907,11 @@ local limitedHuishi = fk.CreateActiveSkill{
 
     if #wakeSkills > 0 and from.maxHp >= #room.alive_players then
       local choice = room:askForChoice(from, wakeSkills, self.name, "#mobile__limited_huishi-choice:"..to.id)
-      local toWakeSkills = type(to:getMark("@mobile__limited_huishi")) == "table" and to:getMark("@mobile__limited_huishi") or {}
+      local toWakeSkills = to:getTableMark("@mobile__limited_huishi")
       table.insertIfNeed(toWakeSkills, choice)
       room:setPlayerMark(to, "@mobile__limited_huishi", toWakeSkills)
 
-      toWakeSkills = type(to:getMark(MarkEnum.StraightToWake)) == "table" and to:getMark(MarkEnum.StraightToWake) or {}
+      toWakeSkills = to:getTableMark(MarkEnum.StraightToWake)
       table.insertIfNeed(toWakeSkills, choice)
       room:setPlayerMark(to, MarkEnum.StraightToWake, toWakeSkills)
     else
@@ -934,14 +934,8 @@ local limitedHuishiClear = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-
-    local toWakeSkills = player:getMark("@mobile__limited_huishi")
-    table.removeOne(toWakeSkills, data.skill.name)
-    room:setPlayerMark(player, "@mobile__limited_huishi", #toWakeSkills > 0 and toWakeSkills or 0)
-
-    toWakeSkills = type(player:getMark(MarkEnum.StraightToWake)) == "table" and player:getMark(MarkEnum.StraightToWake) or {}
-    table.removeOne(toWakeSkills, data.skill.name)
-    room:setPlayerMark(player, MarkEnum.StraightToWake, #toWakeSkills > 0 and toWakeSkills or 0)
+    room:removeTableMark(player, "@mobile__limited_huishi", data.skill.name)
+    room:removeTableMark(player, MarkEnum.StraightToWake, data.skill.name)
   end,
 }
 local zuoxing = fk.CreateViewAsSkill{
@@ -1095,7 +1089,7 @@ local dinghan = fk.CreateTriggerSkill{
       return
         data.card.type == Card.TypeTrick and
         data.card.name ~= "raid_and_frontal_attack" and
-        not table.contains(type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}, data.card.trueName)
+        not table.contains(player:getTableMark("@$dinghan"), data.card.trueName)
     else
       return true
     end
@@ -1104,7 +1098,7 @@ local dinghan = fk.CreateTriggerSkill{
     if event == fk.TurnStart then
       local room = player.room
 
-      local dinghanRecord = type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}
+      local dinghanRecord = player:getTableMark("@$dinghan")
       local allTricksName = {}
       for _, id in ipairs(Fk:getAllCardIds()) do
         local card = Fk:getCardById(id)
@@ -1135,7 +1129,7 @@ local dinghan = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local dinghanRecord = type(player:getMark("@$dinghan")) == "table" and player:getMark("@$dinghan") or {}
+    local dinghanRecord = player:getTableMark("@$dinghan")
     if event == fk.TargetConfirming then
       table.insert(dinghanRecord, data.card.trueName)
       room:setPlayerMark(player, "@$dinghan", dinghanRecord)

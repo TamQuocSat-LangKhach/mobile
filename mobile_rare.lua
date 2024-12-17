@@ -167,10 +167,10 @@ local mobile__kuangcai = fk.CreateTriggerSkill{
 local mobile__kuangcai_targetmod = fk.CreateTargetModSkill{
   name = "#mobile__kuangcai_targetmod",
   bypass_times = function(self, player, skill, scope, card, to)
-    return player:usedSkillTimes("mobile__kuangcai", Player.HistoryPhase) > 0
+    return card and player:usedSkillTimes("mobile__kuangcai", Player.HistoryPhase) > 0
   end,
   bypass_distances = function(self, player, skill, card, to)
-    return player:usedSkillTimes("mobile__kuangcai", Player.HistoryPhase) > 0
+    return card and player:usedSkillTimes("mobile__kuangcai", Player.HistoryPhase) > 0
   end,
 }
 local mobile__kuangcai_trigger = fk.CreateTriggerSkill{
@@ -1502,7 +1502,7 @@ local aosi = fk.CreateTriggerSkill{
 local aosi_targetmod = fk.CreateTargetModSkill{
   name = "#aosi_targetmod",
   bypass_times = function(self, player, skill, scope, card, to)
-    return player:hasSkill(aosi) and scope == Player.HistoryPhase and to:getMark("@@aosi-phase") > 0
+    return card and player:hasSkill(aosi) and scope == Player.HistoryPhase and to:getMark("@@aosi-phase") > 0
   end,
 }
 guli:addRelatedSkill(guli_trigger)

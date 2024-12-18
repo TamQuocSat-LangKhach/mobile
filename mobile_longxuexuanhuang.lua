@@ -1326,4 +1326,134 @@ Fk:loadTranslationTable{
 
 mobileSimazhou:addSkill(suwang)
 
+local mobile__jiachong = General(extension, "mobile__jiachong", "qun", 3)
+
+local mobile__beini = fk.CreateActiveSkill{
+  name = "mobile__beini",
+  anim_type = "drawcard",
+  prompt = "#mobile__beini",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) < 1
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id and Fk:currentRoom():getPlayerById(to_select).hp >= Self.hp
+  end,
+  target_num = 1,
+  interaction = UI.ComboBox { choices = {"mobile__beini_own", "mobile__beini_other"} },
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local to = room:getPlayerById(effect.tos[1])
+    local drawer = self.interaction.data == "mobile__beini_own" and player or to
+    local from = self.interaction.data == "mobile__beini_other" and player or to
+    drawer:drawCards(2, self.name)
+    if drawer.dead or from.dead then return end
+    local all_choices = {"mobile__beini_slash:"..drawer.id, "mobile__beini_prey:"..drawer.id}
+    local choices = {}
+    if from:canUseTo(Fk:cloneCard("slash"), drawer, {bypass_distances = true, bypass_times = true}) then
+      table.insert(choices, all_choices[1])
+    end
+    if #drawer:getCardIds("ej") > 0 then
+      table.insert(choices, all_choices[2])
+    end
+    if #choices == 0 then return end
+    local choice = room:askForChoice(from, choices, self.name, nil, false, all_choices)
+    if choice == all_choices[1] then
+      room:useVirtualCard("slash", nil, from, drawer, self.name, true)
+    else
+      local card = room:askForCardChosen(from, drawer, "ej", self.name)
+      room:obtainCard(from, card, true, fk.ReasonPrey, from.id, self.name)
+    end
+  end,
+}
+mobile__jiachong:addSkill(mobile__beini)
+
+local mobile__dingfa = fk.CreateTriggerSkill{
+  name = "mobile__dingfa",
+  anim_type = "control",
+  events = {fk.EventPhaseEnd},
+  can_trigger = function(self, event, target, player, data)
+    return player == target and player:hasSkill(self) and player.phase == Player.Discard
+    and player:getMark("@mobile__dingfa-turn") >= 4
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local choices = {"mobile__dingfa_throw", "Cancel"}
+    if player:isWounded() then table.insert(choices, 2, "mobile__dingfa_recover") end
+    local choice = room:askForChoice(player, choices, self.name, nil, false, {"mobile__dingfa_throw", "mobile__dingfa_recover", "Cancel"})
+    if choice == "Cancel" then return false end
+    if choice == "mobile__dingfa_throw" then
+      local tos = room:askForChoosePlayers(player, table.map(room.alive_players, Util.IdMapper), 1, 1, "#mobile__dingfa-choose", self.name, true)
+      if #tos > 0 then
+        self.cost_data = {tos = tos}
+        return true
+      end
+    else
+      self.cost_data = nil
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if self.cost_data == nil then
+      room:recover{
+        who = player,
+        num = 1,
+        recoverBy = player,
+        skillName = self.name,
+      }
+    else
+      local to = room:getPlayerById(self.cost_data.tos[1])
+      if to:isNude() then return end
+      local cards = room:askForCardsChosen(player, to, 1, 2, "he", self.name)
+      room:throwCard(cards, self.name, to, player)
+    end
+  end,
+
+  refresh_events = {fk.AfterCardsMove},
+  can_refresh = function(self, event, target, player, data)
+    return player:hasSkill(self, true) and player.phase ~= Player.NotActive
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local num = #U.getLostCardsFromMove(player, data)
+    if num > 0 then
+      player.room:addPlayerMark(player, "@mobile__dingfa-turn", num)
+    end
+  end,
+
+  on_lose = function (self, player)
+    player.room:setPlayerMark(player, "@mobile__dingfa-turn", 0)
+  end,
+}
+mobile__jiachong:addSkill(mobile__dingfa)
+
+Fk:loadTranslationTable{
+  ["mobile__jiachong"] = "贾充",
+  ["#mobile__jiachong"] = "凶凶踽行",
+  ["designer:mobile__jiachong"] = "Loun老萌",
+  ["illustrator:mobile__jiachong"] = "铁杵文化",
+  ["cv:mobile__jiachong"] = "虞晓旭",
+
+  ["mobile__beini"] = "悖逆",
+  [":mobile__beini"] = "出牌阶段限一次，你可以选择一名体力值不小于你的角色，令你或其摸两张牌，然后未摸牌的角色选择一项：1.视为对摸牌的角色使用一张无距离限制、无次数限制且不计入使用次数的【杀】；2.获得摸牌的角色场上的一张牌。",
+  ["#mobile__beini"] = "悖逆：选择一名体力值不小于你的角色，令你或其摸两张牌，未摸牌角色选择出杀或偷牌",
+  ["mobile__beini_own"] = "你摸两张牌，其选一项",
+  ["mobile__beini_other"] = "其摸两张牌，你选一项",
+  ["mobile__beini_slash"] = "视为对 %src 使用【杀】",
+  ["mobile__beini_prey"] = "获得 %src 场上一张牌",
+  ["mobile__dingfa"] = "定法",
+  [":mobile__dingfa"] = "弃牌阶段结束时，若本回合你失去的牌数不小于4，你可以选择一项：1.回复1点体力；2.弃置一名角色至多两张牌。",
+  ["@mobile__dingfa-turn"] = "定法",
+  ["mobile__dingfa_throw"] = "弃置一名角色至多2张牌",
+  ["mobile__dingfa_recover"] = "回复1点体力",
+  ["#mobile__dingfa-choose"] = "定法：选择一名角色，弃置其至多2张牌",
+
+  ["$mobile__beini1"] = "今日污无用清名，明朝自得新圣褒嘉。",
+  ["$mobile__beini2"] = "吾佐奉朝日暖旭，又何惮落月残辉？",
+  ["$mobile__dingfa1"] = "峻礼教之防，准五服以制罪。",
+  ["$mobile__dingfa2"] = "礼律并重，臧善否恶，宽简弼国。",
+  ["~mobile__jiachong"] = "此生从势忠命，此刻，只乞不获恶谥……",
+}
+
+
 return extension

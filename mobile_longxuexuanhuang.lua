@@ -1456,4 +1456,83 @@ Fk:loadTranslationTable{
 }
 
 
+--[[
+local simazhao = General(extension, "mobile__simazhao", "wei", 3)
+local simazhao2 = General(extension, "mobile2__simazhao", "qun", 3)
+simazhao2.total_hidden = true
+
+local simazhaoWin = fk.CreateActiveSkill{ name = "mobile__simazhao_win_audio" }
+simazhaoWin.package = extension
+Fk:addSkill(simazhaoWin)
+local simazhao2Win = fk.CreateActiveSkill{ name = "mobile2__simazhao_win_audio" }
+simazhao2Win.package = extension
+Fk:addSkill(simazhao2Win)
+--]]
+
+Fk:loadTranslationTable{
+  ["mobile__simazhao"] = "司马昭",
+  ["#mobile__simazhao"] = "独祅吞天",
+  ["illustrator:mobile__simazhao"] = "腥鱼仔",
+  ["$mobile__simazhao_win_audio"] = "明日正为吉日，当举禅位之典。",
+  ["~mobile__simazhao"] = "曹髦小儿竟有如此肝胆……我实不甘。",
+
+  ["mobile2__simazhao"] = "司马昭",
+  ["#mobile2__simazhao"] = "独祅吞天",
+  ["illustrator:mobile2__simazhao"] = "腥鱼仔",
+  ["$mobile2__simazhao_win_audio"] = "万里山河，终至我司马一家。",
+  ["~mobile2__simazhao"] = "愿我晋祚，万世不易，国运永昌。",
+}
+
+
+
+Fk:loadTranslationTable{
+  ["mobile__xiezheng"] = "挟征",
+  [":mobile__xiezheng"] = "结束阶段，你可以令至多一名角色（若为斗地主模式，改为两名，本局游戏限一次）依次将一张手牌置于牌堆顶，然后视为你使用一张【兵临城下】（若为身份模式，优先指定同势力角色为目标），结算后若未造成过伤害，你失去1点体力。",
+
+  ["$mobile__xiezheng1"] = "烈祖明皇帝乘舆仍出，陛下何妨效之。",
+  ["$mobile__xiezheng2"] = "陛下宜誓临戎，使将士得凭天威。",
+  ["$mobile__xiezheng3"] = "既得众将之力，何愁贼不得平？",--挟征（第二形态）
+  ["$mobile__xiezheng4"] = "逆贼起兵作乱，诸位无心报国乎？",--挟征（第二形态）
+}
+
+
+Fk:loadTranslationTable{
+  ["mobile__qiantun"] = "谦吞",
+  [":mobile__qiantun"] = "魏势力技，出牌阶段限一次，你可以令一名有手牌的其他角色展示至少一张手牌，然后你与其拼点（其仅能用展示牌拼点）。"..
+  "若你赢，你获得其两张展示的手牌；若你没赢，你获得其两张未展示的手牌。（若为斗地主模式，至多获得两张）",
+  ["$mobile__qiantun1"] = "辅国臣之本分，何敢图于禄勋。",
+  ["$mobile__qiantun2"] = "蜀贼吴寇未灭，臣未可受此殊荣。",
+  ["$mobile__qiantun3"] = "陛下一国之君，不可使以小性。",--谦吞（赢）	
+  ["$mobile__qiantun4"] = "讲经宴筵，实非治国之道也。",--谦吞（没赢）
+}
+
+
+Fk:loadTranslationTable{
+  ["mobile__zhaoxiong"] = "昭凶",
+  [":mobile__zhaoxiong"] = "持恒技，限定技，准备阶段，若你已受伤，你可以将势力变更为群，然后你获得技能“荡异”（若为身份模式，则删去“挟征”中的“优先指定同势力角色为目标”）。",
+  ["$mobile__zhaoxiong1"] = "若得灭蜀之功，何不可受禅为帝。",
+  ["$mobile__zhaoxiong2"] = "已极人臣之贵，当一尝人主之威。",
+}
+
+
+
+Fk:loadTranslationTable{
+  ["mobile__dangyi"] = "荡异",
+  [":mobile__dangyi"] = "持恒技，主公技，每回合限一次，当你造成伤害时，你可以令此伤害+1（每局游戏限两次）。",
+  ["$mobile__dangyi1"] = "哼！斩首示众，以儆效尤。",
+  ["$mobile__dangyi2"] = "汝等仍存异心，可见心存魏阙。",
+}
+
+
+
+Fk:loadTranslationTable{
+  ["mobile__weisi"] = "威肆",
+  [":mobile__weisi"] = "群势力技，出牌阶段限一次，你可以选择一名其他角色，令其将任意张手牌移出游戏直到回合结束，然后视为对其使用一张【决斗】，"..
+  "此牌对其造成伤害后，你获得其所有手牌（若为斗地主模式，所有改为一张）。",
+  ["$mobile__weisi1"] = "上者慑敌以威，灭敌以势。",
+  ["$mobile__weisi2"] = "哼，求存者多，未见求死者也。",
+  ["$mobile__weisi3"] = "未想逆贼区区，竟然好物甚巨。", --威肆（获得手牌）
+}
+
+
 return extension

@@ -847,4 +847,53 @@ Fk:loadTranslationTable{
   ["#defensive_siege_engine"] = "大攻车·守御",
 }
 
+local enemyAtTheGatesSkill = fk.CreateActiveSkill{
+  name = "mobile__enemy_at_the_gates_skill",
+  prompt = "#mobile__enemy_at_the_gates_skill",
+  can_use = Util.CanUse,
+  target_num = 1,
+  mod_target_filter = function(self, to_select, selected, user, card)
+    return user ~= to_select
+  end,
+  target_filter = Util.TargetFilter,
+  on_effect = function(self, room, cardEffectEvent)
+    local player = room:getPlayerById(cardEffectEvent.from)
+    local to = room:getPlayerById(cardEffectEvent.to)
+    local cards = room:getNCards(4)
+    room:moveCardTo(cards, Card.Processing, nil, fk.ReasonJustMove, self.name, nil, true, player.id)
+    for _, id in ipairs(cards) do
+      local card = Fk:getCardById(id)
+      if card.trueName == "slash" and not player:prohibitUse(card) and not player:isProhibited(to, card) and to:isAlive() then
+        card.skillName = self.name
+        room:useCard({
+          card = card,
+          from = player.id,
+          tos = { {to.id} },
+          extraUse = true,
+        })
+      end
+    end
+    cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
+    if #cards > 0 then
+      room:delay(#cards * 150)
+      room:moveCardTo(table.reverse(cards), Card.DrawPile, nil, fk.ReasonPut, self.name, nil, true, player.id)
+    end
+  end,
+}
+local enemyAtTheGates = fk.CreateTrickCard{
+  name = "&mobile__enemy_at_the_gates",
+  suit = Card.Spade,
+  number = 7,
+  skill = enemyAtTheGatesSkill,
+}
+extension:addCards{
+  enemyAtTheGates,
+}
+Fk:loadTranslationTable{
+  ["mobile__enemy_at_the_gates"] = "兵临城下",
+  [":mobile__enemy_at_the_gates"] = "锦囊牌<br /><b>时机</b>：出牌阶段<br /><b>目标</b>：一名其他角色<br /><b>效果</b>：你展示牌堆顶的四张牌，依次对目标角色使用其中的【杀】，然后将其余的牌以原顺序放回牌堆顶。",
+  ["#mobile__enemy_at_the_gates_skill"] = "选择一名其他角色，你展示牌堆顶四张牌，依次对其使用其中【杀】，其余牌放回牌堆顶",
+  ["mobile__enemy_at_the_gates_skill"] = "兵临城下",
+}
+
 return extension

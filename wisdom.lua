@@ -895,7 +895,7 @@ local limitedHuishi = fk.CreateActiveSkill{
   on_use = function(self, room, effect)
     local from = room:getPlayerById(effect.from)
     local to = room:getPlayerById(effect.tos[1])
-    
+
     local wakeSkills = {}
     if #room.alive_players <= from.maxHp then
       wakeSkills = table.map(table.filter(to.player_skills, function(s)
@@ -907,13 +907,8 @@ local limitedHuishi = fk.CreateActiveSkill{
 
     if #wakeSkills > 0 and from.maxHp >= #room.alive_players then
       local choice = room:askForChoice(from, wakeSkills, self.name, "#mobile__limited_huishi-choice:"..to.id)
-      local toWakeSkills = to:getTableMark("@mobile__limited_huishi")
-      table.insertIfNeed(toWakeSkills, choice)
-      room:setPlayerMark(to, "@mobile__limited_huishi", toWakeSkills)
-
-      toWakeSkills = to:getTableMark(MarkEnum.StraightToWake)
-      table.insertIfNeed(toWakeSkills, choice)
-      room:setPlayerMark(to, MarkEnum.StraightToWake, toWakeSkills)
+      room:addTableMarkIfNeed(to, "@mobile__limited_huishi", choice)
+      room:addTableMarkIfNeed(to, MarkEnum.StraightToWake, choice)
     else
       to:drawCards(4, self.name)
     end

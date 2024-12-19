@@ -905,9 +905,7 @@ local xuetuV2 = fk.CreateActiveSkill{
     room:notifySkillInvoked(player, self.name, "support")
     local target = room:getPlayerById(effect.tos[1])
 
-    local xuetuUsed = player:getTableMark("xuetu_v2_used-phase")
-    table.insertIfNeed(xuetuUsed, self.interaction.data)
-    room:setPlayerMark(player, "xuetu_v2_used-phase", xuetuUsed)
+    room:addTableMarkIfNeed(player, "xuetu_v2_used-phase", self.interaction.data)
 
     if self.interaction.data == "xuetu_v2_recover" then
       room:recover{
@@ -1006,9 +1004,7 @@ local weiming = fk.CreateTriggerSkill{
       table.insertIfNeed(weimingTargets, toId)
       player.tag["weimingTargets"] = weimingTargets
 
-      local weimingOwners = to:getTableMark("@@weiming")
-      table.insertIfNeed(weimingOwners, player.id)
-      room:setPlayerMark(to, "@@weiming", weimingOwners)
+      room:addTableMarkIfNeed(to, "@@weiming", player.id)
     else
       for _, p in ipairs(room.alive_players) do
         local weimingOwners = p:getTableMark("@@weiming")

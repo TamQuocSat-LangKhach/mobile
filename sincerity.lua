@@ -703,9 +703,7 @@ local chuhai = fk.CreateActiveSkill{
         end
       end
       room:addPlayerMark(target, "@@chuhai-phase")
-      local targetRecorded = player:getTableMark("chuhai_target-phase")
-      table.insertIfNeed(targetRecorded, target.id)
-      room:setPlayerMark(player, "chuhai_target-phase", targetRecorded)
+      room:addTableMarkIfNeed(player, "chuhai_target-phase", target.id)
     end
   end,
 }
@@ -1190,9 +1188,7 @@ local mobile__mingfa = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.EventPhaseStart then
       player:showCards(self.cost_data)
-      local mark = player:getTableMark("@$mobile__mingfa_cards")
-      table.insertIfNeed(mark, self.cost_data[1])
-      room:setPlayerMark(player, "@$mobile__mingfa_cards", mark)
+      room:addTableMarkIfNeed(player, "@$mobile__mingfa_cards", self.cost_data[1])
     else
       if player == data.from then
         data.fromCard.number = math.min(13, data.fromCard.number + 2)

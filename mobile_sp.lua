@@ -410,13 +410,9 @@ local mobile__gongsun = fk.CreateTriggerSkill{
     local names = U.getAllCardNames("bt", true)
     if player.dead or #names == 0 or to.dead then return end
     local choice = U.askForChooseCardNames(room, player, names, 1, 1, self.name, "#mobile__gongsun-name:" .. to.id)[1]
-    local tos = player:getTableMark("_mobile__gongsun")
-    table.insertIfNeed(tos, to.id)
-    room:setPlayerMark(player, "_mobile__gongsun", tos)
+    room:addTableMarkIfNeed(player, "_mobile__gongsun", to.id)
     for _, p in ipairs({player, to}) do
-      local record = p:getTableMark("@mobile__gongsun")
-      table.insert(record, choice)
-      room:setPlayerMark(p, "@mobile__gongsun", record)
+      room:addTableMark(p, "@mobile__gongsun", choice)
     end
   end,
 

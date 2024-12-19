@@ -637,9 +637,7 @@ local shuangxiong_trigger = fk.CreateTriggerSkill{
         room:moveCardTo(cards, Card.DrawPile, nil, fk.ReasonJustMove, "m_ex__shuangxiong", nil, true)
       end
       if color == "nocolor" then return end
-      local colorsRecorded = player:getTableMark("@shuangxiong-turn")
-      table.insertIfNeed(colorsRecorded, color)
-      room:setPlayerMark(player, "@shuangxiong-turn", colorsRecorded)
+      room:addTableMarkIfNeed(player, "@shuangxiong-turn", color)
       return true
     elseif event == fk.Damaged then
       room:moveCardTo(self.cost_data, Card.PlayerHand, player, fk.ReasonJustMove, "m_ex__shuangxiong", nil, true, player.id)

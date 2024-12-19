@@ -1363,9 +1363,7 @@ local xionghuo_record = fk.CreateTriggerSkill{
           skillName = "mobile__xionghuo",
         }
         if not (player.dead or target.dead) then
-          local mark = target:getTableMark("mobile__xionghuo_prohibit-turn")
-          table.insert(mark, player.id)
-          room:setPlayerMark(target, "mobile__xionghuo_prohibit-turn", mark)
+          room:addTableMark(target, "mobile__xionghuo_prohibit-turn", player.id)
         end
       elseif rand == 2 then
         room:loseHp(target, 1, "mobile__xionghuo")

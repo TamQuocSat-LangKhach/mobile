@@ -787,9 +787,7 @@ local binglun = fk.CreateActiveSkill{
     if choice == "draw1" then
       target:drawCards(1, self.name)
     else
-      local mark = target:getTableMark(self.name)
-      table.insert(mark, player.id)
-      room:setPlayerMark(target, self.name, mark)
+      room:addTableMark(target, self.name, player.id)
     end
   end,
 }

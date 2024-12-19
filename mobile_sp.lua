@@ -4233,7 +4233,7 @@ Fk:loadTranslationTable{
   ["~yangbiao"] = "未能效死佑汉，只因宗族之重……",
 }
 
-local simazhao = General(extension, "mobile__simazhao", "wei", 3)
+local simazhao = General(extension, "mob_sp__simazhao", "wei", 3)
 local zhaoxin = fk.CreateActiveSkill{
   name = "zhaoxin",
   anim_type = "drawcard",
@@ -4331,8 +4331,8 @@ simazhao:addSkill(zhaoxin)
 simazhao:addSkill(daigong)
 AddWinAudio(simazhao)
 Fk:loadTranslationTable{
-  ["mobile__simazhao"] = "司马昭",
-  ["#mobile__simazhao"] = "四海威服",
+  ["mob_sp__simazhao"] = "司马昭", -- 手杀称为SP司马昭
+  ["#mob_sp__simazhao"] = "四海威服",
   ["zhaoxin"] = "昭心",
   [":zhaoxin"] = "出牌阶段限一次，你可以将任意张牌置于你的武将牌上，称为“望”（其总数不能超过3），然后摸等量的牌。你和你攻击范围内角色的摸牌阶段"..
   "结束时，其可以获得一张你选择的“望”，然后你可以对其造成1点伤害。",
@@ -4350,8 +4350,8 @@ Fk:loadTranslationTable{
   ["$zhaoxin2"] = "公此行欲何为，吾自有量度。",
   ["$daigong1"] = "不急，只等敌军士气渐殆。",
   ["$daigong2"] = "敌谋吾已尽料，可以长策縻之。",
-  ["~mobile__simazhao"] = "安世，接下来，就看你的了……",
-  ["$mobile__simazhao_win_audio"] = "天下归一之功，已近在咫尺。",
+  ["~mob_sp__simazhao"] = "安世，接下来，就看你的了……",
+  ["$mob_sp__simazhao_win_audio"] = "天下归一之功，已近在咫尺。",
 }
 
 --SP13：曹嵩 裴秀 杨阜 彭羕 牵招 郭女王 韩遂 阎象 李遗

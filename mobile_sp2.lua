@@ -1651,7 +1651,7 @@ local zhijieDelay = fk.CreateTriggerSkill{
     room:setPlayerMark(player, "@zhijie-phase", mark)
     player:drawCards(1, "zhijie")
     if not player.dead and x > 0 then
-      local cards = room:askForDiscard(player, x, x, true, "zhijie")
+      local cards = room:askForDiscard(player, x, x, true, "zhijie", false)
       room:addPlayerMark(player, "zhijie_discard-phase", x)
     end
   end,

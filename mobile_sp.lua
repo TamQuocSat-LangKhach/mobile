@@ -5119,69 +5119,42 @@ local yichong = fk.CreateTriggerSkill{
 }
 local wufei = fk.CreateTriggerSkill{
   name = "wufei",
-  events = {fk.TargetSpecified, fk.Damaged},
+  events = {fk.PreDamage, fk.Damaged},
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self) or player ~= target then return false end
+    if not player:hasSkill(self) then return false end
     local mark = player:getMark("yichong_target")
     if type(mark) ~= "table" then return false end
     local to = player.room:getPlayerById(mark[1])
     if to == nil or to.dead then return false end
-    if event == fk.TargetSpecified then
-      return data.firstTarget and (data.card.trueName == "slash" or (data.card:isCommonTrick() and data.card.is_damage_card))
+    if event == fk.PreDamage then
+      return player == data.from and player.room.logic:damageByCardEffect()
     elseif event == fk.Damaged then
-      return to.hp > 3
+      return player == target and to.hp > 3
     end
   end,
   on_cost = function(self, event, target, player, data)
-    if event == fk.TargetSpecified then
-      return true
-    end
     local mark = player:getMark("yichong_target")
     if type(mark) ~= "table" then return false end
-    local room = player.room
-    if room:askForSkillInvoke(player, self.name, nil, "#wufei-invoke::"..mark[1]) then
-      room:doIndicate(player.id, {mark[1]})
+    if event == fk.PreDamage or player.room:askForSkillInvoke(player, self.name, nil, "#wufei-invoke::"..mark[1]) then
+      self.cost_data = { tos = { mark[1] } }
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
-    local mark = player:getMark("yichong_target")
-    if type(mark) ~= "table" then return false end
-    local to = player.room:getPlayerById(mark[1])
-    if to == nil or to.dead then return false end
     player:broadcastSkillInvoke(self.name)
-    if event == fk.TargetSpecified then
-      player.room:notifySkillInvoked(player, self.name, "control")
-      data.extra_data = data.extra_data or {}
-      data.extra_data.wufei = mark[1]
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data.tos[1])
+    if event == fk.PreDamage then
+      room:notifySkillInvoked(player, self.name, "control")
+      data.from = to
     else
       player.room:notifySkillInvoked(player, self.name, "masochism")
       player.room:damage{
-        from = player,
         to = to,
         damage = 1,
         skillName = self.name,
       }
-    end
-  end,
-
-  refresh_events = {fk.PreDamage},
-  can_refresh = function(self, event, target, player, data)
-    if data.card then
-      local e = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
-      if e then
-        local use = e.data[1]
-        return use.extra_data and use.extra_data.wufei
-      end
-    end
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    local e = room.logic:getCurrentEvent():findParent(GameEvent.UseCard)
-    if e then
-      local use = e.data[1]
-      data.from = room:getPlayerById(use.extra_data.wufei)
     end
   end,
 }
@@ -5194,8 +5167,8 @@ Fk:loadTranslationTable{
   [":yichong"] = "准备阶段，你可以选择一名其他角色并指定一种花色，获得其所有该花色的装备和一张该花色的手牌，并令其获得“雀”标记直到你下个回合开始"..
   "（若场上已有“雀”标记则转移给该角色）。拥有“雀”标记的角色获得你指定花色的牌时，你获得此牌（你至多因此“雀”标记获得一张牌）。",
   ["wufei"] = "诬诽",
-  [":wufei"] = "你使用【杀】或伤害类普通锦囊指定目标后，令拥有“雀”标记的其他角色代替你成为伤害来源。"..
-  "你受到伤害后，若拥有“雀”标记的角色体力值大于3，你可以令其受到1点伤害。",
+  [":wufei"] = "你使用【杀】或普通锦囊牌造成的伤害的来源视为拥有“雀”的角色。"..
+  "当你受到伤害后，若拥有“雀”标记的角色体力值大于3，你可以令其受到1点无来源伤害。",
 
   ["#yichong-choose"] = "你可以发动 易宠，选择一名其他角色，获得其所有该花色的装备区里的牌和一张该花色的手牌",
   ["@yichong_que"] = "雀",

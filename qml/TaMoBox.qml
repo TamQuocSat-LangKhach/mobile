@@ -38,6 +38,7 @@ GraphicsBox {
         general: model.general
         deputyGeneral: model.deputyGeneral
         role: model.role
+        role_shown: model.role_shown
         state: "candidate"
         screenName: model.screenName
         kingdom: model.kingdom
@@ -180,6 +181,7 @@ GraphicsBox {
             kingdom = player.kingdom,
             seat = player.seat,
             role = player.role,
+            role_shown = player.role_shown,
           }
         end)()`
       );

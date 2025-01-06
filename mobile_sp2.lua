@@ -709,35 +709,33 @@ local daoshu = fk.CreateActiveSkill{
     if table.contains({"m_1v2_mode", "brawl_mode", "m_2v2_mode"}, room.settings.gameMode) then
       friends = U.GetFriends(room, player)
     end
+
+    local req = Request:new(friends, "CustomDialog")
+    req.focus_text = self.name
     for _, p in ipairs(friends) do
-      p.request_data = json.encode({
+      req:setData(p, {
         path = "packages/utility/qml/ChooseCardsAndChoiceBox.qml",
         data = {
           newHandIds,
           { "OK" },
           "#mobile__daoshu-guess",
-          nil,
+          {},
           1,
           1,
           {}
         },
       })
+      req:setDefaultReply(p, { cards = table.random(target:getCardIds("h")) })
     end
 
-    room:notifyMoveFocus(friends, self.name)
-    room:doBroadcastRequest("CustomDialog", friends)
+    req:ask()
 
     local friendIds = table.map(friends, Util.IdMapper)
     room:sortPlayersByAction(friendIds)
     for _, pid in ipairs(friendIds) do
       local p = room:getPlayerById(pid)
       if p:isAlive() then
-        local cardGuessed
-        if p.reply_ready then
-          cardGuessed = json.decode(p.client_reply).cards[1]
-        else
-          cardGuessed = table.random(target:getCardIds("h"))
-        end
+        local cardGuessed = req:getResult(p).cards[1]
 
         if cardGuessed == 0 then
           if p == player then

@@ -1382,9 +1382,7 @@ local tamo = fk.CreateTriggerSkill{
           return p.role_shown and p.role == "lord"
         end)
       elseif room:isGameMode("1v2_mode") then
-        local seat3Player = table.find(availablePlayerIds, function(pid)
-          return room:getPlayerById(pid).seat == 3
-        end)
+        local seat3Player = room:getPlayerBySeat(3)
         disabledPlayerIds = { seat3Player }
       end
 

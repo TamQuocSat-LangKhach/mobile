@@ -1403,7 +1403,7 @@ Fk:loadTranslationTable{
   ["m_ex__jianyong"] = "界简雍",
   ["#m_ex__jianyong"] = "悠游风议",
   ["illustrator:m_ex__jianyong"] = "zoo",
-  
+
   ["m_ex__qiaoshui"] = "巧说",
   [":m_ex__qiaoshui"] = "出牌阶段限一次，你可以与一名角色拼点：若你赢，本阶段你使用下一张基本牌或普通锦囊牌可以多选择或少选择一个目标；若你没赢，本阶段你不能使用锦囊牌。",
   ["#m_ex__qiaoshui_delay"] = "巧说",

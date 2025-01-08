@@ -1340,14 +1340,17 @@ local mobile__mutao = fk.CreateActiveSkill{
         return table.contains(target:getCardIds(Player.Hand), i)
       end)
     end
-    room:damage{
-      from = target,
-      to = to,
-      damage = math.min(#table.filter(to:getCardIds(Player.Hand), function(id)
+    num = math.min(#table.filter(to:getCardIds(Player.Hand), function(id)
         return Fk:getCardById(id).trueName == "slash"
-      end), 2),
-      skillName = self.name,
-    }
+      end), 2)
+    if num > 0 then
+      room:damage{
+        from = target,
+        to = to,
+        damage = num,
+        skillName = self.name,
+      }
+    end
   end,
 }
 

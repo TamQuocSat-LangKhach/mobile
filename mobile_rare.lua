@@ -2372,7 +2372,7 @@ local danggu = fk.CreateTriggerSkill{
     if not player.tag['jiedang_before_generals'] then
       return false
     end
-    
+
     if event == fk.AfterPropertyChange then
       return target == player and data.results and (data.results.generalChange or data.results.deputyChange)
     else

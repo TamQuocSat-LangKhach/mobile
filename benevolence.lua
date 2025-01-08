@@ -1383,7 +1383,7 @@ local tamo = fk.CreateTriggerSkill{
         end)
       elseif room:isGameMode("1v2_mode") then
         local seat3Player = room:getPlayerBySeat(3)
-        disabledPlayerIds = { seat3Player }
+        disabledPlayerIds = { seat3Player.id }
       end
 
       local result = room:askForCustomDialog(

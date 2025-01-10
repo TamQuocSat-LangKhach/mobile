@@ -1291,6 +1291,7 @@ Fk:loadTranslationTable{
   ["wangjing"] = "王经",
   ["#wangjing"] = "青云孤竹",
   --["illustrator:wangjing"] = "",
+  ["~wangjing"] = "有母此言，经死之无悔。",
 
   ["zujin"] = "阻进",
   [":zujin"] = "每回合每种牌名限一次。若你未受伤或体力值不为最低，你可以将一张基本牌当【杀】使用或打出；"..
@@ -1303,6 +1304,14 @@ Fk:loadTranslationTable{
   ["#jiejianw-give"] = "节谏：将手牌任意分配给其他角色，这些角色获得“节谏”标记",
   ["@jiejianw"] = "节谏",
   ["#jiejianw-invoke"] = "节谏：是否将对 %dest 使用的%arg转移给你并摸一张牌？",
+
+  ["$zujin1"] = "静守待援，不可中诱敌之计。",
+  ["$zujin2"] = "错估军情，今唯退守狄道矣。",
+  ["$zujin3"] = "蜀军远来必疲，今当先发以制。",
+
+  ["$jiejianw1"] = "陛下何急一时，今当忍而待机啊。",
+  ["$jiejianw2"] = "今权在其门，为日已久，陛下何以为抗。",
+  ["$jiejianw3"] = "昔鲁昭公败走失国，陛下因而更宜深虑。",
 }
 
 local baoxin = General(extension, "mobile__baoxin", "qun", 4)
@@ -1754,6 +1763,358 @@ Fk:loadTranslationTable{
 
 ganfuren:addSkill(shushen)
 
+local shiTaishici = General(extension, "shi__taishici", "wu", 4)
+local shiTaishiciWin = fk.CreateActiveSkill{ name = "shi__taishici_win_audio" }
+shiTaishiciWin.package = extension
+Fk:addSkill(shiTaishiciWin)
+Fk:loadTranslationTable{
+  ["shi"] = "势",
 
+  ["shi__taishici"] = "势太史慈",
+  ["#shi__taishici"] = "志踏天阶",
+  ["$shi__taishici_win_audio"] = "幸遇伯符，吾之壮志成矣！",
+  ["~shi__taishici"] = "身证大义，魂念江东……",
+}
+
+local getValueOfX = function(player, skillName, owner)
+  owner = owner or player
+  local markStr = owner:getMark("@shi__zhenfeng_" .. skillName)
+  if markStr == "shi__zhenfeng_hp" then
+    return player.hp
+  elseif markStr == "shi__zhenfeng_lostHp" then
+    return player:getLostHp()
+  elseif markStr == "shi__zhenfeng_alives" then
+    return #player.room.alive_players
+  end
+
+  if skillName == "zhanlie" then
+    return player:getAttackRange()
+  end
+
+  return player.maxHp
+end
+
+local shiHanzhan = fk.CreateActiveSkill{
+  name = "shi__hanzhan",
+  anim_type = "offensive",
+  card_num = 0,
+  target_num = 1,
+  prompt = "#shi__hanzhan",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = function(self, to_select, selected)
+    return #selected == 0 and to_select ~= Self.id
+  end,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    local target = room:getPlayerById(effect.tos[1])
+
+    for _, p in ipairs({ player, target }) do
+      local drawNum = getValueOfX(p, self.name, player) - p:getHandcardNum()
+      if drawNum > 0 then
+        p:drawCards(math.min(3, drawNum), self.name)
+      end
+    end
+
+    local duel = Fk:cloneCard("duel")
+    if player:canUseTo(duel, target) then
+      room:useCard{
+        from = player.id,
+        tos = {{ target.id }},
+        card = duel,
+      }
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["shi__hanzhan"] = "酣战",
+  [":shi__hanzhan"] = "出牌阶段限一次，你可以选择一名其他角色，你与其分别将手牌摸至X张（X为各自体力上限，且每名角色至多摸三张），" ..
+  "然后视为你对其使用一张【决斗】。",
+
+  ["#shi__hanzhan"] = "酣战：你可与一名其他角色摸牌，然后视为你对其使用【决斗】",
+
+  ["$shi__hanzhan1"] = "君壮情烈胆，某必当奉陪！",
+  ["$shi__hanzhan2"] = "哼！你我再斗一番，方知孰为霸王！",
+}
+
+shiTaishici:addSkill(shiHanzhan)
+
+local parseZhanLieMark = function (player)
+  local mark = player:getMark("@zhanlie")
+  if mark == 0 then
+    return { num = 0, max = 0 }
+  end
+
+  local markParsed = mark:split('/')
+  return { num = tonumber(markParsed[1]), max = tonumber(markParsed[2]) }
+end
+
+local zhanlie = fk.CreateTriggerSkill{
+  name = "zhanlie",
+  anim_type = "support",
+  events = {fk.AfterCardsMove, fk.EventPhaseEnd},
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.AfterCardsMove then
+      local zhanLie = parseZhanLieMark(player)
+      return
+        zhanLie.max > zhanLie.num and
+        table.find(
+          data,
+          function(move)
+            return
+              move.toArea == Card.DiscardPile and
+              table.find(
+                move.moveInfo,
+                function(info)
+                  return Fk:getCardById(info.cardId).trueName == "slash" and player.room:getCardArea(info.cardId) == Card.DiscardPile
+                end
+              )
+          end
+        )
+    end
+
+    return target == player and player:hasSkill(self) and player.phase == Player.Play and parseZhanLieMark(player).num > 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.EventPhaseEnd then
+      local use = U.askForUseVirtualCard(
+        room,
+        player,
+        "slash",
+        nil,
+        self.name,
+        "#zhanlie-slash:::" .. math.floor(parseZhanLieMark(player).num / 3),
+        true,
+        true,
+        false,
+        true,
+        nil,
+        true
+      )
+
+      if not use then
+        return false
+      end
+
+      self.cost_data = use
+    end
+
+    return true
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterCardsMove then
+      local zhanLie = parseZhanLieMark(player)
+      local canPlusNum = zhanLie.max - zhanLie.num
+      if canPlusNum == 0 then
+        return false
+      end
+
+      local marksToGet = 0
+      for _, move in ipairs(data) do
+        if move.toArea == Card.DiscardPile then
+          for _, info in ipairs(move.moveInfo) do
+            if Fk:getCardById(info.cardId).trueName == "slash" and room:getCardArea(info.cardId) == Card.DiscardPile then
+              marksToGet = marksToGet + 1
+            end
+
+            if marksToGet >= canPlusNum then
+              break
+            end
+          end
+
+          if marksToGet >= canPlusNum then
+            break
+          end
+        end
+      end
+
+      room:removePlayerMark(player, "zhanlie_max", marksToGet)
+      room:setPlayerMark(player, "@zhanlie", (zhanLie.num + marksToGet) .. "/" .. zhanLie.max)
+    else
+      local zhanLie = parseZhanLieMark(player)
+      local buffNum = math.floor(zhanLie.num / 3)
+      room:setPlayerMark(player, "@zhanlie", "0/" .. math.min(6, player:getMark("zhanlie_max")))
+
+      local use = self.cost_data
+      if buffNum > 0 then
+        use.extra_data = { zhanlieBuff = buffNum }
+      end
+      room:useCard(use)
+    end
+  end,
+  refresh_events = {fk.TurnStart, fk.PreCardUse},
+  can_refresh = function (self, event, target, player, data)
+    if event == fk.TurnStart then
+      return player:hasSkill(self) and parseZhanLieMark(player).num < 6 and getValueOfX(player, self.name) > 0
+    end
+
+    return target == player and data.card.trueName == "slash" and ((data.extra_data or {}).zhanlieBuff or 0) > 0
+  end,
+  on_refresh = function (self, event, target, player, data)
+    local room = player.room
+    if event == fk.TurnStart then
+      local zhanLie = parseZhanLieMark(player)
+      local xVal = getValueOfX(player, self.name)
+      room:setPlayerMark(player, "@zhanlie", zhanLie.num .. "/" .. math.min(6, zhanLie.num + xVal))
+      room:setPlayerMark(player, "zhanlie_max", xVal)
+    else
+      local buffNum = data.extra_data.zhanlieBuff
+      local allChoices = { "zhanlie_target", "zhanlie_damage", "zhanlie_disresponsive", "zhanlie_draw" }
+      local choiceList = table.simpleClone(allChoices)
+
+      local extraTargets = room:getUseExtraTargets(data)
+      if (#extraTargets == 0) then
+        table.remove(choiceList, 1)
+      end
+
+      local choices = room:askForChoices(player, choiceList, 1, buffNum, self.name, "#shi__zhanlie:::" .. buffNum)
+
+      data.extra_data.zhanlieBuff = {}
+      for _, choice in ipairs(choices) do
+        if choice == "zhanlie_target" then
+          local tos = room:askForChoosePlayers(player, extraTargets, 1, 1, "#zhanlie_target", self.name, false)
+          TargetGroup:pushTargets(data.tos, tos)
+        elseif choice == "zhanlie_damage" then
+          data.additionalDamage = (data.additionalDamage or 0) + 1
+        elseif choice == "zhanlie_disresponsive" then
+          data.extra_data.zhanlieBuff[choice] = true
+        else
+          data.extra_data.zhanlieBuff[choice] = player.id
+        end
+      end
+    end
+  end,
+}
+local zhanlieBuff = fk.CreateTriggerSkill{
+  name = "#zhanlie_buff",
+  mute = true,
+  events = {fk.PreCardEffect, fk.CardUseFinished},
+  can_trigger = function(self, event, target, player, data)
+    if not data.extra_data or type(data.extra_data.zhanlieBuff) ~= "table" then
+      return false
+    end
+
+    if event == fk.PreCardEffect then
+      return data.to == player.id and data.card.trueName == "slash" and data.extra_data.zhanlieBuff.zhanlie_disresponsive
+    end
+
+    return player.id == data.extra_data.zhanlieBuff.zhanlie_draw
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.PreCardEffect then
+      local ids = room:askForDiscard(player, 1, 1, true, self.name, true, nil, "#zhanlie_discard")
+      if #ids == 0 then
+        data.disresponsive = true
+      end
+    else
+      target:drawCards(2, self.name)
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["zhanlie"] = "战烈",
+  [":zhanlie"] = "出牌阶段限一次，你可以选择一名其他角色，你与其分别将手牌摸至X张（X为各自体力上限，且每名角色至多摸三张），" ..
+  "然后视为你对其使用一张【决斗】。",
+  ["#zhanlie_buff"] = "战烈",
+
+  ["@zhanlie"] = "烈",
+  ["#zhanlie-slash"] = "战烈：你可视为使用带有至多%arg个额外效果的【杀】",
+
+  ["#shi__zhanlie"] = "战烈：请为此【杀】选择至多%arg项额外效果",
+  ["zhanlie_target"] = "目标+1",
+  ["zhanlie_damage"] = "伤害+1",
+  ["zhanlie_disresponsive"] = "需额外弃置一张牌响应",
+  ["zhanlie_draw"] = "结算结束后摸2张牌",
+  ["#zhanlie_target"] = "战烈：请为此【杀】选择一个额外目标",
+  ["#zhanlie_discard"] = "战烈：请弃置一张牌，否则你不能响应此【杀】",
+
+  ["$zhanlie1"] = "且看此箭之下，焉有偷生之人？",
+  ["$zhanlie2"] = "哼，汝还能战否？",
+  ["$zhanlie3"] = "君头已在此，还不授首来降！",
+}
+
+zhanlie:addRelatedSkill(zhanlieBuff)
+shiTaishici:addSkill(zhanlie)
+
+local shiZhenfeng = fk.CreateActiveSkill{
+  name = "shi__zhenfeng",
+  frequency = Skill.Limited,
+  anim_type = "support",
+  card_num = 0,
+  target_num = 0,
+  prompt = "#shi__zhenfeng",
+  can_use = function(self, player)
+    return
+      player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
+      (player:isWounded() or (player:hasSkill("shi__hanzhan", true) or player:hasSkill("zhanlie", true)))
+  end,
+  interaction = function()
+    local choiceList = {}
+    if Self:isWounded() then
+      table.insert(choiceList, "shi__zhenfeng_recover")
+    end
+
+    if Self:hasSkill("shi__hanzhan", true) or Self:hasSkill("zhanlie", true) then
+      table.insert(choiceList, "shi__zhenfeng_upgrade")
+    end
+
+    return UI.ComboBox { choices = choiceList, all_choices = { "shi__zhenfeng_recover", "shi__zhenfeng_upgrade" } }
+  end,
+  card_filter = Util.FalseFunc,
+  target_filter = Util.FalseFunc,
+  on_use = function(self, room, effect)
+    local player = room:getPlayerById(effect.from)
+    if self.interaction.data == "shi__zhenfeng_recover" then
+      room:recover{
+        who = player,
+        num = 2,
+        recoverBy = player,
+        skillName = self.name,
+      }
+    else
+      for _, skill in ipairs({ "shi__hanzhan", "zhanlie" }) do
+        if player:hasSkill(skill, true) then
+          local choice = room:askForChoice(
+            player,
+            { "shi__zhenfeng_hp", "shi__zhenfeng_lostHp", "shi__zhenfeng_alives" },
+            skill,
+            "#shi__zhenfeng-choose:::" .. skill
+          )
+          room:setPlayerMark(player, "@shi__zhenfeng_" .. skill, choice)
+        end
+      end
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["shi__zhenfeng"] = "振锋",
+  [":shi__zhenfeng"] = "限定技，出牌阶段，你可以选择一项：1.回复2点体力；2.分别修改“酣战”及“战烈”中的X为当前体力值、" ..
+  "已损失体力值、存活角色数中的一项（拥有对应技能方可选择）。",
+
+  ["#shi__zhenfeng"] = "振锋：你可以回复体力或修改其他技能",
+  ["shi__zhenfeng_recover"] = "回复2点体力",
+  ["shi__zhenfeng_upgrade"] = "修改技能",
+
+  ["shi__zhenfeng_hp"] = "当前体力值",
+  ["shi__zhenfeng_lostHp"] = "已损失体力值",
+  ["shi__zhenfeng_alives"] = "存活角色数",
+  ["#shi__zhenfeng-choose"] = "振锋：请将%arg中的X修改为其中一项",
+
+  ["@shi__zhenfeng_shi__hanzhan"] = "酣战",
+  ["@shi__zhenfeng_zhanlie"] = "战烈",
+
+  ["$shi__zhenfeng1"] = "有胆气者，随某前去一战！",
+  ["$shi__zhenfeng2"] = "待吾重振兵马，胜负犹未可知！",
+  ["$shi__zhenfeng3"] = "前番未见高下，此番定决生死！",
+  ["$shi__zhenfeng4"] = "天道择义而襄，英雄待机而胜！",
+}
+
+shiTaishici:addSkill(shiZhenfeng)
 
 return extension

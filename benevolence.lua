@@ -195,9 +195,7 @@ Fk:loadTranslationTable{
   ["#mobile__huaxin"] = "清素拂浊",
   ["illustrator:mobile__huaxin"] = "游漫美绘",
   ["yuanqing"] = "渊清",
-  [":yuanqing"] = "锁定技，出牌阶段结束时，你随机将弃牌堆中你本回合因使用而置入弃牌堆的牌中的每种类别各一张牌置入“仁”区。"..
-  "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
-  "仁区是一个存于场上，用于存放牌的公共区域。<br>仁区中的牌上限为6张，当仁区中的牌超过6张时，最先置入仁区中的牌将置入弃牌堆。",
+  [":yuanqing"] = "锁定技，出牌阶段结束时，你随机将弃牌堆中你本回合因使用而置入弃牌堆的牌中的每种类别各一张牌置入<a href='RenPile_href'>“仁”区</a>。",
   ["shuchen"] = "疏陈",
   [":shuchen"] = "锁定技，当一名角色进入濒死状态时，若“仁”牌数至少为4，你获得所有“仁”牌，然后令其回复1点体力。",
 
@@ -501,9 +499,7 @@ Fk:loadTranslationTable{
   ["#mobile__zhangwen"] = "抱德炀和",
   ["illustrator:mobile__zhangwen"] = "凝聚永恒",
   ["gebo"] = "戈帛",
-  [":gebo"] = "锁定技，一名角色回复体力后，你从牌堆顶将一张牌置于“仁”区中。"..
-  "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
-  "仁区是一个存于场上，用于存放牌的公共区域。<br>仁区中的牌上限为6张。<br>当仁区中的牌超过6张时，最先置入仁区中的牌将置入弃牌堆。",
+  [":gebo"] = "锁定技，一名角色回复体力后，你从牌堆顶将一张牌置于<a href='RenPile_href'>“仁”区</a>中。",
   ["mobile__songshu"] = "颂蜀",
   [":mobile__songshu"] = "一名体力值大于你的其他角色摸牌阶段开始时，若“仁”区有牌，你可以令其放弃摸牌，改为获得X张“仁”区牌"..
   "（X为你的体力值，且最大为5）。若如此做，本回合其使用牌时不能指定其他角色为目标。",
@@ -700,13 +696,15 @@ local jishi = fk.CreateTriggerSkill{
   name = "jishi",
   mute = true,
   frequency = Skill.Compulsory,
-  events = {fk.CardUseFinished, "fk.AfterRenMove"},
+  events = {fk.CardUseFinished, fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(self) then
       if event == fk.CardUseFinished then
         return target == player and not data.damageDealt and player.room:getCardArea(data.card) == Card.Processing
       else
-        return data.skillName ~= "ren_overflow"
+        return table.find(data, function(move)
+          return move.extra_data and move.extra_data.removefromrenpile and move.skillName ~= "ren_overflow"
+        end)
       end
     end
   end,
@@ -837,9 +835,7 @@ Fk:loadTranslationTable{
   ["#zhangzhongjing"] = "医理圣哲",
   ["illustrator:zhangzhongjing"] = "鬼画府",
   ["jishi"] = "济世",
-  [":jishi"] = "锁定技，你使用牌结算结束后置入弃牌堆前，若此牌没有造成伤害，则将之置入“仁”区；当“仁”牌不因溢出而离开“仁”区后，你摸一张牌。"..
-  "<br/><font color='grey'>#\"<b>仁区</b>\"<br/>"..
-  "仁区是一个存于场上，用于存放牌的公共区域。<br>仁区中的牌上限为6张。<br>当仁区中的牌超过6张时，最先置入仁区中的牌将置入弃牌堆。",
+  [":jishi"] = "锁定技，你使用牌结算结束后置入弃牌堆前，若此牌没有造成伤害，则将之置入<a href='RenPile_href'>“仁”区</a>；当“仁”牌不因溢出而离开“仁”区后，你摸一张牌。",
   ["liaoyi"] = "疗疫",
   [":liaoyi"] = "其他角色回合开始时，若其手牌数小于体力值且场上“仁”数量不小于X，则你可以令其获得X张“仁”；若其手牌数大于体力值，"..
   "则可以令其将X张牌置入“仁”区（X为其手牌数与体力值差值，且至多为4）。",
@@ -1322,7 +1318,7 @@ Fk:loadTranslationTable{
   "猿：获得一名其他角色装备区里的一张牌。<br>"..
   "鹤：你摸三张牌。",
   ["youyi"] = "游医",
-  [":youyi"] = "弃牌阶段结束时，你可以将此阶段弃置的牌置入“仁”区。出牌阶段限一次，你可以弃置所有“仁”区的牌，令所有角色回复1点体力。",
+  [":youyi"] = "弃牌阶段结束时，你可以将此阶段弃置的牌置入<a href='RenPile_href'>“仁”区</a>。出牌阶段限一次，你可以弃置所有“仁”区的牌，令所有角色回复1点体力。",
   ["#wuling"] = "五灵：向一名角色传授“五禽戏”",
   ["Please arrange WuLing cards"] = "请拖动分配“五禽戏”的顺序（从左至右）",
   ["#wuling-choice"] = "五灵：选择向 %dest 传授“五禽戏”的顺序<br>已选择：%arg",

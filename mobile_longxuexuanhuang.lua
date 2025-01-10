@@ -142,11 +142,11 @@ local QLqingzheng = fk.CreateTriggerSkill{
       player:hasSkill(self) and
       player.phase == Player.Play and
       table.find(player:getCardIds("h"), function(id) return Fk:getCardById(id).suit ~= Card.NoSuit end)
-      and table.find(player.room:getOtherPlayers(player), function(p) return not p:isKongcheng() end)
+      and table.find(player.room:getOtherPlayers(player, false), function(p) return not p:isKongcheng() end)
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local targets = table.filter(room:getOtherPlayers(player), function(p) return not p:isKongcheng() end)
+    local targets = table.filter(room:getOtherPlayers(player, false), function(p) return not p:isKongcheng() end)
     local listNames = {"log_spade", "log_club", "log_heart", "log_diamond"}
     local listCards = { {}, {}, {}, {} }
     for _, id in ipairs(player.player_cards[Player.Hand]) do
@@ -503,7 +503,7 @@ local cuizhen = fk.CreateTriggerSkill{
     if player:hasSkill(self) then
       if event == fk.GameStart then
         -- return room:isGameMode("role_mode") and
-        return table.find(room:getOtherPlayers(player), function(p)
+        return table.find(room:getOtherPlayers(player, false), function(p)
           return #p:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
         end)
       elseif event == fk.TargetSpecified and target == player and player.phase == Player.Play and data.card.is_damage_card then
@@ -517,7 +517,7 @@ local cuizhen = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local room = player.room
     if event == fk.GameStart then
-      local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
+      local targets = table.map(table.filter(room:getOtherPlayers(player, false), function(p)
         return #p:getAvailableEquipSlots(Card.SubtypeWeapon) > 0
       end), Util.IdMapper)
       --local max = room:isGameMode("role_mode") and 3 or 2
@@ -1105,9 +1105,9 @@ local choumangDelay = fk.CreateTriggerSkill{
     local to = table.find(data.extra_data.choumangPreyPlayers, function(info) return info[1] == player.id end)[2]
     to = room:getPlayerById(to)
     local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
+    for _, p in ipairs(room:getOtherPlayers(player, false)) do
       if not p:isAllNude() and not p:isRemoved()
-      and ((player:distanceTo(p) <= 1) or (to:isAlive() and to:distanceTo(p) <= 1)) then
+      and ((player:distanceTo(p) <= 1) or (to:isAlive() and to:compareDistance(p, 1, "<="))) then
         table.insert(targets, p.id)
       end
     end
@@ -1283,7 +1283,7 @@ local suwang = fk.CreateTriggerSkill{
       room:obtainCard(player, player:getPile("$suwang"), false, fk.ReasonPrey, player.id, self.name)
       local tos = room:askForChoosePlayers(
         player,
-        table.map(room:getOtherPlayers(player), Util.IdMapper),
+        table.map(room:getOtherPlayers(player, false), Util.IdMapper),
         1,
         1, 
         "#suwang-choose",
@@ -1530,7 +1530,7 @@ local xiezheng = fk.CreateTriggerSkill{
     if player.dead then return end
     local extra_data = {}
     if room:isGameMode("role_mode") and player:getMark("mobile__xiezheng_updata") == 0 then
-      local must_targets = table.filter(room:getOtherPlayers(player), function (p)
+      local must_targets = table.filter(room:getOtherPlayers(player, false), function (p)
         return p.kingdom == player.kingdom
       end)
       if #must_targets > 0 then

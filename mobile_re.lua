@@ -188,7 +188,7 @@ local qingjian_delay = fk.CreateTriggerSkill{
   on_use = function(self, event, target, player, data)
     local room = player.room
     local cards = player:getPile("$m_ex__qingjian")
-    local move = room:askForYiji(player, cards, room:getOtherPlayers(player), "m_ex__qingjian",
+    local move = room:askForYiji(player, cards, room:getOtherPlayers(player, false), "m_ex__qingjian",
     #cards, #cards, nil, "$m_ex__qingjian", true)
     player:broadcastSkillInvoke("ex__qingjian")
     cards = room:doYiji(move, player.id, "m_ex__qingjian")

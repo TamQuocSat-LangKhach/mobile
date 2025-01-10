@@ -928,7 +928,7 @@ local yaohu_trigger = fk.CreateTriggerSkill{
       local id = room:askForCardChosen(target, player, {card_data = {{"yaohu", player:getPile("liuzhang_sheng")}}}, "yaohu")
       room:obtainCard(target.id, id, true, fk.ReasonPrey)
       if player.dead or target.dead then return end
-      local targets = table.map(table.filter(room:getOtherPlayers(player), function(p)
+      local targets = table.map(table.filter(room:getOtherPlayers(player, false), function(p)
         return target:inMyAttackRange(p) end), Util.IdMapper)
       if #targets == 0 then
         room:setPlayerMark(target, "@@yaohu-phase", player.id)

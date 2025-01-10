@@ -171,7 +171,7 @@ local yilie = fk.CreateTriggerSkill{
     if event == fk.GameStart then
       local tos = room:askForChoosePlayers(
         player,
-        table.map(room:getOtherPlayers(player), Util.IdMapper),
+        table.map(room:getOtherPlayers(player, false), Util.IdMapper),
         1,
         1,
         "#mobile__yilie-choose",
@@ -256,7 +256,7 @@ local guimou = fk.CreateTriggerSkill{
     if event == fk.EventPhaseStart then
       local targets = {}
       local minValue = 999
-      for _, p in ipairs(room:getOtherPlayers(player)) do
+      for _, p in ipairs(room:getOtherPlayers(player, false)) do
         local recordVal = p.tag["guimou_record" .. player.id] or 0
         if minValue >= recordVal then
           if minValue > recordVal then
@@ -1232,7 +1232,7 @@ local jiejianw = fk.CreateTriggerSkill{
     local room = player.room
     if event == fk.EventPhaseStart then
       local cards = player:getCardIds("h")
-      local result = room:askForYiji(player, cards, room:getOtherPlayers(player), self.name, 0, #cards,
+      local result = room:askForYiji(player, cards, room:getOtherPlayers(player, false), self.name, 0, #cards,
         "#jiejianw-give", nil, true)
       for _, ids in pairs(result) do
         if #ids > 0 then
@@ -1529,7 +1529,7 @@ local jiwei = fk.CreateTriggerSkill {
         end
       elseif event == fk.EventPhaseStart then
         return target == player and player.phase == Player.Start and player:getHandcardNum() >= #player.room.alive_players and
-          player:getHandcardNum() >= player.hp and #player.room:getOtherPlayers(player) > 0
+          player:getHandcardNum() >= player.hp and #player.room:getOtherPlayers(player, false) > 0
       end
     end
   end,
@@ -1557,7 +1557,7 @@ local jiwei = fk.CreateTriggerSkill {
       if color == "black" then
         cards = black
       end
-      room:askForYiji(player, cards, room:getOtherPlayers(player), self.name, #cards, #cards, "#jiwei-give:::"..color)
+      room:askForYiji(player, cards, room:getOtherPlayers(player, false), self.name, #cards, #cards, "#jiwei-give:::"..color)
     end
   end,
 }

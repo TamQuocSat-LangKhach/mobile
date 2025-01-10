@@ -573,7 +573,7 @@ local xunyi = fk.CreateTriggerSkill{
     player:broadcastSkillInvoke(self.name)
     if event == fk.GameStart then
       room:notifySkillInvoked(player, self.name, "special")
-      local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
+      local targets = table.map(room:getOtherPlayers(player, false), Util.IdMapper)
       local tos = room:askForChoosePlayers(player, targets, 1, 1, "#xunyi-choose", self.name, false, false)
       local to
       if #tos > 0 then
@@ -606,7 +606,7 @@ local xunyi = fk.CreateTriggerSkill{
     elseif event == fk.Death then
       room:notifySkillInvoked(player, self.name, "special")
       room:setPlayerMark(player, self.name, 0)
-      local targets = table.map(room:getOtherPlayers(player), Util.IdMapper)
+      local targets = table.map(room:getOtherPlayers(player, false), Util.IdMapper)
       local to = room:askForChoosePlayers(player, targets, 1, 1, "#xunyi-choose", self.name, true, false)
       if #to > 0 then
         room:setPlayerMark(room:getPlayerById(to[1]), "@@xunyi", 1)
@@ -1211,7 +1211,7 @@ local mobile__mingfa_delay = fk.CreateTriggerSkill{
     local ids = table.filter(player:getTableMark("mobile__mingfa-turn"), function(id) return table.contains(player:getCardIds("he"), id) end)
     room:setPlayerMark(player, "mobile__mingfa-turn", 0)
     if #ids == 0 then return end
-    local targets = table.map(table.filter(room:getOtherPlayers(player), function(p) return player:canPindian(p) end), Util.IdMapper)
+    local targets = table.map(table.filter(room:getOtherPlayers(player, false), function(p) return player:canPindian(p) end), Util.IdMapper)
     local tos, cid =  room:askForChooseCardAndPlayers(player, targets, 1, 1, tostring(Exppattern{ id = ids }), "#mobile__mingfa-choose", "mobile__mingfa", true)
     if #tos > 0 and cid then
       local to = room:getPlayerById(tos[1])
@@ -1557,7 +1557,7 @@ local powei = fk.CreateTriggerSkill{
     if event == fk.GameStart then
       room:notifySkillInvoked(player, self.name)
       player:broadcastSkillInvoke(self.name, 1)
-      for _, p in ipairs(room:getOtherPlayers(player)) do
+      for _, p in ipairs(room:getOtherPlayers(player, false)) do
         room:setPlayerMark(p, "@@powei_wei", 1)
       end
     elseif event == fk.TurnStart then

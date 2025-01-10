@@ -76,7 +76,7 @@ local shanxie = fk.CreateActiveSkill{
     local card = room:getCardsFromPileByRule(".|.|.|.|.|weapon")
     if #card == 0 then
       local ids = {}
-      for _, p in ipairs(room:getOtherPlayers(player)) do
+      for _, p in ipairs(room:getOtherPlayers(player, false)) do
         if p:getEquipment(Card.SubtypeWeapon) then
           table.insertTableIfNeed(ids, p:getEquipments(Card.SubtypeWeapon))
         end

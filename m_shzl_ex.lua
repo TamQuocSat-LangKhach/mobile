@@ -25,7 +25,7 @@ local leiji = fk.CreateTriggerSkill{
     return player:hasSkill(self) and target == player and data.card.name == "jink" and #player.room.alive_players > 1
   end,
   on_cost = function(self, event, target, player, data)
-    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, 1,
+    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player, false), Util.IdMapper), 1, 1,
       "#ex__leiji-choose", self.name, true)
     if #to > 0 then
       self.cost_data = {tos = to}
@@ -137,7 +137,7 @@ local guhuo = fk.CreateViewAsSkill{
 
     local canuse = true
     for _, p in ipairs(room:getOtherPlayers(player)) do
-      if not p:hasSkill("chanyuan") then
+      if not p:hasSkill("chanyuan") and p:isAlive() then
         local choice = room:askForChoice(p, {"noquestion", "question"}, self.name, "#guhuo-ask::"..player.id..":"..use.card.name)
         room:sendLog{
           type = "#guhuo_query",
@@ -835,7 +835,7 @@ local fangzhu = fk.CreateTriggerSkill{
   anim_type = "masochism",
   events = {fk.Damaged},
   on_cost = function(self, event, target, player, data)
-    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper), 1, 1,
+    local to = player.room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player, false), Util.IdMapper), 1, 1,
       "#m_ex__fangzhu-choose:::"..player:getLostHp(), self.name, true)
     if #to > 0 then
       self.cost_data = {tos = to}
@@ -1071,7 +1071,7 @@ local fangquan_delay = fk.CreateTriggerSkill{
       return not player:prohibitDiscard(id)
     end)
     local success, dat = room:askForUseActiveSkill(player, "choose_players_skill", "#m_ex__fangquan-choose", true, {
-      targets = table.map(room:getOtherPlayers(player), Util.IdMapper),
+      targets = table.map(room:getOtherPlayers(player, false), Util.IdMapper),
       num = 1,
       min_num = 1,
       pattern = tostring(Exppattern{ id = cards }),

@@ -24,7 +24,7 @@ local yingjian = fk.CreateTriggerSkill{
     local slash = Fk:cloneCard "slash"
     local max_num = slash.skill:getMaxTargetNum(player, slash)
     local targets = {}
-    for _, p in ipairs(room:getOtherPlayers(player)) do
+    for _, p in ipairs(room:getOtherPlayers(player, false)) do
       if not player:isProhibited(p, slash) then
         table.insert(targets, p.id)
       end
@@ -210,11 +210,11 @@ local mobile__shejian = fk.CreateTriggerSkill{
           end
         end
       end, Player.HistoryPhase)
-      return yes and #suits > 1 and table.find(player.room:getOtherPlayers(player), function(p) return not p:isNude() end)
+      return yes and #suits > 1 and table.find(player.room:getOtherPlayers(player, false), function(p) return not p:isNude() end)
     end
   end,
   on_cost = function(self, event, target, player, data)
-    local targets = table.map(table.filter(player.room:getOtherPlayers(player), function(p)
+    local targets = table.map(table.filter(player.room:getOtherPlayers(player, false), function(p)
       return not p:isNude() end), Util.IdMapper)
     local to = player.room:askForChoosePlayers(player, targets, 1, 1, "#mobile__shejian-choose", self.name, true)
     if #to > 0 then
@@ -872,7 +872,7 @@ local weifeng = fk.CreateTriggerSkill{
   end,
   on_refresh = function(self, event, target, player, data)
     local room = player.room
-    for _, p in ipairs(room:getOtherPlayers(player)) do
+    for _, p in ipairs(room:getOtherPlayers(player, false)) do
       if p:getMark(self.name) ~= 0 and table.find(p:getMark(self.name), function(e) return e[1] == player.id end) then
         room:setPlayerMark(p, "@weifeng", 0)
         local mark = p:getMark(self.name)
@@ -2669,7 +2669,7 @@ local yufeng = fk.CreateActiveSkill{
     player:chat(Fk:translate(chatStr))
 
     if not (score < maxScore and math.random() < 0.2) then
-      local tos = player.room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player), Util.IdMapper), 1, score,
+      local tos = player.room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player, false), Util.IdMapper), 1, score,
       "#mobile__yufeng-choose:::" .. score, self.name, true)
       for _, pid in ipairs(tos) do
         room:setPlayerMark(room:getPlayerById(pid), "@@mobile__yufeng", 1)

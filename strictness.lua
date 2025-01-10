@@ -147,7 +147,7 @@ local yajun = fk.CreateTriggerSkill{
         return true
       else
         return player.phase == Player.Play and not player:isKongcheng() and
-          table.find(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end)
+          table.find(player.room:getOtherPlayers(player, false), function(p) return player:canPindian(p) end)
       end
     end
   end,
@@ -169,7 +169,7 @@ local yajun = fk.CreateTriggerSkill{
         return false
       end, Player.HistoryTurn)
       if #ids == 0 then return false end
-      local tos, id = player.room:askForChooseCardAndPlayers(player, table.map(table.filter(player.room:getOtherPlayers(player), function(p) return player:canPindian(p) end), Util.IdMapper), 1, 1, tostring(Exppattern{ id = ids }), "#yajun-use", self.name, true)
+      local tos, id = player.room:askForChooseCardAndPlayers(player, table.map(table.filter(player.room:getOtherPlayers(player, false), function(p) return player:canPindian(p) end), Util.IdMapper), 1, 1, tostring(Exppattern{ id = ids }), "#yajun-use", self.name, true)
       if #tos > 0 and id then
         self.cost_data = {tos[1], id}
         return true
@@ -731,7 +731,7 @@ local shiji = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and data.to ~= player and data.damageType ~= fk.NormalDamage and
       not data.to:isKongcheng() and
-      table.find(player.room:getOtherPlayers(player), function(p)
+      table.find(player.room:getOtherPlayers(player, false), function(p)
         return p:getHandcardNum() >= player:getHandcardNum()
       end)
   end,
@@ -791,7 +791,7 @@ local zhengjun = fk.CreateTriggerSkill{
       end
       local reward = room:askForChoice(player, choices, self.name, "#zhengjun-reward", false, {"draw2", "recover"})
       U.rewardZhengsu(player, player, reward, self.name)
-      local to = room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player), Util.IdMapper),
+      local to = room:askForChoosePlayers(player, table.map(player.room:getOtherPlayers(player, false), Util.IdMapper),
       1, 1, "#zhengjun-choose", self.name, true)
       if #to > 0 then
         to = room:getPlayerById(to[1])

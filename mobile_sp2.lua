@@ -1064,6 +1064,7 @@ Fk:loadTranslationTable{
 }
 
 local zhangbu = General(extension, "zhangbu", "wu", 4)
+zhangbu.total_hidden = true
 local chengxiong = fk.CreateTriggerSkill{
   name = "chengxiong",
   anim_type = "offensive",

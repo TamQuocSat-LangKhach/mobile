@@ -1817,14 +1817,16 @@ local shiHanzhan = fk.CreateActiveSkill{
     local target = room:getPlayerById(effect.tos[1])
 
     for _, p in ipairs({ player, target }) do
-      local drawNum = getValueOfX(p, self.name, player) - p:getHandcardNum()
-      if drawNum > 0 then
-        p:drawCards(math.min(3, drawNum), self.name)
+      if p:isAlive() then
+        local drawNum = getValueOfX(p, self.name, player) - p:getHandcardNum()
+        if drawNum > 0 then
+          p:drawCards(math.min(3, drawNum), self.name)
+        end
       end
     end
 
     local duel = Fk:cloneCard("duel")
-    if player:canUseTo(duel, target) then
+    if player:isAlive() and target:isAlive() and player:canUseTo(duel, target) then
       room:useCard{
         from = player.id,
         tos = {{ target.id }},
@@ -1946,52 +1948,49 @@ local zhanlie = fk.CreateTriggerSkill{
 
       local use = self.cost_data
       if buffNum > 0 then
-        use.extra_data = { zhanlieBuff = buffNum }
+        local allChoices = { "zhanlie_target", "zhanlie_damage", "zhanlie_disresponsive", "zhanlie_draw" }
+        local choiceList = table.simpleClone(allChoices)
+
+        local extraTargets = room:getUseExtraTargets(use)
+        if (#extraTargets == 0) then
+          table.remove(choiceList, 1)
+        end
+
+        local choices = room:askForChoices(player, choiceList, 1, buffNum, self.name, "#shi__zhanlie:::" .. buffNum, false, false, allChoices)
+
+        for _, choice in ipairs(choices) do
+          if choice == "zhanlie_target" then
+            local tos = room:askForChoosePlayers(player, extraTargets, 1, 1, "#zhanlie_target", self.name, false)
+            TargetGroup:pushTargets(use.tos, tos)
+          elseif choice == "zhanlie_damage" then
+            use.additionalDamage = (use.additionalDamage or 0) + 1
+          else
+            use.extra_data = use.extra_data or {}
+            use.extra_data.zhanlieBuff = use.extra_data.zhanlieBuff or {}
+            if choice == "zhanlie_disresponsive" then
+              use.extra_data.zhanlieBuff[choice] = true
+            else
+              use.extra_data.zhanlieBuff[choice] = player.id
+            end
+          end
+        end
       end
+
       room:useCard(use)
     end
   end,
-  refresh_events = {fk.TurnStart, fk.PreCardUse},
+  refresh_events = {fk.TurnStart},
   can_refresh = function (self, event, target, player, data)
-    if event == fk.TurnStart then
-      return player:hasSkill(self) and parseZhanLieMark(player).num < 6 and getValueOfX(player, self.name) > 0
-    end
-
-    return target == player and data.card.trueName == "slash" and ((data.extra_data or {}).zhanlieBuff or 0) > 0
+    return player:hasSkill(self) and getValueOfX(player, self.name) > 0
   end,
   on_refresh = function (self, event, target, player, data)
     local room = player.room
-    if event == fk.TurnStart then
-      local zhanLie = parseZhanLieMark(player)
-      local xVal = getValueOfX(player, self.name)
+    local zhanLie = parseZhanLieMark(player)
+    local xVal = getValueOfX(player, self.name)
+    if parseZhanLieMark(player).num < 6 then
       room:setPlayerMark(player, "@zhanlie", zhanLie.num .. "/" .. math.min(6, zhanLie.num + xVal))
-      room:setPlayerMark(player, "zhanlie_max", xVal)
-    else
-      local buffNum = data.extra_data.zhanlieBuff
-      local allChoices = { "zhanlie_target", "zhanlie_damage", "zhanlie_disresponsive", "zhanlie_draw" }
-      local choiceList = table.simpleClone(allChoices)
-
-      local extraTargets = room:getUseExtraTargets(data)
-      if (#extraTargets == 0) then
-        table.remove(choiceList, 1)
-      end
-
-      local choices = room:askForChoices(player, choiceList, 1, buffNum, self.name, "#shi__zhanlie:::" .. buffNum)
-
-      data.extra_data.zhanlieBuff = {}
-      for _, choice in ipairs(choices) do
-        if choice == "zhanlie_target" then
-          local tos = room:askForChoosePlayers(player, extraTargets, 1, 1, "#zhanlie_target", self.name, false)
-          TargetGroup:pushTargets(data.tos, tos)
-        elseif choice == "zhanlie_damage" then
-          data.additionalDamage = (data.additionalDamage or 0) + 1
-        elseif choice == "zhanlie_disresponsive" then
-          data.extra_data.zhanlieBuff[choice] = true
-        else
-          data.extra_data.zhanlieBuff[choice] = player.id
-        end
-      end
     end
+    room:setPlayerMark(player, "zhanlie_max", xVal)
   end,
 }
 local zhanlieBuff = fk.CreateTriggerSkill{
@@ -2026,7 +2025,7 @@ Fk:loadTranslationTable{
   ["zhanlie"] = "战烈",
   [":zhanlie"] = "一名角色的回合开始时，你记录X（X为此时你的攻击范围）。本回合中的前X张【杀】进入弃牌堆后，若此牌在弃牌堆内，" ..
   "你获得1枚“烈”标记（你至多拥有6枚“烈”标记）；出牌阶段结束时，你可以移除所有“烈”标记，视为使用一张无次数限制的【杀】，" ..
-  "至多Y项（Y为你本次移除的标记数/3，向下取整）：1.此【杀】目标+1；2.此【杀】伤害基数+1；3.此【杀】需目标角色额外弃置一张牌方可响应" ..
+  "并选择至多Y项（Y为你本次移除的标记数/3，向下取整）：1.此【杀】目标+1；2.此【杀】伤害基数+1；3.此【杀】需目标角色额外弃置一张牌方可响应" ..
   "4.此【杀】结算结束后你摸两张牌。",
   ["#zhanlie_buff"] = "战烈",
 

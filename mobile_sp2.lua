@@ -1064,13 +1064,12 @@ Fk:loadTranslationTable{
 }
 
 local zhangbu = General(extension, "zhangbu", "wu", 4)
-zhangbu.total_hidden = true
 local chengxiong = fk.CreateTriggerSkill{
   name = "chengxiong",
   anim_type = "offensive",
   events = {fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self) and data.firstTarget and data.card.type == Card.TypeTrick and
+    if target == player and player:hasSkill(self) and data.card.type == Card.TypeTrick and
       table.find(AimGroup:getAllTargets(data.tos), function(id) return id ~= player.id end) then
       local room = player.room
       local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 999, function(e)
@@ -1152,7 +1151,6 @@ Fk:loadTranslationTable{
 }
 
 local wangjing = General(extension, "wangjing", "wei", 3)
-wangjing.total_hidden = true
 local zujin = fk.CreateViewAsSkill{
   name = "zujin",
   pattern = "slash,jink,nullification",
@@ -1216,50 +1214,49 @@ local zujin = fk.CreateViewAsSkill{
 local jiejianw = fk.CreateTriggerSkill{
   name = "jiejianw",
   anim_type = "support",
-  events = {fk.EventPhaseStart, fk.TargetConfirming},
+  events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
-    if event == fk.EventPhaseStart then
-      return target == player and player:hasSkill(self) and player.phase == Player.Start and not player:isKongcheng() and #player.room.alive_players > 1
-    elseif event == fk.TargetConfirming then
-      return player:hasSkill(self) and target:getMark("@jiejianw") ~= 0 and
-        #AimGroup:getAllTargets(data.tos) == 1 and
-        data.from ~= player.id and  --应该是
-        data.card.type ~= Card.TypeEquip and  --测试确实不能偷装备
-        not player.room:getPlayerById(data.from):isProhibited(player, data.card)
-    end
+    return target == player and player:hasSkill(self) and player.phase == Player.Start and not player:isKongcheng() and
+      #player.room:getOtherPlayers(player) > 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.EventPhaseStart then
-      local cards = player:getCardIds("h")
-      local result = room:askForYiji(player, cards, room:getOtherPlayers(player, false), self.name, 0, #cards,
-        "#jiejianw-give", nil, true)
-      for _, ids in pairs(result) do
-        if #ids > 0 then
-          self.cost_data = result
-          return true
-        end
-      end
-    else
-      return room:askForSkillInvoke(player, self.name, nil, "#jiejianw-invoke::"..target.id..":"..data.card:toLogString())
+    local to, cards = room:askForChooseCardsAndPlayers(player, 1, 999, room:getOtherPlayers(player), 1, 1, ".|.|.|hand",
+      "#jiejianw-give", self.name, true, false)
+    if #to > 0 and #cards > 0 then
+      self.cost_data = {tos = to, cards = cards}
+      return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if event == fk.EventPhaseStart then
-      for id, cards in pairs(self.cost_data) do
-        if #cards > 0 then
-          local p = room:getPlayerById(tonumber(id))
-          room:setPlayerMark(p, "@jiejianw", tostring(math.max(p.hp, 0)))
-        end
-      end
-      room:doYiji(self.cost_data, player.id, self.name)
-    else
-      room:doIndicate(data.from, {player.id})
-      AimGroup:cancelTarget(data, target.id)
-      AimGroup:addTargets(room, data, player.id)
-      player:drawCards(1, self.name)
+    local to = room:getPlayerById(self.cost_data.tos[1])
+    room:setPlayerMark(to, "@jiejianw", tostring(math.max(to.hp, 0)))
+    room:moveCardTo(self.cost_data.cards, Card.PlayerHand, to, fk.ReasonGive, self.name, nil, false, player.id)
+  end
+}
+local jiejianw_trigger = fk.CreateTriggerSkill{
+  name = "#jiejianw_trigger",
+  anim_type = "support",
+  events = {fk.TargetConfirming},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill("jiejianw") and target:getMark("@jiejianw") ~= 0 and player:getMark("jiejianw-turn") == 0 and
+      #AimGroup:getAllTargets(data.tos) == 1 and data.from ~= player.id and data.card.type ~= Card.TypeEquip and
+      not player.room:getPlayerById(data.from):isProhibited(player, data.card) and
+      player.room.logic:getCurrentEvent():findParent(GameEvent.Turn) ~= nil
+  end,
+  on_cost = function(self, event, target, player, data)
+    if player.room:askForSkillInvoke(player, "jiejianw", nil, "#jiejianw-invoke::"..target.id..":"..data.card:toLogString()) then
+      self.cost_data = {tos = {target.id}}
+      return true
     end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    room:setPlayerMark(player, "jiejianw-turn", 1)
+    AimGroup:cancelTarget(data, target.id)
+    AimGroup:addTargets(room, data, player.id)
+    player:drawCards(1, "jiejianw")
   end
 }
 local jiejianw_delay = fk.CreateTriggerSkill{
@@ -1284,6 +1281,7 @@ local jiejianw_delay = fk.CreateTriggerSkill{
     room:setPlayerMark(player, "@jiejianw", 0)
   end,
 }
+jiejianw:addRelatedSkill(jiejianw_trigger)
 jiejianw:addRelatedSkill(jiejianw_delay)
 wangjing:addSkill(zujin)
 wangjing:addSkill(jiejianw)
@@ -1292,22 +1290,28 @@ Fk:loadTranslationTable{
   ["#wangjing"] = "青云孤竹",
   --["illustrator:wangjing"] = "",
   ["~wangjing"] = "有母此言，经死之无悔。",
-
+}
+Fk:loadTranslationTable{
   ["zujin"] = "阻进",
   [":zujin"] = "每回合每种牌名限一次。若你未受伤或体力值不为最低，你可以将一张基本牌当【杀】使用或打出；"..
   "若你已受伤，你可以将一张基本牌当【闪】或【无懈可击】使用或打出。",
-  ["jiejianw"] = "节谏",
-  [":jiejianw"] = "准备阶段，你可将任意张手牌交给任意名其他角色，这些角色获得“节谏”标记。当“节谏”角色成为其他角色使用非装备牌的唯一目标时，"..
-  "你可将此牌转移给你，然后摸一张牌。“节谏”角色的回合结束时，移除其“节谏”标记，若其体力值不小于X（X为你交给其牌时其体力值），你摸两张牌。",
   ["#zujin-slash"] = "阻进：你可以将一张基本牌当【杀】使用或打出",
   ["#zujin-jink"] = "阻进：你可以将一张基本牌当【闪】或【无懈可击】使用或打出",
-  ["#jiejianw-give"] = "节谏：将手牌任意分配给其他角色，这些角色获得“节谏”标记",
-  ["@jiejianw"] = "节谏",
-  ["#jiejianw-invoke"] = "节谏：是否将对 %dest 使用的%arg转移给你并摸一张牌？",
 
   ["$zujin1"] = "静守待援，不可中诱敌之计。",
   ["$zujin2"] = "错估军情，今唯退守狄道矣。",
   ["$zujin3"] = "蜀军远来必疲，今当先发以制。",
+}
+Fk:loadTranslationTable{
+  ["jiejianw"] = "节谏",
+  [":jiejianw"] = "准备阶段，你可以将任意张手牌交给一名其他角色，令其获得“节谏”标记。每名角色的回合限一次，当“节谏”角色成为其他角色使用"..
+  "非装备牌的唯一目标时，你可以将此牌转移给你，然后摸一张牌。“节谏”角色的回合结束时，移除其“节谏”标记，若其体力值不小于你交给其牌时的体力值，"..
+  "你摸两张牌。",
+  ["#jiejianw-give"] = "节谏：将任意张手牌交给一名角色，其获得“节谏”标记",
+  ["@jiejianw"] = "节谏",
+  ["#jiejianw_trigger"] = "节谏",
+  ["#jiejianw-invoke"] = "节谏：是否将对 %dest 使用的%arg转移给你并摸一张牌？",
+  ["#jiejianw_delay"] = "节谏",
 
   ["$jiejianw1"] = "陛下何急一时，今当忍而待机啊。",
   ["$jiejianw2"] = "今权在其门，为日已久，陛下何以为抗。",

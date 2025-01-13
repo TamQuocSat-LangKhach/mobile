@@ -567,9 +567,198 @@ Fk:loadTranslationTable{
 }
 
 -- SP
+local sunluyu = General(extension, "mobile__sunluyu", "wu", 3, 3, General.Female)
+Fk:loadTranslationTable{
+  ["mobile__sunluyu"] = "孙鲁育",
+  ["#mobile__sunluyu"] = "舍身饲虎",
+  ["illustrator:mobile__sunluyu"] = "鬼画府",
+  ["~mobile__sunluyu"] = "今朝遭诬含冤去，他日丹青还我清！",
+}
+local mumu = fk.CreateTriggerSkill{
+  name = "mobile__mumu",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Play and
+      table.find(player.room.alive_players, function (p)
+        return #p:getCardIds("e") > 0
+      end)
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local choices = {"mobile__mumu_discard", "Cancel"}
+    if table.find(room.alive_players, function(p)
+      return #p:getEquipments(Card.SubtypeArmor) > 0
+    end) then
+      table.insert(choices, 2, "mobile__mumu_get")
+    end
+    local choice = room:askForChoice(player, choices, self.name)
+    if choice ~= "Cancel" then
+      self.cost_data = {choice = choice}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if self.cost_data.choice == "mobile__mumu_discard" then
+      local targets = table.filter(room.alive_players, function(p)
+        return #p:getCardIds("e") > 0
+      end)
+      local to = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1,
+        "#mobile__mumu-discard", self.name, false)
+      to = room:getPlayerById(to[1])
+      local id = room:askForCardChosen(player, to, "e", self.name)
+      room:throwCard(id, self.name, to, player)
+    else
+      local targets = table.filter(room.alive_players, function(p)
+        return #p:getEquipments(Card.SubtypeArmor) > 0
+      end)
+      local to = room:askForChoosePlayers(player, table.map(targets, Util.IdMapper), 1, 1,
+        "#mobile__mumu-get", self.name, false)
+      to = room:getPlayerById(to[1])
+      local ids = to:getEquipments(Card.SubtypeArmor)
+      room:setPlayerMark(player, "@@mobile__mumu-turn", 1)
+      if #ids > 1 then
+        ids = U.askforChooseCardsAndChoice(player, ids, {"OK"}, self.name, "#mobile__mumu-prey")
+      end
+      room:moveCardTo(ids, Card.PlayerHand, player, fk.ReasonPrey, self.name, nil, true, player.id)
+    end
+  end,
+}
+local mumu_prohibit = fk.CreateProhibitSkill{
+  name = "#mobile__mumu_prohibit",
+  prohibit_response = function(self, player, card)
+    return card.trueName == "slash" and player:getMark("@@mobile__mumu-turn") > 0
+  end,
+  prohibit_use = function(self, player, card)
+    return card.trueName == "slash" and player:getMark("@@mobile__mumu-turn") > 0
+  end,
+}
+mumu:addRelatedSkill(mumu_prohibit)
+Fk:loadTranslationTable{
+  ["mobile__mumu"] = "穆穆",
+  [":mobile__mumu"] = "出牌阶段开始时，你可以选择一项：弃置场上一张装备牌；获得场上一张防具牌，然后你本回合不能使用或打出【杀】。",
+  ["mobile__mumu_discard"] = "弃置一名角色装备区里的一张牌",
+  ["mobile__mumu_get"] = "获得场上一张防具牌，本回合不可出杀",
+  ["#mobile__mumu-discard"] = "穆穆：选择一名角色，弃置其一张装备",
+  ["#mobile__mumu-get"] = "穆穆：选择一名角色，获得其一张防具",
+  ["#mobile__mumu-prey"] = "穆穆：获得其中一张防具牌",
+  ["@@mobile__mumu-turn"] = "禁止出杀",
+
+  ["$mobile__mumu1"] = "夏至岁首之时，不可妄兴刀兵。",
+  ["$mobile__mumu2"] = "储君之争，乱在当下，祸及千秋呀！",
+}
+
+local meibu = fk.CreateTriggerSkill{
+  name = "mobile__meibu",
+  anim_type = "control",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and target.phase == Player.Play and target:inMyAttackRange(player) and not player:isNude()
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local cards = room:askForDiscard(player, 1, 1, true, self.name, true, nil, "#mobile__meibu-invoke::"..target.id, true)
+    if #cards > 0 then
+      self.cost_data = {tos = {target.id}, cards = cards}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local card = Fk:getCardById(self.cost_data.cards[1])
+    if card.trueName ~= "slash" and not (card.color == Card.Black and card.type == Card.TypeTrick) then
+      room:setPlayerMark(player, "mobile__meibu_src-turn", 1)
+    end
+    room:throwCard(card, self.name, player, player)
+    if target.dead then return end
+    room:setPlayerMark(target, "mobile__meibu-turn", 1)
+    room:handleAddLoseSkills(target, "mobile__zhixi", nil, true, false)
+    room.logic:getCurrentEvent():findParent(GameEvent.Turn):addCleaner(function()
+      room:handleAddLoseSkills(target, "-mobile__zhixi", nil, true, false)
+    end)
+  end,
+}
+local meibu_distance = fk.CreateDistanceSkill{
+  name = "#mobile__meibu_distance",
+  fixed_func = function(self, from, to)
+    if from:getMark("mobile__meibu-turn") > 0 and to:getMark("mobile__meibu_src-turn") > 0 then
+      return 1
+    end
+  end,
+}
+meibu:addRelatedSkill(meibu_distance)
+Fk:loadTranslationTable{
+  ["mobile__meibu"] = "魅步",
+  [":mobile__meibu"] = "其他角色的出牌阶段开始时，若你在其攻击范围内，你可以弃置一张牌，然后其本回合视为拥有技能〖止息〗。若你以此法弃置的牌"..
+  "不是【杀】或黑色锦囊牌，则本回合其与你距离为1。",
+  ["#mobile__meibu-invoke"] = "魅步：是否弃一张牌，令 %dest 本回合获得“止息”？",
+
+  ["$mobile__meibu1"] = "娇莺枝头舞，佳节兵戈止。",
+  ["$mobile__meibu2"] = "倚栏赏华舟，翠叶香万里。",
+}
+
+local zhixi = fk.CreateTriggerSkill{
+  name = "mobile__zhixi",
+  anim_type = "negative",
+  frequency = Skill.Compulsory,
+  events = {fk.AfterCardUseDeclared},
+  can_trigger = function (self, event, target, player, data)
+    return target == player and player:hasSkill(self) and data.card.type == Card.TypeTrick and player.phase == Player.Play
+  end,
+  on_use = function (self, event, target, player, data)
+    player._phase_end = true
+  end,
+
+  refresh_events = {fk.AfterCardUseDeclared, fk.HpChanged, fk.MaxHpChanged},
+  can_refresh = function(self, event, target, player, data)
+    return target == player and player.phase == Player.Play and player:hasSkill(self, true)
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterCardUseDeclared then
+      room:addPlayerMark(player, "mobile__zhixi-phase", 1)
+    end
+    local x = player.hp - player:getMark("mobile__zhixi-phase")
+    room:setPlayerMark(player, "@mobile__zhixi-phase", x > 0 and {"mobile__zhixi_remains", x} or {"mobile__zhixi_prohibit"})
+  end,
+
+  on_acquire = function (self, player, is_start)
+    local room = player.room
+    local phase_event = room.logic:getCurrentEvent():findParent(GameEvent.Phase, true)
+    if phase_event == nil then return end
+    local end_id = phase_event.id
+    local n = #room.logic:getEventsByRule(GameEvent.UseCard, 999, function (e)
+      return e.data[1].from == player.id
+    end, end_id)
+    room:setPlayerMark(player, "mobile__zhixi-phase", n)
+    n = player.hp - n
+    room:setPlayerMark(player, "@mobile__zhixi-phase", n > 0 and {"mobile__zhixi_remains", n} or {"mobile__zhixi_prohibit"})
+  end,
+  on_lose = function (self, player, is_death)
+    player.room:setPlayerMark(player, "@mobile__zhixi-phase", 0)
+  end,
+}
+local zhixi_prohibit = fk.CreateProhibitSkill{
+  name = "#mobile__zhixi_prohibit",
+  prohibit_use = function(self, player)
+    return player:hasSkill(zhixi) and player.phase == Player.Play and player:getMark("mobile__zhixi-phase") >= player.hp
+  end,
+}
+zhixi:addRelatedSkill(zhixi_prohibit)
+Fk:loadTranslationTable{
+  ["mobile__zhixi"] = "止息",
+  [":mobile__zhixi"] = "锁定技，出牌阶段，你至多使用X张牌（X为你的体力值）。你使用锦囊牌后，结束出牌阶段。",
+  ["@mobile__zhixi-phase"] = "止息",
+  ["mobile__zhixi_remains"] = "剩余",
+  ["mobile__zhixi_prohibit"] = "不能出牌",
+}
+
+sunluyu:addSkill(mumu)
+sunluyu:addSkill(meibu)
+sunluyu:addRelatedSkill(zhixi)
 
 local zhanggong = General(extension, "mobile__zhanggong", "wei", 3)
-
 local mobile__qianxinz = fk.CreateActiveSkill{
   name = "mobile__qianxinz",
   anim_type = "offensive",

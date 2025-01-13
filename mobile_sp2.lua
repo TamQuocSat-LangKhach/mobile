@@ -1518,6 +1518,7 @@ local jiwei = fk.CreateTriggerSkill {
   frequency = Skill.Compulsory,
   events = {fk.TurnEnd, fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
+    local room = player.room
     if player:hasSkill(self) then
       if event == fk.TurnEnd and target ~= player then
         local n = 0
@@ -1534,16 +1535,23 @@ local jiwei = fk.CreateTriggerSkill {
         end, Player.HistoryTurn) > 0 then
           n = n + 1
         end
-        if #player.room.logic:getActualDamageEvents(1, Util.TrueFunc, Player.HistoryTurn) > 0 then
-          n = n + 1
+        if not room:isGameMode("role_mode") and #player.room.logic:getActualDamageEvents(1, Util.TrueFunc, Player.HistoryTurn) > 0 then
+          n = n + (room:isGameMode("1v2_mode") and 2 or 1)
         end
         if n > 0 then
           self.cost_data = n
           return true
         end
       elseif event == fk.EventPhaseStart then
-        return target == player and player.phase == Player.Start and player:getHandcardNum() >= #player.room.alive_players and
-          player:getHandcardNum() >= player.hp and #player.room:getOtherPlayers(player, false) > 0
+        if not (target == player and player.phase == Player.Start and #player.room:getOtherPlayers(player, false) > 0) then
+          return false
+        end
+
+        if room:isGameMode("1v2_mode") or room:isGameMode("2v2_mode") then
+          return #room.players == #room.alive_players and player:getHandcardNum() >= 5
+        else
+          return player:getHandcardNum() >= #room.alive_players and player:getHandcardNum() >= player.hp
+        end
       end
     end
   end,
@@ -1589,8 +1597,9 @@ Fk:loadTranslationTable{
   "的一张牌，将之交给一名角色。",
   ["jiwei"] = "济危",
   [":jiwei"] = "锁定技，其他角色的回合结束时，此回合每满足一项，你便摸一张牌：<br>"..
-  "1.有角色失去过牌；<br>2.有角色受到过伤害。<br>"..
-  "准备阶段，若你的手牌数不小于场上存活人数且不小于你的体力值，则你须将手牌中数量较多颜色的牌全部分配给其他角色（若数量相同则选择一种颜色）。",
+  "1.有角色失去过牌；<br>2.有角色受到过伤害（若为身份模式，则移除此项；若为斗地主，则满足此项额外摸一张牌）。<br>"..
+  "准备阶段，若你的手牌数不小于存活人数且不小于你的体力值（若为斗地主或2v2模式，则此条件改为若所有角色均存活且你的手牌数不少于五张），" ..
+  "则你须将手牌中数量较多颜色的牌全部分配给其他角色（若数量相同则选择一种颜色）。",
   ["#bojian-ask"] = "博鉴：请选择其中一张牌",
   ["#bojian-choose"] = "博鉴：将%arg交给一名角色",
   ["#jiwei-choice"] = "济危：请选择一种颜色，将此颜色的手牌分配给其他角色",

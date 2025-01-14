@@ -645,8 +645,8 @@ Fk:loadTranslationTable{
   ["#mobile__mumu-prey"] = "穆穆：获得其中一张防具牌",
   ["@@mobile__mumu-turn"] = "禁止出杀",
 
-  ["$mobile__mumu1"] = "夏至岁首之时，不可妄兴刀兵。",
-  ["$mobile__mumu2"] = "储君之争，乱在当下，祸及千秋呀！",
+  ["$mobile__mumu1"] = "储君之争，乱在当下，祸及千秋呀！",
+  ["$mobile__mumu2"] = "夏至岁首之时，不可妄兴刀兵。",
 }
 
 local meibu = fk.CreateTriggerSkill{
@@ -694,62 +694,58 @@ Fk:loadTranslationTable{
   "不是【杀】或黑色锦囊牌，则本回合其与你距离为1。",
   ["#mobile__meibu-invoke"] = "魅步：是否弃一张牌，令 %dest 本回合获得“止息”？",
 
-  ["$mobile__meibu1"] = "娇莺枝头舞，佳节兵戈止。",
-  ["$mobile__meibu2"] = "倚栏赏华舟，翠叶香万里。",
+  ["$mobile__meibu1"] = "倚栏赏华舟，翠叶香万里。",
+  ["$mobile__meibu2"] = "娇莺枝头舞，佳节兵戈止。",
 }
 
 local zhixi = fk.CreateTriggerSkill{
   name = "mobile__zhixi",
   anim_type = "negative",
   frequency = Skill.Compulsory,
-  events = {fk.AfterCardUseDeclared},
+  mute = true,
+  events = {fk.CardUseFinished},
   can_trigger = function (self, event, target, player, data)
-    return target == player and player:hasSkill(self) and data.card.type == Card.TypeTrick and player.phase == Player.Play
+    return target == player and player:hasSkill(self) and player.phase == Player.Play
   end,
   on_use = function (self, event, target, player, data)
-    player._phase_end = true
-  end,
-
-  refresh_events = {fk.AfterCardUseDeclared, fk.HpChanged, fk.MaxHpChanged},
-  can_refresh = function(self, event, target, player, data)
-    return target == player and player.phase == Player.Play and player:hasSkill(self, true)
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.AfterCardUseDeclared then
-      room:addPlayerMark(player, "mobile__zhixi-phase", 1)
+    if data.card.type == Card.TypeTrick then
+      player:endPlayPhase()
     end
-    local x = player.hp - player:getMark("mobile__zhixi-phase")
-    room:setPlayerMark(player, "@mobile__zhixi-phase", x > 0 and {"mobile__zhixi_remains", x} or {"mobile__zhixi_prohibit"})
   end,
 
   on_acquire = function (self, player, is_start)
-    local room = player.room
-    local phase_event = room.logic:getCurrentEvent():findParent(GameEvent.Phase, true)
-    if phase_event == nil then return end
-    local end_id = phase_event.id
-    local n = #room.logic:getEventsByRule(GameEvent.UseCard, 999, function (e)
-      return e.data[1].from == player.id
-    end, end_id)
-    room:setPlayerMark(player, "mobile__zhixi-phase", n)
-    n = player.hp - n
-    room:setPlayerMark(player, "@mobile__zhixi-phase", n > 0 and {"mobile__zhixi_remains", n} or {"mobile__zhixi_prohibit"})
+    player.room:setPlayerMark(player, "@[mobile__zhixi]", 1)
   end,
   on_lose = function (self, player, is_death)
-    player.room:setPlayerMark(player, "@mobile__zhixi-phase", 0)
+    player.room:setPlayerMark(player, "@[mobile__zhixi]", 0)
+  end,
+}
+Fk:addQmlMark{
+  name = "mobile__zhixi",
+  qml_path = "",
+  how_to_show = function(name, value, p)
+    if p.phase == Player.Play then
+      local x = p.hp - p:usedSkillTimes(zhixi.name, Player.HistoryPhase)
+      if x < 1 then
+        return Fk:translate("mobile__zhixi_prohibit")
+      else
+        return Fk:translate("mobile__zhixi_remains") .. tostring(x)
+      end
+    end
+    return "#hidden"
   end,
 }
 local zhixi_prohibit = fk.CreateProhibitSkill{
   name = "#mobile__zhixi_prohibit",
   prohibit_use = function(self, player)
-    return player:hasSkill(zhixi) and player.phase == Player.Play and player:getMark("mobile__zhixi-phase") >= player.hp
+    return player:hasSkill(zhixi) and player.phase == Player.Play and player:usedSkillTimes(zhixi.name, Player.HistoryPhase) >= player.hp
   end,
 }
 zhixi:addRelatedSkill(zhixi_prohibit)
 Fk:loadTranslationTable{
   ["mobile__zhixi"] = "止息",
   [":mobile__zhixi"] = "锁定技，出牌阶段，你至多使用X张牌（X为你的体力值）。你使用锦囊牌后，结束出牌阶段。",
-  ["@mobile__zhixi-phase"] = "止息",
+  ["@[mobile__zhixi]"] = "止息",
   ["mobile__zhixi_remains"] = "剩余",
   ["mobile__zhixi_prohibit"] = "不能出牌",
 }

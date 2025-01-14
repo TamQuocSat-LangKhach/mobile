@@ -1222,8 +1222,8 @@ local jiejianw = fk.CreateTriggerSkill{
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local to, cards = room:askForChooseCardsAndPlayers(player, 1, 999, room:getOtherPlayers(player), 1, 1, ".|.|.|hand",
-      "#jiejianw-give", self.name, true, false)
+    local to, cards = room:askForChooseCardsAndPlayers(player, 1, 999, table.map(room:getOtherPlayers(player), Util.IdMapper), 1, 1,
+      ".|.|.|hand", "#jiejianw-give", self.name, true, false)
     if #to > 0 and #cards > 0 then
       self.cost_data = {tos = to, cards = cards}
       return true

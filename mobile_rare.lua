@@ -821,7 +821,7 @@ Fk:loadTranslationTable{
   ["~zhengxuan"] = "注易未毕，奈何寿数将近……",
 }
 
---将星独具：星张辽 星张郃 星徐晃 星甘宁 星黄忠 星魏延 星周不疑
+--将星独具：星张辽 星张郃 星徐晃 星甘宁 星黄忠 星魏延 星周不疑 星董卓
 local zhangliao = General(extension, "mxing__zhangliao", "qun", 4)
 local weifeng = fk.CreateTriggerSkill{
   name = "weifeng",
@@ -1626,6 +1626,281 @@ Fk:loadTranslationTable{
   ["$quesong2"] = "挽汉室于危亡，继光武之中兴。",
   ["~mxing__zhoubuyi"] = "慧童亡，天下伤……",
 }
+
+local xingdongzhuo = General(extension, "mxing__dongzhuo", "qun", 3, 4)
+Fk:loadTranslationTable{
+  ["mxing__dongzhuo"] = "星董卓",
+  ["#mxing__dongzhuo"] = "破羌安边",
+  ["~mxing__dongzhuo"] = "本欲坐观时变，奈何天不遂我啊。",
+}
+
+local xiongjin = fk.CreateTriggerSkill{
+  name = "xiongjin",
+  anim_type = "drawcard",
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return
+      player:hasSkill(self) and
+      target.phase == Player.Play and
+      player:getLostHp() > 0 and
+      player:getMark(target == player and "xiongjinUser-round" or "xiongjinAnother-round") == 0
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local prompt = target == player and "#xiongjinUser-invoke::" or "#xiongjinAnother-invoke::" .. target.id
+    if room:askForSkillInvoke(player, self.name, data, prompt .. ":" .. math.min(3, player:getLostHp())) then
+      room:setPlayerMark(player, target == player and "xiongjinUser-round" or "xiongjinAnother-round", 1)
+      return true
+    end
+
+    return false
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if not target:isAlive() then
+      return false
+    end
+
+    local drawNum = math.min(3, player:getLostHp())
+    if drawNum > 0 then
+      target:drawCards(drawNum, self.name)
+    end
+
+    room:setPlayerMark(target, target == player and "@@xiongjinNotBasic-turn" or "@@xiongjinBasic-turn", 1)
+  end,
+}
+local xiongjinDiscard = fk.CreateTriggerSkill{
+  name = "#xiongjin_discard",
+  mute = true,
+  events = {fk.EventPhaseStart},
+  can_trigger = function(self, event, target, player, data)
+    return
+      target == player and
+      player.phase == Player.Discard and
+      (
+        player:getMark("@@xiongjinBasic-turn") > 0 or
+        player:getMark("@@xiongjinNotBasic-turn") > 0
+      )
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if player:getMark("@@xiongjinBasic-turn") > 0 then
+      local toDiscard = table.filter(player:getCardIds("he"), function(id)
+        return Fk:getCardById(id).type == Card.TypeBasic
+      end)
+
+      if #toDiscard > 0 then
+        room:throwCard(toDiscard, self.name, player, player)
+      end
+    end
+    if player:getMark("@@xiongjinNotBasic-turn") > 0 then
+      local toDiscard = table.filter(player:getCardIds("he"), function(id)
+        return Fk:getCardById(id).type ~= Card.TypeBasic
+      end)
+
+      if #toDiscard > 0 then
+        room:throwCard(toDiscard, self.name, player, player)
+      end
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["xiongjin"] = "雄进",
+  [":xiongjin"] = "每轮各限一次，你/其他角色的出牌阶段开始时，你可以令你/其摸X张牌（X为你已损失的体力值，且至多为3）。" ..
+  "若如此做，本回合的弃牌阶段开始时，你/其弃置所有非基本/基本牌。",
+  ["#xiongjin_discard"] = "雄进",
+
+  ["#xiongjinUser-invoke"] = "雄进：你可摸%arg张牌，于此回合弃牌阶段开始时弃置所有非基本牌",
+  ["#xiongjinAnother-invoke"] = "雄进：你可令%dest摸%arg张牌，其于此回合弃牌阶段开始时弃置所有基本牌",
+  ["@@xiongjinBasic-turn"] = "雄进 弃基本牌",
+  ["@@xiongjinNotBasic-turn"] = "雄进 弃非基本",
+
+  ["$xiongjin1"] = "将者当有勇有谋，屡战屡胜。",
+  ["$xiongjin2"] = "逆贼造乱，此吾等建功之时。",
+}
+
+xiongjin:addRelatedSkill(xiongjinDiscard)
+xingdongzhuo:addSkill(xiongjin)
+
+local zhenbian = fk.CreateTriggerSkill{
+  name = "zhenbian",
+  frequency = Skill.Compulsory,
+  anim_type = "support",
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    return
+      player:hasSkill(self) and
+      table.find(data, function(move)
+        return
+          move.toArea == Card.DiscardPile and
+          (
+            move.moveReason ~= fk.ReasonUse or
+            not player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard, true)
+          )
+      end)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local suitsToRecord = player:getTableMark("@zhenbianSuits")
+    for _, move in ipairs(data) do
+      if
+        move.toArea == Card.DiscardPile and
+        (
+          move.moveReason ~= fk.ReasonUse or
+          not player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard, true)
+        )
+      then
+        for _, info in ipairs(move.moveInfo) do
+          local card = Fk:getCardById(info.cardId)
+          if card.suit ~= Card.NoSuit then
+            table.insertIfNeed(suitsToRecord, card:getSuitString(true))
+          end
+        end
+
+        if #suitsToRecord > 3 then
+          break
+        end
+      end
+    end
+
+    if #suitsToRecord > 3 and player.maxHp < 8 then
+      room:changeMaxHp(player, 1)
+      room:setPlayerMark(player, "@zhenbianSuits", 0)
+    else
+      room:setPlayerMark(player, "@zhenbianSuits", suitsToRecord)
+    end
+  end,
+}
+local zhenbianMaxCards = fk.CreateMaxCardsSkill{
+  name = "#zhenbian_maxCards",
+  frequency = Skill.Compulsory,
+  main_skill = zhenbian,
+  fixed_func = function(self, player)
+    return player:hasSkill(self) and player.maxHp or nil
+  end
+}
+Fk:loadTranslationTable{
+  ["zhenbian"] = "镇边",
+  [":zhenbian"] = "锁定技，你的手牌上限等同于你的体力上限；当有牌不因使用而进入弃牌堆后，本技能记录这些牌的花色，" ..
+  "然后若本技能记录了四种花色且你的体力上限小于8，则你清除记录的花色并加1点体力上限。",
+
+  ["@zhenbianSuits"] = "镇边",
+
+  ["$zhenbian1"] = "有吾在此，胡人何虑。",
+  ["$zhenbian2"] = "某功甚大，当有此赏。",
+}
+
+zhenbian:addRelatedSkill(zhenbianMaxCards)
+xingdongzhuo:addSkill(zhenbian)
+
+local baoxi = fk.CreateTriggerSkill{
+  name = "baoxi",
+  anim_type = "offensive",
+  events = {fk.AfterCardsMove},
+  can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(self) and #player:getHandlyIds(true) == 0 then
+      return false
+    end
+
+    local basicMark = player:getMark("baoxiBasic-round")
+    local notBasicMark = player:getMark("baoxiNotBasic-round")
+    if basicMark ~= 0 and notBasicMark ~= 0 then
+      return false
+    end
+
+    local basicCount = 0
+    local notBasicCount = 0
+    for _, move in ipairs(data) do
+      if move.toArea == Card.DiscardPile then
+        for _, info in ipairs(move.moveInfo) do
+          local card = Fk:getCardById(info.cardId)
+          if basicMark == 0 and card.type == Card.TypeBasic then
+            basicCount = basicCount + 1
+          elseif notBasicMark == 0 and card.type ~= Card.TypeBasic then
+            notBasicCount = notBasicCount + 1
+          end
+
+          if basicCount > 1 and notBasicCount > 1 then
+            self.cost_data = { ["baoxiBasic"] = true, ["baoxiNotBasic"] = true }
+            return true
+          end
+        end
+      end
+    end
+
+    if basicCount > 1 or notBasicCount > 1 then
+      self.cost_data = { ["baoxiBasic"] = basicCount > 1, ["baoxiNotBasic"] = notBasicCount > 1 }
+      return true
+    end
+
+    return false
+  end,
+  on_trigger = function(self, event, target, player, data)
+    local tempCostData = table.simpleClone(self.cost_data)
+    if tempCostData["baoxiBasic"] and player:hasSkill(self) and #player:getHandlyIds(true) > 0 then
+      self.cost_data = "baoxiBasic"
+      self:doCost(event, target, player, data)
+    end
+    if tempCostData["baoxiNotBasic"] and player:hasSkill(self) and #player:getHandlyIds(true) > 0 then
+      self.cost_data = "baoxiNotBasic"
+      self:doCost(event, target, player, data)
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local cardName = self.cost_data == "baoxiBasic" and "duel" or "slash"
+    room:setPlayerMark(player, "baoxiUseCard", cardName)
+    local success, dat = room:askForUseActiveSkill(player, "baoxi_viewas", "#baoxi-use:::" .. cardName, true, {bypass_times = true})
+    room:setPlayerMark(player, "baoxiUseCard", 0)
+
+    if success and dat then
+      room:setPlayerMark(player, self.cost_data .. "-round", 1)
+      dat.cardName = cardName
+      self.cost_data = dat
+      return true
+    end
+    
+    return false
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local dat = self.cost_data
+
+    room:changeMaxHp(player, -1)
+    room:sortPlayersByAction(dat.targets)
+    local targets = table.map(dat.targets, Util.Id2PlayerMapper)
+    room:useVirtualCard(dat.cardName, dat.cards, player, targets, self.name, dat.cardName == "slash")
+  end,
+}
+local baoxiViewAs = fk.CreateViewAsSkill{
+  name = "baoxi_viewas",
+  handly_pile = true,
+  card_filter = function(self, to_select, selected)
+    return #selected == 0 and table.contains(Self:getHandlyIds(true), to_select)
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then return end
+    local card = Fk:cloneCard(Self:getMark("baoxiUseCard"))
+    card.skillName = "baoxi"
+    card:addSubcard(cards[1])
+    return card
+  end,
+}
+Fk:loadTranslationTable{
+  ["baoxi"] = "暴袭",
+  [":baoxi"] = "每轮各限一次，当一次性至少两张基本牌进入弃牌堆后，你可以减1点体力上限并将一张手牌当【决斗】使用；" ..
+  "当一次性至少两张非基本牌进入弃牌堆后，你可减1点体力上限并将一张手牌当不计入次数且无次数限制的【杀】使用。",
+  ["baoxi_viewas"] = "暴袭",
+
+  ["#baoxi-use"] = "暴袭：你可减1点体力上限并将一张手牌当【%arg】使用",
+
+  ["$baoxi1"] = "哈哈哈哈，我要看到遍地血海。",
+  ["$baoxi2"] = "大好的军功，岂能放过。",
+}
+
+Fk:addSkill(baoxiViewAs)
+xingdongzhuo:addSkill(baoxi)
 
 local shichangshi = General(extension, "shichangshi", "qun", 1)
 

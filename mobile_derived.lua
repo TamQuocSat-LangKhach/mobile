@@ -397,7 +397,7 @@ local offensiveSiegeEngineSkill = fk.CreateTriggerSkill{
           player,
           self.name,
           data,
-          "#offensive_siege_engine-invoke::" .. data.to.id .. ":" .. math.min(room:getTag("RoundCount"), 3)
+          "#offensive_siege_engine-invoke::" .. data.to.id .. ":" .. math.min(room:getBanner("RoundCount"), 3)
         )
     end
 
@@ -493,7 +493,7 @@ local offensiveSiegeEngineSkill = fk.CreateTriggerSkill{
         }
       end
 
-      data.damage = data.damage + math.min(room:getTag("RoundCount"), 3)
+      data.damage = data.damage + math.min(room:getBanner("RoundCount"), 3)
     end
   end,
 

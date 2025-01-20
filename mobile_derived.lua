@@ -11,7 +11,7 @@ local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
   target_filter = Util.TargetFilter,
   target_num = 1,
   mod_target_filter = function(self, to_select, selected, user, card)
-    return user ~= to_select
+    return user.id ~= to_select
   end,
   on_effect = function(self, room, effect)
     local cardResponded = room:askForResponse(room:getPlayerById(effect.to), "raid_and_frontal_attack", "slash,jink", "#RFA-response:" .. effect.from, true, nil, effect)
@@ -853,7 +853,7 @@ local enemyAtTheGatesSkill = fk.CreateActiveSkill{
   can_use = Util.CanUse,
   target_num = 1,
   mod_target_filter = function(self, to_select, selected, user, card)
-    return user ~= to_select
+    return user.id ~= to_select
   end,
   target_filter = Util.TargetFilter,
   on_effect = function(self, room, cardEffectEvent)

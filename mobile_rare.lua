@@ -1799,7 +1799,7 @@ local baoxi = fk.CreateTriggerSkill{
   anim_type = "offensive",
   events = {fk.AfterCardsMove},
   can_trigger = function(self, event, target, player, data)
-    if not player:hasSkill(self) and #player:getHandlyIds(true) == 0 then
+    if not player:hasSkill(self) or #player:getHandlyIds(true) == 0 then
       return false
     end
 
@@ -1860,7 +1860,6 @@ local baoxi = fk.CreateTriggerSkill{
       self.cost_data = dat
       return true
     end
-    
     return false
   end,
   on_use = function(self, event, target, player, data)

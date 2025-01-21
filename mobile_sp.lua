@@ -2901,13 +2901,13 @@ local jueyong = fk.CreateTriggerSkill{
           end
           if pid ~= nil then
             local from = room:getPlayerById(pid)
-            if from ~= nil and not from.dead then
+            if from and not from.dead then
               if from:canUse(card) and not from:prohibitUse(card) and not from:isProhibited(player, card) and
                   (card.skill:modTargetFilter(player.id, {}, from, card, false)) then
                 local tos = {{player.id}}
                 if card.skill:getMinTargetNum() == 2 then
                   local targets = table.filter(room.alive_players, function (p)
-                    return card.skill:targetFilter(p.id, {player.id}, {}, card)
+                    return p ~= player and card.skill:targetFilter(p.id, {player.id}, {}, card, nil, from)
                   end)
                   if #targets > 0 then
                     local to_slash = room:askForChoosePlayers(from, table.map(targets, function (p)

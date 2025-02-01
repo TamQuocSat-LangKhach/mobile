@@ -131,6 +131,7 @@ Fk:loadTranslationTable{
 
 qianlong.permanent_skill = true
 caomao:addSkill(qianlong)
+caomao2:addSkill(qianlong.name)
 
 local QLqingzheng = fk.CreateTriggerSkill{
   name = "mobile_qianlong__qingzheng",
@@ -492,6 +493,7 @@ Fk:loadTranslationTable{
 
 weitong.permanent_skill = true
 caomao:addSkill(weitong)
+caomao2:addSkill(weitong.name)
 
 local guanqiujian = General(extension, "mob_sp__guanqiujian", "wei", 4)
 local cuizhen = fk.CreateTriggerSkill{

@@ -4530,6 +4530,7 @@ caosong:addSkill(guanzong)
 Fk:loadTranslationTable{
   ["mobile__caosong"] = "曹嵩",
   ["#mobile__caosong"] = "舆金贾权",
+  ["illustrator:mobile__caosong"] = "黯荧岛工作室",
   ["yijin"] = "亿金",
   [":yijin"] = "锁定技，游戏开始时，你获得6枚“金”标记；回合开始时，若你没有“金”，你死亡。出牌阶段开始时，你令一名没有“金”的其他角色获得一枚“金”和"..
   "对应的效果直到其下回合结束：<br>膴士：摸牌阶段摸牌数+4、出牌阶段使用【杀】次数上限+1；<br>厚任：回合结束时回复3点体力；<br>"..
@@ -4637,6 +4638,7 @@ Fk:loadTranslationTable{
   ["peixiu"] = "裴秀",
   ["#peixiu"] = "晋国开秘",
   ["designer:peixiu"] = "Loun老萌",
+  ["illustrator:peixiu"] = "鬼画府",
   ["xingtu"] = "行图",
   [":xingtu"] = "锁定技，当你使用牌时，若此牌的点数为X的因数，你摸一张牌；你使用点数为X的倍数的牌无次数限制（X为你使用的上一张牌的点数）。",
   ["juezhi"] = "爵制",
@@ -5163,6 +5165,7 @@ guonvwang:addSkill(wufei)
 Fk:loadTranslationTable{
   ["mobile__guozhao"] = "郭女王",
   ["#mobile__guozhao"] = "文德皇后",
+  ["illustrator:mobile__guozhao"] = "凡果",
   ["yichong"] = "易宠",
   [":yichong"] = "准备阶段，你可以选择一名其他角色并指定一种花色，获得其所有该花色的装备和一张该花色的手牌，并令其获得“雀”标记直到你下个回合开始"..
   "（若场上已有“雀”标记则转移给该角色）。拥有“雀”标记的角色获得你指定花色的牌时，你获得此牌（你至多因此“雀”标记获得一张牌）。",

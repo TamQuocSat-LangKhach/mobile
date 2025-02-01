@@ -379,12 +379,12 @@ local pingcai = fk.CreateActiveSkill{
       end) and 4 or 3
       local targets = table.map(table.filter(room.alive_players, function(p) return not p.chained end), Util.IdMapper)
       if #targets == 0 then return end
-      local tos = room:askForChoosePlayers(player, targets, 3, n, "#pingcai_pangtong:::"..n, self.name, false)
+      local tos = room:askForChoosePlayers(player, targets, 1, n, "#pingcai_pangtong:::"..n, self.name, false)
       if #tos > 0 then
         player:broadcastSkillInvoke(self.name, 3)
         for _, id in ipairs(tos) do
           local p = room:getPlayerById(id)
-          if not p.dead then
+          if not p.dead and not p.chained then
             p:setChainState(true)
           end
         end

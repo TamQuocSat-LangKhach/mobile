@@ -1127,7 +1127,7 @@ local mobile__lirang = fk.CreateTriggerSkill{
       end
     elseif event == fk.EventPhaseChanging then
       room:setPlayerMark(player, "@@mobile__kongrong_qian", 0)
-      return true
+      player:skip(Player.Draw)
     end
   end,
 

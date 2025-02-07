@@ -2414,13 +2414,13 @@ local huantu = fk.CreateTriggerSkill{
   on_cost = function(self, event, target, player, data)
     local card = player.room:askForCard(player, 1, 1, true, self.name, true, ".", "#huantu-invoke::"..target.id)
     if #card > 0 then
-      self.cost_data = card[1]
+      self.cost_data = {tos = {target.id}, cards = card}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
-    player.room:moveCardTo(Fk:getCardById(self.cost_data), Card.PlayerHand, target, fk.ReasonGive, self.name, nil, false, player.id)
-    return true
+    target:skip(Player.Draw)
+    player.room:moveCardTo(self.cost_data.cards, Card.PlayerHand, target, fk.ReasonGive, self.name, nil, false, player.id)
   end,
 }
 local huantu_trigger = fk.CreateTriggerSkill{
@@ -3583,9 +3583,8 @@ Fk:loadTranslationTable{
   ["illustrator:mobile__liuye"] = "Thinking",
 
   ["polu"] = "破橹",
-  [":polu"] = "锁定技，①回合开始时，你获得游戏外的【霹雳车】并使用之；②当你受到1点伤害后，若你的装备区里没有【霹雳车】，你摸一张牌，然后随机从"..
-  "牌堆中获得一张武器牌并使用之。<br>"..
-  "<font color='grey'>【霹雳车】装备牌·武器<br/><b>攻击范围</b>：9<br /><b>武器技能</b>：当你对其他角色造成伤害后，你可以弃置其装备区内的所有牌。",
+  [":polu"] = "锁定技，回合开始时，你获得游戏外的<a href=':mobile__catapult'>【霹雳车】</a>并使用之；"..
+  "当你受到1点伤害后，若你的装备区里没有【霹雳车】，你摸一张牌，然后随机从牌堆中获得一张武器牌并使用之。",
   ["choulue"] = "筹略",
   [":choulue"] = "出牌阶段开始时，你可以令一名其他角色选择是否交给你一张牌，若其执行，你可视为使用上一张除延时锦囊牌以外对你造成伤害的牌。",
   ["#choulue-choose"] = "筹略：令一名其他角色选择是否交给你一张牌",
@@ -4176,7 +4175,7 @@ local mobileYizheng = fk.CreateActiveSkill{
     local to = room:getPlayerById(effect.tos[1])
     local pindian = from:pindian({ to }, self.name)
     if pindian.results[to.id].winner == from then
-      room:setPlayerMark(to, "@@mobile__yizheng", true)
+      room:setPlayerMark(to, "@@mobile__yizheng", 1)
     else
       room:changeMaxHp(from, -1)
     end
@@ -4184,15 +4183,14 @@ local mobileYizheng = fk.CreateActiveSkill{
 }
 local mobileYizhengDebuff = fk.CreateTriggerSkill{
   name = "#yizheng-debuff",
-  mute = true,
-  priority = 3,
-  refresh_events = {fk.EventPhaseStart},
+
+  refresh_events = {fk.EventPhaseChanging},
   can_refresh = function(self, event, target, player, data)
-    return player == target and player.phase == Player.Start and target:getMark("@@mobile__yizheng") == true
+    return target == player and data.to == Player.Draw and player:getMark("@@mobile__yizheng") > 0
   end,
   on_refresh = function(self, event, target, player, data)
-    target.room:setPlayerMark(target, "@@mobile__yizheng", 0)
-    target:skip(Player.Draw)
+    player.room:setPlayerMark(player, "@@mobile__yizheng", 0)
+    player:skip(Player.Draw)
   end,
 }
 mobileYizheng:addRelatedSkill(mobileYizhengDebuff)
@@ -4463,7 +4461,7 @@ local yijin_trigger = fk.CreateTriggerSkill{
         src:broadcastSkillInvoke("yijin", 2)
         room:notifySkillInvoked(src, "yijin", "control")
       end
-      return true
+      player:skip(data.to)
     elseif event == fk.EventPhaseStart then
       if src then
         src:broadcastSkillInvoke("yijin", 2)

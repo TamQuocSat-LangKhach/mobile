@@ -764,13 +764,11 @@ local duanliang_targetmod = fk.CreateTargetModSkill{
 local jiezi = fk.CreateTriggerSkill{
   name = "m_ex__jiezi",
   anim_type = "drawcard",
-  events = {fk.EventPhaseChanging},
+  events = {fk.EventPhaseSkipped},
   frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self) and player ~= target and target and target.skipped_phases[Player.Draw] and
-        player:usedSkillTimes(self.name, Player.HistoryTurn) < 1 then
-      return data.to == Player.Play or data.to == Player.Discard or data.to == Player.Finish
-    end
+    return player:hasSkill(self) and target ~= player and data.phase == Player.Draw and
+      player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
   end,
   on_use = function(self, event, target, player, data)
     player:drawCards(1, self.name)
@@ -1053,7 +1051,6 @@ local fangquan = fk.CreateTriggerSkill{
   end,
   on_use = function(self, event, target, player, data)
     player:skip(Player.Play)
-    return true
   end,
 }
 local fangquan_delay = fk.CreateTriggerSkill{

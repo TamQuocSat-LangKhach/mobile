@@ -41,6 +41,13 @@ local laishou = fk.CreateTriggerSkill{
 local luanqun = fk.CreateActiveSkill{
   name = "luanqun",
   anim_type = "control",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("role_mode") then
+      return "luanqun_role_mode"
+    else
+      return "luanqun_1v2"
+    end
+  end,
   card_num = 0,
   target_num = 0,
   prompt = "#luanqun",
@@ -136,6 +143,10 @@ Fk:loadTranslationTable{
   [":laishou"] = "锁定技，当你受到致命伤害时，若你的体力上限小于9，防止此伤害并增加等量的体力上限。准备阶段，若你的体力上限不小于9，你死亡。",
   ["luanqun"] = "乱群",
   [":luanqun"] = "出牌阶段限一次，若你有手牌，你可以令所有角色同时展示一张手牌，然后你可以获得其中至多两张（若为身份模式，则改为至多四张）"..
+  "与你展示牌颜色相同的牌。令所有与你展示牌颜色不同的角色于其下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
+  [":luanqun_1v2"] = "出牌阶段限一次，若你有手牌，你可以令所有角色同时展示一张手牌，然后你可以获得其中至多两张"..
+  "与你展示牌颜色相同的牌。令所有与你展示牌颜色不同的角色于其下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
+  [":luanqun_role_mode"] = "出牌阶段限一次，若你有手牌，你可以令所有角色同时展示一张手牌，然后你可以获得其中至多四张"..
   "与你展示牌颜色相同的牌。令所有与你展示牌颜色不同的角色于其下回合出牌阶段使用第一张【杀】只能指定你为目标，且你不能响应其下回合使用的【杀】。",
   ["#luanqun"] = "乱群：令所有角色展示一张手牌，你可以获得其中一张与你展示颜色相同的牌",
   ["#luanqun-card"] = "乱群：请展示一张手牌",
@@ -462,6 +473,13 @@ muludawang.shield = 1
 local shoufa = fk.CreateTriggerSkill{
   name = "shoufa",
   anim_type = "offensive",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "shoufa_1v2"
+    else
+      return "shoufa_role_mode"
+    end
+  end,
   events = {fk.Damage, fk.Damaged},
   can_trigger = function(self, event, target, player, data)
     if not (target == player and player:hasSkill(self)) then
@@ -617,6 +635,12 @@ Fk:loadTranslationTable{
   [":shoufa"] = "当你每回合首次造成伤害后，你可以选择你距离2以内的一名角色；每回合限五次，当你受到伤害后，" ..
   "你可以选择与你距离大于1的一名角色（若为斗地主，则上述距离改为你距离1以内和与你距离不小于1），其随机执行一种效果：<br>" ..
   "豹，其受到1点无来源伤害；<br>鹰，你随机获得其一张牌；<br>熊，你随机弃置其装备区里的一张牌；<br>兔，其摸一张牌。",
+  [":shoufa_1v2"] = "当你每回合首次造成伤害后，你可以选择你距离1以内的一名角色；每回合限五次，当你受到伤害后，" ..
+  "你可以选择与你距离不小于1的一名角色，其随机执行一种效果：<br>" ..
+  "豹，其受到1点无来源伤害；<br>鹰，你随机获得其一张牌；<br>熊，你随机弃置其装备区里的一张牌；<br>兔，其摸一张牌。",
+  [":shoufa_role_mode"] = "当你每回合首次造成伤害后，你可以选择你距离2以内的一名角色；每回合限五次，当你受到伤害后，" ..
+  "你可以选择与你距离大于1的一名角色，其随机执行一种效果：<br>" ..
+  "豹，其受到1点无来源伤害；<br>鹰，你随机获得其一张牌；<br>熊，你随机弃置其装备区里的一张牌；<br>兔，其摸一张牌。",
   ["zhoulin"] = "咒鳞",
   [":zhoulin"] = "限定技，出牌阶段，若你有“兽法”，则你可以获得2点护甲并选择一种野兽效果，令你直到你的下个回合开始，" ..
   "“兽法”必定执行此野兽效果。",
@@ -645,6 +669,13 @@ Fk:loadTranslationTable{
 local jianggan = General(extension, "mobile__jianggan", "wei", 3)
 local daoshu = fk.CreateActiveSkill{
   name = "mobile__daoshu",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") or Fk:currentRoom():isGameMode("2v2_mode") then
+      return "mobile__daoshu_1v2"
+    else
+      return "mobile__daoshu_role_mode"
+    end
+  end,
   prompt = "#mobile__daoshu",
   mute = true,
   card_num = 0,
@@ -825,6 +856,12 @@ Fk:loadTranslationTable{
   "并将一张牌名不同的手牌伪装成此牌名的牌，然后你观看其伪装后的手牌，并猜测其中伪装过的牌（若为2v2或斗地主，" ..
   "则改为选择一名手牌数不少于2的敌方角色，且你与友方角色同时猜测）。猜中的角色对该角色各造成1点伤害，" ..
   "猜错的角色分别随机弃置两张手牌，若手牌不足则改为失去1点体力。",
+  [":mobile__daoshu_1v2"] = "出牌阶段限一次，你可以选择一名手牌数不少于2的敌方角色，该角色从随机三个牌名中选择一个，" ..
+  "并将一张牌名不同的手牌伪装成此牌名的牌，然后你观看其伪装后的手牌，并与友方角色同时猜测其中伪装过的牌。" ..
+  "猜中的角色对该角色各造成1点伤害，猜错的角色分别随机弃置两张手牌，若手牌不足则改为失去1点体力。",
+  [":mobile__daoshu_role_mode"] = "出牌阶段限一次，你可以选择一名手牌数不少于2的其他角色，该角色从随机三个牌名中选择一个，" ..
+  "并将一张牌名不同的手牌伪装成此牌名的牌，然后你观看其伪装后的手牌，并猜测其中伪装过的牌。" ..
+  "猜中的角色对该角色各造成1点伤害，猜错的角色分别随机弃置两张手牌，若手牌不足则改为失去1点体力。",
   ["daizui"] = "戴罪",
   [":daizui"] = "限定技，当你受到伤害时，若伤害值不小于你的体力值和护甲之和，你可以防止此伤害，然后将对你造成伤害的牌置于伤害来源的武将牌上，" ..
   "称为“释”。本回合结束时，其获得其“释”。",
@@ -1515,6 +1552,15 @@ local bojian = fk.CreateTriggerSkill {
 local jiwei = fk.CreateTriggerSkill {
   name = "jiwei",
   anim_type = "drawcard",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "jiwei_1v2"
+    elseif Fk:currentRoom():isGameMode("2v2_mode") then
+      return "jiwei_2v2"
+    else
+      return "jiwei_role_mode"
+    end
+  end,
   frequency = Skill.Compulsory,
   events = {fk.TurnEnd, fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
@@ -1600,6 +1646,13 @@ Fk:loadTranslationTable{
   "1.有角色失去过牌；<br>2.有角色受到过伤害（若为身份模式，则移除此项；若为斗地主，则满足此项额外摸一张牌）。<br>"..
   "准备阶段，若你的手牌数不小于存活人数且不小于你的体力值（若为斗地主或2v2模式，则此条件改为若所有角色均存活且你的手牌数不少于五张），" ..
   "则你须将手牌中数量较多颜色的牌全部分配给其他角色（若数量相同则选择一种颜色）。",
+  [":jiwei_1v2"] = "锁定技，其他角色的回合结束时，若此回合：有角色失去过牌，你摸一张牌；有角色受到过伤害，你摸两张牌。<br>"..
+  "准备阶段，若所有角色均存活且你的手牌数不少于五张，则你须将手牌中数量较多颜色的牌全部分配给其他角色（若数量相同则选择一种颜色）。",
+  [":jiwei_role_mode"] = "锁定技，其他角色的回合结束时，若此回合有角色失去过牌，你摸一张牌。<br>"..
+  "准备阶段，若你的手牌数不小于存活人数且不小于你的体力值，则你须将手牌中数量较多颜色的牌全部分配给其他角色（若数量相同则选择一种颜色）。",
+  [":jiwei_2v2"] = "锁定技，其他角色的回合结束时，此回合每满足一项，你便摸一张牌：<br>"..
+  "1.有角色失去过牌；<br>2.有角色受到过伤害。<br>"..
+  "准备阶段，若你的手牌数不小于存活人数且不小于你的体力值，则你须将手牌中数量较多颜色的牌全部分配给其他角色（若数量相同则选择一种颜色）。",
   ["#bojian-ask"] = "博鉴：请选择其中一张牌",
   ["#bojian-choose"] = "博鉴：将%arg交给一名角色",
   ["#jiwei-choice"] = "济危：请选择一种颜色，将此颜色的手牌分配给其他角色",
@@ -2131,5 +2184,136 @@ Fk:loadTranslationTable{
 }
 
 shiTaishici:addSkill(shiZhenfeng)
+
+local dongzhao = General(extension, "dongzhao", "wei", 3)
+local miaolue = fk.CreateTriggerSkill{
+  name = "miaolue",
+  anim_type = "masochism",
+  events = {fk.Damaged},
+  on_cost = function(self, event, target, player, data)
+    local choice = player.room:askForChoice(player, {"draw2", "miaolue_zhinang", "Cancel"}, self.name)
+    if choice ~= "Cancel" then
+      self.cost_data = {choice = choice}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if self.cost_data.choice == "draw2" then
+      player:drawCards(2, self.name)
+    else
+      local choice = room:askForChoice(player, {"dismantlement", "nullification", "ex_nihilo"}, self.name, "#miaolue-ask")
+      local id = room:getCardsFromPileByRule(choice, 1, "allPiles")
+      if #id > 0 then
+        room:obtainCard(player, id[1], false, fk.ReasonPrey)
+      end
+    end
+  end,
+}
+local miaolue_trigger = fk.CreateTriggerSkill{
+  name = "#miaolue_trigger",
+  anim_type = "drawcard",
+  events = {fk.GameStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill("miaolue")
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local miaolue_derivecards = {
+      {"underhanding", Card.Spade, 5},
+      {"underhanding", Card.Club, 5},
+      {"underhanding", Card.Heart, 5},
+      {"underhanding", Card.Diamond, 5},
+    }
+    local cids = table.filter(U.prepareDeriveCards(room, miaolue_derivecards, "miaolue_derivecards"), function (id)
+      return room:getCardArea(id) == Card.Void
+    end)
+    if #cids > 0 then
+      room:obtainCard(player, table.random(cids, 2), false, fk.ReasonPrey, player.id, "miaolue", MarkEnum.DestructIntoDiscard)
+    end
+  end,
+}
+miaolue:addRelatedSkill(miaolue_trigger)
+dongzhao:addSkill(miaolue)
+Fk:loadTranslationTable{
+  ["dongzhao"] = "董昭",
+  ["$miaolue1"] = "",
+  ["$miaolue2"] = "",
+  ["$yingjia1"] = "",
+  ["$yingjia2"] = "",
+  ["~dongzhao"] = "",
+}
+Fk:loadTranslationTable{
+  ["miaolue"] = "妙略",
+  [":miaolue"] = "游戏开始时，你获得两张<a href='underhanding_href'>【瞒天过海】</a>；当你受到伤害后，你可以选择一项：" ..
+  "1.摸两张牌；2.从牌堆或弃牌堆获得一张你指定的<a href='bag_of_tricks'>智囊</a>。",
+  ["miaolue_zhinang"] = "获得一张你指定的智囊",
+  ["#miaolue-ask"] = "妙略：选择要获得的一种“智囊”",
+  ["#miaolue_trigger"] = "妙略",
+}
+local yingjia = fk.CreateTriggerSkill{
+  name = "yingjia",
+  anim_type = "control",
+  frequency = Skill.Limited,
+  events = {fk.TurnEnd},
+  can_trigger = function(self, event, target, player, data)
+    if player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and
+      not player:isKongcheng() then
+      local names = {}
+      return #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function(e)
+        local use = e.data[1]
+        if use.from == player.id and use.card.type == Card.TypeTrick then
+          local name = use.card.trueName
+          if table.contains(names, name) then
+            return true
+          else
+            table.insert(names, name)
+          end
+        end
+      end, Player.HistoryTurn) == 1
+    end
+  end,
+  on_cost = function(self, event, target, player, data)
+    local room = player.room
+    local cards = table.filter(player:getCardIds("h"), function (id)
+      return not player:prohibitDiscard(id)
+    end)
+    local to, card = room:askForChooseCardAndPlayers(player, table.map(room.alive_players, Util.IdMapper), 1, 1,
+      tostring(Exppattern{ id = cards }), "#yingjia-choose", self.name, true)
+    if #to > 0 then
+      self.cost_data = {tos = to, card = {card}}
+      return true
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local to = room:getPlayerById(self.cost_data.tos[1])
+    room:throwCard(self.cost_data.card, self.name, player, player)
+    if not to.dead then
+      to:gainAnExtraTurn(true, self.name)
+    end
+  end
+}
+local yingjia_delay = fk.CreateTriggerSkill{
+  name = "#yingjia_delay",
+  mute = true,
+  events = {fk.TurnStart},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:getCurrentExtraTurnReason() == "yingjia"
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    player:drawCards(2, "yingjia")
+  end,
+}
+yingjia:addRelatedSkill(yingjia_delay)
+dongzhao:addSkill(yingjia)
+Fk:loadTranslationTable{
+  ["yingjia"] = "迎驾",
+  [":yingjia"] = "限定技，一名角色的回合结束时，若你于此回合内使用过至少两张同名锦囊牌，你可以弃置一张手牌，令一名角色执行一个额外回合，"..
+  "此额外回合开始时其摸两张牌。",
+  ["#yingjia-choose"] = "迎驾：弃置一张手牌，令一名角色获得一个额外回合",
+}
 
 return extension

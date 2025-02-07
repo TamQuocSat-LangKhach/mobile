@@ -441,9 +441,11 @@ local yinship = fk.CreateTriggerSkill{
   frequency = Skill.Compulsory,
   events = {fk.EventPhaseChanging},
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and table.contains({2, 3, 7}, data.to)
+    return target == player and player:hasSkill(self) and table.contains({Player.Start, Player.Judge, Player.Finish}, data.to)
   end,
-  on_use = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    player:skip(data.to)
+  end,
 }
 local yinship_prohibit = fk.CreateProhibitSkill{
   name = "#yinship_prohibit",
@@ -1925,6 +1927,229 @@ local tenChangShiMapper = {
   ["changshi__gaowang"] = "changshi__miaoyu",
 }
 
+local danggu = fk.CreateTriggerSkill{
+  name = "danggu",
+  frequency = Skill.Compulsory,
+  anim_type = "negative",
+  events = {fk.GameStart, fk.AfterPlayerRevived},
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.GameStart then
+      return player:hasSkill(self)
+    elseif event == fk.AfterPlayerRevived then
+      return
+        target == player and
+        data.reason == "rest" and
+        type(player.tag["changshi_cards"]) == "table" and
+        #player.tag["changshi_cards"] > 0
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+
+    ---@param room Room
+    ---@param player ServerPlayer
+    ---@param generals string[]
+    local doJieDang = function(room, player, generals)
+      if type(generals) ~= "table" or #generals < 2 then
+        return
+      end
+
+      generals = table.simpleClone(generals)
+
+      local mainGeneral
+      local deputyGeneral
+      if #generals < 3 then
+        mainGeneral = generals[1]
+        deputyGeneral = generals[2]
+      else
+        mainGeneral = table.random(generals)
+        table.removeOne(generals, mainGeneral)
+        local deputyGenerals = table.random(generals, 4)
+
+        local haters = {
+          ["changshi__bilan"] = 'changshi__hankui',
+          ["changshi__hankui"] = 'changshi__bilan',
+          ["changshi__duangui"] = 'changshi__guosheng',
+          ["changshi__guosheng"] = 'changshi__duangui',
+        }
+
+        local disabledGeneral = ""
+        local hater = haters[mainGeneral]
+        if hater and table.contains(deputyGenerals, hater) then
+          disabledGeneral = hater
+        elseif math.random() < 0.1 then
+          disabledGeneral = table.random(deputyGenerals)
+        end
+
+        local result = room:askForCustomDialog(
+          player, "jiedang",
+          "packages/mobile/qml/JieDangBox.qml",
+          { mainGeneral, deputyGenerals, disabledGeneral }
+        )
+
+        if result ~= "" then
+          deputyGeneral = json.decode(result).general
+        else
+          deputyGeneral = table.random(deputyGenerals)
+        end
+      end
+
+      player.tag['jiedang_before_generals'] = { player.general, player.deputyGeneral }
+      table.removeOne(generals, mainGeneral)
+      table.removeOne(generals, deputyGeneral)
+      player.tag['changshi_cards'] = generals
+      room:setPlayerMark(player, "@&changshiCards", #generals > 0 and generals or 0)
+
+      room:changeHero(player, mainGeneral, true, false, false, false)
+      room:changeHero(player, deputyGeneral, true, true, false, false)
+      room:handleAddLoseSkills(player, tenChangShiMapper[mainGeneral] .. "|" .. tenChangShiMapper[deputyGeneral], nil, false)
+    end
+    if event == fk.GameStart then
+      local tenChangShis = {}
+      for changShi, _ in pairs(tenChangShiMapper) do
+        table.insert(tenChangShis, changShi)
+      end
+      room:setPlayerMark(player, "@&changshiCards", tenChangShis)
+
+      doJieDang(room, player, tenChangShis)
+    elseif event == fk.AfterPlayerRevived then
+      doJieDang(room, player, player.tag['changshi_cards'])
+      player:drawCards(1, self.name)
+    end
+  end,
+
+  refresh_events = { fk.BeforeGameOverJudge, fk.GameFinished, fk.AfterPropertyChange },
+  can_refresh = function(self, event, target, player, data)
+    if not player.tag['jiedang_before_generals'] then
+      return false
+    end
+
+    if event == fk.AfterPropertyChange then
+      return target == player and data.results and (data.results.generalChange or data.results.deputyChange)
+    else
+      return event == fk.GameFinished or target == player
+    end
+  end,
+  on_refresh = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.AfterPropertyChange then
+      if data.results.generalChange then
+        local beforeGeneral = data.results.generalChange[1]
+        if tenChangShiMapper[beforeGeneral] then
+          room:handleAddLoseSkills(player, "-" .. tenChangShiMapper[beforeGeneral], nil, false)
+        end
+
+        if not tenChangShiMapper[player.general] then
+          player.tag['jiedang_before_generals'][1] = player.general
+        end
+      end
+
+      if data.results.deputyChange then
+        local beforeGeneral = data.results.deputyChange[1]
+        if tenChangShiMapper[beforeGeneral] then
+          room:handleAddLoseSkills(player, "-" .. tenChangShiMapper[beforeGeneral], nil, false)
+        end
+
+        if not tenChangShiMapper[player.deputyGeneral] then
+          player.tag['jiedang_before_generals'][2] = player.deputyGeneral
+        end
+      end
+    else
+      local generals = player.tag['jiedang_before_generals']
+
+      local hasDangGu = player:hasSkill(self, true, true)
+      local hasMoWang = player:hasSkill("mowang", true, true)
+
+      if #generals > 1 then
+        if event == fk.GameFinished then
+          room:setPlayerProperty(player, "deputyGeneral", generals[2])
+        else
+          room:changeHero(player, generals[2], false, true, false, false)
+        end
+      end
+      if generals[1] ~= "" then
+        if event == fk.GameFinished then
+          room:setPlayerProperty(player, "general", generals[1])
+        else
+          room:changeHero(player, generals[1], false, false, false, false)
+        end
+      end
+
+      if event == fk.GameFinished then
+        return false
+      end
+
+      local toObtain = {}
+      if hasDangGu and not player:hasSkill(self) then
+        table.insert(toObtain, self.name)
+      end
+      if hasMoWang and not player:hasSkill("mowang") then
+        table.insert(toObtain, "mowang")
+      end
+
+      if #toObtain > 0 then
+        room:handleAddLoseSkills(player, table.concat(toObtain, "|"), nil, false)
+      end
+    end
+  end,
+}
+Fk:loadTranslationTable{
+  ["danggu"] = "党锢",
+  [":danggu"] = "锁定技，游戏开始时，你获得十张不同的“常侍牌”，然后你进行一次“结党”（随机展示一张“常侍”牌，然后随机展示四张“常侍”牌，你从中选择一张与"..
+  "最初展示的“常侍”牌互相认可的与其组成双将。）；当你因休整而返回游戏后，你进行一次“结党”并摸一张牌。",
+  ["@&changshiCards"] = "常侍",
+  ["jiedang"] = "结党",
+  ["$JieDang"] = "结党",
+
+  ["$changshi__zhangrang_taunt1"] = "吾乃当今帝父，汝岂配与我同列？",
+  ["$changshi__zhaozhong_taunt1"] = "汝此等语，何不以溺自照？",
+  ["$changshi__sunzhang_taunt1"] = "闻谤而怒，见誉而喜，汝万万不能啊！",
+  ["$changshi__bilan_taunt1"] = "吾虽鄙夫，亦远胜尔等狂叟！",
+  ["$changshi__xiayun_taunt1"] = "贪财好贿，其罪尚小，不敬不逊，却为大逆！",
+  ["$changshi__hankui_taunt1"] = "切！宁享短福，莫为汝等庸奴！",
+  ["$changshi__lisong_taunt1"] = "区区不才，可为帝之耳目，试问汝有何能？",
+  ["$changshi__duangui_taunt1"] = "哼，不过襟裾牛马，衣冠狗彘尓！",
+  ["$changshi__guosheng_taunt1"] = "此昏聩之徒，吾羞与为伍。",
+  ["$changshi__gaowang_taunt1"] = "若非吾之相助，汝安有今日？",
+}
+
+shichangshi:addSkill(danggu)
+
+local mowang = fk.CreateTriggerSkill{
+  name = "mowang",
+  frequency = Skill.Compulsory,
+  anim_type = "negative",
+  events = {fk.BeforeGameOverJudge, fk.TurnEnd},
+  can_trigger = function(self, event, target, player, data)
+    if event == fk.BeforeGameOverJudge then
+      return
+        target == player and
+        player:hasSkill(self, false, true) and
+        player:hasSkill("danggu", true, true) and
+        type(player.tag["changshi_cards"]) == "table" and
+        #player.tag["changshi_cards"] > 0 and
+        player.maxHp > 0
+    else
+      return target == player and player:hasSkill(self)
+    end
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    if event == fk.BeforeGameOverJudge then
+      player._splayer:setDied(false)
+      room:setPlayerRest(player, 1)
+    else
+      room:killPlayer({ who = player.id })
+    end
+  end,
+}
+
+shichangshi:addSkill(mowang)
+Fk:loadTranslationTable{
+  ["mowang"] = "殁亡",
+  [":mowang"] = "锁定技，当你即将死亡时，若你拥有技能“党锢”且你仍有未亮出的“常侍”牌，则改为休整一轮；回合结束时，你死亡。",
+}
+
 Fk:loadTranslationTable{
   ["changshi"] = "常侍",
   ["changshi__zhangrang"] = "张让",
@@ -2037,9 +2262,9 @@ local changshiChiyan = fk.CreateTriggerSkill{
 local changshiChiyanDelay = fk.CreateTriggerSkill{
   name = "#changshi__chiyan_delay",
   mute = true,
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    return data.to == Player.NotActive and #player:getPile("$changshi__chiyan") > 0
+    return #player:getPile("$changshi__chiyan") > 0
   end,
   on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
@@ -2214,7 +2439,7 @@ local changshiYaozhuo = fk.CreateActiveSkill{
     local to = room:getPlayerById(effect.tos[1])
     local pindian = from:pindian({ to }, self.name)
     if pindian.results[to.id].winner == from then
-      room:setPlayerMark(to, "@@changshi__yaozhuo", true)
+      room:setPlayerMark(to, "@@changshi__yaozhuo", 1)
     else
       room:askForDiscard(from, 2, 2, true, self.name, false)
     end
@@ -2222,15 +2447,14 @@ local changshiYaozhuo = fk.CreateActiveSkill{
 }
 local changshiYaozhuoDebuff = fk.CreateTriggerSkill{
   name = "#changshi__Yaozhuo-debuff",
-  mute = true,
-  priority = 3,
+
   refresh_events = {fk.EventPhaseChanging},
   can_refresh = function(self, event, target, player, data)
-    return target:getMark("@@changshi__yaozhuo") == true and data.from == Player.RoundStart
+    return target == player and player:getMark("@@changshi__yaozhuo") > 0 and data.to == Player.Draw
   end,
   on_refresh = function(self, event, target, player, data)
-    target.room:setPlayerMark(target, "@@changshi__yaozhuo", 0)
-    target:skip(Player.Draw)
+    player.room:setPlayerMark(target, "@@changshi__yaozhuo", 0)
+    player:skip(Player.Draw)
   end,
 }
 Fk:loadTranslationTable{
@@ -2541,237 +2765,17 @@ local changshiMiaoyuDiscard = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["changshi__miaoyu"] = "妙语",
-  [":changshi__miaoyu"] = "你可以将至多两张同花色的牌按以下规则使用或打出：<font color='red'>♥</font>当【桃】，<font color='red'>♦</font>当火【杀】，"..
-  "♣当【闪】，♠当【无懈可击】。若你以此法使用或打出了两张：红桃牌，此牌回复基数+1；方块牌，此牌伤害基数+1；黑色牌，你弃置当前回合角色一张牌。",
+  [":changshi__miaoyu"] = "你可以将至多两张同花色的牌按以下规则使用或打出："..
+  "<font color='red'>♥</font>当【桃】，<font color='red'>♦</font>当火【杀】，"..
+  "♣当【闪】，♠当【无懈可击】。"..
+  "若你以此法使用或打出了两张：<font color='red'>♥</font>牌，此牌回复基数+1；"..
+  "<font color='red'>♦</font>牌，此牌伤害基数+1；黑色牌，你弃置当前回合角色一张牌。",
   ["$changshi__miaoyu1"] = "小伤无碍，安心修养便可。",
 }
 
 changshiMiaoyu:addRelatedSkill(changshiMiaoyuDiscard)
 hiddenChangshi:addSkill(changshiMiaoyu)
 shichangshi:addRelatedSkill("changshi__miaoyu")
-
-local danggu = fk.CreateTriggerSkill{
-  name = "danggu",
-  frequency = Skill.Compulsory,
-  anim_type = "negative",
-  events = {fk.GameStart, fk.AfterPlayerRevived},
-  can_trigger = function(self, event, target, player, data)
-    if event == fk.GameStart then
-      return player:hasSkill(self)
-    elseif event == fk.AfterPlayerRevived then
-      return
-        target == player and
-        data.reason == "rest" and
-        type(player.tag["changshi_cards"]) == "table" and
-        #player.tag["changshi_cards"] > 0
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-
-    ---@param room Room
-    ---@param player ServerPlayer
-    ---@param generals string[]
-    local doJieDang = function(room, player, generals)
-      if type(generals) ~= "table" or #generals < 2 then
-        return
-      end
-
-      generals = table.simpleClone(generals)
-
-      local mainGeneral
-      local deputyGeneral
-      if #generals < 3 then
-        mainGeneral = generals[1]
-        deputyGeneral = generals[2]
-      else
-        mainGeneral = table.random(generals)
-        table.removeOne(generals, mainGeneral)
-        local deputyGenerals = table.random(generals, 4)
-
-        local haters = {
-          ["changshi__bilan"] = 'changshi__hankui',
-          ["changshi__hankui"] = 'changshi__bilan',
-          ["changshi__duangui"] = 'changshi__guosheng',
-          ["changshi__guosheng"] = 'changshi__duangui',
-        }
-
-        local disabledGeneral = ""
-        local hater = haters[mainGeneral]
-        if hater and table.contains(deputyGenerals, hater) then
-          disabledGeneral = hater
-        elseif math.random() < 0.1 then
-          disabledGeneral = table.random(deputyGenerals)
-        end
-
-        local result = room:askForCustomDialog(
-          player, "jiedang",
-          "packages/mobile/qml/JieDangBox.qml",
-          { mainGeneral, deputyGenerals, disabledGeneral }
-        )
-
-        if result ~= "" then
-          deputyGeneral = json.decode(result).general
-        else
-          deputyGeneral = table.random(deputyGenerals)
-        end
-      end
-
-      player.tag['jiedang_before_generals'] = { player.general, player.deputyGeneral }
-      table.removeOne(generals, mainGeneral)
-      table.removeOne(generals, deputyGeneral)
-      player.tag['changshi_cards'] = generals
-      room:setPlayerMark(player, "@&changshiCards", #generals > 0 and generals or 0)
-
-      room:changeHero(player, mainGeneral, true, false, false, false)
-      room:changeHero(player, deputyGeneral, true, true, false, false)
-      room:handleAddLoseSkills(player, tenChangShiMapper[mainGeneral] .. "|" .. tenChangShiMapper[deputyGeneral], nil, false)
-    end
-    if event == fk.GameStart then
-      local tenChangShis = {}
-      for changShi, _ in pairs(tenChangShiMapper) do
-        table.insert(tenChangShis, changShi)
-      end
-      room:setPlayerMark(player, "@&changshiCards", tenChangShis)
-
-      doJieDang(room, player, tenChangShis)
-    elseif event == fk.AfterPlayerRevived then
-      doJieDang(room, player, player.tag['changshi_cards'])
-      player:drawCards(1, self.name)
-    end
-  end,
-
-  refresh_events = { fk.BeforeGameOverJudge, fk.GameFinished, fk.AfterPropertyChange },
-  can_refresh = function(self, event, target, player, data)
-    if not player.tag['jiedang_before_generals'] then
-      return false
-    end
-
-    if event == fk.AfterPropertyChange then
-      return target == player and data.results and (data.results.generalChange or data.results.deputyChange)
-    else
-      return event == fk.GameFinished or target == player
-    end
-  end,
-  on_refresh = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.AfterPropertyChange then
-      if data.results.generalChange then
-        local beforeGeneral = data.results.generalChange[1]
-        if tenChangShiMapper[beforeGeneral] then
-          room:handleAddLoseSkills(player, "-" .. tenChangShiMapper[beforeGeneral], nil, false)
-        end
-
-        if not tenChangShiMapper[player.general] then
-          player.tag['jiedang_before_generals'][1] = player.general
-        end
-      end
-
-      if data.results.deputyChange then
-        local beforeGeneral = data.results.deputyChange[1]
-        if tenChangShiMapper[beforeGeneral] then
-          room:handleAddLoseSkills(player, "-" .. tenChangShiMapper[beforeGeneral], nil, false)
-        end
-
-        if not tenChangShiMapper[player.deputyGeneral] then
-          player.tag['jiedang_before_generals'][2] = player.deputyGeneral
-        end
-      end
-    else
-      local generals = player.tag['jiedang_before_generals']
-
-      local hasDangGu = player:hasSkill(self, true, true)
-      local hasMoWang = player:hasSkill("mowang", true, true)
-
-      if #generals > 1 then
-        if event == fk.GameFinished then
-          room:setPlayerProperty(player, "deputyGeneral", generals[2])
-        else
-          room:changeHero(player, generals[2], false, true, false, false)
-        end
-      end
-      if generals[1] ~= "" then
-        if event == fk.GameFinished then
-          room:setPlayerProperty(player, "general", generals[1])
-        else
-          room:changeHero(player, generals[1], false, false, false, false)
-        end
-      end
-
-      if event == fk.GameFinished then
-        return false
-      end
-
-      local toObtain = {}
-      if hasDangGu and not player:hasSkill(self) then
-        table.insert(toObtain, self.name)
-      end
-      if hasMoWang and not player:hasSkill("mowang") then
-        table.insert(toObtain, "mowang")
-      end
-
-      if #toObtain > 0 then
-        room:handleAddLoseSkills(player, table.concat(toObtain, "|"), nil, false)
-      end
-    end
-  end,
-}
-Fk:loadTranslationTable{
-  ["danggu"] = "党锢",
-  [":danggu"] = "锁定技，游戏开始时，你获得十张不同的“常侍牌”，然后你进行一次“结党”（随机展示一张“常侍”牌，然后随机展示四张“常侍”牌，你从中选择一张与"..
-  "最初展示的“常侍”牌互相认可的与其组成双将。）；当你因休整而返回游戏后，你进行一次“结党”并摸一张牌。",
-  ["@&changshiCards"] = "常侍",
-  ["jiedang"] = "结党",
-  ["$JieDang"] = "结党",
-
-  ["$changshi__zhangrang_taunt1"] = "吾乃当今帝父，汝岂配与我同列？",
-  ["$changshi__zhaozhong_taunt1"] = "汝此等语，何不以溺自照？",
-  ["$changshi__sunzhang_taunt1"] = "闻谤而怒，见誉而喜，汝万万不能啊！",
-  ["$changshi__bilan_taunt1"] = "吾虽鄙夫，亦远胜尔等狂叟！",
-  ["$changshi__xiayun_taunt1"] = "贪财好贿，其罪尚小，不敬不逊，却为大逆！",
-  ["$changshi__hankui_taunt1"] = "切！宁享短福，莫为汝等庸奴！",
-  ["$changshi__lisong_taunt1"] = "区区不才，可为帝之耳目，试问汝有何能？",
-  ["$changshi__duangui_taunt1"] = "哼，不过襟裾牛马，衣冠狗彘尓！",
-  ["$changshi__guosheng_taunt1"] = "此昏聩之徒，吾羞与为伍。",
-  ["$changshi__gaowang_taunt1"] = "若非吾之相助，汝安有今日？",
-}
-
-shichangshi:addSkill(danggu)
-
-local mowang = fk.CreateTriggerSkill{
-  name = "mowang",
-  frequency = Skill.Compulsory,
-  anim_type = "negative",
-  events = {fk.BeforeGameOverJudge, fk.TurnEnd},
-  can_trigger = function(self, event, target, player, data)
-    if event == fk.BeforeGameOverJudge then
-      return
-        target == player and
-        player:hasSkill(self, false, true) and
-        player:hasSkill("danggu", true, true) and
-        type(player.tag["changshi_cards"]) == "table" and
-        #player.tag["changshi_cards"] > 0 and
-        player.maxHp > 0
-    else
-      return target == player and player:hasSkill(self)
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    if event == fk.BeforeGameOverJudge then
-      player._splayer:setDied(false)
-      room:setPlayerRest(player, 1)
-    else
-      room:killPlayer({ who = player.id })
-    end
-  end,
-}
-
-shichangshi:addSkill(mowang)
-Fk:loadTranslationTable{
-  ["mowang"] = "殁亡",
-  [":mowang"] = "锁定技，当你即将死亡时，若你拥有技能“党锢”且你仍有未亮出的“常侍”牌，则改为休整一轮；回合结束时，你死亡。",
-}
 
 for generalName, _  in pairs(tenChangShiMapper) do
   local changshi = General(extension, generalName, "qun", 0)
@@ -3030,10 +3034,11 @@ Fk:loadTranslationTable{
   ["illustrator:nanhualaoxian"] = "君桓文化",
 
   ["mobile__yufeng"] = "御风",
-  [":mobile__yufeng"] = "出牌阶段限一次，你可以进行一次御风飞行。若失败你摸X张牌；若成功，则你可选择至多X名其他角色，" ..
+  [":mobile__yufeng"] = "出牌阶段限一次，你可以进行一次<a href=':mobile__yufeng_href'>御风飞行</a>。若失败你摸X张牌；"..
+  "若成功，则你可选择至多X名其他角色，" ..
   "其下一个准备阶段进行一次判定：若结果为黑色，其跳过接下来的出牌和弃牌阶段；若结果为红色，其跳过接下来的摸牌阶段" ..
-  "（若选择角色数不足X，剩余的分数改为摸等量张牌）（X为御风飞行得分，至多为3）。" ..
-  "<br/><font color='grey'>#\"<b>御风飞行</b>\"：随机亮出牌堆和弃牌堆中的一张牌，然后重复猜测下一张亮出的牌比上一张亮出的牌点数更大或更小，" ..
+  "（若选择角色数不足X，剩余的分数改为摸等量张牌）（X为御风飞行得分，至多为3）。",
+  [":mobile__yufeng_href"] = "随机亮出牌堆和弃牌堆中的一张牌，然后重复猜测下一张亮出的牌比上一张亮出的牌点数更大或更小，" ..
   "直到达到分数上限或猜错（2分或3分），每猜对一次得一分。",
   ["#mobile__yufeng-prompt"] = "你可玩一次小游戏，成功后令他人跳过摸牌或出牌弃牌阶段",
   ["#mobile__yufeng-choose"] = "御风：选择至多 %arg 名其他角色，其下回合跳过摸牌或出牌弃牌阶段",
@@ -3048,7 +3053,8 @@ Fk:loadTranslationTable{
   ["score_full"] = "满载而归，哈哈。",
 
   ["mobile__tianshu"] = "天书",
-  [":mobile__tianshu"] = "出牌阶段开始时，若【太平要术】不在游戏内、在牌堆或弃牌堆中，你可以弃置一张牌，令一名角色获得【太平要术】并使用之。",
+  [":mobile__tianshu"] = "出牌阶段开始时，若<a href=':js__peace_spell'>【太平要术】</a>不在游戏内、在牌堆或弃牌堆中，"..
+  "你可以弃置一张牌，令一名角色获得【太平要术】并使用之。",
   ["#mobile__tianshu-invoke"] = "天书：你可弃置一张牌，令一名角色获得【太平要术】并使用",
 
   ["$mobile__yufeng1"] = "广开兮天门，纷吾乘兮玄云。",
@@ -3330,12 +3336,17 @@ Fk:loadTranslationTable{
 local quchong = fk.CreateActiveSkill{
   name = "quchong",
   anim_type = "drawcard",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") or Fk:currentRoom():isGameMode("2v2_mode") then
+      return "quchong_1v2"
+    else
+      return "quchong_role_mode"
+    end
+  end,
   prompt = "#quchong-active",
   card_num = 1,
   target_num = 0,
-  can_use = function(self, player)
-    return true
-  end,
+  can_use = Util.TrueFunc,
   card_filter = function (self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).type == Card.TypeEquip
   end,
@@ -3501,19 +3512,17 @@ local quchongChooseSiegeEngine = fk.CreateActiveSkill{
 Fk:loadTranslationTable{
   ["quchong"] = "渠冲",
   [":quchong"] = "出牌阶段，你可以重铸一张装备牌；每个回合结束时，你将弃牌堆中的装备牌移出游戏并获得等量铸造值；" ..
-  "出牌阶段开始时，若场上没有【大攻车】（【大攻车·进击】、【大攻车·守御】），则你可按铸造的次数以0、5、10、10点铸造值" ..
-  "（若为2v2或斗地主模式，则改为0、2、5、5）选择一种大攻车并将之交给一名角色令其使用；否则你可以将场上的【大攻车】" ..
-  "交给另一名角色并令其使用。<br />" ..
-  "<font color='grey'>【大攻车·进击】<br />" ..
-  "装备牌·武器 <b>攻击范围</b>：9 <b>耐久度</b>：2<br />" ..
-  "<b>武器技能</b>：当此牌进入装备区后，弃置你装备区里的其他牌；当其他装备牌进入装备区前，改为将之置入弃牌堆；" ..
-  "当你造成伤害时，你可以令此牌减1点耐久度，令此伤害+X（X为游戏轮数且至多为3）；当此牌不因“渠冲”而离开装备区时，防止之，然后此牌-1点耐久度；" ..
-  "当此牌耐久度减至0时，销毁此牌。<br />" ..
-  "【大攻车·守御】<br />" ..
-  "装备牌·武器 <b>攻击范围</b>：9 <b>耐久度</b>：3<br />" ..
-  "<b>武器技能</b>：当此牌进入装备区后，弃置你装备区里的其他牌；当其他装备牌进入装备区前，改为将之置入弃牌堆；" ..
-  "当你受到伤害时，此牌减等量点耐久度（不足则全减），令此伤害-X（X为减少的耐久度）；当此牌不因“渠冲”而离开装备区时，防止之，然后此牌减1点耐久度；" ..
-  "当此牌耐久度减至0时，销毁此牌。</font>",
+  "出牌阶段开始时，若场上没有【大攻车】（<a href=':offensive_siege_engine'>【大攻车·进击】</a>、"..
+  "<a href=':defensive_siege_engine'>【大攻车·守御】</a>），则你可按铸造的次数以0、5、10、10点铸造值" ..
+  "（若为2v2或斗地主模式，则改为0、2、5、5）选择一种大攻车并将之交给一名角色令其使用；否则你可以将场上的【大攻车】交给另一名角色并令其使用。",
+  [":quchong_1v2"] = "出牌阶段，你可以重铸一张装备牌；每个回合结束时，你将弃牌堆中的装备牌移出游戏并获得等量铸造值；" ..
+  "出牌阶段开始时，若场上没有【大攻车】（<a href=':offensive_siege_engine'>【大攻车·进击】</a>、"..
+  "<a href=':defensive_siege_engine'>【大攻车·守御】</a>），则你可按铸造的次数以0、2、5、5点铸造值" ..
+  "选择一种大攻车并将之交给一名角色令其使用；否则你可以将场上的【大攻车】交给另一名角色并令其使用。",
+  [":quchong_role_mode"] = "出牌阶段，你可以重铸一张装备牌；每个回合结束时，你将弃牌堆中的装备牌移出游戏并获得等量铸造值；" ..
+  "出牌阶段开始时，若场上没有【大攻车】（<a href=':offensive_siege_engine'>【大攻车·进击】</a>、"..
+  "<a href=':defensive_siege_engine'>【大攻车·守御】</a>），则你可按铸造的次数以0、5、10、10点铸造值" ..
+  "选择一种大攻车并将之交给一名角色令其使用；否则你可以将场上的【大攻车】交给另一名角色并令其使用。",
   ["@quchong_casting_point"] = "铸造值",
   ["#quchong-active"] = "渠冲：你可以重铸一张装备牌",
   ["#quchong_trigger"] = "渠冲",

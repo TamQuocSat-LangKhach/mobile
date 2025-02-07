@@ -1864,7 +1864,9 @@ local m_ex__dingpin_record = fk.CreateTriggerSkill{
 m_ex__dingpin:addRelatedSkill(m_ex__dingpin_record)
 Fk:loadTranslationTable{
   ["m_ex__dingpin"] = "定品",
-  [":m_ex__dingpin"] = "出牌阶段，你可以弃置一张牌（不能是你本回合使用或弃置过的类型）并选择一名角色，令其进行判定，若结果为：黑色，该角色摸X张牌（X为当前体力值且最大为3），然后你于此回合内不能对其发动“定品”；红桃，你此次发动“定品”弃置的牌不计入弃置过的类型；方块，你翻面。",
+  [":m_ex__dingpin"] = "出牌阶段，你可以弃置一张牌（不能是你本回合使用或弃置过的类型）并选择一名角色，令其进行判定，若结果为："..
+  "黑色，该角色摸X张牌（X为当前体力值且最大为3），然后你于此回合内不能对其发动“定品”；"..
+  "<font color='red'>♥</font>，你此次发动“定品”弃置的牌不计入弃置过的类型；<font color='red'>♦</font>，你翻面。",
   ["#m_ex__dingpin-active"] = "发动定品，选择一张牌弃置（不能是你本回合使用或弃置过的类型）并选择一名角色",
   ["$m_ex__dingpin1"] = "察举旧制已隳，简拔当立中正。",
   ["$m_ex__dingpin2"] = "置州郡中正，以九品进退人才。",
@@ -2432,39 +2434,47 @@ zhuhuan:addSkill("fenli")
 local m_ex__pingkou = fk.CreateTriggerSkill{
   name = "m_ex__pingkou",
   anim_type = "offensive",
-  events = {fk.EventPhaseChanging},
+  events = {fk.TurnEnd},
   can_trigger = function(self, event, target, player, data)
-    return target == player and data.to == Player.NotActive and player:hasSkill(self) and player.skipped_phases
-    --FIXME:fk.TurnEnd时skipped_phases已经清理了
+    return target == player and player:hasSkill(self) and player:getMark("m_ex__pingkou-turn") > 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
-    local n = 0
-    for _, phase in ipairs({Player.Start, Player.Judge, Player.Draw, Player.Play, Player.Discard, Player.Finish}) do
-      if player.skipped_phases[phase] then
-        n = n + 1
-      end
-    end
-    local targets = room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player, false), Util.IdMapper), 1, n, "#m_ex__pingkou-choose:::"..n, self.name, true)
-    if #targets > 0 then
-      self.cost_data = targets
+    local n = player:getMark("m_ex__pingkou-turn")
+    local tos = room:askForChoosePlayers(player, table.map(room:getOtherPlayers(player, false), Util.IdMapper), 1, n,
+      "#m_ex__pingkou-choose:::"..n, self.name, true)
+    if #tos > 0 then
+      room:sortPlayersByAction(tos)
+      self.cost_data = {tos = tos}
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    table.forEach(self.cost_data, function(id)
-      room:damage{
-        from = player,
-        to = room:getPlayerById(id),
-        damage = 1,
-        skillName = self.name,
-      }
-    end)
-    local cards = player.room:getCardsFromPileByRule(".|.|.|.|.|equip")
+    for _, id in ipairs(self.cost_data.tos) do
+      local p = room:getPlayerById(id)
+      if not p.dead then
+        room:damage{
+          from = player,
+          to = p,
+          damage = 1,
+          skillName = self.name,
+        }
+      end
+    end
+    if player.dead then return end
+    local cards = room:getCardsFromPileByRule(".|.|.|.|.|equip")
     if #cards > 0 then
       player.room:obtainCard(player, cards[1], true, fk.ReasonJustMove)
     end
+  end,
+
+  refresh_events = {fk.EventPhaseSkipped},
+  can_refresh = function (self, event, target, player, data)
+    return target == player and (data.phase >= Player.Start and data.phase <= Player.Finish)
+  end,
+  on_refresh = function (self, event, target, player, data)
+    player.room:addPlayerMark(player, "m_ex__pingkou-turn", 1)
   end,
 }
 Fk:loadTranslationTable{
@@ -2547,15 +2557,14 @@ local m_ex__wurong = fk.CreateActiveSkill{
 }
 local m_ex__wurong_delay = fk.CreateTriggerSkill{
   name = "#m_ex__wurong_delay",
-  mute = true,
-  events = {fk.EventPhaseChanging},
-  can_trigger = function(self, event, target, player, data)
+
+  refresh_events = {fk.EventPhaseChanging},
+  can_refresh = function(self, event, target, player, data)
     return target == player and player:getMark("@@m_ex__wurong_skip") > 0 and data.to == Player.Draw
   end,
-  on_cost = Util.TrueFunc,
-  on_use = function (self, event, target, player, data)
+  on_refresh = function (self, event, target, player, data)
     player.room:setPlayerMark(player, "@@m_ex__wurong_skip", 0)
-    return true
+    player:skip(Player.Draw)
   end,
 }
 m_ex__wurong:addRelatedSkill(m_ex__wurong_delay)

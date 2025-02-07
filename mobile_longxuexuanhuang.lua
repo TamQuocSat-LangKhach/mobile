@@ -623,6 +623,13 @@ local function DoZuoyou(player, status)
 end
 local zuoyou = fk.CreateActiveSkill{
   name = "zuoyou",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("2v2_mode") then
+      return "zuoyou_2v2"
+    else
+      return "zuoyou_role_mode"
+    end
+  end,
   anim_type = "switch",
   switch_skill_name = "zuoyou",
   card_num = 0,
@@ -680,6 +687,10 @@ Fk:loadTranslationTable{
   ["zuoyou"] = "佐佑",
   [":zuoyou"] = "转换技，出牌阶段限一次，阳：你可以令一名角色摸三张牌，然后其弃置两张手牌；阴：" ..
   "你可以令一名手牌数不少于1的角色弃置一张手牌，然后其获得1点护甲（若为2v2模式，则改为令一名角色获得1点护甲）。",
+  [":zuoyou_role_mode"] = "转换技，出牌阶段限一次，阳：你可以令一名角色摸三张牌，然后其弃置两张手牌；阴：" ..
+  "你可以令一名手牌数不少于1的角色弃置一张手牌，然后其获得1点护甲。",
+  [":zuoyou_2v2"] = "转换技，出牌阶段限一次，阳：你可以令一名角色摸三张牌，然后其弃置两张手牌；阴：" ..
+  "你可以令一名手牌数不少于1的角色弃置一张手牌，然后令一名角色获得1点护甲。",
   ["shishoul"] = "侍守",
   [":shishoul"] = "锁定技，当其他角色执行了“佐佑”的一项后，你执行“佐佑”的另一项。",
   ["#zuoyou-yang"] = "佐佑：你可以令一名角色摸三张牌，然后其弃置两张手牌",
@@ -696,6 +707,13 @@ local chengjiw = General(extension, "chengjiw", "wei", 4)
 local kuangli = fk.CreateTriggerSkill{
   name = "kuangli",
   anim_type = "offensive",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "kuangli_1v2"
+    else
+      return "kuangli_role_mode"
+    end
+  end,
   frequency = Skill.Compulsory,
   events = {fk.EventPhaseStart, fk.TargetSpecified},
   can_trigger = function(self, event, target, player, data)
@@ -772,6 +790,10 @@ Fk:loadTranslationTable{
   ["kuangli"] = "狂戾",
   [":kuangli"] = "锁定技，出牌阶段开始时，令随机数量（至少为一）名其他角色获得“狂戾”标记直到回合结束；每阶段限两次" ..
   "（若为斗地主，则改为限一次），当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你随机弃置你与其各一张牌，然后你摸两张牌。",
+  [":kuangli_1v2"] = "锁定技，出牌阶段开始时，令随机数量（至少为一）名其他角色获得“狂戾”标记直到回合结束；每阶段限一次，" ..
+  "当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你随机弃置你与其各一张牌，然后你摸两张牌。",
+  [":kuangli_role_mode"] = "锁定技，出牌阶段开始时，令随机数量（至少为一）名其他角色获得“狂戾”标记直到回合结束；每阶段限两次，" ..
+  "当你于出牌阶段内使用牌指定一名拥有“狂戾”标记的角色为目标后，你随机弃置你与其各一张牌，然后你摸两张牌。",
   ["xiongsi"] = "凶肆",
   [":xiongsi"] = "限定技，出牌阶段，若你的手牌不少于三张，你可以弃置所有手牌，然后令所有其他角色各失去1点体力。",
   ["@@kuangli-turn"] = "狂戾",
@@ -1237,6 +1259,13 @@ mobileSimazhou:addSkill(bifeng)
 local suwang = fk.CreateTriggerSkill{
   name = "suwang",
   anim_type = "drawcard",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("2v2_mode") then
+      return "suwang_2v2"
+    else
+      return "suwang_role_mode"
+    end
+  end,
   derived_piles = "$suwang",
   events = {fk.TurnEnd, fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
@@ -1317,6 +1346,10 @@ local suwang = fk.CreateTriggerSkill{
 Fk:loadTranslationTable{
   ["suwang"] = "宿望",
   [":suwang"] = "一名角色的回合结束时，若其于此回合内使用牌时指定过你为目标且你未受到过伤害（若为2v2模式，则改为受到过的伤害值不大于1），" ..
+  "则你将牌堆顶一张牌置于你的武将牌上，称为“宿望”；摸牌阶段，若你有“宿望”，则你可以改为获得你的所有“宿望”，然后你可令一名其他角色摸两张牌。",
+  [":suwang_role_mode"] = "一名角色的回合结束时，若其于此回合内使用牌时指定过你为目标且你未受到过伤害，" ..
+  "则你将牌堆顶一张牌置于你的武将牌上，称为“宿望”；摸牌阶段，若你有“宿望”，则你可以改为获得你的所有“宿望”，然后你可令一名其他角色摸两张牌。",
+  [":suwang_2v2"] = "一名角色的回合结束时，若其于此回合内使用牌时指定过你为目标且你受到过的伤害值不大于1，" ..
   "则你将牌堆顶一张牌置于你的武将牌上，称为“宿望”；摸牌阶段，若你有“宿望”，则你可以改为获得你的所有“宿望”，然后你可令一名其他角色摸两张牌。",
   ["$suwang"] = "宿望",
   ["#suwang-invoke"] = "宿望：你可获得你的“宿望”牌，然后可令一名其他角色摸两张牌",
@@ -1487,6 +1520,15 @@ Fk:loadTranslationTable{
 local xiezheng = fk.CreateTriggerSkill{
   name = "mobile__xiezheng",
   anim_type = "control",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("role_mode") then
+      return "mobile__xiezheng_role_mode"
+    elseif Fk:currentRoom():isGameMode("1v2_mode") then
+      return "mobile__xiezheng_1v2"
+    else
+      return "mobile__xiezheng_2v2"
+    end
+  end,
   events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if player.room:isGameMode("1v2_mode") and player:usedSkillTimes(self.name, Player.HistoryGame) > 0 then return false end
@@ -1569,7 +1611,14 @@ simazhao2:addSkill("mobile__xiezheng")
 
 Fk:loadTranslationTable{
   ["mobile__xiezheng"] = "挟征",
-  [":mobile__xiezheng"] = "结束阶段，你可以令至多一名角色（若为斗地主模式，改为两名，本局游戏限一次）依次将随机一张手牌置于牌堆顶，然后视为你使用一张【兵临城下】（若为身份模式，优先指定同势力角色为目标），结算后若未造成过伤害，你失去1点体力。",
+  [":mobile__xiezheng"] = "结束阶段，你可以令至多一名角色（若为斗地主模式，改为两名，本局游戏限一次）依次将随机一张手牌置于牌堆顶，"..
+  "然后视为你使用一张【兵临城下】（若为身份模式，优先指定同势力角色为目标），结算后若未造成过伤害，你失去1点体力。",
+  [":mobile__xiezheng_role_mode"] = "结束阶段，你可以令一名角色将随机一张手牌置于牌堆顶，"..
+  "然后视为你使用一张【兵临城下】（需优先指定同势力角色为目标），结算后若未造成过伤害，你失去1点体力。",
+  [":mobile__xiezheng_1v2"] = "每局游戏限一次，结束阶段，你可以令至多两名角色依次将随机一张手牌置于牌堆顶，"..
+  "然后视为你使用一张【兵临城下】，结算后若未造成过伤害，你失去1点体力。",
+  [":mobile__xiezheng_2v2"] = "结束阶段，你可以令一名角色将随机一张手牌置于牌堆顶，"..
+  "然后视为你使用一张【兵临城下】，结算后若未造成过伤害，你失去1点体力。",
   ["#mobile__xiezheng-choose"] = "挟征：令至多%arg名角色依次将随机一张手牌置于牌堆顶，然后你视为使用一张%arg2【兵临城下】！",
   ["#mobile__xiezheng-use"] = "挟征：视为使用一张【兵临城下】！若未造成伤害，你失去1点体力",
   ["mobile__xiezheng_debuff"] = "优先指定同势力角色为目标的",
@@ -1583,6 +1632,13 @@ Fk:loadTranslationTable{
 local qiantun = fk.CreateActiveSkill{
   name = "mobile__qiantun",
   anim_type = "control",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "mobile__qiantun_1v2"
+    else
+      return "mobile__qiantun_role_mode"
+    end
+  end,
   card_num = 0,
   target_num = 1,
   prompt = "#mobile__qiantun",
@@ -1678,6 +1734,10 @@ Fk:loadTranslationTable{
   ["mobile__qiantun"] = "谦吞",
   [":mobile__qiantun"] = "魏势力技，出牌阶段限一次，你可以令一名有手牌的其他角色展示至少一张手牌，然后你与其拼点（其仅能用展示牌拼点）。"..
   "若你赢，你获得其展示的手牌；若你没赢，你获得其未展示的手牌。（若为斗地主模式，至多获得两张）",
+  [":mobile__qiantun_role_mode"] = "魏势力技，出牌阶段限一次，你可以令一名有手牌的其他角色展示至少一张手牌，然后你与其拼点（其仅能用展示牌拼点）。"..
+  "若你赢，你获得其展示的手牌；若你没赢，你获得其未展示的手牌。",
+  [":mobile__qiantun_1v2"] = "魏势力技，出牌阶段限一次，你可以令一名有手牌的其他角色展示至少一张手牌，然后你与其拼点（其仅能用展示牌拼点）。"..
+  "若你赢，你获得其展示的手牌；若你没赢，你获得其未展示的手牌。（至多获得两张）",
   ["#mobile__qiantun"] = "谦吞：令一名角色展示任意张手牌并与其拼点，若赢，你获得展示牌；若没赢，你获得其未展示的手牌",
   ["#mobile__qiantun-ask"] = "谦吞：请展示任意张手牌，你将只能用这些牌与 %src 拼点，根据拼点结果其获得你的展示牌或未展示牌！",
   ["#mobile__qiantun-pindian"] = "谦吞：你只能用这些牌与 %src 拼点！若其赢，其获得你的展示牌；若其没赢，其获得你未展示的手牌",
@@ -1690,6 +1750,13 @@ Fk:loadTranslationTable{
 
 local zhaoxiong = fk.CreateTriggerSkill{
   name = "mobile__zhaoxiong",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("role_mode") then
+      return "mobile__zhaoxiong_role_mode"
+    else
+      return "mobile__zhaoxiong_1v2"
+    end
+  end,
   events = {fk.EventPhaseStart},
   frequency = Skill.Limited,
   can_trigger = function(self, event, target, player, data)
@@ -1721,7 +1788,11 @@ simazhao2:addSkill("mobile__zhaoxiong")
 
 Fk:loadTranslationTable{
   ["mobile__zhaoxiong"] = "昭凶",
-  [":mobile__zhaoxiong"] = "持恒技，限定技，准备阶段，若你已受伤，你可以将势力变更为群，然后你获得技能“荡异”（若为身份模式，则删去“挟征”中的“优先指定同势力角色为目标”）。",
+  [":mobile__zhaoxiong"] = "持恒技，限定技，准备阶段，若你已受伤，你可以将势力变更为群，然后你获得技能〖荡异〗"..
+  "（若为身份模式，则删去〖挟征〗中的“优先指定同势力角色为目标”）。",
+  [":mobile__zhaoxiong_role_mode"] = "持恒技，限定技，准备阶段，若你已受伤，你可以将势力变更为群，然后你获得技能〖荡异〗，"..
+  "并删去〖挟征〗中的“优先指定同势力角色为目标”。",
+  [":mobile__zhaoxiong_1v2"] = "持恒技，限定技，准备阶段，若你已受伤，你可以将势力变更为群，然后你获得技能〖荡异〗。",
   ["#mobile__zhaoxiong-invoke"] = "昭凶：是否变为群势力、失去“谦吞”、获得“威肆”和“荡异”？",
   ["$mobile__zhaoxiong1"] = "若得灭蜀之功，何不可受禅为帝。",
   ["$mobile__zhaoxiong2"] = "已极人臣之贵，当一尝人主之威。",
@@ -1757,6 +1828,13 @@ Fk:loadTranslationTable{
 local weisi = fk.CreateActiveSkill{
   name = "mobile__weisi",
   anim_type = "offensive",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "mobile__weisi_1v2"
+    else
+      return "mobile__weisi_role_mode"
+    end
+  end,
   card_num = 0,
   target_num = 1,
   prompt = "#mobile__weisi",
@@ -1812,6 +1890,10 @@ Fk:loadTranslationTable{
   ["mobile__weisi"] = "威肆",
   [":mobile__weisi"] = "群势力技，出牌阶段限一次，你可以选择一名其他角色，令其将任意张手牌移出游戏直到回合结束，然后视为对其使用一张【决斗】，"..
   "此牌对其造成伤害后，你获得其所有手牌（若为斗地主模式，所有改为一张）。",
+  [":mobile__weisi_role_mode"] = "群势力技，出牌阶段限一次，你可以选择一名其他角色，令其将任意张手牌移出游戏直到回合结束，"..
+  "然后视为对其使用一张【决斗】，此牌对其造成伤害后，你获得其所有手牌。",
+  [":mobile__weisi_1v2"] = "群势力技，出牌阶段限一次，你可以选择一名其他角色，令其将任意张手牌移出游戏直到回合结束，然后视为对其使用一张【决斗】，"..
+  "此牌对其造成伤害后，你获得其一张手牌。",
   ["#mobile__weisi"] = "威肆：令一名角色将任意张手牌移出游戏直到回合结束，然后视为对其使用【决斗】！",
   ["#mobile__weisi-ask"] = "威肆：%src 将对你使用【决斗】！请将任意张手牌本回合移出游戏，【决斗】对你造成伤害后其获得你手牌！",
   ["$mobile__weisi"] = "威肆",

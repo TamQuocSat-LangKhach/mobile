@@ -2699,8 +2699,8 @@ local feili = fk.CreateTriggerSkill{
       local cards, choice = U.askForCardByMultiPatterns(
         player,
         {
-          { ".", 0, 0, "feili_removemark::" .. data.from.id },
-          { ".", x, x, "feili_discard:::" .. tostring(x) }
+          { ".", x, x, "feili_discard:::" .. tostring(x) },
+          { ".", 0, 0, "feili_removemark::" .. data.from.id }
         },
         self.name,
         true,

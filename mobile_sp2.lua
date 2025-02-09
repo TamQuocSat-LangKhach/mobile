@@ -7,6 +7,12 @@ Fk:loadTranslationTable{
   ["mobile_sp2"] = "手杀-SP2",
 }
 
+local function AddWinAudio(general)
+  local Win = fk.CreateActiveSkill{ name = general.name.."_win_audio" }
+  Win.package = extension
+  Fk:addSkill(Win)
+end
+
 --未分组：吴班 鲍信 胡班 陈珪 霍峻 木鹿大王 蒋干 杨奉 SP孙策 来敏
 
 local laimin = General(extension, "laimin", "shu", 3)
@@ -2379,8 +2385,8 @@ Fk:loadTranslationTable{
   [":guansha"] = "限定技，出牌阶段结束时，你可以将所有牌替换为牌堆中等量的基本牌，"..
     "然后你于此回合内手牌上限+X（X为你以此法得到的牌的牌名数）。",
 
-  ["$guansha1"] = "",
-  ["$guansha2"] = "",
+  ["$guansha1"] = "今趁天寒，可灌沙为城，不过达晓之功。",
+  ["$guansha2"] = "如此坚壁可成，虽金汤之固未能过也。",
 }
 
 local jiyu = fk.CreateActiveSkill{
@@ -2465,13 +2471,15 @@ jiyu:addRelatedSkill(jiyuRefresh)
 
 Fk:loadTranslationTable{
   ["jiyul"] = "急御",
-  [":jiyul"] = "出牌阶段限一次，你可以弃置一张手牌，从牌堆随机获得此牌类别以外的牌各一张，若你使用了这些牌，此技能视为未发动过。",
+  [":jiyul"] = "出牌阶段限一次，你可以弃置一张手牌，从牌堆随机获得此牌类别以外的牌各一张，"..
+    "若你使用过所有于此阶段内以此法得到的牌，此技能视为未发动过。",
 
   ["#jiyul-active"] = "发动 急御，弃置一张手牌，从牌堆随机获得此牌类别以外的牌各一张",
   ["@@jiyul-phase"] = "急御",
 
-  ["$jiyul1"] = "",
-  ["$jiyul2"] = "",
+  ["$jiyul1"] = "丞相今与贼战，当急筑营寨，以御敌变也。",
+  ["$jiyul2"] = "三军既出，营为首务，安可不筑城以御乎？",
+  ["$jiyul3"] = "丞相英明一世，岂为此事所迷？",
 }
 
 local lougui = General(extension, "mobile__lougui", "wei", 3)
@@ -2481,8 +2489,8 @@ lougui:addSkill(jiyu)
 Fk:loadTranslationTable{
   ["mobile__lougui"] = "娄圭",
   ["#mobile__lougui"] = "一日之寒",
-  --["mobile__lougui:lougui"] = "",
-  ["~mobile__qinghegongzhu"] = "",
+  --["illustrator:mobile__lougui"] = "",
+  ["~mobile__lougui"] = "丞相留步，老夫告辞……",
 }
 
 local zengou = fk.CreateActiveSkill{
@@ -2680,8 +2688,9 @@ Fk:loadTranslationTable{
   ["@@mobile__zengou-inhand"] = "谮构",
   ["@[private]mobile__zengou_wu"] = "诬",
 
-  ["$mobile__zengou1"] = "",
-  ["$mobile__zengou2"] = "",
+  ["$mobile__zengou1"] = "汝既负我在先，就休怪我心狠手辣。",
+  ["$mobile__zengou2"] = "有此把柄在手，教汝有口难言。",
+  ["$mobile__zengou3"] = "哼！只有如此，方解我所受之辱。",
 }
 
 local feili = fk.CreateTriggerSkill{
@@ -2751,19 +2760,21 @@ Fk:loadTranslationTable{
   ["feili_removemark"] = "移除%dest的“诬”标记",
   ["feili_discard"] = "弃置%arg张牌",
 
-  ["$feili1"] = "",
-  ["$feili2"] = "",
+  ["$feili1"] = "怪我未下狠手，让你饶幸生还。",
+  ["$feili2"] = "夏侯楙，事已至此，何必再惺惺作态。",
 }
 
 local qinghegongzhu = General(extension, "mobile__qinghegongzhu", "wei", 3, 3, General.Female)
 qinghegongzhu:addSkill(zengou)
 qinghegongzhu:addSkill(feili)
+AddWinAudio(qinghegongzhu)
 
 Fk:loadTranslationTable{
   ["mobile__qinghegongzhu"] = "清河公主",
   ["#mobile__qinghegongzhu"] = "蛊虿之谗",
-  --["illustrator:mobile__qinghegongzhu"] = "君桓文化",
-  ["~mobile__qinghegongzhu"] = "",
+  --["illustrator:mobile__qinghegongzhu"] = "",
+  ["~mobile__qinghegongzhu"] = "夏侯楙徒有形表，实非良人……",
+  ["$mobile__qinghegongzhu_win_audio"] = "夫君自走思路，何可怨得妾身。",
 }
 
 return extension

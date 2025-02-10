@@ -2777,4 +2777,140 @@ Fk:loadTranslationTable{
   ["$mobile__qinghegongzhu_win_audio"] = "夫君自走死路，何可怨得妾身。",
 }
 
+
+local mobile__huojun = General(extension, "mobile__huojun", "shu", 4)
+
+local mobile__sidai = fk.CreateViewAsSkill{
+  name = "mobile__sidai",
+  anim_type = "offensive",
+  frequency = Skill.Limited,
+  card_filter = Util.FalseFunc,
+  prompt = "#mobile__sidai",
+  view_as = function(self, cards)
+    local c = Fk:cloneCard("slash")
+    c:addSubcards(table.filter(Self.player_cards[Player.Hand], function(cid)
+      return Fk:getCardById(cid).type == Card.TypeBasic
+    end))
+    c.skillName = self.name
+    return c
+  end,
+  before_use = function(self, player, use)
+    local basic_cards = {}
+    for _, id in ipairs(use.card.subcards) do
+      table.insertIfNeed(basic_cards, Fk:getCardById(id).name)
+    end
+    use.extraUse = true
+    use.extra_data = use.extra_data or {}
+    use.extra_data.mobile__sidaiBuff = basic_cards
+  end,
+  enabled_at_play = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0 and table.find(player.player_cards[Player.Hand], function(cid)
+      return Fk:getCardById(cid).type == Card.TypeBasic
+    end)
+  end,
+  enabled_at_response = Util.FalseFunc,
+}
+
+local mobile__sidai_delay = fk.CreateTriggerSkill{
+  name = "#mobile__sidai_delay",
+  mute = true,
+  events = {fk.Damage, fk.TargetConfirmed},
+  can_trigger = function(self, event, target, player, data)
+    if target ~= player or not data.card or not table.contains(data.card.skillNames, mobile__sidai.name) then return false end
+    local parentUseData = player.room.logic:getCurrentEvent():findParent(GameEvent.UseCard, true)
+    if not parentUseData then return false end
+    local buff = (parentUseData.data[1].extra_data or Util.DummyTable).mobile__sidaiBuff or Util.DummyTable
+    if event == fk.TargetConfirmed then
+      return table.contains(buff, "jink")
+    else
+      return table.contains(buff, "peach") and not data.to.dead
+    end
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function(self, event, target, player, data)
+    if event == fk.Damage then
+      player.room:changeMaxHp(data.to, -1)
+    elseif player:isKongcheng() or #player.room:askForDiscard(player, 1, 1, true, self.name, true, ".|.|.|.|.|basic", "#mobile__sidai_nojink") == 0 then
+      data.disresponsive = true
+    end
+  end,
+}
+mobile__sidai:addRelatedSkill(mobile__sidai_delay)
+mobile__huojun:addSkill(mobile__sidai)
+
+local mobile__jieyu = fk.CreateTriggerSkill{
+  name = "mobile__jieyu",
+  events = {fk.EventPhaseStart},
+  anim_type = "defensive",
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and player.phase == Player.Finish
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local x = player:getMark("@mobile__jieyu")
+    local names, get = {}, {}
+    local pile = table.simpleClone(room.discard_pile)
+    while #get < x do
+      local id = table.remove(pile, math.random(#pile))
+      local card = Fk:getCardById(id)
+      if card.type == Card.TypeBasic and table.insertIfNeed(names, card.trueName) then
+        table.insert(get, id)
+      end
+    end
+    if #get > 0 then
+      room:obtainCard(player, get, true, fk.ReasonPrey, player.id, self.name)
+    end
+  end,
+  on_acquire = function (self, player, is_start)
+    player.room:setPlayerMark(player, "@mobile__jieyu", 3)
+  end,
+  on_lose = function (self, player, is_death)
+    player.room:setPlayerMark(player, "@mobile__jieyu", 0)
+  end,
+  refresh_events = {fk.EventPhaseEnd, fk.TargetConfirmed},
+  can_refresh = function (self, event, target, player, data)
+    if target == player and player:getMark("@mobile__jieyu") > 0 then
+      if event == fk.EventPhaseEnd then
+        return player.phase == Player.Finish and player:getMark("@mobile__jieyu") ~= 3
+      else
+        return (data.card.trueName == "slash" or (data.card.is_damage_card and data.card.type == Card.TypeTrick))
+        and data.from ~= player.id and player:getMark("@mobile__jieyu") > 1
+        and player:usedSkillTimes(self.name, Player.HistoryGame) > 0 -- 未发动第一次技能时不会使X减少
+      end
+    end
+  end,
+  on_refresh = function (self, event, target, player, data)
+    if event == fk.EventPhaseEnd then
+      player.room:setPlayerMark(player, "@mobile__jieyu", 3)
+    else
+      player.room:removePlayerMark(player, "@mobile__jieyu", 1)
+    end
+  end,
+}
+mobile__huojun:addSkill(mobile__jieyu)
+
+Fk:loadTranslationTable{
+  ["mobile__huojun"] = "霍峻",
+  ["#mobile__huojun"] = "葭萌铁狮",
+  ["illustrator:mobile__huojun"] = "枭瞳",
+  ["designer:mobile__huojun"] = "步穗",
+
+  ["mobile__sidai"] = "伺怠",
+  [":mobile__sidai"] = "限定技，出牌阶段，你可将所有基本牌当【杀】使用（不计入次数）。若这些牌中有：【桃】，此【杀】造成伤害后，受到伤害角色减1点体力上限；【闪】，此【杀】的目标需弃置一张基本牌，否则不能响应。",
+  ["#mobile__sidai_delay"] = "伺怠",
+  ["#mobile__sidai_nojink"] = "伺怠：弃置一张基本牌，否则不能响应此【杀】",
+  ["#mobile__sidai"] = "伺怠：你可将所有基本牌当【杀】使用（有桃、闪则获得额外效果）！",
+
+  ["mobile__jieyu"] = "竭御",
+  [":mobile__jieyu"] = "结束阶段，你可从弃牌堆中随机获得X张牌名各不相同的基本牌（X为3-你上次发动此技能至本阶段，你成为其他角色【杀】或伤害类锦囊目标的次数，X至少为1）。",
+  ["@mobile__jieyu"] = "竭御",
+
+  ["$mobile__sidai1"] = "敌军疲乏，正是战机，随我杀！",
+  ["$mobile__sidai2"] = "敌军无备，随我冲锋！",
+  ["$mobile__jieyu1"] = "葭萌，蜀之咽喉，峻必竭力守之。",
+  ["$mobile__jieyu2"] = "吾头可得，城不可得。",
+  ["~mobile__huojun"] = "恨，不能与使君共成霸业……",
+}
+
+
 return extension

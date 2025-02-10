@@ -2774,7 +2774,7 @@ Fk:loadTranslationTable{
   ["#mobile__qinghegongzhu"] = "蛊虿之谗",
   --["illustrator:mobile__qinghegongzhu"] = "",
   ["~mobile__qinghegongzhu"] = "夏侯楙徒有形表，实非良人……",
-  ["$mobile__qinghegongzhu_win_audio"] = "夫君自走思路，何可怨得妾身。",
+  ["$mobile__qinghegongzhu_win_audio"] = "夫君自走死路，何可怨得妾身。",
 }
 
 return extension

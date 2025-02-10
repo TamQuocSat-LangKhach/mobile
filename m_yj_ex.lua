@@ -2205,36 +2205,26 @@ Fk:loadTranslationTable{
 local m_ex__jianying = fk.CreateViewAsSkill{
   name = "m_ex__jianying",
   prompt = "#m_ex__jianying-active",
-  interaction = function()
-    local names, all_names = {} , {}
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if card.type == Card.TypeBasic and not card.is_derived and not table.contains(all_names, card.name) then
-        table.insert(all_names, card.name)
-        local to_use = Fk:cloneCard(card.name)
-        if Self:canUse(to_use) and not Self:prohibitUse(to_use) then
-          table.insert(names, card.name)
-        end
-      end
-    end
-    if #names == 0 then return false end
-    return UI.ComboBox { choices = names, all_choices = all_names }
+  interaction = function(self, player)
+    local all_names = U.getAllCardNames("b")
+    return U.CardNameBox {
+      choices = U.getViewAsCardNames(player, self.name, all_names),
+      all_choices = all_names,
+      default_choice = "AskForCardsChosen",
+    }
   end,
   card_filter = function(self, to_select, selected)
-    return #selected == 0
+    return #selected == 0 and Fk.all_card_types[self.interaction.data] ~= nil
   end,
-  before_use = function(self, player, use)
-    player.room:setPlayerMark(player, "m_ex__jianying-used-phase", 1)
-  end,
-  view_as = function(self, cards)
-    if not self.interaction.data or #cards ~= 1 then return end
+  view_as = function(self, cards, player)
+    if Fk.all_card_types[self.interaction.data] == nil or #cards ~= 1 then return end
     local card = Fk:cloneCard(self.interaction.data)
     card:addSubcards(cards)
 
     local suitstrings = {"spade", "heart", "club", "diamond"}
     local suits = {Card.Spade, Card.Heart, Card.Club, Card.Diamond}
     local colors = {Card.Black, Card.Red, Card.Black, Card.Diamond}
-    local suit = Self:getMark("m_ex__jianying_suit-phase")
+    local suit = player:getMark("m_ex__jianying_suit-phase")
     if table.contains(suitstrings, suit) then
       card.suit = suits[table.indexOf(suitstrings, suit)]
       card.color = colors[table.indexOf(suitstrings, suit)]
@@ -2243,8 +2233,19 @@ local m_ex__jianying = fk.CreateViewAsSkill{
     card.skillName = self.name
     return card
   end,
+  before_use = function(self, player, use)
+    player.room:setPlayerMark(player, "m_ex__jianying_used-phase", 1)
+  end,
   enabled_at_play = function(self, player)
-    return player:getMark("m_ex__jianying-used-phase") == 0
+    return player:getMark("m_ex__jianying_used-phase") == 0
+  end,
+
+  on_lose = function (self, player)
+    local room = player.room
+    room:setPlayerMark(player, "m_ex__jianying_used-phase", 0)
+    room:setPlayerMark(player, "m_ex__jianying_suit-phase", 0)
+    room:setPlayerMark(player, "m_ex__jianying_number-phase", 0)
+    room:setPlayerMark(player, "@m_ex__jianying_record-phase", 0)
   end,
 }
 local m_ex__jianying_trigger = fk.CreateTriggerSkill{
@@ -2253,8 +2254,8 @@ local m_ex__jianying_trigger = fk.CreateTriggerSkill{
   mute = true,
   main_skill = m_ex__jianying,
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(m_ex__jianying) and player.phase == Player.Play and
-    (data.extra_data or {}).m_ex__jianying_triggerable
+    return data.from == player.id and player:hasSkill(m_ex__jianying) and player.phase == Player.Play and
+      (data.extra_data or {}).m_ex__jianying_triggerable
   end,
   on_use = function(self, event, target, player, data)
     player:broadcastSkillInvoke(m_ex__jianying.name)

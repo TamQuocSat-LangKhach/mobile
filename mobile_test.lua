@@ -8,6 +8,12 @@ Fk:loadTranslationTable{
 
 local U = require "packages/utility/utility"
 
+local function AddWinAudio(general)
+  local Win = fk.CreateActiveSkill{ name = general.name.."_win_audio" }
+  Win.package = extension
+  Fk:addSkill(Win)
+end
+
 local zhangbu = General(extension, "zhangbu", "wu", 4)
 Fk:loadTranslationTable{
   ["zhangbu"] = "张布",
@@ -117,13 +123,16 @@ local function GongliFriend(room, player, friend)
 end
 
 local friend__zhugeliang = General(extension, "m_friend__zhugeliang", "qun", 3)
+AddWinAudio(friend__zhugeliang)
 friend__zhugeliang.hidden = true
 Fk:loadTranslationTable{
   ["m_friend__zhugeliang"] = "友诸葛亮",
-  ["#m_friend__zhugeliang"] = "",
-  ["illustrator:m_friend__zhugeliang"] = "",
-  ["~m_friend__zhugeliang"] = "",
+  ["#m_friend__zhugeliang"] = "龙骧九天",
+  --["illustrator:m_friend__zhugeliang"] = "",
+  ["~m_friend__zhugeliang"] = "吾既得明主，纵不得良时，亦当全力一试……",
+  ["$m_friend__zhugeliang_win_audio"] = "鼎足之势若成，则将军中原可图也。",
 }
+
 Fk:loadTranslationTable{
   ["yance"] = "演策",
   [":yance"] = "每轮限一次，首轮开始时，或准备阶段，你可以选择一项：从牌堆中随机获得一张锦囊牌；执行<a href='wolongyance'>卧龙演策</a>。"..
@@ -135,10 +144,21 @@ Fk:loadTranslationTable{
   "全部正确，你摸两张牌，此后卧龙演策可预测的牌数+1（至多为7）。",
   ["wolongyance"] = "预测此后被使用的指定数量张牌的颜色或类别（初始可预测的牌数为3），“预测的方式”即通过颜色预测或通过类别预测。"..
   "此预测在一名角色使用牌时揭示，若所有预测均已揭示，称为全部验证。",
+  ["$yance1"] = "以今日之时局，唯以此策解之。",
+  ["$yance2"] = "今世变化难测，需赖以演策之术。",
+  ["$yance3"] = "百策百中，勤在推演而已。",
+  ["$yance4"] = "哎，算计百般，终是徒劳。",
+  ["$yance5"] = "所谓算无遗策，亦不过如此而已。",
+  ["$yance6"] = "吾已尽全力，奈何老天仍胜我一筹。",
+  ["$yance7"] = "未思周密，使敌有残喘之机。",
 }
+
 Fk:loadTranslationTable{
   ["fangqiu"] = "方遒",
   [":fangqiu"] = "限定技，当你执行“卧龙演策”后，你可以展示你的“卧龙演策”预测，若如此做，本次“卧龙演策”的预测全部验证后，执行效果的值均+1。",
+  ["$fangqiu1"] = "一举可成之事，何必再增变数。",
+  ["$fangqiu2"] = "破敌便在此刻，吾等勿负良机。",
+  ["$fangqiu3"] = "哈哈哈哈，果不出我所料。",
 }
 local zhugeliang__gongli = fk.CreateTriggerSkill{
   name = "zhugeliang__gongli",
@@ -161,14 +181,15 @@ Fk:loadTranslationTable{
   "若友方友徐庶在场，你“卧龙演策”预测的第一张牌的结果始终视为正确。（仅斗地主和2v2模式生效）",
   [":zhugeliang__gongli_pangtong"] = "锁定技，若友方友庞统在场，你执行“卧龙演策”初始可预测的牌数+1。",
   [":zhugeliang__gongli_xushu"] = "锁定技，若友方友徐庶在场，你“卧龙演策”预测的第一张牌的结果始终视为正确。",
+  ["$zhugeliang__gongli1"] = "其志远兮，当与诤友共进。",
+  ["$zhugeliang__gongli2"] = "共以济世为志，今与诸兄勉之。",
 }
-
 local friend__pangtong = General(extension, "m_friend__pangtong", "qun", 3)
 Fk:loadTranslationTable{
   ["m_friend__pangtong"] = "友庞统",
-  ["#m_friend__pangtong"] = "",
-  ["illustrator:m_friend__pangtong"] = "",
-  ["~m_friend__pangtong"] = "",
+  ["#m_friend__pangtong"] = "凤翥南地",
+  --["illustrator:m_friend__pangtong"] = "",
+  ["~m_friend__pangtong"] = "大事未竟，惜哉，惜哉……",
 }
 local manjuan = fk.CreateTriggerSkill{
   name = "friend__manjuan",
@@ -254,6 +275,8 @@ Fk:loadTranslationTable{
   [":friend__manjuan"] = "当你不因本技能一次性获得至少两张牌后，你可以将其中任意张牌以任意顺序置于牌堆顶。若如此做，你每放置一张牌，"..
   "便从弃牌堆中随机获得一张与此牌类别不同的牌（每次至多获得五张）。",
   ["#friend__manjuan-invoke"] = "漫卷：你可以将其中的牌置于牌堆顶，获得等量类别不同的牌",
+  ["$friend__manjuan1"] = "十行俱下犹觉浅，一朝闭门书五车。",
+  ["$friend__manjuan2"] = "有此神目，何愁观之未遍。",
 }
 local yangming = fk.CreateTriggerSkill{
   name = "friend__yangming",
@@ -359,6 +382,8 @@ Fk:loadTranslationTable{
   [":friend__yangming"] = "出牌阶段结束时，若你本阶段失去过所有手牌，你可以亮出牌堆顶的X张牌（X为本回合进入过弃牌堆的牌的花色数），"..
   "使用其中任意张花色各不相同的牌（无次数限制）。",
   ["#friend__yangming-use"] = "养名：你可以使用其中任意张花色各不相同的牌",
+  ["$friend__yangming1"] = "但为国养士，为主选才耳。",
+  ["$friend__yangming2"] = "贤人何其之多，但无识才之人也。",
 }
 local pangtong__gongli = fk.CreateTriggerSkill{
   name = "pangtong__gongli",
@@ -382,14 +407,16 @@ Fk:loadTranslationTable{
   ["#pangtong__gongli-prey"] = "共砺：获得其中一张牌",
   [":pangtong__gongli_zhugeliang"] = "锁定技，若友方友诸葛亮在场，你发动〖养名〗亮出牌张数+1。",
   [":pangtong__gongli_xushu"] = "锁定技，若友方友徐庶在场，你发动〖养名〗后，获得一张本次亮出牌中未使用过的花色的牌。",
+  ["$pangtong__gongli1"] = "你我同有此志，更应砥砺共进。",
+  ["$pangtong__gongli2"] = "三人同心，诸事可期。",
 }
 
 local friend__xushu = General(extension, "m_friend__xushu", "qun", 3)
 Fk:loadTranslationTable{
   ["m_friend__xushu"] = "友徐庶",
-  ["#m_friend__xushu"] = "",
-  ["illustrator:m_friend__xushu"] = "",
-  ["~m_friend__xushu"] = "",
+  ["#m_friend__xushu"] = "潜悟诲人",
+  --["illustrator:m_friend__xushu"] = "",
+  ["~m_friend__xushu"] = "百姓陷于苦海，而吾却难以济之……",
 }
 local xiaxing = fk.CreateTriggerSkill{
   name = "xiaxing",
@@ -467,6 +494,8 @@ Fk:loadTranslationTable{
   [":xiaxing"] = "游戏开始时，你获得并使用<a href=':xuanjian_sword'>【玄剑】</a>；当【玄剑】进入弃牌堆后，你可以移除1个“启诲”标记获得之。",
   ["#xiaxing_trigger"] = "侠行",
   ["#xiaxing-choice"] = "侠行：是否移除一个“启诲”标记获得【玄剑】？",
+  ["$xiaxing1"] = "大丈夫当行侠重义，仗剑天下。",
+  ["$xiaxing2"] = "路见不平，拔刀相助，乃侠者之义也。",
 }
 local qihui = fk.CreateTriggerSkill{
   name = "qihui",
@@ -536,6 +565,9 @@ Fk:loadTranslationTable{
   ["qihui_recover"] = "回复1点体力，重铸一张牌",
   ["qihui_use"] = "使用下一张牌无次数限制",
   ["#qihui-recast"] = "启诲：重铸一张牌",
+  ["$qihui1"] = "天乃高且远，安可事事自下。",
+  ["$qihui2"] = "吾等当上体天心，下济黎民。",
+  ["$qihui3"] = "若除贪官恶吏，天下自为之一清。",
 }
 local xushu__gongli = fk.CreateTargetModSkill{
   name = "xushu__gongli",
@@ -562,6 +594,8 @@ Fk:loadTranslationTable{
   "若友方友庞统在场，你发动〖玄剑〗使用的【杀】无距离限制。（仅斗地主和2v2模式生效）",
   [":xushu__gongli_zhugeliang"] = "锁定技，若友方友诸葛亮在场，你发动〖玄剑〗改为将一张手牌当【杀】使用。",
   [":xushu__gongli_pangtong"] = "锁定技，若友方友庞统在场，你发动〖玄剑〗使用的【杀】无距离限制。",
+  ["$xushu__gongli1"] = "吾等并力同心相通，大事何不可成哉。",
+  ["$xushu__gongli2"] = "以吾等之才，何不同辅一主，共成王霸之业。",
 }
 
 return extension

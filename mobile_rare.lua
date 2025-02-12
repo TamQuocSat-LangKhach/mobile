@@ -1644,13 +1644,14 @@ local xiongjin = fk.CreateTriggerSkill{
     return
       player:hasSkill(self) and
       target.phase == Player.Play and
-      player:getLostHp() > 0 and
       player:getMark(target == player and "xiongjinUser-round" or "xiongjinAnother-round") == 0
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room
     local prompt = target == player and "#xiongjinUser-invoke::" or "#xiongjinAnother-invoke::" .. target.id
-    if room:askForSkillInvoke(player, self.name, data, prompt .. ":" .. math.min(3, player:getLostHp())) then
+
+    local drawNum = math.max(1, player:getLostHp())
+    if room:askForSkillInvoke(player, self.name, data, prompt .. ":" .. math.min(3, drawNum)) then
       room:setPlayerMark(player, target == player and "xiongjinUser-round" or "xiongjinAnother-round", 1)
       return true
     end
@@ -1663,7 +1664,8 @@ local xiongjin = fk.CreateTriggerSkill{
       return false
     end
 
-    local drawNum = math.min(3, player:getLostHp())
+    local drawNum = math.max(1, player:getLostHp())
+    drawNum = math.min(3, drawNum)
     if drawNum > 0 then
       target:drawCards(drawNum, self.name)
     end
@@ -1709,7 +1711,7 @@ local xiongjinDiscard = fk.CreateTriggerSkill{
 }
 Fk:loadTranslationTable{
   ["xiongjin"] = "雄进",
-  [":xiongjin"] = "每轮各限一次，你/其他角色的出牌阶段开始时，你可以令你/其摸X张牌（X为你已损失的体力值，且至多为3）。" ..
+  [":xiongjin"] = "每轮各限一次，你/其他角色的出牌阶段开始时，你可以令你/其摸X张牌（X为你已损失的体力值，且至少为1，至多为3）。" ..
   "若如此做，本回合的弃牌阶段开始时，你/其弃置所有非基本/基本牌。",
   ["#xiongjin_discard"] = "雄进",
 

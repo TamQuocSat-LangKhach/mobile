@@ -1522,7 +1522,11 @@ local xiezheng = fk.CreateTriggerSkill{
   anim_type = "control",
   dynamic_desc = function(self, player)
     if Fk:currentRoom():isGameMode("role_mode") then
-      return "mobile__xiezheng_role_mode"
+      if player:getMark("mobile__xiezheng_updata") > 0 then
+        return "mobile__xiezheng_role_mode2"
+      else
+        return "mobile__xiezheng_role_mode"
+      end
     elseif Fk:currentRoom():isGameMode("1v2_mode") then
       return "mobile__xiezheng_1v2"
     else
@@ -1615,6 +1619,8 @@ Fk:loadTranslationTable{
   "然后视为你使用一张【兵临城下】（若为身份模式，优先指定同势力角色为目标），结算后若未造成过伤害，你失去1点体力。",
   [":mobile__xiezheng_role_mode"] = "结束阶段，你可以令一名角色将随机一张手牌置于牌堆顶，"..
   "然后视为你使用一张【兵临城下】（需优先指定同势力角色为目标），结算后若未造成过伤害，你失去1点体力。",
+  [":mobile__xiezheng_role_mode2"] = "结束阶段，你可以令一名角色将随机一张手牌置于牌堆顶，"..
+  "然后视为你使用一张【兵临城下】，结算后若未造成过伤害，你失去1点体力。",
   [":mobile__xiezheng_1v2"] = "每局游戏限一次，结束阶段，你可以令至多两名角色依次将随机一张手牌置于牌堆顶，"..
   "然后视为你使用一张【兵临城下】，结算后若未造成过伤害，你失去1点体力。",
   [":mobile__xiezheng_2v2"] = "结束阶段，你可以令一名角色将随机一张手牌置于牌堆顶，"..

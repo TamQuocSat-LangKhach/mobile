@@ -5,6 +5,57 @@ Fk:loadTranslationTable{
   ["mobile_derived"] = "手杀衍生牌",
 }
 
+local U = require "packages/utility/utility"
+
+local enemyAtTheGatesSkill = fk.CreateActiveSkill{
+  name = "mobile__enemy_at_the_gates_skill",
+  prompt = "#mobile__enemy_at_the_gates_skill",
+  can_use = Util.CanUse,
+  target_num = 1,
+  mod_target_filter = function(self, to_select, selected, user, card)
+    return user.id ~= to_select
+  end,
+  target_filter = Util.TargetFilter,
+  on_effect = function(self, room, cardEffectEvent)
+    local player = room:getPlayerById(cardEffectEvent.from)
+    local to = room:getPlayerById(cardEffectEvent.to)
+    local cards = room:getNCards(4)
+    room:moveCardTo(cards, Card.Processing, nil, fk.ReasonJustMove, self.name, nil, true, player.id)
+    for _, id in ipairs(cards) do
+      local card = Fk:getCardById(id)
+      if card.trueName == "slash" and not player:prohibitUse(card) and not player:isProhibited(to, card) and to:isAlive() then
+        card.skillName = self.name
+        room:useCard({
+          card = card,
+          from = player.id,
+          tos = { {to.id} },
+          extraUse = true,
+        })
+      end
+    end
+    cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
+    if #cards > 0 then
+      room:delay(#cards * 150)
+      room:moveCardTo(table.reverse(cards), Card.DrawPile, nil, fk.ReasonPut, self.name, nil, true, player.id)
+    end
+  end,
+}
+local enemyAtTheGates = fk.CreateTrickCard{
+  name = "&mobile__enemy_at_the_gates",
+  suit = Card.Spade,
+  number = 7,
+  skill = enemyAtTheGatesSkill,
+}
+extension:addCards{
+  enemyAtTheGates,
+}
+Fk:loadTranslationTable{
+  ["mobile__enemy_at_the_gates"] = "兵临城下",
+  [":mobile__enemy_at_the_gates"] = "锦囊牌<br /><b>时机</b>：出牌阶段<br /><b>目标</b>：一名其他角色<br /><b>效果</b>：你展示牌堆顶的四张牌，依次对目标角色使用其中的【杀】，然后将其余的牌以原顺序放回牌堆顶。",
+  ["#mobile__enemy_at_the_gates_skill"] = "选择一名其他角色，你展示牌堆顶四张牌，依次对其使用其中【杀】，其余牌放回牌堆顶",
+  ["mobile__enemy_at_the_gates_skill"] = "兵临城下",
+}
+
 local raidAndFrontalAttackSkill = fk.CreateActiveSkill{
   name = "raid_and_frontal_attack_skill",
   can_use = Util.CanUse,
@@ -838,7 +889,7 @@ local defensiveSiegeEngine = fk.CreateWeapon{
 extension:addCard(defensiveSiegeEngine)
 Fk:loadTranslationTable{
   ["defensive_siege_engine"] = "大攻车·守御",
-  [":defensive_siege_engine"] = "装备牌·武器<br /><b>攻击范围</b>：9<br /><b>耐久度</b>：3<br />" ..
+  [":defensive_siege_engine"] = "装备牌·武器<br/><b>攻击范围</b>：9<br/><b>耐久度</b>：3<br/>" ..
   "<b>武器技能</b>：当此牌进入装备区后，弃置你装备区里的其他牌；当其他装备牌进入装备区前，改为将之置入弃牌堆；" ..
   "当你受到伤害时，此牌减等量点耐久度（不足则全减），令此伤害-X（X为减少的耐久度）；当此牌不因“渠冲”而离开装备区时，防止之，然后此牌减1点耐久度；" ..
   "当此牌耐久度减至0时，销毁此牌。",
@@ -847,53 +898,80 @@ Fk:loadTranslationTable{
   ["#defensive_siege_engine"] = "大攻车·守御",
 }
 
-local enemyAtTheGatesSkill = fk.CreateActiveSkill{
-  name = "mobile__enemy_at_the_gates_skill",
-  prompt = "#mobile__enemy_at_the_gates_skill",
-  can_use = Util.CanUse,
-  target_num = 1,
-  mod_target_filter = function(self, to_select, selected, user, card)
-    return user.id ~= to_select
+local function GongliFriend(room, player, friend)
+  return (room:isGameMode("1v2_mode") or room:isGameMode("2v2_mode")) and
+    table.find(room.alive_players, function (p)
+      return p.role == player.role and (p.general == friend or p.deputyGeneral == friend)
+    end)
+end
+local xuanjianSkill = fk.CreateViewAsSkill{
+  name = "xuanjian_sword_skill",
+  attached_equip = "xuanjian_sword",
+  pattern = "slash",
+  prompt = function ()
+    if Self:hasSkill("xushu__gongli") and GongliFriend(Fk:currentRoom(), Self, "m_friend__zhugeliang") then
+      return "#xuanjian_sword_skill_update"
+    else
+      return "#xuanjian_sword_skill"
+    end
   end,
-  target_filter = Util.TargetFilter,
-  on_effect = function(self, room, cardEffectEvent)
-    local player = room:getPlayerById(cardEffectEvent.from)
-    local to = room:getPlayerById(cardEffectEvent.to)
-    local cards = room:getNCards(4)
-    room:moveCardTo(cards, Card.Processing, nil, fk.ReasonJustMove, self.name, nil, true, player.id)
-    for _, id in ipairs(cards) do
-      local card = Fk:getCardById(id)
-      if card.trueName == "slash" and not player:prohibitUse(card) and not player:isProhibited(to, card) and to:isAlive() then
-        card.skillName = self.name
-        room:useCard({
-          card = card,
-          from = player.id,
-          tos = { {to.id} },
-          extraUse = true,
-        })
-      end
+  interaction = function (self, player)
+    if player:hasSkill("xushu__gongli") and GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") then
+      return U.CardNameBox {choices = {"slash"}}
+    else
+      local all_choices = {"log_spade", "log_heart", "log_club", "log_diamond"}
+      local choices = table.filter(all_choices, function (s)
+        local card = Fk:cloneCard("slash")
+        card.skillName = "xuanjian_sword"
+        local cards = table.filter(player:getCardIds("h"), function (id)
+          return Fk:getCardById(id):getSuitString(true) == s
+        end)
+        card:addSubcards(cards)
+        return player:canUse(card)
+      end)
+      return UI.ComboBox {choices = choices, all_choices = all_choices}
     end
-    cards = table.filter(cards, function(id) return room:getCardArea(id) == Card.Processing end)
-    if #cards > 0 then
-      room:delay(#cards * 150)
-      room:moveCardTo(table.reverse(cards), Card.DrawPile, nil, fk.ReasonPut, self.name, nil, true, player.id)
+  end,
+  card_filter = function(self, to_select, selected, player)
+    if player:hasSkill("xushu__gongli") and GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") then
+      return #selected == 0
+    else
+      return false
     end
+  end,
+  view_as = function(self, cards, player)
+    local card = Fk:cloneCard("slash")
+    card.skillName = "xuanjian_sword"
+    if player:hasSkill("xushu__gongli") and GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") then
+      if #cards ~= 1 then return end
+    else
+      cards = table.filter(player:getCardIds("h"), function (id)
+        return Fk:getCardById(id):getSuitString(true) == self.interaction.data
+      end)
+      if #cards == 0 then return end
+    end
+    card:addSubcards(cards)
+    return card
+  end,
+  enabled_at_response = function (self, player, response)
+    return not response
   end,
 }
-local enemyAtTheGates = fk.CreateTrickCard{
-  name = "&mobile__enemy_at_the_gates",
+Fk:addSkill(xuanjianSkill)
+local xuanjian_sword = fk.CreateWeapon{
+  name = "&xuanjian_sword",
   suit = Card.Spade,
-  number = 7,
-  skill = enemyAtTheGatesSkill,
+  number = 2,
+  attack_range = 2,
+  equip_skill = xuanjianSkill,
 }
-extension:addCards{
-  enemyAtTheGates,
-}
+extension:addCard(xuanjian_sword)
 Fk:loadTranslationTable{
-  ["mobile__enemy_at_the_gates"] = "兵临城下",
-  [":mobile__enemy_at_the_gates"] = "锦囊牌<br /><b>时机</b>：出牌阶段<br /><b>目标</b>：一名其他角色<br /><b>效果</b>：你展示牌堆顶的四张牌，依次对目标角色使用其中的【杀】，然后将其余的牌以原顺序放回牌堆顶。",
-  ["#mobile__enemy_at_the_gates_skill"] = "选择一名其他角色，你展示牌堆顶四张牌，依次对其使用其中【杀】，其余牌放回牌堆顶",
-  ["mobile__enemy_at_the_gates_skill"] = "兵临城下",
+  ["xuanjian_sword"] = "玄剑",
+  ["xuanjian_sword_skill"] = "玄剑",
+  [":xuanjian_sword"] = "装备牌·武器<br/><b>攻击范围</b>：2<br/><b>武器技能</b>：你可以将一种花色的所有手牌当【杀】使用。",
+  ["#xuanjian_sword_skill"] = "玄剑：将一种花色的所有手牌当【杀】使用",
+  ["#xuanjian_sword_skill_update"] = "玄剑：将一张手牌当【杀】使用",
 }
 
 return extension

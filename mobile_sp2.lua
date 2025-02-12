@@ -1106,94 +1106,6 @@ Fk:loadTranslationTable{
   ["~yangfeng"] = "刘备！本共图吕布，何设鸿门相欺！",
 }
 
-local zhangbu = General(extension, "zhangbu", "wu", 4)
-zhangbu.total_hidden = true
-local chengxiong = fk.CreateTriggerSkill{
-  name = "chengxiong",
-  anim_type = "offensive",
-  events = {fk.TargetSpecified},
-  can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self) and data.card.type == Card.TypeTrick and
-      table.find(AimGroup:getAllTargets(data.tos), function(id) return id ~= player.id end) then
-      local room = player.room
-      local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 999, function(e)
-        local use = e.data[1]
-        return use and use.from == player.id
-      end, Player.HistoryPhase)
-      return table.find(room.alive_players, function(p)
-        return #p:getCardIds("he") >= n
-      end)
-    end
-  end,
-  on_cost = function (self, event, target, player, data)
-    local room = player.room
-    local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 999, function(e)
-      local use = e.data[1]
-      return use and use.from == player.id
-    end, Player.HistoryPhase)
-    local targets = table.map(table.filter(room.alive_players, function(p)
-      return #p:getCardIds("he") >= n
-    end), Util.IdMapper)
-    local to = room:askForChoosePlayers(player, targets, 1, 1, "#chengxiong-choose:::"..data.card:getColorString(), self.name, true)
-    if #to > 0 then
-      self.cost_data = to[1]
-      return true
-    end
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = room:getPlayerById(self.cost_data)
-    local card = room:askForCardChosen(player, to, "he", self.name)
-    local color = Fk:getCardById(card).color
-    room:throwCard(card, self.name, to, player)
-    if color == data.card.color and color ~= Card.NoColor and not to.dead then
-      room:damage{
-        from = player,
-        to = to,
-        damage = 1,
-        skillName = self.name,
-      }
-    end
-  end,
-}
-local wangzhuan = fk.CreateTriggerSkill{
-  name = "wangzhuan",
-  anim_type = "drawcard",
-  events = {fk.Damaged},
-  can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and not data.card and
-      (data.from and data.from == player or target == player)
-  end,
-  on_cost = function(self, event, target, player, data)
-    return player.room:askForSkillInvoke(player, self.name, nil, "#wangzhuan-invoke")
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    player:drawCards(2, self.name)
-    if room.current and not room.current.dead then
-      room:doIndicate(player.id, {room.current.id})
-      room:addPlayerMark(room.current, "@@wangzhuan-turn")
-      room:addPlayerMark(room.current, MarkEnum.UncompulsoryInvalidity .. "-turn")
-    end
-  end,
-}
-zhangbu:addSkill(chengxiong)
-zhangbu:addSkill(wangzhuan)
-Fk:loadTranslationTable{
-  ["zhangbu"] = "张布",
-  ["#zhangbu"] = "主胜辅义",
-  --["illustrator:zhangbu"] = "",
-
-  ["chengxiong"] = "惩凶",
-  [":chengxiong"] = "你使用锦囊牌指定其他角色为目标后，你可以选择一名牌数不小于X的角色（X为你此阶段使用的牌数），弃置其一张牌，"..
-  "若此牌颜色与你使用的锦囊牌颜色相同，你对其造成1点伤害。",
-  ["wangzhuan"] = "妄专",
-  [":wangzhuan"] = "当一名角色受到非游戏牌造成的伤害后，若你是伤害来源或受伤角色，你可以摸两张牌，然后当前回合角色非锁定技失效直到回合结束。",
-  ["#chengxiong-choose"] = "惩凶：弃置一名角色一张牌，若为%arg，对其造成1点伤害",
-  ["#wangzhuan-invoke"] = "妄专：你可以摸两张牌，令当前回合角色本回合非锁定技无效",
-  ["@@wangzhuan-turn"] = "妄专",
-}
-
 local wangjing = General(extension, "wangjing", "wei", 3)
 local zujin = fk.CreateViewAsSkill{
   name = "zujin",
@@ -1640,7 +1552,7 @@ zhenji:addSkill(jiwei)
 Fk:loadTranslationTable{
   ["mob_sp__zhenji"] = "甄姬",
   ["#mob_sp__zhenji"] = "明珠锦玉",
-  ["illustrator:mob_sp__zhenji"] = "",
+  ["illustrator:mob_sp__zhenji"] = "铁杵",
   ["~mob_sp__zhenji"] = "悔入帝王家，万愿皆成空……",
   ["$mob_sp__zhenji_win_audio"] = "昔见百姓十室九空，更惜今日安居乐业。",
 

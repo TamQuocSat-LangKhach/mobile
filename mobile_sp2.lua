@@ -2373,7 +2373,8 @@ local jiyuRefresh = fk.CreateTriggerSkill{
       U.clearHandMark(player, "@@jiyul-phase")
     elseif loseByUse and table.every(player:getCardIds(Player.Hand), function (id)
       return Fk:getCardById(id):getMark("@@jiyul-phase") == 0
-    end) then
+    end) and player:getMark("jiyul_reset-phase") == 0 then
+      room:setPlayerMark(player, "jiyul_reset-phase", 1)
       player:setSkillUseHistory("jiyul", 0, Player.HistoryPhase)
     end
   end,
@@ -2383,8 +2384,8 @@ jiyu:addRelatedSkill(jiyuRefresh)
 
 Fk:loadTranslationTable{
   ["jiyul"] = "急御",
-  [":jiyul"] = "出牌阶段限一次，你可以弃置一张手牌，从牌堆随机获得此牌类别以外的牌各一张，"..
-    "若你使用过所有于此阶段内以此法得到的牌，此技能视为未发动过。",
+  [":jiyul"] = "出牌阶段限一次，你可以弃置一张手牌，从牌堆随机获得此牌类别以外的牌各一张。"..
+    "每阶段限一次，若你于此阶段使用了所有因此获得的牌，复原此技能。",
 
   ["#jiyul-active"] = "发动 急御，弃置一张手牌，从牌堆随机获得此牌类别以外的牌各一张",
   ["@@jiyul-phase"] = "急御",

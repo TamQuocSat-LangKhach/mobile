@@ -791,30 +791,38 @@ Fk:loadTranslationTable{
 
 Fk:loadTranslationTable{
   ["m_friend__shitao"] = "友石韬",
-  ["#m_friend__shitao"] = "",
+  ["#m_friend__shitao"] = "月堕窠臼",
   --["illustrator:m_friend__shitao"] = "",
-  ["~m_friend__shitao"] = "",
+  ["~m_friend__shitao"] = "空有一腔热血，却是报国无门……",
 }
 Fk:loadTranslationTable{
   ["qinying"] = "钦英",
   [":qinying"] = "出牌阶段限一次，你可以重铸任意张牌，视为使用一张【决斗】。若如此做，此【决斗】结算过程中限X次（X为你以此法重铸的牌数），"..
   "你或目标角色可以弃置区域中的一张牌，视为打出一张【杀】。",
+  ["$qinying1"] = "虽穷不处亡国之势，虽贫不受污君之禄。",
+  ["$qinying2"] = "太公七十而不自达，孙叔敖三去相而不自悔。",
+  ["$qinying3"] = "知命者待时而举，岂曰时无英雄乎？",
+  ["$qinying4"] = "但因明主未遇，故潜居抱道以待其时。",
 }
 Fk:loadTranslationTable{
   ["lunxiong"] = "论雄",
   [":lunxiong"] = "当你造成或受到伤害后，你可以弃置点数唯一最大的手牌，然后你摸三张牌，你本局游戏以此法弃置牌的点数须大于此牌。",
+  ["$lunxiong1"] = "英以其聪谋始，以其明见机，待雄之胆行之。",
+  ["$lunxiong2"] = "雄以其力服众，以其勇排难，待英之智成之。",
 }
 Fk:loadTranslationTable{
   ["shitao__gongli"] = "共砺",
   [":shitao__gongli"] = "锁定技，游戏开始时，你令本局〖钦英〗减少X个可用于弃置的类别的牌（X为全场友武将数）。",
+  ["$shitao__gongli1"] = "天下失道，诸君可有意共匡社稷？",
+  ["$shitao__gongli2"] = "既志同道合，吾等何不一道？",
 }
 
 local friend__cuijun = General(extension, "m_friend__cuijun", "qun", 3)
 Fk:loadTranslationTable{
   ["m_friend__cuijun"] = "友崔钧",
-  ["#m_friend__cuijun"] = "",
+  ["#m_friend__cuijun"] = "日奋金丝",
   --["illustrator:m_friend__cuijun"] = "",
-  ["~m_friend__cuijun"] = "",
+  ["~m_friend__cuijun"] = "与君等交何其之快，只惜无再聚之日矣……",
 }
 local shunyi = fk.CreateTriggerSkill{
   name = "shunyi",
@@ -884,6 +892,8 @@ Fk:loadTranslationTable{
   ["#shunyi-invoke"] = "顺逸：是否将所有%arg手牌置于武将牌上直到回合结束并摸一张牌？",
   ["$shunyi"] = "顺逸",
   ["#shunyi_delay"] = "顺逸",
+  ["$shunyi1"] = "将军岂不知顺天者逸，逆天者劳乎？",
+  ["$shunyi2"] = "我本山野村夫，不足与将军论天下大事。",
 }
 local biwei = fk.CreateActiveSkill{
   name = "biwei",
@@ -925,6 +935,8 @@ Fk:loadTranslationTable{
   ["biwei"] = "鄙位",
   [":biwei"] = "出牌阶段限一次，你可以弃置一张点数唯一最大的手牌并选择一名其他角色，令其弃置所有点数不小于此牌的手牌。若其未因此弃置牌，复原此技能。",
   ["#biwei"] = "鄙位：弃置点数唯一最大的手牌，令一名角色弃置所有点数不小于此牌的手牌",
+  ["$biwei1"] = "何羡殿上公卿？徒惹一身铜臭。",
+  ["$biwei2"] = "但见朱门酒肉臭，谁知人间疾苦久？",
 }
 local cuijun__gongli = fk.CreateTriggerSkill{
   name = "cuijun__gongli",
@@ -968,6 +980,8 @@ Fk:loadTranslationTable{
   ["cuijun__gongli"] = "共砺",
   [":cuijun__gongli"] = "锁定技，游戏开始时，你令〖顺逸〗增加X个可触发的花色（X为全场友武将数）。",
   ["#cuijun__gongli-choice"] = "共砺：为“顺逸”增加%arg个可触发花色",
+  ["$cuijun__gongli1"] = "一味不能合伊鼎之甘，独木岂能致邓林之茂？",
+  ["$cuijun__gongli2"] = "良友结，则辅仁之道弘矣。",
 }
 
 return extension

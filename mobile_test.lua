@@ -148,22 +148,25 @@ local function DoYance(player)
   local yes = #table.filter(results, function (n)
     return n == 1
   end)
-  if yes == 0 then
-    player:broadcastSkillInvoke("yance", 4)
+  if yes < #results / 2 then
     room:notifySkillInvoked(player, "yance", "negative")
-    room:addPlayerMark(player, "yance_fail", fangqiu_trigger)
-    room:loseHp(player, fangqiu_trigger, "yance")
-  elseif yes < #results / 2 then
-    player:broadcastSkillInvoke("yance", 5)
-    room:notifySkillInvoked(player, "yance", "negative")
-    room:askForDiscard(player, fangqiu_trigger, fangqiu_trigger, true, "yance", false)
+    if yes == 0 then
+      player:broadcastSkillInvoke("yance", 4)
+      room:addPlayerMark(player, "yance_fail", fangqiu_trigger)
+      room:loseHp(player, fangqiu_trigger, "yance")
+    else
+      player:broadcastSkillInvoke("yance", 6)
+    end
+    if not player.dead then
+      room:askForDiscard(player, fangqiu_trigger, fangqiu_trigger, true, "yance", false)
+    end
   else
+    room:notifySkillInvoked(player, "yance", "drawcard")
     if yes == #results then
-      player:broadcastSkillInvoke("yance", 3)
+      player:broadcastSkillInvoke("yance", table.random{3, 5})
     else
       player:broadcastSkillInvoke("yance", table.random{6, 7})
     end
-    room:notifySkillInvoked(player, "yance", "drawcard")
     local choice = room:askForChoice(player, choices, "yance", "#yance-prey")
     local pattern
     if table.contains({"basic", "trick", "equip"}, choice) then
@@ -816,7 +819,13 @@ Fk:loadTranslationTable{
 local shunyi = fk.CreateTriggerSkill{
   name = "shunyi",
   anim_type = "drawcard",
+  dynamic_desc = function(self, player)
+    return "shunyi_inner:"..table.concat(table.map(player:getTableMark("shunyi"), function (s)
+      return Fk:translate(U.ConvertSuit(s, "int", "sym"))
+    end), "")
+  end,
   events = {fk.CardUsing},
+  frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and-- not player:isKongcheng() and
       U.IsUsingHandcard(player, data) and
@@ -847,6 +856,10 @@ local shunyi = fk.CreateTriggerSkill{
       player:drawCards(1, self.name)
     end
   end,
+
+  on_acquire = function (self, player, is_start)
+    player.room:setPlayerMark(player, self.name, {Card.Heart})
+  end,
 }
 local shunyi_delay = fk.CreateTriggerSkill{
   name = "#shunyi_delay",
@@ -865,6 +878,8 @@ friend__cuijun:addSkill(shunyi)
 Fk:loadTranslationTable{
   ["shunyi"] = "顺逸",
   [":shunyi"] = "当你使用点数唯一最小的手牌时，若此牌的花色为<font color='red'>♥</font>且点数大于X（X为你本回合发动本技能的次数），你可以将"..
+  "此花色的所有手牌扣置于武将牌上直至当前回合结束，然后你摸一张牌。",
+  [":shunyi_inner"] = "当你使用点数唯一最小的手牌时，若此牌的花色为{1}且点数大于X（X为你本回合发动本技能的次数），你可以将"..
   "此花色的所有手牌扣置于武将牌上直至当前回合结束，然后你摸一张牌。",
   ["#shunyi-invoke"] = "顺逸：是否将所有%arg手牌置于武将牌上直到回合结束并摸一张牌？",
   ["$shunyi"] = "顺逸",
@@ -887,7 +902,7 @@ local biwei = fk.CreateActiveSkill{
       end)
   end,
   target_filter = function(self, to_select, selected, _, _, _, player)
-    return #selected == 0 and to_select ~= player
+    return #selected == 0 and to_select ~= player.id
   end,
   on_use = function(self, room, effect)
     local player = room:getPlayerById(effect.from)

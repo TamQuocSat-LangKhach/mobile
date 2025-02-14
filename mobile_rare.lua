@@ -1392,6 +1392,7 @@ local qishe = fk.CreateViewAsSkill{
   name = "qishe",
   anim_type = "offensive",
   pattern = "analeptic",
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).type == Card.TypeEquip
   end,
@@ -2183,21 +2184,13 @@ hiddenChangshi.total_hidden = true
 local changshiTaoluan = fk.CreateViewAsSkill{
   name = "changshi__taoluan",
   pattern = ".",
-  interaction = function()
-    local names = {}
-    local mark = Self:getMark("@$taoluan")
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if (card.type == Card.TypeBasic or card:isCommonTrick()) and not card.is_derived and
-        Self:canUse(card) then
-        if mark == 0 or (not table.contains(mark, card.trueName)) then
-          table.insertIfNeed(names, card.name)
-        end
-      end
-    end
+  interaction = function(self, player)
+    local all_names = U.getAllCardNames("bt")
+    local names = U.getViewAsCardNames(player, self.name, all_names, nil, player:getTableMark("@$taoluan"))
     if #names == 0 then return end
-    return UI.ComboBox {choices = names}
+    return U.CardNameBox {choices = names, all_choices = all_names}
   end,
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0
   end,
@@ -2692,6 +2685,7 @@ shichangshi:addRelatedSkill("changshi__niqu")
 local changshiMiaoyu = fk.CreateViewAsSkill{
   name = "changshi__miaoyu",
   pattern = "peach,slash,jink,nullification",
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     if #selected == 2 then
       return false

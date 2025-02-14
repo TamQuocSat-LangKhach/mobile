@@ -2521,19 +2521,10 @@ local jibing = fk.CreateViewAsSkill{
   expand_pile = "$mayuanyi_bing",
   derived_piles = "$mayuanyi_bing",
   prompt = "#jibing",
-  interaction = function()
-    local names = {}
-    if Fk.currentResponsePattern == nil and Self:canUse(Fk:cloneCard("slash")) then
-      table.insertIfNeed(names, "slash")
-    else
-      for _, name in ipairs({"slash", "jink"}) do
-        if Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(Fk:cloneCard(name)) then
-          table.insertIfNeed(names, name)
-        end
-      end
-    end
-    if #names == 0 then return end
-    return UI.ComboBox {choices = names}
+  interaction = function(self, player)
+    local all_names = {"slash", "jink"}
+    local names = U.getViewAsCardNames(player, self.name, all_names)
+    return U.CardNameBox {choices = names, all_choices = all_names}
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Self:getPileNameOfId(to_select) == "$mayuanyi_bing"
@@ -3410,19 +3401,13 @@ local yizan = fk.CreateViewAsSkill{
       return "#yizan1"
     end
   end,
-  interaction = function()
-    local names = {}
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if card.type == Card.TypeBasic and not card.is_derived and
-        ((Fk.currentResponsePattern == nil and card.skill:canUse(Self, card)) or
-        (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(card))) then
-        table.insertIfNeed(names, card.name)
-      end
-    end
+  interaction = function(self, player)
+    local all_names = U.getAllCardNames("b")
+    local names = U.getViewAsCardNames(player, self.name, all_names)
     if #names == 0 then return end
-    return UI.ComboBox {choices = names}
+    return U.CardNameBox {choices = names, all_choices = all_names}
   end,
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     local card = Fk:getCardById(to_select)
     if #selected == 0 then
@@ -4927,6 +4912,7 @@ local xiaoni = fk.CreateViewAsSkill{
     if #names == 0 then return end
     return UI.ComboBox {choices = names}
   end,
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and self.interaction.data
   end,
@@ -5227,6 +5213,7 @@ local mobile__xiaoxi = fk.CreateViewAsSkill{
   name = "mobile__xiaoxi",
   anim_type = "offensive",
   pattern = "slash",
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Black
   end,

@@ -1117,11 +1117,11 @@ local zujin = fk.CreateViewAsSkill{
       return "#zujin-jink"
     end
   end,
-  interaction = function()
+  interaction = function(self, player)
     local all_names = {"slash", "jink", "nullification"}
-    local names = U.getViewAsCardNames(Self, "zujin", all_names, {}, Self:getTableMark("zujin-turn"))
+    local names = U.getViewAsCardNames(player, self.name, all_names, nil, player:getTableMark("zujin-turn"))
     if #names > 0 then
-      return UI.ComboBox { choices = names, all_choices = all_names }
+      return U.CardNameBox { choices = names, all_choices = all_names }
     end
   end,
   card_filter = function (self, to_select, selected)
@@ -1135,9 +1135,7 @@ local zujin = fk.CreateViewAsSkill{
     return card
   end,
   before_use = function(self, player)
-    local mark = player:getTableMark("zujin-turn")
-    table.insert(mark, Fk:cloneCard(self.interaction.data).trueName)
-    player.room:setPlayerMark(player, "zujin-turn", mark)
+    player.room:addTableMark(player, "zujin-turn", self.interaction.data)
   end,
   enabled_at_play = function(self, player)
     return not table.contains(player:getTableMark("zujin-turn"), "slash") and

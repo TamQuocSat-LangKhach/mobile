@@ -327,6 +327,7 @@ local huoji = fk.CreateViewAsSkill{
   anim_type = "offensive",
   pattern = "fire_attack",
   prompt = "#m_ex__huoji",
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Red
   end,
@@ -343,6 +344,7 @@ local kanpo = fk.CreateViewAsSkill{
   anim_type = "control",
   pattern = "nullification",
   prompt = "#m_ex__kanpo",
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Black
   end,
@@ -549,6 +551,7 @@ local shuangxiong = fk.CreateViewAsSkill{
     end
     return "#shuangxiong:::"..color
   end,
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     if #selected == 1 then return false end
     local color = Fk:getCardById(to_select):getColorString()
@@ -675,6 +678,7 @@ local luanji = fk.CreateViewAsSkill{
       return suit ~= "log_nosuit" and not table.contains(Self:getTableMark("@m_ex__luanji-phase"), suit)
     end
   end,
+  handly_pile = true,
   view_as = function(self, cards)
     if #cards ~= 2 then return end
     local card = Fk:cloneCard("archery_attack")
@@ -743,6 +747,7 @@ local duanliang = fk.CreateViewAsSkill{
   anim_type = "control",
   pattern = "supply_shortage",
   prompt = "#m_ex__duanliang",
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).color == Card.Black and Fk:getCardById(to_select).type ~= Card.TypeTrick
   end,

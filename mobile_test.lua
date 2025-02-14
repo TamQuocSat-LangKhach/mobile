@@ -182,7 +182,7 @@ local function DoYance(player)
     end
     if yes == #results and not player.dead then
       room:addPlayerMark(player, "yance_success", fangqiu_trigger)
-      player:drawCards(2 * fangqiu_trigger, "yance")
+      player:drawCards(1 + fangqiu_trigger, "yance")
     end
   end
 end

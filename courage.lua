@@ -611,9 +611,7 @@ local chuifeng = fk.CreateViewAsSkill{
   enabled_at_play = function(self, player)
     return player:usedSkillTimes(self.name, Player.HistoryPhase) < 2 and player.hp > 0
   end,
-  card_filter = function()
-    return false
-  end,
+  card_filter = Util.FalseFunc,
   view_as = function(self, cards)
     local card = Fk:cloneCard("duel")
     card.skillName = self.name
@@ -669,6 +667,7 @@ local chongjian = fk.CreateViewAsSkill{
     return UI.ComboBox {choices = names}
   end,
   pattern = "slash,analeptic",
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:getCardById(to_select).type == Card.TypeEquip
   end,

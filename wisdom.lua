@@ -616,22 +616,13 @@ local mobile__sanchen = fk.CreateTriggerSkill{
 local miewu = fk.CreateViewAsSkill{
   name = "miewu",
   pattern = ".",
-  interaction = function()
-    local names, all_names = {} , {}
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if (card.type == Card.TypeBasic or card.type == Card.TypeTrick) and not card.is_derived and not table.contains(all_names, card.name) then
-        table.insert(all_names, card.name)
-        local to_use = Fk:cloneCard(card.name)
-        if ((Fk.currentResponsePattern == nil and Self:canUse(to_use) and not Self:prohibitUse(to_use)) or
-        (Fk.currentResponsePattern and Exppattern:Parse(Fk.currentResponsePattern):match(to_use))) then
-          table.insert(names, card.name)
-        end
-      end
-    end
-    if #names == 0 then return false end
-    return UI.ComboBox { choices = names, all_choices = all_names }
+  interaction = function(self, player)
+    local all_names = U.getAllCardNames("btd")
+    local names = U.getViewAsCardNames(player, self.name, all_names)
+    if #names == 0 then return end
+    return U.CardNameBox {choices = names, all_choices = all_names}
   end,
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0
   end,
@@ -675,7 +666,7 @@ Fk:loadTranslationTable{
   ["wuku"] = "武库",
   [":wuku"] = "锁定技，当一名角色使用装备时，你获得1个“武库”标记。（“武库”数量至多为3）",
   ["mobile__sanchen"] = "三陈",
-  [":mobile__sanchen"] = "觉醒技，结束阶段，若你已有3个“武库”，你增加一点体力上限，回复一点体力，然后获得技能〖灭吴〗。",
+  [":mobile__sanchen"] = "觉醒技，结束阶段，若你已有3个“武库”，你增加1点体力上限，回复1点体力，然后获得技能〖灭吴〗。",
   ["@wuku"] = "武库",
   ["miewu"] = "灭吴",
   ["#miewu_delay"] = "灭吴",
@@ -936,20 +927,11 @@ local limitedHuishiClear = fk.CreateTriggerSkill{
 local zuoxing = fk.CreateViewAsSkill{
   name = "zuoxing",
   prompt = "#zuoxing",
-  interaction = function()
-    local names, all_names = {} , {}
-    for _, id in ipairs(Fk:getAllCardIds()) do
-      local card = Fk:getCardById(id)
-      if card:isCommonTrick() and not card.is_derived and not table.contains(all_names, card.name) then
-        table.insert(all_names, card.name)
-        local to_use = Fk:cloneCard(card.name)
-        if Self:canUse(to_use) and not Self:prohibitUse(to_use) then
-          table.insert(names, card.name)
-        end
-      end
-    end
-    if #names == 0 then return false end
-    return UI.ComboBox {choices = names, all_choices = all_names}
+  interaction = function(self, player)
+    local all_names = U.getAllCardNames("t")
+    local names = U.getViewAsCardNames(player, self.name, all_names)
+    if #names == 0 then return end
+    return U.CardNameBox {choices = names, all_choices = all_names}
   end,
   enabled_at_play = function(self, player)
     return

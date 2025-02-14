@@ -970,13 +970,13 @@ local xuanjian_sword = fk.CreateWeapon{
   name = "&xuanjian_sword",
   suit = Card.Spade,
   number = 2,
-  attack_range = 2,
+  attack_range = 3,
   equip_skill = xuanjianSkill,
 }
 extension:addCard(xuanjian_sword)
 Fk:loadTranslationTable{
   ["xuanjian_sword"] = "玄剑",
-  [":xuanjian_sword"] = "装备牌·武器<br/><b>攻击范围</b>：2<br/><b>武器技能</b>：你可以将一种花色的所有手牌当【杀】使用。",
+  [":xuanjian_sword"] = "装备牌·武器<br/><b>攻击范围</b>：3<br/><b>武器技能</b>：你可以将一种花色的所有手牌当【杀】使用。",
   ["xuanjian_sword_skill"] = "玄剑",
   [":xuanjian_sword_skill"] = "你可以将一种花色的所有手牌当【杀】使用。",
   ["#xuanjian_sword_skill"] = "玄剑：将一种花色的所有手牌当【杀】使用",

@@ -2213,6 +2213,7 @@ local m_ex__jianying = fk.CreateViewAsSkill{
       default_choice = "AskForCardsChosen",
     }
   end,
+  handly_pile = true,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk.all_card_types[self.interaction.data] ~= nil
   end,

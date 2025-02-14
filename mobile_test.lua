@@ -484,12 +484,9 @@ local yangming = fk.CreateTriggerSkill{
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(self) and player.phase == Player.Play then
       local room = player.room
-      local n = player:getHandcardNum()
-      if #room.logic:getEventsByRule(GameEvent.MoveCards, 1, function (e)
+      local n = 0
+      room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function (e)
         for _, move in ipairs(e.data) do
-          if move.to == player.id and move.toArea == Card.PlayerHand then
-            n = n - #move.moveInfo
-          end
           if move.from == player.id then
             for _, info in ipairs(move.moveInfo) do
               if info.fromArea == Card.PlayerHand then
@@ -497,24 +494,23 @@ local yangming = fk.CreateTriggerSkill{
               end
             end
           end
-          return n == 0
         end
-      end, room.logic:getCurrentEvent().id) > 0 then
-        if player:hasSkill("pangtong__gongli") and GongliFriend(room, player, "m_friend__zhugeliang") then
-          return true
-        else
-          return #room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function (e)
-            for _, move in ipairs(e.data) do
-              if move.toArea == Card.DiscardPile then
-                for _, info in ipairs(move.moveInfo) do
-                  if Fk:getCardById(info.cardId).suit ~= Card.NoSuit then
-                    return true
-                  end
+      end, Player.HistoryPhase)
+      if n < 3 then return end
+      if player:hasSkill("pangtong__gongli") and GongliFriend(room, player, "m_friend__zhugeliang") then
+        return true
+      else
+        return #room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function (e)
+          for _, move in ipairs(e.data) do
+            if move.toArea == Card.DiscardPile then
+              for _, info in ipairs(move.moveInfo) do
+                if Fk:getCardById(info.cardId).suit ~= Card.NoSuit then
+                  return true
                 end
               end
             end
-          end, Player.HistoryTurn) > 0
-        end
+          end
+        end, Player.HistoryTurn) > 0
       end
     end
   end,
@@ -578,7 +574,7 @@ local yangming = fk.CreateTriggerSkill{
 friend__pangtong:addSkill(yangming)
 Fk:loadTranslationTable{
   ["friend__yangming"] = "养名",
-  [":friend__yangming"] = "出牌阶段结束时，若你本阶段失去过所有手牌，你可以亮出牌堆顶的X张牌（X为本回合进入过弃牌堆的牌的花色数），"..
+  [":friend__yangming"] = "出牌阶段结束时，若你本阶段失去过至少三张手牌，你可以亮出牌堆顶的X张牌（X为本回合进入过弃牌堆的牌的花色数），"..
   "使用其中任意张花色各不相同的牌（无次数限制）。",
   ["#friend__yangming-use"] = "养名：你可以使用其中任意张花色各不相同的牌",
   ["$friend__yangming1"] = "但为国养士，为主选才耳。",

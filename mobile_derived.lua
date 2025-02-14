@@ -927,7 +927,7 @@ local xuanjianSkill = fk.CreateViewAsSkill{
           return Fk:getCardById(id):getSuitString(true) == s
         end)
         card:addSubcards(cards)
-        return player:canUse(card)
+        return #cards > 0 and player:canUse(card)
       end)
       return UI.ComboBox {choices = choices, all_choices = all_choices}
     end
@@ -953,6 +953,14 @@ local xuanjianSkill = fk.CreateViewAsSkill{
     card:addSubcards(cards)
     return card
   end,
+  before_use = function (self, player, use)
+    local room = player.room
+    if player:hasSkill("xushu__gongli") and
+      GongliFriend(room, player, "m_friend__zhugeliang") or GongliFriend(room, player, "m_friend__pangtong") then
+      player:broadcastSkillInvoke("xushu__gongli")
+      room:notifySkillInvoked(player, "xushu__gongli", "special")
+    end
+  end,
   enabled_at_response = function (self, player, response)
     return not response
   end,
@@ -968,8 +976,9 @@ local xuanjian_sword = fk.CreateWeapon{
 extension:addCard(xuanjian_sword)
 Fk:loadTranslationTable{
   ["xuanjian_sword"] = "玄剑",
-  ["xuanjian_sword_skill"] = "玄剑",
   [":xuanjian_sword"] = "装备牌·武器<br/><b>攻击范围</b>：2<br/><b>武器技能</b>：你可以将一种花色的所有手牌当【杀】使用。",
+  ["xuanjian_sword_skill"] = "玄剑",
+  [":xuanjian_sword_skill"] = "你可以将一种花色的所有手牌当【杀】使用。",
   ["#xuanjian_sword_skill"] = "玄剑：将一种花色的所有手牌当【杀】使用",
   ["#xuanjian_sword_skill_update"] = "玄剑：将一张手牌当【杀】使用",
 }

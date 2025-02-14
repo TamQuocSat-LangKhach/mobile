@@ -163,9 +163,9 @@ local function DoYance(player)
   else
     room:notifySkillInvoked(player, "yance", "drawcard")
     if yes == #results then
-      player:broadcastSkillInvoke("yance", table.random{3, 5})
+      player:broadcastSkillInvoke("yance", 3)
     else
-      player:broadcastSkillInvoke("yance", table.random{6, 7})
+      player:broadcastSkillInvoke("yance", 7)
     end
     local choice = room:askForChoice(player, choices, "yance", "#yance-prey")
     local pattern
@@ -269,6 +269,14 @@ local yance_trigger = fk.CreateTriggerSkill{
     local mark = player:getTableMark("@[yance]")
     if result == 1 then
       table.insert(mark.value, 2 * index, "√")
+      if #table.filter(player:getTableMark("yance_results"), function (n)
+        return n == 1
+      end) < 5 then
+        player:broadcastSkillInvoke("yance", 5)
+        room:notifySkillInvoked(player, "yance", "drawcard")
+        player:drawCards(1, "yance")
+        if player.dead then return end
+      end
     else
       table.insert(mark.value, 2 * index, "×")
     end
@@ -737,6 +745,7 @@ local qihui = fk.CreateTriggerSkill{
   end,
   on_refresh = function (self, event, target, player, data)
     player.room:setPlayerMark(player, "qihui_use", 0)
+    data.extraUse = true
   end,
 }
 local qihui_targetmod = fk.CreateTargetModSkill{
@@ -789,30 +798,199 @@ Fk:loadTranslationTable{
   ["$xushu__gongli2"] = "以吾等之才，何不同辅一主，共成王霸之业。",
 }
 
+local friend__shitao = General(extension, "m_friend__shitao", "qun", 3)
 Fk:loadTranslationTable{
   ["m_friend__shitao"] = "友石韬",
   ["#m_friend__shitao"] = "月堕窠臼",
   --["illustrator:m_friend__shitao"] = "",
   ["~m_friend__shitao"] = "空有一腔热血，却是报国无门……",
 }
+local qinying = fk.CreateViewAsSkill{
+  name = "qinying",
+  anim_type = "offensive",
+  prompt = "#qinying",
+  card_filter = Util.TrueFunc,
+  view_as = function(self, cards)
+    if #cards == 0 then return end
+    local card = Fk:cloneCard("duel")
+    card.skillName = self.name
+    self.cost_data = cards
+    return card
+  end,
+  before_use = function (self, player, use)
+    local room = player.room
+    if #player:getTableMark(self.name) < 3 then
+      room:setBanner(self.name, #self.cost_data)
+      if #player:getTableMark(self.name) > 0 then
+        room:setBanner("qinying_prohibit", player:getMark(self.name))
+      end
+      room:handleAddLoseSkills(player, "qinying&", nil, false, true)
+      for _, id in ipairs(TargetGroup:getRealTargets(use.tos)) do
+        local to = room:getPlayerById(id)
+        room:handleAddLoseSkills(to, "qinying&", nil, false, true)
+      end
+    end
+    room:recastCard(self.cost_data, player, self.name)
+  end,
+  after_use = function (self, player, use)
+    local room = player.room
+    room:setBanner(self.name, nil)
+    room:setBanner("qinying_prohibit", nil)
+    for _, p in ipairs(room.players) do
+      room:handleAddLoseSkills(p, "-qinying&", nil, false, true)
+    end
+  end,
+  enabled_at_play = function (self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+}
+local qinying_viewas = fk.CreateViewAsSkill{
+  name = "qinying&",
+  mute = true,
+  pattern = "slash",
+  prompt = function (self)
+    return "#qinying&:::"..Fk:currentRoom():getBanner("qinying")
+  end,
+  expand_pile = function (self, player)
+    return player:getCardIds("j")
+  end,
+  card_filter = function (self, to_select, selected, player)
+    if #selected == 0 and not player:prohibitDiscard(to_select) then
+      if Fk:currentRoom():getBanner("qinying_prohibit") then
+        return not table.contains(Fk:currentRoom():getBanner("qinying_prohibit"), Fk:getCardById(to_select):getTypeString())
+      else
+        return true
+      end
+    end
+  end,
+  view_as = function(self, cards)
+    if #cards ~= 1 then return end
+    local card = Fk:cloneCard("slash")
+    card.skillName = self.name
+    self.cost_data = cards
+    return card
+  end,
+  before_use = function (self, player, use)
+    local room = player.room
+    local banner = room:getBanner("qinying")
+    if banner then
+      banner = banner -1
+      if banner == 0 then
+        room:setBanner("qinying", nil)
+      else
+        room:setBanner("qinying", banner)
+      end
+    else
+      return self.name
+    end
+    room:throwCard(self.cost_data, self.name, player, player)
+  end,
+  enabled_at_play = Util.FalseFunc,
+  enabled_at_response = function (self, player, response)
+    return response and Fk:currentRoom():getBanner("qinying")
+  end,
+}
+Fk:addSkill(qinying_viewas)
+friend__shitao:addSkill(qinying)
 Fk:loadTranslationTable{
   ["qinying"] = "钦英",
   [":qinying"] = "出牌阶段限一次，你可以重铸任意张牌，视为使用一张【决斗】。若如此做，此【决斗】结算过程中限X次（X为你以此法重铸的牌数），"..
   "你或目标角色可以弃置区域中的一张牌，视为打出一张【杀】。",
+  ["#qinying"] = "钦英：你可以重铸任意张牌，视为使用一张【决斗】，双方可以弃一张牌以视为打出【杀】",
+  ["qinying&"] = "钦英",
+  [":qinying&"] = "你可以弃置区域中的一张牌，视为打出一张【杀】。",
+  ["#qinying&"] = "你可以弃置区域中的一张牌，视为打出一张【杀】（还剩%arg次！）",
+
   ["$qinying1"] = "虽穷不处亡国之势，虽贫不受污君之禄。",
   ["$qinying2"] = "太公七十而不自达，孙叔敖三去相而不自悔。",
   ["$qinying3"] = "知命者待时而举，岂曰时无英雄乎？",
   ["$qinying4"] = "但因明主未遇，故潜居抱道以待其时。",
 }
+local lunxiong = fk.CreateTriggerSkill{
+  name = "lunxiong",
+  anim_type = "masochism",
+  events = {fk.Damage, fk.Damaged},
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(self) and not player:isKongcheng() and
+      player:getMark(self.name) < 13
+  end,
+  on_cost = function (self, event, target, player, data)
+    local room = player.room
+    local ids = table.filter(player:getCardIds("h"), function(id)
+      local num = Fk:getCardById(id).number
+      return num > player:getMark(self.name) and
+        table.every(player:getCardIds("h"), function(id2)
+          return num >= Fk:getCardById(id2).number
+        end) and not player:prohibitDiscard(id)
+    end)
+    if #ids ~= 1 then
+      room:askForCard(player, 1, 1, false, self.name, true, "false", "#lunxiong-invoke:::"..(player:getMark(self.name) + 1))
+    else
+      local cards = room:askForDiscard(player, 1, 1, false, self.name, true, tostring(Exppattern{ id = ids }),
+        "#lunxiong-invoke:::"..(player:getMark(self.name) + 1), true)
+      if #cards > 0 then
+        self.cost_data = {cards = cards}
+        return true
+      end
+    end
+  end,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    local id = self.cost_data.cards[1]
+    room:setPlayerMark(player, self.name, Fk:getCardById(id).number)
+    room:throwCard(id, self.name, player, player)
+    if not player.dead then
+      player:drawCards(3, self.name)
+    end
+  end,
+}
+friend__shitao:addSkill(lunxiong)
 Fk:loadTranslationTable{
   ["lunxiong"] = "论雄",
-  [":lunxiong"] = "当你造成或受到伤害后，你可以弃置点数唯一最大的手牌，然后你摸三张牌，你本局游戏以此法弃置牌的点数须大于此牌。",
+  [":lunxiong"] = "当你造成或受到伤害后，你可以弃置点数唯一最大的手牌，然后摸三张牌，你本局游戏以此法弃置牌的点数须大于此牌。",
+  ["#lunxiong-invoke"] = "论雄：你可以弃置点数唯一最大的手牌（至少为%arg点），摸三张牌",
+
   ["$lunxiong1"] = "英以其聪谋始，以其明见机，待雄之胆行之。",
   ["$lunxiong2"] = "雄以其力服众，以其勇排难，待英之智成之。",
 }
+local shitao__gongli = fk.CreateTriggerSkill{
+  name = "shitao__gongli",
+  anim_type = "special",
+  frequency = Skill.Compulsory,
+  events = {fk.GameStart},
+  can_trigger = function(self, event, target, player, data)
+    return player:hasSkill(self) and player:hasSkill("qinying", true) and
+      table.find(player.room.alive_players, function (p)
+        return p.general:startsWith("m_friend__") or p.deputyGeneral:startsWith("m_friend__")
+      end)
+  end,
+  on_use = function(self, event, target, player, data)
+    local room = player.room
+    local n = 0
+    for _, p in ipairs(room.alive_players) do
+      if p.general:startsWith("m_friend__") then
+        n = n + 1
+      end
+      if p.deputyGeneral:startsWith("m_friend__") then
+        n = n + 1
+      end
+      if n > 2 then break end
+    end
+    if n == 3 then
+      room:setPlayerMark(player, "qinying", {Card.TypeBasic, Card.TypeTrick, Card.TypeEquip})
+    else
+      local choices = room:askForChoices(player, {"basic", "trick", "equip"}, n, n, self.name,
+        "#shitao__gongli-choice:::"..n, false)
+      room:setPlayerMark(player, "qinying", choices)
+    end
+  end,
+}
+friend__shitao:addSkill(shitao__gongli)
 Fk:loadTranslationTable{
   ["shitao__gongli"] = "共砺",
   [":shitao__gongli"] = "锁定技，游戏开始时，你令本局〖钦英〗减少X个可用于弃置的类别的牌（X为全场友武将数）。",
+  ["#shitao__gongli-choice"] = "共砺：为“钦英”减少%arg个可弃置类别",
+
   ["$shitao__gongli1"] = "天下失道，诸君可有意共匡社稷？",
   ["$shitao__gongli2"] = "既志同道合，吾等何不一道？",
 }

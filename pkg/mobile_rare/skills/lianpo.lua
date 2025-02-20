@@ -26,7 +26,7 @@ lianpo:addEffect(fk.Deathed, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
     if target ~= player and player:hasSkill(lianpo.name) and data.killer == player then
-      if player:getMark("@@mobile__lianpo-turn") == 0 then
+      if player:getMark("@@mobile__lianpo-turn") == 0 and player.room.logic:getCurrentEvent():findParent(GameEvent.Turn, true) then
         return true
       else
         return player:hasSkill("mobile__jilue", true) and
@@ -47,7 +47,7 @@ lianpo:addEffect(fk.Deathed, {
       table.insert(choices, 1, "mobile__lianpo_skill")
     end
 
-    if player:getMark("@@mobile__lianpo-turn") == 0 then
+    if player:getMark("@@mobile__lianpo-turn") == 0 and room.logic:getCurrentEvent():findParent(GameEvent.Turn, true) then
       table.insert(choices, 1, "mobile__lianpo_turn")
     end
 

@@ -1,0 +1,42 @@
+local gongli = fk.CreateSkill {
+  name = "xushu__gongli",
+  tags = { Skill.Compulsory },
+}
+
+Fk:loadTranslationTable{
+  ["xushu__gongli"] = "共砺",
+  [":xushu__gongli"] = "锁定技，若友方友诸葛亮在场，你发动〖玄剑〗改为将一张手牌当【杀】使用；"..
+  "若友方友庞统在场，你发动〖玄剑〗使用的【杀】无距离限制。（仅斗地主和2v2模式生效）",
+
+  [":xushu__gongli_zhugeliang"] = "锁定技，若友方友诸葛亮在场，你发动〖玄剑〗改为将一张手牌当【杀】使用。",
+  [":xushu__gongli_pangtong"] = "锁定技，若友方友庞统在场，你发动〖玄剑〗使用的【杀】无距离限制。",
+
+  ["$xushu__gongli1"] = "吾等并力同心相通，大事何不可成哉。",
+  ["$xushu__gongli2"] = "以吾等之才，何不同辅一主，共成王霸之业。",
+}
+
+local function GongliFriend(room, player, friend)
+  return (room:isGameMode("1v2_mode") or room:isGameMode("2v2_mode")) and
+    table.find(room.alive_players, function (p)
+      return p.role == player.role and (p.general == friend or p.deputyGeneral == friend)
+    end)
+end
+
+gongli:addEffect("targetmod", {
+  dynamic_desc = function(self, player)
+    if GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") and GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") then
+      return "xushu__gongli"
+    elseif GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") then
+      return "xushu__gongli_zhugeliang"
+    elseif GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") then
+      return "xushu__gongli_pangtong"
+    end
+    return "dummyskill"
+  end,
+  bypass_distances = function (self, player, skill, card, to)
+    return player:hasSkill(gongli.name) and GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") and card and
+      table.contains(card.skillNames, "xuanjian_sword")
+  end,
+})
+
+return gongli

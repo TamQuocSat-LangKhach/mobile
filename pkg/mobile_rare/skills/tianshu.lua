@@ -1,5 +1,5 @@
 local tianshu = fk.CreateSkill {
-  name = "tianshu",
+  name = "mobile__tianshu",
 }
 
 Fk:loadTranslationTable{

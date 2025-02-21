@@ -16,13 +16,13 @@ local lunxiong_spec = {
   anim_type = "masochism",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(self) and not player:isKongcheng() and
-      player:getMark(self.name) < 13
+      player:getMark(lunxiong.name) < 13
   end,
   on_cost = function (self, event, target, player, data)
     local room = player.room
     local ids = table.filter(player:getCardIds("h"), function(id)
       local num = Fk:getCardById(id).number
-      return num > player:getMark(self.name) and
+      return num > player:getMark(lunxiong.name) and
         table.every(player:getCardIds("h"), function(id2)
           return num >= Fk:getCardById(id2).number
         end) and not player:prohibitDiscard(id)
@@ -56,7 +56,7 @@ local lunxiong_spec = {
   on_use = function (self, event, target, player, data)
     local room = player.room
     local id = event:getCostData(self).cards[1]
-    room:setPlayerMark(player, self.name, Fk:getCardById(id).number)
+    room:setPlayerMark(player, lunxiong.name, Fk:getCardById(id).number)
     room:throwCard(id, lunxiong.name, player, player)
     if not player.dead then
       player:drawCards(3, lunxiong.name)

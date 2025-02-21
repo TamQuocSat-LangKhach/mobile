@@ -1,5 +1,5 @@
 local qinying_viewas = fk.CreateSkill {
-  name = "qinying_viewas",
+  name = "qinying&",
 }
 
 Fk:loadTranslationTable{
@@ -30,7 +30,7 @@ qinying_viewas:addEffect("viewas", {
   view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local card = Fk:cloneCard("slash")
-    card.skillName = qinying_viewas.name
+    card.skillName = "qinying"
     self.cost_data = cards
     return card
   end,
@@ -47,7 +47,7 @@ qinying_viewas:addEffect("viewas", {
     else
       return qinying_viewas.name
     end
-    room:throwCard(self.cost_data, qinying_viewas.name, player, player)
+    room:throwCard(self.cost_data, "qinying", player, player)
   end,
   enabled_at_play = Util.FalseFunc,
   enabled_at_response = function (self, player, response)

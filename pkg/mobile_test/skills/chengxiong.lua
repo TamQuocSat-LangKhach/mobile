@@ -15,7 +15,7 @@ chengxiong:addEffect(fk.TargetSpecified, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(chengxiong.name) and data.card.type == Card.TypeTrick and data.firstTarget and
-      table.find(data.tos, function(p)
+      table.find(data.use.tos, function(p)
         return p ~= player
       end) then
       local room = player.room

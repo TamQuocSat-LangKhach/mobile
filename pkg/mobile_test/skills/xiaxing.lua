@@ -19,7 +19,7 @@ xiaxing:addEffect(fk.GameStart, {
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(xiaxing.name) then
       local room = player.room
-      local cards = table.filter(U.prepareDeriveCards(room, { {"xuanjian_sword", Card.Spade, 2} }, self.name), function (id)
+      local cards = table.filter(U.prepareDeriveCards(room, { {"xuanjian_sword", Card.Spade, 2} }, xiaxing.name), function (id)
         return room:getCardArea(id) == Card.Void
       end)
       return #cards > 0
@@ -28,7 +28,7 @@ xiaxing:addEffect(fk.GameStart, {
   on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
-    local cards = table.filter(U.prepareDeriveCards(room, { {"xuanjian_sword", Card.Spade, 2} }, self.name), function (id)
+    local cards = table.filter(U.prepareDeriveCards(room, { {"xuanjian_sword", Card.Spade, 2} }, xiaxing.name), function (id)
       return room:getCardArea(id) == Card.Void
     end)
     room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonJustMove, xiaxing.name, nil, true, player)

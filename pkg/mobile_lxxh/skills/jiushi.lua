@@ -1,0 +1,78 @@
+local jiushi = fk.CreateSkill {
+  name = "mobile_qianlong__jiushi",
+  tags = { Skill.Permanent },
+}
+
+Fk:loadTranslationTable{
+  ["mobile_qianlong__jiushi"] = "酒诗",
+  [":mobile_qianlong__jiushi"] = "持恒技，当你需要使用【酒】时，若你的武将牌正面向上，你可以翻面，视为使用一张【酒】；当你受到伤害后，" ..
+  "若你的武将牌于受到此伤害时背面向上，你可以翻面；当你翻面后，你随机获得牌堆中的一张锦囊牌。",
+
+  ["#mobile_qianlong__jiushi"] = "酒诗：你可以翻面，视为使用一张【酒】",
+  ["#mobile_qianlong__jiushi-turnover"] = "酒诗：是否翻回正面？",
+
+  ["$mobile_qianlong__jiushi1"] = "心愤无所表，下笔即成篇。",
+  ["$mobile_qianlong__jiushi2"] = "弃忧但求醉，醒后寻复来。",
+}
+
+jiushi:addEffect("targetmod", {
+  anim_type = "offensive",
+  prompt = "#mobile_qianlong__jiushi",
+  pattern = "analeptic",
+  card_filter = Util.FalseFunc,
+  before_use = function(self, player)
+    player:turnOver()
+  end,
+  view_as = function(self, player, cards)
+    local c = Fk:cloneCard("analeptic")
+    c.skillName = jiushi.name
+    return c
+  end,
+  enabled_at_play = function (self, player)
+    return player.faceup
+  end,
+  enabled_at_response = function (self, player, response)
+    return not response and player.faceup
+  end,
+})
+jiushi:addEffect(fk.Damaged, {
+  anim_type = "masochism",
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(jiushi.name) and not player.faceup and
+      data.extra_data and data.extra_data.qianlong_jiushi
+  end,
+  on_cost = function (self, event, target, player, data)
+    return player.room:askToSkillInvoke(player, {
+      skill_name = jiushi.name,
+      prompt = "#mobile_qianlong__jiushi-turnover",
+    })
+  end,
+  on_use = function (self, event, target, player, data)
+    player:turnOver()
+  end,
+})
+jiushi:addEffect(fk.DamageInflicted, {
+  can_refresh = function(self, event, target, player, data)
+    return target == player and not player.faceup
+  end,
+  on_refresh = function(self, event, target, player, data)
+    data.extra_data = data.extra_data or {}
+    data.extra_data.qianlong_jiushi = true
+  end,
+})
+jiushi:addEffect(fk.TurnedOver, {
+  anim_type = "drawcard",
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:hasSkill(jiushi.name)
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    local room = player.room
+    local cards = player.room:getCardsFromPileByRule(".|.|.|.|.|trick")
+    if #cards > 0 then
+      room:obtainCard(player, cards, false, fk.ReasonJustMove, player, jiushi.name)
+    end
+  end,
+})
+
+return jiushi

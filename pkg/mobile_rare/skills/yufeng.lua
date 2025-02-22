@@ -192,6 +192,7 @@ yufeng:addEffect("active", {
 })
 yufeng:addEffect(fk.EventPhaseStart, {
   anim_type = "negative",
+  is_delay_effect = true,
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Start and player:getMark("@@mobile__yufeng") > 0
   end,
@@ -212,8 +213,6 @@ yufeng:addEffect(fk.EventPhaseStart, {
       player:skip(Player.Draw)
     end
   end,
-}, {
-  is_delay_effect = true,
 })
 
 return yufeng

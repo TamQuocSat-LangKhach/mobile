@@ -121,6 +121,8 @@ zhengjing:addEffect("active", {
   end,
 })
 zhengjing:addEffect(fk.EventPhaseStart, {
+  mute = true,
+  is_delay_effect = true,
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Start and #player:getPile("$zhengxuan_jing") > 0
   end,
@@ -131,8 +133,6 @@ zhengjing:addEffect(fk.EventPhaseStart, {
     player:skip(Player.Draw)
     room:moveCardTo(player:getPile("$zhengxuan_jing"), Card.PlayerHand, player, fk.ReasonPrey, "zhengjing", nil, false, player)
   end,
-}, {
-  is_delay_effect = true,
 })
 
 return zhengjing

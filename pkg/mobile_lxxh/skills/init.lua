@@ -13,4 +13,12 @@ return {
   require(prefix .. "shishou"),
   require(prefix .. "kuangli"),
   require(prefix .. "xiongsi"),
+  require(prefix .. "panxiang"),
+  require(prefix .. "chenjie"),
+  require(prefix .. "beiming"),
+  require(prefix .. "choumang"),
+  require(prefix .. "bifeng"),
+  require(prefix .. "suwang"),
+  require(prefix .. "beini"),
+  require(prefix .. "dingfa"),
 }

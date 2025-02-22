@@ -60,7 +60,6 @@ zuoyou:addEffect("active", {
     end
   end,
   anim_type = "switch",
-  switch_skill_name = zuoyou.name,
   card_num = 0,
   target_num = 1,
   prompt = function(self, player)

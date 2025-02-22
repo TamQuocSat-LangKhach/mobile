@@ -14,7 +14,6 @@ Fk:loadTranslationTable{
 
 shidi:addEffect(fk.EventPhaseStart, {
   mute = true,
-  switch_skill_name = "shidi",
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(self) then
       if player:getSwitchSkillState(shidi.name) == fk.SwitchYin then
@@ -30,6 +29,7 @@ shidi:addEffect(fk.EventPhaseStart, {
   end,
 })
 shidi:addEffect(fk.CardUsing, {
+  is_delay_effect = true,
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(shidi.name) and data.card.trueName == "slash" then
       if player:getSwitchSkillState(shidi.name) == fk.SwitchYang then
@@ -48,8 +48,6 @@ shidi:addEffect(fk.CardUsing, {
       table.insertIfNeed(data.disresponsiveList, player)
     end
   end,
-}, {
-  is_delay_effect = true,
 })
 shidi:addEffect("distance", {
   correct_func = function(self, from, to)

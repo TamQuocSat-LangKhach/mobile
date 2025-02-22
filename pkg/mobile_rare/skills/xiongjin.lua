@@ -49,6 +49,8 @@ xiongjin:addEffect(fk.EventPhaseStart, {
   end,
 })
 xiongjin:addEffect(fk.EventPhaseStart, {
+  mute = true,
+  is_delay_effect = true,
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Discard and
       (player:getMark("@@xiongjinBasic-turn") > 0 or player:getMark("@@xiongjinNotBasic-turn") > 0)
@@ -74,8 +76,6 @@ xiongjin:addEffect(fk.EventPhaseStart, {
       end
     end
   end,
-}, {
-  is_delay_effect = true,
 })
 
 return xiongjin

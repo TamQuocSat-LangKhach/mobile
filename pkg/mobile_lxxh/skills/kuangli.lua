@@ -45,9 +45,9 @@ kuangli:addEffect(fk.EventPhaseStart, {
 kuangli:addEffect(fk.TargetSpecified, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player.phase == Player.Play and
+    return target == player and player:hasSkill(kuangli.name) and player.phase == Player.Play and
       not data.to.dead and data.to:getMark("@@kuangli-turn") > 0 and
-      player:usedSkillTimes(self.name, Player.HistoryPhase) < (player.room:isGameMode("1v2_mode") and 1 or 2)
+      player:usedEffectTimes(self.name, Player.HistoryPhase) < (player.room:isGameMode("1v2_mode") and 1 or 2)
   end,
   on_use = function (self, event, target, player, data)
     local room = player.room

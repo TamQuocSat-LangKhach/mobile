@@ -22,6 +22,7 @@ kuangcai:addEffect(fk.EventPhaseStart, {
 })
 kuangcai:addEffect(fk.CardUsing, {
   anim_type = "drawcard",
+  is_delay_effect = true,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:usedSkillTimes(kuangcai.name, Player.HistoryPhase) > 0
   end,
@@ -31,8 +32,6 @@ kuangcai:addEffect(fk.CardUsing, {
     room:removePlayerMark(player, kuangcai.name, 1)
     player:drawCards(1, kuangcai.name)
   end,
-}, {
-  is_delay_effect = true,
 })
 kuangcai:addEffect(fk.StartPlayCard, {
   can_refresh = function (self, event, target, player, data)

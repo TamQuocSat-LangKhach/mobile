@@ -1,6 +1,7 @@
 local skill = fk.CreateSkill {
   name = "#ex_vine_skill",
   tags = { Skill.Compulsory },
+  attached_equip = "ex_vine",
 }
 
 Fk:loadTranslationTable{
@@ -9,7 +10,6 @@ Fk:loadTranslationTable{
 
 skill:addEffect(fk.PreCardEffect, {
   mute = true,
-  attached_equip = "ex_vine",
   can_trigger = function(self, event, target, player, data)
     return data.to == player and player:hasSkill(skill.name) and
       table.contains({"slash", "savage_assault", "archery_attack"}, data.card.name)
@@ -28,7 +28,6 @@ skill:addEffect(fk.PreCardEffect, {
 })
 skill:addEffect(fk.DamageInflicted, {
   mute = true,
-  attached_equip = "ex_vine",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and data.damageType == fk.FireDamage
   end,
@@ -46,7 +45,6 @@ skill:addEffect(fk.DamageInflicted, {
 })
 skill:addEffect(fk.BeforeChainStateChange, {
   mute = true,
-  attached_equip = "ex_vine",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(skill.name) and not player.chained
   end,

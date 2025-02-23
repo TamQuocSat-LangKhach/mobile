@@ -1,5 +1,6 @@
 local skill = fk.CreateSkill {
   name = "#offensive_siege_engine_skill",
+  attached_equip = "offensive_siege_engine",
 }
 
 Fk:loadTranslationTable{

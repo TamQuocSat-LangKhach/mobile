@@ -189,7 +189,7 @@ local xuanjian_sword = fk.CreateCard{
   type = Card.TypeEquip,
   sub_type = Card.SubtypeWeapon,
   attack_range = 3,
-  equip_skill = "xuanjian_sword_skill",
+  equip_skill = "xuanjian_sword_skill&",
 }
 extension:addCardSpec("xuanjian_sword", Card.Spade, 9)
 Fk:loadTranslationTable{

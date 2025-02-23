@@ -9,7 +9,7 @@ Fk:loadTranslationTable{
 }
 
 yinshi:addEffect(fk.EventPhaseChanging, {
-  anim_type = "defensive",
+  mute = true,
   events = {fk.EventPhaseChanging},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(yinshi.name) and

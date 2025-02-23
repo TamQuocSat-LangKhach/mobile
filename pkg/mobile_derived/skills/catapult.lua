@@ -1,5 +1,6 @@
 local skill = fk.CreateSkill {
   name = "#mobile__catapult_skill",
+  attached_equip = "mobile__catapult",
 }
 
 Fk:loadTranslationTable{

@@ -40,6 +40,7 @@ picai:addEffect("active", {
       if not table.every(cards, function(card)
           return card == judge.card or judge.card:compareSuitWith(card, true)
         end) or
+        player.dead or
         not room:askToSkillInvoke(player, {
           skill_name = picai.name,
           prompt = "#changshi__picai-ask",
@@ -54,16 +55,18 @@ picai:addEffect("active", {
     end)
     if #cards == 0 then return end
 
-    local to = room:askToChoosePlayers(player, {
-      min_num = 1,
-      max_num = 1,
-      targets = room.alive_players,
-      skill_name = picai.name,
-      prompt = "#changshi__picai-give",
-      cancelable = true,
-    })
-    if #to > 0 then
-      room:moveCardTo(cards, Card.PlayerHand, to[1], fk.ReasonGive, picai.name, nil, true, player)
+    if not player.dead then
+      local to = room:askToChoosePlayers(player, {
+        min_num = 1,
+        max_num = 1,
+        targets = room.alive_players,
+        skill_name = picai.name,
+        prompt = "#changshi__picai-give",
+        cancelable = true,
+      })
+      if #to > 0 then
+        room:moveCardTo(cards, Card.PlayerHand, to[1], fk.ReasonGive, picai.name, nil, true, player)
+      end
     end
     room:cleanProcessingArea(cards)
   end,

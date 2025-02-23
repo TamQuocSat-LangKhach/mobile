@@ -1,10 +1,11 @@
 local skill = fk.CreateSkill {
-  name = "xuanjian_sword_skill",
+  name = "xuanjian_sword_skill&",
+  attached_equip = "xuanjian_sword",
 }
 
 Fk:loadTranslationTable{
-  ["xuanjian_sword_skill"] = "玄剑",
-  [":xuanjian_sword_skill"] = "你可以将一种花色的所有手牌当【杀】使用。",
+  ["xuanjian_sword_skill&"] = "玄剑",
+  [":xuanjian_sword_skill&"] = "你可以将一种花色的所有手牌当【杀】使用。",
   ["#xuanjian_sword_skill"] = "玄剑：将一种花色的所有手牌当【杀】使用",
   ["#xuanjian_sword_skill_update"] = "玄剑：将一张手牌当【杀】使用",
 }
@@ -19,7 +20,6 @@ local function GongliFriend(room, player, friend)
 end
 
 skill:addEffect("viewas", {
-  attached_equip = "xuanjian_sword",
   pattern = "slash",
   prompt = function (self, player)
     if player:hasSkill("xushu__gongli") and GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") then

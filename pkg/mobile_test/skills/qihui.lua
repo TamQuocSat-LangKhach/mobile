@@ -6,13 +6,17 @@ local qihui = fk.CreateSkill {
 Fk:loadTranslationTable{
   ["qihui"] = "启诲",
   [":qihui"] = "锁定技，当你使用牌时，若你没有此牌对应类别的标记，你获得1个对应类别的“启诲”标记，然后若你拥有3个“启诲”标记，"..
-  "你移除2个“启诲”标记并选择一项：回复1点体力并重铸一张牌；摸两张牌；你使用的下一张牌不计入次数且无次数限制。",
+  "你移除2个“启诲”标记（若为斗地主模式则移除所有“启诲”标记）并选择一项：回复1点体力；摸两张牌（若为斗地主模式则摸三张牌）；"..
+  "你使用的下一张牌不计入次数且无次数限制。",
+
+  [":qihui_1v2"] = "锁定技，当你使用牌时，若你没有此牌对应类别的标记，你获得1个对应类别的“启诲”标记，然后若你拥有3个“启诲”标记，"..
+  "你移除所有“启诲”标记并选择一项：回复1点体力；摸三张牌；你使用的下一张牌不计入次数且无次数限制。",
+  [":qihui_role_mode"] = "锁定技，当你使用牌时，若你没有此牌对应类别的标记，你获得1个对应类别的“启诲”标记，然后若你拥有3个“启诲”标记，"..
+  "你移除2个“启诲”标记并选择一项：回复1点体力；摸两张牌；你使用的下一张牌不计入次数且无次数限制。",
 
   ["@qihui"] = "启诲",
   ["#qihui-remove"] = "启诲：请移除两种“启诲”标记",
-  ["qihui_recover"] = "回复1点体力，重铸一张牌",
   ["qihui_use"] = "使用下一张牌无次数限制",
-  ["#qihui-recast"] = "启诲：重铸一张牌",
 
   ["$qihui1"] = "天乃高且远，安可事事自下。",
   ["$qihui2"] = "吾等当上体天心，下济黎民。",
@@ -20,6 +24,13 @@ Fk:loadTranslationTable{
 }
 
 qihui:addEffect(fk.CardUsing, {
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "qihui_1v2"
+    else
+      return "qihui_role_mode"
+    end
+  end,
   anim_type = "special",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(qihui.name) and
@@ -29,49 +40,44 @@ qihui:addEffect(fk.CardUsing, {
     local room = player.room
     room:addTableMark(player, "@qihui", data.card:getTypeString().."_char")
     if #player:getTableMark("@qihui") == 3 then
-      local choices = room:askToChoices(player, {
-        choices = {"basic", "trick", "equip"},
-        min_num = 2,
-        max_num = 2,
-        skill_name = qihui.name,
-        prompt = "#qihui-remove",
-        cancelable = false,
-      })
-      for _, choice in ipairs(choices) do
-        room:removeTableMark(player, "@qihui", choice.."_char")
+      if room:isGameMode("1v2_mode") then
+        room:setPlayerMark(player, "@qihui", 0)
+      else
+        local choices = room:askToChoices(player, {
+          choices = {"basic", "trick", "equip"},
+          min_num = 2,
+          max_num = 2,
+          skill_name = qihui.name,
+          prompt = "#qihui-remove",
+          cancelable = false,
+        })
+        for _, choice in ipairs(choices) do
+          room:removeTableMark(player, "@qihui", choice.."_char")
+        end
       end
-      local all_choices = {"qihui_recover", "draw2", "qihui_use"}
-      choices = table.simpleClone(all_choices)
-      if not player:isWounded() and player:isNude() then
+      local all_choices = {"recover", "draw2", "qihui_use"}
+      if room:isGameMode("1v2_mode") then
+        all_choices[2] = "draw3"
+      end
+      local choices = table.simpleClone(all_choices)
+      if not player:isWounded() then
         table.remove(choices, 1)
       end
       local choice = room:askToChoice(player, {
         choices = choices,
         skill_name = qihui.name,
       })
-      if choice == "qihui_recover" then
-        if player:isWounded() then
-          room:recover{
-            who = player,
-            num = 1,
-            recoverBy = player,
-            skillName = qihui.name,
-          }
-          if player.dead then return end
-        end
-        if not player:isNude() then
-          local card = room:askToCards(player, {
-            min_num = 1,
-            max_num = 1,
-            include_equip = true,
-            skill_name = qihui.name,
-            prompt = "#qihui-recast",
-            cancelable = false,
-          })
-          room:recastCard(card, player, qihui.name)
-        end
+      if choice == "recover" then
+        room:recover{
+          who = player,
+          num = 1,
+          recoverBy = player,
+          skillName = qihui.name,
+        }
       elseif choice == "draw2" then
         player:drawCards(2, qihui.name)
+      elseif choice == "draw3" then
+        player:drawCards(3, qihui.name)
       elseif choice == "qihui_use" then
         room:setPlayerMark(player, "qihui_use", 1)
       end

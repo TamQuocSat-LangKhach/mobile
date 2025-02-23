@@ -19,7 +19,7 @@ zimou:addEffect(fk.CardUsing, {
     return target == player and player:hasSkill(zimou.name) and
       player.phase == Player.Play and table.contains({ 2, 4, 6 }, player:getMark("@changshi__zimou"))
   end,
-  on_use = function(self, event, player, target, data)
+  on_use = function(self, event, target, player, data)
     local count = player:getMark("@changshi__zimou")
     local name = "analeptic"
     if count == 4 then

@@ -7,7 +7,7 @@ Fk:loadTranslationTable{
   ["#mobile__enemy_at_the_gates_skill"] = "选择一名其他角色，你展示牌堆顶四张牌，依次对其使用其中【杀】，其余牌放回牌堆顶",
 }
 
-skill:addEffect("active", {
+skill:addEffect("cardskill", {
   prompt = "#mobile__enemy_at_the_gates_skill",
   can_use = Util.CanUse,
   target_num = 1,

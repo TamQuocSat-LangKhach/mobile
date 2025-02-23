@@ -14,6 +14,7 @@ skill:addEffect(fk.PreCardEffect, {
     data.card.trueName == "slash" and (data.card.color == Card.Black or data.card.suit == Card.Heart)
   end,
   on_use = function (self, event, target, player, data)
+    player.room:setEmotion(player, "./packages/standard_cards/image/anim/nioh_shield")
     data.nullified = true
   end,
 })

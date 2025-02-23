@@ -4,8 +4,8 @@ local manjuan = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ["friend__manjuan"] = "漫卷",
-  [":friend__manjuan"] = "当你不因本技能一次性获得至少两张牌后，你可以将其中任意张牌以任意顺序置于牌堆顶。若如此做，你每放置一张牌，"..
-  "便从弃牌堆中随机获得一张与此牌类别不同的牌（每次至多获得五张）。",
+  [":friend__manjuan"] = "每轮限五次，当你不因本技能一次性获得至少两张牌后，你可以将其中任意张牌以任意顺序置于牌堆顶。若如此做，"..
+  "你每放置一张牌，便从弃牌堆中随机获得一张与此牌类别不同的牌（每次至多获得五张）。",
 
   ["#friend__manjuan-invoke"] = "漫卷：你可以将其中的牌置于牌堆顶，获得等量类别不同的牌",
 
@@ -14,9 +14,12 @@ Fk:loadTranslationTable{
 }
 
 manjuan:addEffect(fk.AfterCardsMove, {
+  times = function(self)
+    return 5 - Self:usedSkillTimes(manjuan.name, Player.HistoryRound)
+  end,
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(manjuan.name) then
+    if player:hasSkill(manjuan.name) and player:usedSkillTimes(manjuan.name, Player.HistoryRound) < 5 then
       for _, move in ipairs(data) do
         if #move.moveInfo > 1 and (move.to and move.to == player and move.skillName ~= manjuan.name) then
           for _, info in ipairs(move.moveInfo) do

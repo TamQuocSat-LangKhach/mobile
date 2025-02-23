@@ -2958,4 +2958,3 @@ Fk:loadTranslationTable{
 
 zhuzhi:addSkill(m_ex__anguo)
 
-return extension

@@ -11,7 +11,7 @@ local mobile_shiji = require (prefix.."mobile_shiji")
 --local mobile_re = require (prefix.."mobile_re")
 local mobile_test = require (prefix.."mobile_test")
 --local m_shzl_ex = require (prefix.."m_shzl_ex")
---local m_yj_ex = require (prefix.."m_yj_ex")
+local m_yj_ex = require (prefix.."yj_ex")
 
 local mobile_derived = require (prefix.."mobile_derived")
 
@@ -23,6 +23,6 @@ return {
     --mobile_re,
     mobile_test,
     --m_shzl_ex,
-    --m_yj_ex,
+    m_yj_ex,
     mobile_derived,
 }

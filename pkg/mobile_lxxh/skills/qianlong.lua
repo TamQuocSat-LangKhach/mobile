@@ -99,7 +99,7 @@ qianlong:addEffect(fk.Damage, {
     ChangeDaoxin(player, 15 * data.damage)
   end,
 })
-qianlong:addEffect(fk.Damage, {
+qianlong:addEffect(fk.AfterCardsMove, {
   can_trigger = function (self, event, target, player, data)
     if player:hasSkill(qianlong.name) and player:getMark("@mobile__qianlong_daoxin") < 99 then
       for _, move in ipairs(data) do

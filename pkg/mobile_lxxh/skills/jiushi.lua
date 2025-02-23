@@ -15,7 +15,7 @@ Fk:loadTranslationTable{
   ["$mobile_qianlong__jiushi2"] = "弃忧但求醉，醒后寻复来。",
 }
 
-jiushi:addEffect("targetmod", {
+jiushi:addEffect("viewas", {
   anim_type = "offensive",
   prompt = "#mobile_qianlong__jiushi",
   pattern = "analeptic",
@@ -35,11 +35,22 @@ jiushi:addEffect("targetmod", {
     return not response and player.faceup
   end,
 })
+
 jiushi:addEffect(fk.Damaged, {
   anim_type = "masochism",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(jiushi.name) and not player.faceup and
-      data.extra_data and data.extra_data.qianlong_jiushi
+    if target == player and player:hasSkill(jiushi.name) and not player.faceup then
+      local logic = player.room.logic
+      local damage_event = logic:getCurrentEvent():findParent(GameEvent.Damage, true)
+      return damage_event ~= nil and #logic:getEventsByRule(GameEvent.SkillEffect, 1, function(e)
+        if e.data.skill.trueName == "jiushi" then
+          local dying_event = e.parent
+          if dying_event and dying_event.event == GameEvent.Dying then
+            return dying_event.data.damage == data
+          end
+        end
+      end, damage_event.id) == 0
+    end
   end,
   on_cost = function (self, event, target, player, data)
     return player.room:askToSkillInvoke(player, {
@@ -51,15 +62,7 @@ jiushi:addEffect(fk.Damaged, {
     player:turnOver()
   end,
 })
-jiushi:addEffect(fk.DamageInflicted, {
-  can_refresh = function(self, event, target, player, data)
-    return target == player and not player.faceup
-  end,
-  on_refresh = function(self, event, target, player, data)
-    data.extra_data = data.extra_data or {}
-    data.extra_data.qianlong_jiushi = true
-  end,
-})
+
 jiushi:addEffect(fk.TurnedOver, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)

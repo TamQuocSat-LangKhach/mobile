@@ -16,7 +16,9 @@ shixin:addEffect(fk.DamageInflicted, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(shixin.name) and data.damageType == fk.FireDamage
   end,
-  on_use = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    data.prevented = true
+  end,
 })
 
 return shixin

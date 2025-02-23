@@ -27,19 +27,9 @@ skill:addEffect(fk.DamageInflicted, {
         type = "#destructDerivedCards",
         card = cards,
       }
-      room:moveCards{
-        ids = cards,
-        from = player,
-        toArea = Card.Void,
-        skillName = skill.name,
-        moveReason = fk.ReasonJustMove,
-      }
+      room:moveCardTo(cards, Card.Void, nil, fk.ReasonJustMove, skill.name, nil, true)
     end
-
     data.damage = math.max(data.damage - durability, 0)
-    if data.damage < 1 then
-      return true
-    end
   end,
 })
 skill:addEffect(fk.AfterCardsMove, {

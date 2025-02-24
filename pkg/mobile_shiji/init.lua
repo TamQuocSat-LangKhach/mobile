@@ -109,7 +109,7 @@ Fk:loadTranslationTable{
 }
 
 --信：辛毗 周处 吴景 王甫赵累 羊祜 糜夫人 王凌 孔融 神太史慈 神孙策
---General:new(extension, "mobile__xinpi", "wei", 3):addSkills { "mobile__yinju", "mobile__chijie" }
+General:new(extension, "mobile__xinpi", "wei", 3):addSkills { "mobile__yinju", "mobile__chijie" }
 Fk:loadTranslationTable{
   ["mobile__xinpi"] = "辛毗",
   ["#mobile__xinpi"] = "一节肃六军",
@@ -118,9 +118,9 @@ Fk:loadTranslationTable{
   ["~mobile__xinpi"] = "生而立于朝堂，亡而留名青史，我，已无憾矣。",
 }
 
---local zhouchu = General:new(extension, "mobile__zhouchu", "wu", 4)
---zhouchu:addSkills { "xianghai", "chuhai" }
---zhouchu:addRelatedSkill("zhangming")
+local zhouchu = General:new(extension, "mobile__zhouchu", "wu", 4)
+zhouchu:addSkills { "xianghai", "chuhai" }
+zhouchu:addRelatedSkill("zhangming")
 Fk:loadTranslationTable{
   ["mobile__zhouchu"] = "周处",
   ["#mobile__zhouchu"] = "英情天逸",
@@ -129,7 +129,7 @@ Fk:loadTranslationTable{
   ["~mobile__zhouchu"] = "改励自砥，誓除三害……",
 }
 
---General:new(extension, "mobile__wujing", "wu", 4):addSkills { "heji", "liubing" }
+General:new(extension, "mobile__wujing", "wu", 4):addSkills { "heji", "liubing" }
 Fk:loadTranslationTable{
   ["mobile__wujing"] = "吴景",
   ["#mobile__wujing"] = "助吴征战",
@@ -138,7 +138,7 @@ Fk:loadTranslationTable{
   ["~mobile__wujing"] = "贼寇未除，奈何吾身先丧……",
 }
 
---General:new(extension, "wangfuzhaolei", "shu", 4):addSkills { "xunyi" }
+General:new(extension, "wangfuzhaolei", "shu", 4):addSkills { "xunyi" }
 Fk:loadTranslationTable{
   ["wangfuzhaolei"] = "王甫赵累",
   ["#wangfuzhaolei"] = "忱忠不移",
@@ -147,9 +147,9 @@ Fk:loadTranslationTable{
   ["~wangfuzhaolei"] = "誓死……追随将军左右……",
 }
 
---local yanghu = General:new(extension, "mobile__yanghu", "qun", 3)
---yanghu.subkingdom = "jin"
---yanghu:addSkills { "mobile__mingfa", "rongbei" }
+local yanghu = General:new(extension, "mobile__yanghu", "qun", 3)
+yanghu.subkingdom = "jin"
+yanghu:addSkills { "mobile__mingfa", "rongbei" }
 Fk:loadTranslationTable{
   ["mobile__yanghu"] = "羊祜",
   ["#mobile__yanghu"] = "鹤德璋声",
@@ -158,7 +158,7 @@ Fk:loadTranslationTable{
   ["~mobile__yanghu"] = "此生所憾，唯未克东吴也……",
 }
 
---General:new(extension, "nos__mifuren", "shu", 3, 3, General.Female):addSkills { "nos__cunsi", "nos__guixiu" }
+General:new(extension, "nos__mifuren", "shu", 3, 3, General.Female):addSkills { "nos__cunsi", "nos__guixiu" }
 Fk:loadTranslationTable{
   ["nos__mifuren"] = "糜夫人",
   ["#nos__mifuren"] = "乱世沉香",
@@ -167,9 +167,9 @@ Fk:loadTranslationTable{
   ["~nos__mifuren"] = "子龙将军，请保重……",
 }
 
---local mifuren = General:new(extension, "mobile__mifuren", "shu", 3, 3, General.Female)
---mifuren:addSkills { "mobile__guixiu", "qingyu" }
---mifuren:addRelatedSkill("xuancun")
+local mifuren = General:new(extension, "mobile__mifuren", "shu", 3, 3, General.Female)
+mifuren:addSkills { "mobile__guixiu", "qingyu" }
+mifuren:addRelatedSkill("xuancun")
 Fk:loadTranslationTable{
   ["mobile__mifuren"] = "糜夫人",
   ["#mobile__mifuren"] = "乱世沉香",
@@ -178,9 +178,9 @@ Fk:loadTranslationTable{
   ["~mobile__mifuren"] = "妾命数已至，唯愿阿斗顺利归蜀……",
 }
 
---local wangling = General:new(extension, "mobile__wangling", "wei", 4)
---wangling:addSkills { "xingqi", "zifu", "mibei" }
---wangling:addRelatedSkill("mouli")
+local wangling = General:new(extension, "mobile__wangling", "wei", 4)
+wangling:addSkills { "xingqi", "zifu", "mibei" }
+wangling:addRelatedSkill("mouli")
 Fk:loadTranslationTable{
   ["mobile__wangling"] = "王凌",
   ["#mobile__wangling"] = "风节格尚",
@@ -190,7 +190,7 @@ Fk:loadTranslationTable{
   ["~mobile__wangling"] = "一生尽忠事魏，不料今日晚节尽毁啊！",
 }
 
---General:new(extension, "mobile__kongrong", "qun", 3):addSkills { "mobile__mingshi", "mobile__lirang" }
+General:new(extension, "mobile__kongrong", "qun", 3):addSkills { "mobile__mingshi", "mobile__lirang" }
 Fk:loadTranslationTable{
   ["mobile__kongrong"] = "孔融",
   ["#mobile__kongrong"] = "凛然重义",

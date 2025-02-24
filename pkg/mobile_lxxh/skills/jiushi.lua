@@ -6,7 +6,7 @@ local jiushi = fk.CreateSkill {
 Fk:loadTranslationTable{
   ["mobile_qianlong__jiushi"] = "酒诗",
   [":mobile_qianlong__jiushi"] = "持恒技，当你需要使用【酒】时，若你的武将牌正面向上，你可以翻面，视为使用一张【酒】；当你受到伤害后，" ..
-  "若你的武将牌于受到此伤害时背面向上，你可以翻面；当你翻面后，你随机获得牌堆中的一张锦囊牌。",
+  "若你的武将牌背面向上，且你未因此次伤害发动过〖酒诗〗，你可以翻面；当你翻面后，你随机获得牌堆中的一张锦囊牌。",
 
   ["#mobile_qianlong__jiushi"] = "酒诗：你可以翻面，视为使用一张【酒】",
   ["#mobile_qianlong__jiushi-turnover"] = "酒诗：是否翻回正面？",

@@ -22,7 +22,7 @@ xianzhen:addEffect("active", {
   card_num = 0,
   target_num = 1,
   can_use = function(self, player)
-    return not player:isKongcheng() and player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return not player:isKongcheng() and player:usedSkillTimes(xianzhen.name, Player.HistoryPhase) == 0
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, player, to_select, selected)

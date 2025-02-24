@@ -32,7 +32,7 @@ jinjiu:addEffect(fk.DamageInflicted, {
     if parentUseData then
       local drankBuff = parentUseData and (parentUseData.data.extra_data or {}).drankBuff or 0
       if drankBuff > 0 then
-        data.damage = data.damage - drankBuff
+        data:changeDamage(-drankBuff)
       end
     end
   end,

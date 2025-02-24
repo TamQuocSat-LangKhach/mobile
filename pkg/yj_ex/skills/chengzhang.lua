@@ -1,16 +1,17 @@
 local chengzhang = fk.CreateSkill {
-  name = "m_ex__chengzhang",
+  name = "chengzhang",
   tags = { Skill.Wake },
 }
 
 Fk:loadTranslationTable{
-  ["m_ex__chengzhang"] = "成章",
-  [":m_ex__chengzhang"] = "觉醒技，准备阶段，若你造成的伤害与受到的伤害值之和累计7点或以上，则你回复1点体力并摸1张牌，然后修改〖酒诗〗（删去获得锦囊牌的效果）。",
+  ["chengzhang"] = "成章",
+  [":chengzhang"] = "觉醒技，准备阶段，若你造成的伤害与受到的伤害值之和累计7点或以上，则你回复1点体力并摸1张牌，"..
+  "然后修改〖酒诗〗（获得锦囊牌的效果改为当你翻面后发动）。",
 
-  ["@m_ex__chengzhang"] = "成章",
+  ["@chengzhang"] = "成章",
 
-  ["$m_ex__chengzhang1"] = "弦急悲声发，聆我慷慨言。",
-  ["$m_ex__chengzhang2"] = "盛时不再来，百年忽我遒。",
+  ["$chengzhang1"] = "弦急悲声发，聆我慷慨言。",
+  ["$chengzhang2"] = "盛时不再来，百年忽我遒。",
 }
 
 chengzhang:addEffect(fk.EventPhaseStart, {
@@ -21,10 +22,10 @@ chengzhang:addEffect(fk.EventPhaseStart, {
       player.phase == Player.Start
   end,
   can_wake = function(self, event, target, player, data)
-    return player:getMark("@m_ex__chengzhang") > 6
+    return player:getMark("@chengzhang") > 6
   end,
   on_use = function(self, event, target, player, data)
-    player.room:setPlayerMark(player, "@m_ex__chengzhang", 0)
+    player.room:setPlayerMark(player, "@chengzhang", 0)
     if player:isWounded() then
       player.room:recover({
         who = player,
@@ -48,7 +49,7 @@ chengzhang:addEffect(fk.Damage, {
     player:usedSkillTimes(chengzhang.name, Player.HistoryGame) == 0
   end,
   on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "@m_ex__chengzhang", 1)
+    player.room:addPlayerMark(player, "@chengzhang", 1)
   end,
 })
 
@@ -58,8 +59,12 @@ chengzhang:addEffect(fk.Damaged, {
     player:usedSkillTimes(chengzhang.name, Player.HistoryGame) == 0
   end,
   on_refresh = function(self, event, target, player, data)
-    player.room:addPlayerMark(player, "@m_ex__chengzhang", data.damage)
+    player.room:addPlayerMark(player, "@chengzhang", data.damage)
   end,
 })
+
+chengzhang:addLoseEffect(function(self, player, is_death)
+  player.room:setPlayerMark(player, "@chengzhang", 0)
+end)
 
 return chengzhang

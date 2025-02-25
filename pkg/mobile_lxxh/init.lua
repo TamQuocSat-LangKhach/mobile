@@ -103,4 +103,27 @@ Fk:loadTranslationTable{
   ["~mobile__jiachong"] = "此生从势忠命，此刻，只乞不获恶谥……",
 }
 
+local simazhao = General:new(extension, "mobile__simazhao", "wei", 3)
+table.insert(Fk.lords, "mobile__simazhao") -- 没有主公技的常备主
+simazhao:addSkills { "mobile__xiezheng", "mobile__qiantun", "mobile__zhaoxiong" }
+Fk:loadTranslationTable{
+  ["mobile__simazhao"] = "司马昭",
+  ["#mobile__simazhao"] = "独祅吞天",
+  ["illustrator:mobile__simazhao"] = "腥鱼仔",
+
+  ["~mobile__simazhao"] = "曹髦小儿竟有如此肝胆……我实不甘。",
+  ["$mobile__simazhao_win_audio"] = "明日正为吉日，当举禅位之典。",
+}
+local simazhao2 = General:new(extension, "mobile2__simazhao", "qun", 3)
+simazhao2.hidden = true
+simazhao2:addSkills { "mobile__xiezheng", "mobile__weisi", "mobile__zhaoxiong", "mobile__dangyi" }
+Fk:loadTranslationTable{
+  ["mobile2__simazhao"] = "司马昭",
+  ["#mobile2__simazhao"] = "独祅吞天",
+  ["illustrator:mobile2__simazhao"] = "腥鱼仔",
+
+  ["~mobile2__simazhao"] = "愿我晋祚，万世不易，国运永昌。",
+  ["$mobile2__simazhao_win_audio"] = "万里山河，终至我司马一家。",
+}
+
 return extension

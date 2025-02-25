@@ -21,4 +21,9 @@ return {
   require(prefix .. "suwang"),
   require(prefix .. "beini"),
   require(prefix .. "dingfa"),
+  require(prefix .. "xiezheng"),
+  require(prefix .. "qiantun"),
+  require(prefix .. "zhaoxiong"),
+  require(prefix .. "weisi"),
+  require(prefix .. "dangyi"),
 }

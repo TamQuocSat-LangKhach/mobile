@@ -400,6 +400,68 @@ Fk:loadTranslationTable{
   ["~jiangwan"] = "臣即将一死，辅国之事文伟可继……",
 }
 
+General:new(extension, "mobile__jiangqin", "wu", 4):addSkills { "jianyi", "mobile__shangyi" }
+Fk:loadTranslationTable{
+  ["mobile__jiangqin"] = "蒋钦",
+  ["#mobile__jiangqin"] = "折节尚义",
+  ["illustrator:mobile__jiangqin"] = "神影",
 
+  ["~mobile__jiangqin"] = "奋敌护主，成吾忠名……",
+}
+
+General:new(extension, "mobile__cuiyan", "wei", 3):addSkills { "yajun", "zundi" }
+Fk:loadTranslationTable{
+  ["mobile__cuiyan"] = "崔琰",
+  ["#mobile__cuiyan"] = "伯夷之风",
+  ["illustrator:mobile__cuiyan"] = "匠人绘",
+
+  ["~mobile__cuiyan"] = "生当如君子，死当追竹德……",
+}
+
+General:new(extension, "mobile__zhangchangpu", "wei", 3, 3, General.Female):addSkills { "difei", "mobile__yanjiao" }
+Fk:loadTranslationTable{
+  ["mobile__zhangchangpu"] = "张昌蒲",
+  ["#mobile__zhangchangpu"] = "厉色严教",
+  ["illustrator:mobile__zhangchangpu"] = "君桓文化",
+
+  ["~mobile__zhangchangpu"] = "钟氏门楣，待我儿光耀……",
+}
+
+General:new(extension, "mobile__lvfan", "wu", 3):addSkills { "mobile__diaodu", "mobile__diancai", "yanji" }
+Fk:loadTranslationTable{
+  ["mobile__lvfan"] = "吕范",
+  ["#mobile__lvfan"] = "持筹廉悍",
+  ["cv:mobile__lvfan"] = "虞晓旭",
+  ["illustrator:mobile__lvfan"] = "鬼画府",
+
+  ["~mobile__lvfan"] = "此病来势汹汹，恕臣无力侍奉……",
+}
+
+General:new(extension, "mobile__huangfusong", "qun", 4):addSkills { "taoluanh", "shiji", "zhengjun" }
+Fk:loadTranslationTable{
+  ["mobile__huangfusong"] = "皇甫嵩",
+  ["#mobile__huangfusong"] = "铁血柔肠",
+  ["illustrator:mobile__huangfusong"] = "鬼画府",
+
+  ["~mobile__huangfusong"] = "力有所能，臣必为也……",
+}
+
+General:new(extension, "mobile__zhujun", "qun", 4):addSkills { "yangjie", "houfeng", "juxiangz" }
+Fk:loadTranslationTable{
+  ["mobile__zhujun"] = "朱儁",
+  ["#mobile__zhujun"] = "功成师克",
+  ["illustrator:mobile__zhujun"] = "鬼画府",
+
+  ["~mobile__zhujun"] = "郭汜小竖！气煞我也！嗯……",
+}
+
+General:new(extension, "mobile__liuba", "shu", 3):addSkills { "duanbi", "mobile__tongdu" }
+Fk:loadTranslationTable{
+  ["mobile__liuba"] = "刘巴",
+  ["#mobile__liuba"] = "撰科行律",
+  ["illustrator:mobile__liuba"] = "君桓文化",
+
+  ["~mobile__liuba"] = "孔明，大汉的重担，就全系于你一人之身了……",
+}
 
 return extension

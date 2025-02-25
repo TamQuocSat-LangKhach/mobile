@@ -79,7 +79,6 @@ return {
   require(prefix .. "dingzhou"),
   require(prefix .. "zhimeng"),
 
-
   require(prefix .. "zaoli"),
   require(prefix .. "jungong"),
   require(prefix .. "dengli"),
@@ -95,7 +94,23 @@ return {
   require(prefix .. "yiyong"),
   require(prefix .. "shanxie"),
 
-
   require(prefix .. "zhenting"),
   require(prefix .. "jincui"),
+  require(prefix .. "jianyi"),
+  require(prefix .. "shangyi"),
+  require(prefix .. "yajun"),
+  require(prefix .. "zundi"),
+  require(prefix .. "difei"),
+  require(prefix .. "yanjiao"),
+  require(prefix .. "diaodu"),
+  require(prefix .. "diancai"),
+  require(prefix .. "yanji"),
+  require(prefix .. "taoluan"),
+  require(prefix .. "shiji"),
+  require(prefix .. "zhengjun"),
+  require(prefix .. "yangjie"),
+  require(prefix .. "houfeng"),
+  require(prefix .. "juxiang"),
+  require(prefix .. "duanbi"),
+  require(prefix .. "tongdu"),
 }

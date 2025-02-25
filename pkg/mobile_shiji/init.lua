@@ -329,7 +329,77 @@ Fk:loadTranslationTable{
 }
 
 --勇：孙翊 高览 宗预 花鬘 陈武董袭 文鸯 袁涣 王双
+General:new(extension, "sunyi", "wu", 4):addSkills { "zaoli" }
+Fk:loadTranslationTable{
+  ["sunyi"] = "孙翊",
+  ["#sunyi"] = "骁悍激躁",
+  ["illustrator:sunyi"] = "鬼画府",
+
+  ["~sunyi"] = "尔等……为何如此……",
+}
+
+General:new(extension, "mobile__gaolan", "qun", 4):addSkills { "jungong", "dengli" }
+Fk:loadTranslationTable{
+  ["mobile__gaolan"] = "高览",
+  ["#mobile__gaolan"] = "绝击坚营",
+  ["cv:mobile__gaolan"] = "曹真",
+  ["illustrator:mobile__gaolan"] = "兴游",
+
+  ["~mobile__gaolan"] = "满腹忠肝，难抵一句谮言……唉！",
+}
+
+--宗预暂无
+
+General:new(extension, "mobile__huaman", "shu", 4, 4, General.Female):addSkills { "xiangzhen", "fangzong", "xizhan" }
+Fk:loadTranslationTable{
+  ["mobile__huaman"] = "花鬘",
+  ["#mobile__huaman"] = "薮泽清影",
+  ["illustrator:mobile__huaman"] = "alien",
+
+  ["~mobile__huaman"] = "战事已定，吾愿终亦得偿……",
+}
+
+--陈武董袭暂无
+
+local wenyang = General:new(extension, "mobile__wenyang", "wei", 4)
+wenyang.subkingdom = "wu"
+wenyang:addSkills { "quedi", "chuifeng", "chongjian", "mobile__choujue" }
+Fk:loadTranslationTable{
+  ["mobile__wenyang"] = "文鸯",
+  ["#mobile__wenyang"] = "独骑破军",
+  ["illustrator:mobile__wenyang"] = "鬼画府",
+
+  ["~mobile__wenyang"] = "半生功业，而见疑于一家之言，岂能无怨！",
+}
+
+General:new(extension, "yuanhuan", "wei", 3):addSkills { "qingjue", "fengjie" }
+Fk:loadTranslationTable{
+  ["yuanhuan"] = "袁涣",
+  ["#yuanhuan"] = "随车致雨",
+  ["illustrator:yuanhuan"] = "凝聚永恒",
+
+  ["~yuanhuan"] = "乱世之中，有礼无用啊……",
+}
+
+General:new(extension, "mobile__wangshuang", "wei", 4):addSkills { "yiyongw", "shanxie" }
+Fk:loadTranslationTable{
+  ["mobile__wangshuang"] = "王双",
+  ["#mobile__wangshuang"] = "边城猛兵",
+  ["illustrator:mobile__wangshuang"] = "铁杵文化",
+
+  ["~mobile__wangshuang"] = "啊？速回主营！啊！",
+}
 
 --严：蒋琬 蒋钦 崔琰 张昌蒲 吕范 皇甫嵩 朱儁 刘巴
+General:new(extension, "jiangwan", "shu", 3):addSkills { "zhenting", "mobile__jincui" }
+Fk:loadTranslationTable{
+  ["jiangwan"] = "蒋琬",
+  ["#jiangwan"] = "方整威重",
+  ["illustrator:jiangwan"] = "凡果",
+
+  ["~jiangwan"] = "臣即将一死，辅国之事文伟可继……",
+}
+
+
 
 return extension

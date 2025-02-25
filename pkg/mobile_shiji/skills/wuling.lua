@@ -123,6 +123,7 @@ wuling:addEffect("active", {
     local result = room:askToCustomDialog(player, {
       skill_name = wuling.name,
       qml_path = "packages/mobile/qml/WuLingBox.qml",
+      extra_data = {},
     })
     local wulingMarkMap = {
       ["wulingHu"] = "wuling1",

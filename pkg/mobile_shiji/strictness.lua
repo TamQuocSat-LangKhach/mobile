@@ -121,7 +121,7 @@ Fk:loadTranslationTable{
   [":difei"] = "锁定技，每回合限一次，当你受到伤害后，你摸一张牌或弃置一张手牌，然后你展示所有手牌，若对你造成伤害的牌无花色或"..
   "你的手牌中没有与对你造成伤害的牌花色相同的牌，你回复1点体力。",
   ["mobile__yanjiao"] = "严教",
-  [":mobile__yanjiao"] = "出牌阶段限一次，你可以将手牌中某种花色的所有牌（至少一张）交给一名其他角色，然后对其造成1点伤害，若如此做，"..
+  [":mobile__yanjiao"] = "出牌阶段限一次，你可以将手牌中一种花色的所有牌交给一名其他角色，然后对其造成1点伤害，若如此做，"..
   "你的下个回合开始时，你摸X张牌（X为你以此法给出的牌数）。",
   ["#difei-discard"] = "抵诽：你可选择一张手牌弃置，或点取消则摸一张牌",
   ["#difei-discard-recover1"] = "抵诽：你可选择一张手牌弃置，或点取消则摸一张牌，然后展示所有手牌并回复1点体力",
@@ -253,7 +253,7 @@ Fk:loadTranslationTable{
   ["mobile__cuiyan"] = "崔琰",
   ["#mobile__cuiyan"] = "伯夷之风",
   ["yajun"] = "雅俊",
-  [":yajun"] = "①摸牌阶段，你多摸一张牌；②出牌阶段开始时，你可以用一张本回合获得的牌与一名其他角色拼点，若你：赢，你可以将其中一张拼点牌置于牌堆顶；没赢，你本回合的手牌上限-1。",
+  [":yajun"] = "摸牌阶段，你多摸一张牌。出牌阶段开始时，你可以用一张本回合获得的牌与一名其他角色拼点，若你：赢，你可以将其中一张拼点牌置于牌堆顶；没赢，你本回合的手牌上限-1。",
   ["zundi"] = "尊嫡",
   [":zundi"] = "出牌阶段限一次，你可以弃置一张手牌并选择一名角色，然后你进行判定，若结果为：黑色，其摸三张牌；红色，其可以移动场上一张牌。",
   ["#yajun-use"] = "雅俊：你可以用一张本回合获得的牌与一名其他角色拼点",
@@ -267,84 +267,6 @@ Fk:loadTranslationTable{
   ["$zundi1"] = "盖闻春秋之义，立子自当立长。",
   ["$zundi2"] = "五官将才德兼备，是以宜承正统。",
   ["~mobile__cuiyan"] = "生当如君子，死当追竹德……",
-}
-
-local jiangwan = General(extension, "jiangwan", "shu", 3)
-local zhenting = fk.CreateTriggerSkill{
-  name = "zhenting",
-  anim_type = "control",
-  events = {fk.TargetConfirming},
-  can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(self) and player:usedSkillTimes(self.name, Player.HistoryTurn) == 0
-      and data.from and data.from ~= player.id and
-      (data.card.trueName == "slash" or data.card.sub_type == Card.SubtypeDelayedTrick) and
-      not table.contains(AimGroup:getAllTargets(data.tos), player.id) and player:inMyAttackRange(target) and
-      U.canTransferTarget(player, data)
-  end,
-  on_cost = function(self, event, target, player, data)
-    return player.room:askForSkillInvoke(player, self.name, nil, "#zhenting-invoke::"..target.id..":"..data.card:toLogString())
-  end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    room:doIndicate(player.id, {target.id})
-    AimGroup:cancelTarget(data, target.id)
-    AimGroup:addTargets(room, data, player.id)
-    local choices = {"draw1"}
-    local to = room:getPlayerById(data.from)
-    if not to.dead and not to:isNude() then
-      table.insert(choices, 1, "zhenting_discard")
-    end
-    local choice = room:askForChoice(player, choices, self.name, "#zhenting-choice::"..data.from)
-    if choice == "zhenting_discard" then
-      local id = room:askForCardChosen(player, to, "he", self.name)
-      room:throwCard({id}, self.name, to, player)
-    else
-      player:drawCards(1, self.name)
-    end
-  end,
-}
-local mobile__jincui = fk.CreateActiveSkill{
-  name = "mobile__jincui",
-  anim_type = "special",
-  card_num = 0,
-  target_num = 1,
-  frequency = Skill.Limited,
-  prompt = "#mobile__jincui",
-  can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryGame) == 0
-  end,
-  card_filter = Util.FalseFunc,
-  target_filter = function(self, to_select, selected)
-    return #selected == 0 and to_select ~= Self.id
-  end,
-  on_use = function(self, room, effect)
-    local player = room:getPlayerById(effect.from)
-    local target = room:getPlayerById(effect.tos[1])
-    room:swapSeat(player, target)
-    if player.dead or player.hp < 1 then return end
-    room:loseHp(player, player.hp, self.name)
-  end,
-}
-jiangwan:addSkill(zhenting)
-jiangwan:addSkill(mobile__jincui)
-Fk:loadTranslationTable{
-  ["jiangwan"] = "蒋琬",
-  ["#jiangwan"] = "方整威重",
-  ["zhenting"] = "镇庭",
-  [":zhenting"] = "每回合限一次，当你攻击范围内的一名角色成为【杀】或延时锦囊牌的目标时，若你不为此牌的使用者或目标，"..
-  "你可以代替其成为此牌的目标，然后选择一项：1.弃置此牌使用者的一张牌；2.摸一张牌。",
-  ["mobile__jincui"] = "尽瘁",
-  [":mobile__jincui"] = "限定技，出牌阶段，你可以与一名其他角色交换座次，然后你失去X点体力（X为你的体力值）。",
-  ["#zhenting-invoke"] = "镇庭：你可以将对 %dest 使用的%arg转移给你，然后你弃置使用者一张牌或摸一张牌",
-  ["zhenting_discard"] = "弃置其一张牌",
-  ["#zhenting-choice"] = "镇庭：选择对 %dest 执行的一项",
-  ["#mobile__jincui"] = "尽瘁：你可以与一名角色交换座次，然后失去体力！",
-
-  ["$zhenting1"] = "今政事在我，更要持重慎行！",
-  ["$zhenting2"] = "国可因外敌而亡，不可因内政而损！",
-  ["$mobile__jincui1"] = "伐魏虽俯仰惟艰，臣甘愿效死于前！",
-  ["$mobile__jincui2"] = "臣敢竭股肱之力，誓死为陛下前驱！",
-  ["~jiangwan"] = "臣即将一死，辅国之事文伟可继……",
 }
 
 local liuba = General(extension, "mobile__liuba", "shu", 3)
@@ -441,7 +363,7 @@ Fk:loadTranslationTable{
   ["duanbi"] = "锻币",
   [":duanbi"] = "限定技，出牌阶段，若所有角色的手牌数之和大于存活角色数的两倍，你可以令所有其他角色弃置X张手牌（X为其手牌数的一半，向上取整且至多为3），然后你可以选择一名角色，随机将三张以此法弃置的牌交给其。",
   ["mobile__tongdu"] = "统度",
-  [":mobile__tongdu"] = "每回合限一次，当你成为其他角色使用牌的唯一目标后，你可以令一名角色重铸一张牌，若此牌为：<font color='red'>♥</font>牌或锦囊牌，"..
+  [":mobile__tongdu"] = "每回合限一次，当你成为其他角色使用牌的唯一目标时，你可以令一名角色重铸一张牌，若此牌为：<font color='red'>♥</font>牌或锦囊牌，"..
   "其多摸一张牌；【无中生有】，你重置〖锻币〗。",
   ["#duanbi"] = "锻币：令其他角色各弃置一半手牌（向上取整），然后可将随机三张牌交给一名角色！",
   ["#duanbi-give"] = "锻币：你可以将随机三张弃置的牌交给一名角色",
@@ -534,7 +456,7 @@ Fk:loadTranslationTable{
   ["jianyi"] = "俭衣",
   [":jianyi"] = "锁定技，其他角色回合结束时，若弃牌堆中有本回合弃置的防具牌，则你选择其中一张获得。",
   ["mobile__shangyi"] = "尚义",
-  [":mobile__shangyi"] = "出牌阶段限一次，你可以弃置一张牌并令一名有手牌的其他角色观看你的手牌，然后你观看其手牌并获得其中一张牌。",
+  [":mobile__shangyi"] = "出牌阶段限一次，你可以弃置一张牌并令一名有手牌的其他角色，其观看你的手牌，然后你观看其手牌并获得其中一张牌。",
   ["#mobile__shangyi"] = "尚义：弃置一张牌令一名角色观看你的手牌，然后你观看其手牌并获得其中一张牌",
 
   ["$jianyi1"] = "今虽富贵，亦不可浪费。",

@@ -26,7 +26,7 @@ shenzhuo:addEffect(fk.CardUseFinished, {
     local room = player.room
     local choice = room:askToChoice(player, {
       choices = { "shenzhuo_draw1", "shenzhuo_draw3" },
-      skill_name = self.name,
+      skill_name = shenzhuo.name,
     })
     if choice == "shenzhuo_draw1" then
       room:addPlayerMark(player, MarkEnum.SlashResidue.."-turn", 1)

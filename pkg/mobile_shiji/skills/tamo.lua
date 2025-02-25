@@ -40,7 +40,7 @@ tamo:addEffect(fk.GameStart, {
         disabledPlayerIds = { seat3Player.id }
       end
       local result = room:askToCustomDialog(player, {
-        skill_name = self.name,
+        skill_name = tamo.name,
         qml_path = "packages/mobile/qml/TaMoBox.qml",
         extra_data = {
           availablePlayerIds,

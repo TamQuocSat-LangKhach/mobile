@@ -18,7 +18,7 @@ yingba:addEffect("active", {
   anim_type = "offensive",
   target_num = 1,
   can_use = function(self, player)
-    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+    return player:usedSkillTimes(yingba.name, Player.HistoryPhase) == 0
   end,
   card_filter = Util.FalseFunc,
   target_filter = function(self, player, to_select, selected, selected_cards)

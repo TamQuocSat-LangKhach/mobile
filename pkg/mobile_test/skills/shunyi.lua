@@ -32,7 +32,7 @@ shunyi:addEffect(fk.CardUsing, {
   end,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(shunyi.name) and-- not player:isKongcheng() and
-      U.IsUsingHandcard(player, data) and
+      data:IsUsingHandcard(player) and
       table.every(player:getCardIds("h"), function (id)
         return Fk:getCardById(id).number > data.card.number
       end) and

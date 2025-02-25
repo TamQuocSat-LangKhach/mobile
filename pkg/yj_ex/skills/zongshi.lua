@@ -14,6 +14,7 @@ Fk:loadTranslationTable{
 }
 
 zongshi:addEffect(fk.EventPhaseStart, {
+  anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Start and player:hasSkill(zongshi.name) and
     player:getHandcardNum() > player.hp

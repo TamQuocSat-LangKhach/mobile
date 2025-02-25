@@ -7,7 +7,7 @@ Fk:loadTranslationTable{
   [":m_ex__pojun"] = "当你使用【杀】指定一个目标后，你可以将其至多X张牌扣置于该角色的武将牌旁（X为其体力值），若如此做，"..
   "当前回合结束时，该角色获得这些牌；当你使用【杀】对手牌数与装备区里的牌数均不大于你的目标角色造成伤害时，此伤害+1。",
 
-  ["#m_ex__pojun-invoke"] = "是否对%dest发动 破军",
+  ["#m_ex__pojun-invoke"] = "破军：是否扣置%dest的至多%arg张牌直到回合结束",
   ["$m_ex__pojun"] = "破军",
 
   ["$m_ex__pojun1"] = "犯大吴疆土者，盛必击而破之！",
@@ -23,7 +23,7 @@ pojun:addEffect(fk.TargetSpecified, {
   on_cost = function(self, event, target, player, data)
     if player.room:askToSkillInvoke(player, {
       skill_name = pojun.name,
-      prompt = "#m_ex__pojun-invoke::" .. data.to.id,
+      prompt = "#m_ex__pojun-invoke::" .. data.to.id .. ":" .. data.to.hp,
     }) then
       event:setCostData(self, {tos = {data.to}})
       return true

@@ -7,7 +7,7 @@ Fk:loadTranslationTable{
   [":m_ex__xianzhen"] = "出牌阶段限一次，你可以与一名角色拼点，若你：赢，你于此阶段内无视其防具，且对其使用牌无距离和次数限制；"..
     "没赢，你于此阶段内不能使用【杀】。若你的拼点的牌为【杀】，你的【杀】于此回合内不计入手牌上限。",
 
-  ["#m_ex__xianzhen-active"] = "发动陷阵，选择与你拼点的角色",
+  ["#m_ex__xianzhen-active"] = "陷阵：选择1名其他角色，与其拼点",
   ["@@m_ex__xianzhen-phase"] = "陷阵",
   ["@@m_ex__xianzhen_maxcards-turn"] = "陷阵",
 

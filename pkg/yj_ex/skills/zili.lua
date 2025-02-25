@@ -7,6 +7,8 @@ Fk:loadTranslationTable{
   ["m_ex__zili"] = "自立",
   [":m_ex__zili"] = "觉醒技，准备阶段，若“权”的数量不小于3，你选择一项：1.回复1点体力；2.摸两张牌。然后减1点体力上限，获得“排异”。",
 
+  ["#m_ex__zili-choice"] = "自立：选择1项增益",
+
   ["$m_ex__zili1"] = "吾功名盖世，岂可复为人下？",
   ["$m_ex__zili2"] = "天赐良机，不取何为？",
 }
@@ -29,7 +31,8 @@ zili:addEffect(fk.EventPhaseStart, {
     local choice = room:askToChoice(player, {
       choices = choices,
       skill_name = zili.name,
-      all_choices = {"draw2", "recover"}
+      all_choices = {"draw2", "recover"},
+      prompt = "#m_ex__zili-choice"
     })
     if choice == "draw2" then
       room:drawCards(player, 2, zili.name)

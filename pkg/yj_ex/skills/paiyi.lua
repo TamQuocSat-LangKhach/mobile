@@ -5,7 +5,7 @@ local paiyi = fk.CreateSkill {
 Fk:loadTranslationTable{
   ["m_ex__paiyi"] = "排异",
   [":m_ex__paiyi"] = "出牌阶段限一次，你可以移去一张“权”，令一名角色摸两张牌。若该角色的手牌数大于你，你对其造成1点伤害。",
-  ["#m_ex__paiyi-active"] = "发动排异，选择一张“权”牌置入弃牌堆并选择一名角色，令其摸两张牌",
+  ["#m_ex__paiyi-active"] = "排异：选择一张“权”牌置入弃牌堆并选择一名角色，令其摸两张牌",
   ["$m_ex__paiyi1"] = "坏吾大计者，罪死不赦！",
   ["$m_ex__paiyi2"] = "攻讦此子，祸咎已除！",
 }
@@ -30,13 +30,7 @@ paiyi:addEffect("active", {
   on_use = function(self, room, effect)
     local player = effect.from
     local target = effect.tos[1]
-    room:moveCards({
-      from = player.id,
-      ids = effect.cards,
-      toArea = Card.DiscardPile,
-      moveReason = fk.ReasonPutIntoDiscardPile,
-      skillName = paiyi.name,
-    })
+    room:moveCardTo(effect.cards, Card.DiscardPile, nil, fk.ReasonPutIntoDiscardPile, paiyi.name, nil, true, player)
     if not target.dead then
       room:drawCards(target, 2, paiyi.name)
     end

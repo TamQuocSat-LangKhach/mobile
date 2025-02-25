@@ -23,6 +23,12 @@ extension:loadSkillSkels{
   require(prefix .. "dangxian"),
   require(prefix .. "fuli"),
   require(prefix .. "jiangchi"),
+  require(prefix .. "danshou"),
+  require(prefix .. "duodao"),
+  require(prefix .. "anjian"),
+  require(prefix .. "junxing"),
+  require(prefix .. "qiaoshui"),
+  require(prefix .. "zongshij"),
 }
 
 Fk:loadTranslationTable{
@@ -177,7 +183,7 @@ Fk:loadTranslationTable{
 }
 
 General:new(extension, "m_ex__caozhang", "wei", 4):addSkills {
-  "m_ex__jiangchi",
+  "m_ex__jiangchi"
 }
 
 Fk:loadTranslationTable{
@@ -187,9 +193,60 @@ Fk:loadTranslationTable{
   ["~m_ex__caozhang"] = "黄须金甲，也难敌骨肉毒心！",
 }
 
+General:new(extension, "m_ex__zhuran", "wu", 4):addSkills {
+  "m_ex__danshou"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__zhuran"] = "界朱然",
+  ["#m_ex__zhuran"] = "不动之督",
+  ["illustrator:m_ex__zhuran"] = "zoo",
+  ["~m_ex__zhuran"] = "大耳贼就在眼前，快追……",
+}
+
+General:new(extension, "m_ex__jianyong", "shu", 3):addSkills {
+  "m_ex__qiaoshui",
+  "m_ex__zongshij"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__jianyong"] = "界简雍",
+  ["#m_ex__jianyong"] = "悠游风议",
+  ["illustrator:m_ex__jianyong"] = "zoo",
+  ["~m_ex__jianyong"] = "行事无矩，为人所恶矣。",
+}
 
 
 
+
+
+General:new(extension, "m_ex__manchong", "wei", 3):addSkills {
+  "m_ex__junxing",
+  --"yuce"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__manchong"] = "界满宠",
+  ["#m_ex__manchong"] = "政法兵谋",
+  ["designer:m_ex__manchong"] = "Loun老萌",
+  ["illustrator:m_ex__manchong"] = "YanBai",
+  ["~m_ex__manchong"] = "宠一生为公，无愧忠俭之节。",
+
+  ["$yuce_m_ex__manchong1"] = "骄之以利，示之以慑！",
+  ["$yuce_m_ex__manchong2"] = "虽举得于外，则福生于内矣。",
+}
+
+General:new(extension, "m_ex__panzhangmazhong", "wu", 4):addSkills {
+  "m_ex__duodao",
+  "m_ex__anjian"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__panzhangmazhong"] = "潘璋马忠",
+  ["#m_ex__panzhangmazhong"] = "擒龙伏虎",
+  ["illustrator:m_ex__panzhangmazhong"] = "凝聚永恒",
+  ["~m_ex__panzhangmazhong"] = "埋伏得这么好，怎会……",
+}
 
 
 return extension

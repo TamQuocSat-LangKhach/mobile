@@ -40,7 +40,7 @@ skill:addEffect(fk.DamageInflicted, {
     }
     room:broadcastPlaySound("./packages/mobile/audio/card/ex_vineburn")
     room:setEmotion(player, "./packages/maneuvering/image/anim/vineburn")
-    data.damage = data.damage + 1
+    data:changeDamage(1)
   end,
 })
 skill:addEffect(fk.BeforeChainStateChange, {

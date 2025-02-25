@@ -66,7 +66,7 @@ weifeng:addEffect(fk.DamageInflicted, {
     local room = player.room
     room:doIndicate(player.id, {target.id})
     if data.card and data.card.trueName == target:getMark("@weifeng") then
-      data.damage = data.damage + 1
+      data:changeDamage(1)
     elseif not target:isNude() then
       local id = room:askToChooseCard(player, {
         target = target,

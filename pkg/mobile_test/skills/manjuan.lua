@@ -14,8 +14,8 @@ Fk:loadTranslationTable{
 }
 
 manjuan:addEffect(fk.AfterCardsMove, {
-  times = function(self)
-    return 5 - Self:usedSkillTimes(manjuan.name, Player.HistoryRound)
+  times = function(self, player)
+    return 5 - player:usedSkillTimes(manjuan.name, Player.HistoryRound)
   end,
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)

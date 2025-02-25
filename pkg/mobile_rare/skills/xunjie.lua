@@ -33,7 +33,7 @@ xunjie:addEffect(fk.DamageInflicted, {
     }
     room:judge(judge)
     if judge.card.color == Card.Red then
-      data.damage = data.damage - 1
+      data:changeDamage(-1)
     end
   end,
 })

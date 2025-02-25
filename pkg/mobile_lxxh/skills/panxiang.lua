@@ -59,13 +59,13 @@ panxiang:addEffect(fk.DamageInflicted, {
     room:doIndicate(player, {target})
     if event:getCostData(self).choice == "panxiang2" then
       player:broadcastSkillInvoke(panxiang.name, math.random(1, 2))
-      data.damage = data.damage + 1
+      data:changeDamage(1)
       if not target.dead then
         room:drawCards(target, 3, panxiang.name)
       end
     else
       player:broadcastSkillInvoke(panxiang.name, math.random(3, 4))
-      data.damage = data.damage - 1
+      data:changeDamage(-1)
       if data.from and not data.from.dead then
         data.from:drawCards(2, panxiang.name)
       end

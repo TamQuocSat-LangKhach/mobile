@@ -17,6 +17,7 @@ skill:addEffect(fk.DamageInflicted, {
   on_use = function(self, event, target, player, data)
     local room = player.room
     local durability = player:getMark("@defensive_siege_engine_durability")
+    data:changeDamage(-math.max(data.damage, durability))
     local newDurability = math.max(durability - data.damage, 0)
     room:setPlayerMark(player, "@defensive_siege_engine_durability", newDurability)
     if newDurability < 1 then
@@ -29,7 +30,6 @@ skill:addEffect(fk.DamageInflicted, {
       }
       room:moveCardTo(cards, Card.Void, nil, fk.ReasonJustMove, skill.name, nil, true)
     end
-    data.damage = math.max(data.damage - durability, 0)
   end,
 })
 skill:addEffect(fk.AfterCardsMove, {

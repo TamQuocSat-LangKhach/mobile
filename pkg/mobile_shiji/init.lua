@@ -223,6 +223,111 @@ Fk:loadTranslationTable{
 
 --仁：许靖 向宠 刘璋 华歆 张仲景 张温 蔡贞姬 桥公 神华佗 神鲁肃
 
+--许靖暂无
+
+General:new(extension, "xiangchong", "shu", 4):addSkills { "guying", "muzhen" }
+Fk:loadTranslationTable{
+  ["xiangchong"] = "向宠",
+  ["#xiangchong"] = "镇军之岳",
+  ["cv:xiangchong"] = "虞晓旭",
+  ["illustrator:xiangchong"] = "凝聚永恒",
+
+  ["~xiangchong"] = "蛮夷怀异，战乱难平……",
+}
+
+General:new(extension, "liuzhang", "qun", 3):addSkills { "jutu", "yaohu", "huaibi" }
+Fk:loadTranslationTable{
+  ["liuzhang"] = "刘璋",
+  ["#liuzhang"] = "半圭黯暗",
+  ["illustrator:liuzhang"] = "鬼画府",
+
+  ["~liuzhang"] = "引狼入室，噬脐莫及啊！",
+}
+
+General:new(extension, "nos__huaxin", "wei", 3):addSkills { "renshih", "debao", "buqi" }
+Fk:loadTranslationTable{
+  ["nos__huaxin"] = "华歆",
+  ["#nos__huaxin"] = "清素拂浊",
+  ["illustrator:nos__huaxin"] = "凡果",
+
+  ["~nos__huaxin"] = "年老多病，上疏乞身……",
+}
+
+General:new(extension, "mobile__huaxin", "wei", 3):addSkills { "yuanqing", "shuchen" }
+Fk:loadTranslationTable{
+  ["mobile__huaxin"] = "华歆",
+  ["#mobile__huaxin"] = "清素拂浊",
+  ["illustrator:mobile__huaxin"] = "游漫美绘",
+
+  ["~mobile__huaxin"] = "为虑国计，身损可矣……",
+}
+
+General:new(extension, "zhangzhongjing", "qun", 3):addSkills { "jishi", "liaoyi", "binglun" }
+Fk:loadTranslationTable{
+  ["zhangzhongjing"] = "张仲景",
+  ["#zhangzhongjing"] = "医理圣哲",
+  ["illustrator:zhangzhongjing"] = "鬼画府",
+
+  ["~zhangzhongjing"] = "得人不传，恐成坠绪……",
+}
+
+General:new(extension, "mobile__zhangwen", "wu", 3):addSkills { "gebo", "mobile__songshu" }
+Fk:loadTranslationTable{
+  ["mobile__zhangwen"] = "张温",
+  ["#mobile__zhangwen"] = "抱德炀和",
+  ["illustrator:mobile__zhangwen"] = "凝聚永恒",
+
+  ["~mobile__zhangwen"] = "自招罪谴，诚可悲疚……",
+}
+
+General:new(extension, "caizhenji", "wei", 3, 3, General.Female):addSkills { "sheyi", "tianyin" }
+Fk:loadTranslationTable{
+  ["caizhenji"] = "蔡贞姬",
+  ["#caizhenji"] = "舍心顾复",
+  ["illustrator:caizhenji"] = "M云涯",
+
+  ["~caizhenji"] = "世誉吾为贤妻，吾愧终不为良母……",
+}
+
+local qiaogong = General:new(extension, "qiaogong", "wu", 3)
+qiaogong:addSkills { "yizhu", "luanchou" }
+qiaogong:addRelatedSkill("gonghuan")
+Fk:loadTranslationTable{
+  ["qiaogong"] = "桥公",
+  ["#qiaogong"] = "高风硕望",
+  ["illustrator:qiaogong"] = "凝聚永恒",
+
+  ["~qiaogong"] = "为父所念，为汝二人啊……",
+}
+
+General:new(extension, "godhuatuo", "god", 3):addSkills { "wuling", "youyi" }
+Fk:loadTranslationTable{
+  ["godhuatuo"] = "神华佗",
+  ["#godhuatuo"] = "悬壶济世",
+  ["illustrator:godhuatuo"] = "吴涛",
+
+  ["~godhuatuo"] = "人间诸疾未解，老夫怎入轮回……",
+  ["$godhuatuo_win_audio"] = "但愿世间人无病，何惜架上药生尘。",
+}
+for _, name in ipairs({"wulingHu", "wulingLu", "wulingXiong", "wulingYuan", "wulingHe"}) do
+  local card = fk.CreateCard{
+    name = name,
+    type = Card.TypeTrick,
+  }
+  extension:loadCardSkels{card}
+  extension:addCardSpec(name)
+end
+
+General:new(extension, "godlusu", "god", 3):addSkills { "tamo", "dingzhou", "zhimeng" }
+Fk:loadTranslationTable{
+  ["godlusu"] = "神鲁肃",
+  ["#godlusu"] = "兴吴之邓禹",
+  ["illustrator:godlusu"] = "漫想族",
+
+  ["~godlusu"] = "常计小利，何成大局……",
+  ["$godlusu_win_audio"] = "至尊高坐天中，四海皆在目下！",
+}
+
 --勇：孙翊 高览 宗预 花鬘 陈武董袭 文鸯 袁涣 王双
 
 --严：蒋琬 蒋钦 崔琰 张昌蒲 吕范 皇甫嵩 朱儁 刘巴

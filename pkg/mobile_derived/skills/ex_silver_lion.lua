@@ -13,7 +13,7 @@ skill:addEffect(fk.DamageInflicted, {
     return target == player and player:hasSkill(skill.name) and data.damage > 1
   end,
   on_use = function(self, event, target, player, data)
-    data.damage = 1
+    data:changeDamage(1 - data.damage)
   end,
 })
 skill:addEffect(fk.AfterCardsMove, {

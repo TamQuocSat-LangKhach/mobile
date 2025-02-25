@@ -21,6 +21,7 @@ guixiu:addEffect(fk.Damaged, {
 })
 
 guixiu:addEffect(fk.TurnedOver, {
+  anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(guixiu.name) and player.faceup
   end,

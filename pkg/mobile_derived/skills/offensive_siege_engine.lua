@@ -24,7 +24,7 @@ skill:addEffect(fk.DamageCaused, {
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:removePlayerMark(player, "@offensive_siege_engine_durability", 1)
-    data.damage = data.damage + math.min(room:getBanner("RoundCount"), 3)
+    data:changeDamage(math.min(room:getBanner("RoundCount"), 3))
     if player:getMark("@offensive_siege_engine_durability") < 1 then
       local cards = table.filter(player:getCardIds("e"), function(id)
         return Fk:getCardById(id).name == "offensive_siege_engine"

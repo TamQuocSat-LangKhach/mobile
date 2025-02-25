@@ -28,8 +28,8 @@ yishi:addEffect(fk.DamageCaused, {
     end
   end,
   on_use = function(self, event, target, player, data)
-    data.damage = data.damage - 1
     local room = player.room
+    data:changeDamage(-1)
     local card = room:askToChooseCard(player,{
       target = data.to,
       flag = "e",

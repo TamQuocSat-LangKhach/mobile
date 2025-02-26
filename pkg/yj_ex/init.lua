@@ -29,6 +29,25 @@ extension:loadSkillSkels{
   require(prefix .. "junxing"),
   require(prefix .. "qiaoshui"),
   require(prefix .. "zongshij"),
+  require(prefix .. "zongxuan"),
+  require(prefix .. "juece"),
+  require(prefix .. "mieji"),
+  require(prefix .. "zhuikong"),
+  require(prefix .. "qiuyuan"),
+  require(prefix .. "dingpin"),
+  require(prefix .. "zhongyong"),
+  require(prefix .. "sidi"),
+  require(prefix .. "zenhui"),
+  require(prefix .. "jiaojin"),
+  require(prefix .. "qieting"),
+  require(prefix .. "jianying"),
+  require(prefix .. "benxi"),
+  require(prefix .. "pingkou"),
+  require(prefix .. "yanzhu"),
+  require(prefix .. "xingxue"),
+  require(prefix .. "yaoming"),
+  require(prefix .. "anguo"),
+  require(prefix .. "wurong"),
 }
 
 Fk:loadTranslationTable{
@@ -164,7 +183,7 @@ Fk:loadTranslationTable{
   ["#m_ex__bulianshi"] = "无冕之后",
   ["illustrator:m_ex__bulianshi"] = "凡果",
   ["~m_ex__bulianshi"] = "今生先君逝，来世再侍君……",
-  ["$m_ex__bulianshi_win_audio"] = "壮我江东，人才济济！",
+  ["!m_ex__bulianshi"] = "壮我江东，人才济济！",
 
   ["$zhuiyi_m_ex__bulianshi1"] = "化作桃园只为君。",
   ["$zhuiyi_m_ex__bulianshi2"] = "魂若有灵，当助夫君。",
@@ -216,9 +235,17 @@ Fk:loadTranslationTable{
   ["~m_ex__jianyong"] = "行事无矩，为人所恶矣。",
 }
 
+General:new(extension, "m_ex__yufan", "wu", 3):addSkills {
+  "m_ex__zongxuan",
+  --"zhiyan"
+}
 
-
-
+Fk:loadTranslationTable{
+  ["m_ex__yufan"] = "界虞翻",
+  ["#m_ex__yufan"] = "狂直之士",
+  --["illustrator:m_ex__yufan"] = "",
+  --["~m_ex__yufan"] = "",
+}
 
 General:new(extension, "m_ex__manchong", "wei", 3):addSkills {
   "m_ex__junxing",
@@ -236,6 +263,34 @@ Fk:loadTranslationTable{
   ["$yuce_m_ex__manchong2"] = "虽举得于外，则福生于内矣。",
 }
 
+General:new(extension, "m_ex__liru", "qun", 3):addSkills {
+  "m_ex__juece",
+  "m_ex__mieji",
+  --"fencheng"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__liru"] = "界李儒",
+  ["#m_ex__liru"] = "魔仕",
+  ["illustrator:m_ex__liru"] = "三道纹",
+  ["~m_ex__liru"] = "吾等皆死于妇人之手矣！",
+
+  ["$fencheng_m_ex__liru1"] = "千里皇城，尽作焦土！",
+  ["$fencheng_m_ex__liru2"] = "荣耀、权力、欲望、统统让这大火焚灭吧！",
+}
+
+General:new(extension, "m_ex__fuhuanghou", "qun", 3, 3, General.Female):addSkills {
+  "m_ex__zhuikong",
+  "m_ex__qiuyuan"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__fuhuanghou"] = "界伏皇后",
+  ["#m_ex__fuhuanghou"] = "孤注一掷",
+  ["illustrator:m_ex__fuhuanghou"] = "zoo",
+  ["~m_ex__fuhuanghou"] = "父亲大人，你竟如此优柔寡断……",
+}
+
 General:new(extension, "m_ex__panzhangmazhong", "wu", 4):addSkills {
   "m_ex__duodao",
   "m_ex__anjian"
@@ -248,5 +303,158 @@ Fk:loadTranslationTable{
   ["~m_ex__panzhangmazhong"] = "埋伏得这么好，怎会……",
 }
 
+General:new(extension, "m_ex__chenqun", "wei", 3):addSkills {
+  "m_ex__dingpin",
+  --"nos__faen"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__chenqun"] = "界陈群",
+  ["#m_ex__chenqun"] = "万世臣表",
+  ["illustrator:m_ex__chenqun"] = "鬼画府",
+  ["~m_ex__chenqun"] = "立身纯且粹，一死复何忧……",
+
+  ["$nos__faen_m_ex__chenqun1"] = "法不可容之事，情或能原宥。",
+  ["$nos__faen_m_ex__chenqun2"] = "严刑峻法，万望慎行。",
+}
+
+--[[
+General:new(extension, "m_ex__zhoucang", "shu", 4):addSkills {
+  "m_ex__zhongyong",
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__zhoucang"] = "界周仓",
+  ["#m_ex__zhoucang"] = "披肝沥胆",
+  --["illustrator:m_ex__zhoucang"] = "",
+  ["~m_ex__zhoucang"] = "九泉之下，仓陪将军再走一遭……",
+}
+
+General:new(extension, "m_ex__caozhen", "wei", 4):addSkills {
+  "m_ex__sidi",
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__caozhen"] = "界曹真",
+  ["#m_ex__caozhen"] = "荷国天督",
+  ["illustrator:m_ex__caozhen"] = "鬼画府",
+  ["~m_ex__caozhen"] = "雍凉动乱，皆吾之过也……",
+}
+]]
+
+General:new(extension, "m_ex__sunluban", "wu", 3, 3, General.Female):addSkills {
+  "m_ex__zenhui",
+  "m_ex__jiaojin"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__sunluban"] = "界孙鲁班",
+  ["#m_ex__sunluban"] = "为虎作伥",
+  ["illustrator:m_ex__sunluban"] = "鬼画府",
+  ["~m_ex__sunluban"] = "妹妹，姐姐是迫不得已……",
+}
+
+General:new(extension, "m_ex__caifuren", "qun", 3, 3, General.Female):addSkills {
+  "m_ex__qieting",
+  --"xianzhou"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__caifuren"] = "界蔡夫人",
+  ["#m_ex__caifuren"] = "襄江的蒲苇",
+  ["illustrator:m_ex__caifuren"] = "漫想族",
+  ["~m_ex__caifuren"] = "琮儿！啊啊……",
+
+  ["$xianzhou_m_ex__caifuren1"] = "既是诸位之议，妾身复有何疑？",
+  ["$xianzhou_m_ex__caifuren2"] = "我虽女流，亦知献州乃为长久之计。",
+}
+
+local jushou = General:new(extension, "m_ex__jvshou", "qun", 2, 3)
+jushou.shield = 3
+jushou:addSkills {
+  "m_ex__jianying",
+  --"shibei"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__jvshou"] = "界沮授",
+  ["#m_ex__jvshou"] = "监军谋国",
+  ["~m_ex__jvshou"] = "授，无愧主公之恩……",
+
+  ["$shibei_m_ex__jvshou1"] = "只有杀身士，绝无降曹夫！",
+  ["$shibei_m_ex__jvshou2"] = "心向袁氏，绝无背离可言！",
+}
+
+General:new(extension, "m_ex__wuyi", "shu", 4):addSkills {
+  "m_ex__benxi",
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__wuyi"] = "界吴懿",
+  ["#m_ex__wuyi"] = "建兴鞍辔",
+  ["~m_ex__wuyi"] = "吾等虽不惧蜀道之险，却亦难过这渭水长安……",
+}
+
+General:new(extension, "m_ex__zhuhuan", "wu", 4):addSkills {
+  --"fenli",
+  "m_ex__pingkou"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__zhuhuan"] = "界朱桓",
+  ["#m_ex__zhuhuan"] = "中洲拒天人",
+  ["~m_ex__zhuhuan"] = "为将不行前而为人下，非可生受之辱……",
+
+  ["$fenli_m_ex__zhuhuan1"] = "为主制客，乃百战百胜之势。",
+  ["$fenli_m_ex__zhuhuan2"] = "诸位且与我勠力一战，自可得胜。",
+}
+
+General:new(extension, "m_ex__sunxiu", "wu", 3):addSkills {
+  "m_ex__yanzhu",
+  "m_ex__xingxue",
+  --"zhaofu"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__sunxiu"] = "界孙休",
+  ["#m_ex__sunxiu"] = "弥殇的景君",
+  ["illustrator:m_ex__sunxiu"] = "君桓文化",
+  ["~m_ex__sunxiu"] = "不求外取城地，但保大吴永安……",
+}
+
+--[[
+General:new(extension, "m_ex__quancong", "wu", 4):addSkills {
+  "m_ex__yaoming"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__quancong"] = "界全琮",
+  ["#m_ex__quancong"] = "慕势耀族",
+  ["~m_ex__quancong"] = "吾逐名如筑室道谋，而是用终不溃于成。",
+}
+]]
+
+General:new(extension, "m_ex__zhuzhi", "wu", 4):addSkills {
+  "m_ex__anguo"
+}
+
+Fk:loadTranslationTable{
+  ["m_ex__zhuzhi"] = "界朱治",
+  ["#m_ex__zhuzhi"] = "功崇信重",
+  ["~m_ex__zhuzhi"] = "臣辅孙氏三代之业，今年近古稀，死而无憾。",
+}
+
+General:new(extension, "m_ex__zhangyi", "shu", 4):addSkills {
+  "m_ex__wurong",
+  --"shizhi"
+}
+
+--[[
+Fk:loadTranslationTable{
+  ["m_ex__zhangyi"] = "界张嶷",
+  ["#m_ex__zhangyi"] = "通壮逾古",
+  ["~m_ex__zhangyi"] = "北伐未捷，臣定杀身以报陛下！",
+}
+]]
 
 return extension

@@ -1,5 +1,6 @@
 local quanji = fk.CreateSkill {
   name = "m_ex__quanji",
+  derived_piles = "m_ex__zhonghui_power",
 }
 
 Fk:loadTranslationTable{
@@ -45,7 +46,6 @@ quanji:addEffect(fk.Damaged, {
   on_use = quanjiUse,
 })
 
-
 quanji:addEffect("maxcards", {
   correct_func = function(self, player)
     if player:hasSkill(quanji.name) then
@@ -55,6 +55,5 @@ quanji:addEffect("maxcards", {
     end
   end,
 })
-
 
 return quanji

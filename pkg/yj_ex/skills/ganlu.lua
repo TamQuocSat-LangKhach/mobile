@@ -2,8 +2,6 @@ local ganlu = fk.CreateSkill {
   name = "m_ex__ganlu",
 }
 
-local U = require "packages/utility/utility"
-
 Fk:loadTranslationTable{
   ["m_ex__ganlu"] = "甘露",
   [":m_ex__ganlu"] = "出牌阶段限一次，你可以选择两名装备区里的牌数之差不大于你已损失的体力值的角色，交换他们装备区里的牌；"..
@@ -14,6 +12,8 @@ Fk:loadTranslationTable{
   ["$m_ex__ganlu1"] = "玄德实乃佳婿呀。",
   ["$m_ex__ganlu2"] = "好一个郎才女貌，真是天作之合啊。",
 }
+
+local U = require "packages/utility/utility"
 
 ganlu:addEffect("active", {
   anim_type = "control",

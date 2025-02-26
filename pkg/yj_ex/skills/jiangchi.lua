@@ -2,8 +2,6 @@ local jiangchi = fk.CreateSkill {
   name = "m_ex__jiangchi",
 }
 
-local U = require "packages/utility/utility"
-
 Fk:loadTranslationTable{
   ["m_ex__jiangchi"] = "将驰",
   [":m_ex__jiangchi"] = "出牌阶段开始时，你可以选择一项：1.摸一张牌，此阶段不能使用【杀】；2.弃置一张牌，本阶段使用【杀】无距离限制且可以多使用一张【杀】。",
@@ -17,6 +15,8 @@ Fk:loadTranslationTable{
   ["$m_ex__jiangchi1"] = "将飞翼伏，三军整肃。",
   ["$m_ex__jiangchi2"] = "策马扬鞭，奔驰万里。",
 }
+
+local U = require "packages/utility/utility"
 
 jiangchi:addEffect(fk.EventPhaseStart, {
   mute = true,

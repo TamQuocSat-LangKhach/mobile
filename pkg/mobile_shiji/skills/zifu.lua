@@ -13,7 +13,6 @@ Fk:loadTranslationTable{
 
 zifu:addEffect(fk.EventPhaseEnd, {
   anim_type = "negative",
-  frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(zifu.name) and player.phase == Player.Play and
       #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)

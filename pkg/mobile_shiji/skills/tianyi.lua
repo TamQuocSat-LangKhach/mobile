@@ -15,7 +15,6 @@ Fk:loadTranslationTable{
 
 tianyi:addEffect(fk.EventPhaseStart, {
   anim_type = "support",
-  frequency = Skill.Wake,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(tianyi.name) and player.phase == Player.Start and
       player:usedSkillTimes(tianyi.name, Player.HistoryGame) == 0

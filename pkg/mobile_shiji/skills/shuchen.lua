@@ -15,7 +15,6 @@ local U = require "packages/utility/utility"
 
 shuchen:addEffect(fk.EnterDying, {
   anim_type = "support",
-  frequency = Skill.Compulsory,
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(shuchen.name) and #U.GetRenPile(player.room) > 3
   end,

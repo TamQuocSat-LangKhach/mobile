@@ -17,7 +17,6 @@ Fk:loadTranslationTable{
 juejin:addEffect("active", {
   anim_type = "control",
   prompt = "#juejin",
-  frequency = Skill.Limited,
   card_num = 0,
   target_num = 0,
   can_use = function(self, player)

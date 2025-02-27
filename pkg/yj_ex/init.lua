@@ -422,7 +422,7 @@ Fk:loadTranslationTable{
   ["~m_ex__sunxiu"] = "不求外取城地，但保大吴永安……",
 }
 
---[[
+
 General:new(extension, "m_ex__quancong", "wu", 4):addSkills {
   "m_ex__yaoming"
 }
@@ -430,9 +430,10 @@ General:new(extension, "m_ex__quancong", "wu", 4):addSkills {
 Fk:loadTranslationTable{
   ["m_ex__quancong"] = "界全琮",
   ["#m_ex__quancong"] = "慕势耀族",
+  ["illustrator:m_ex__quancong"] = "YanBai",
   ["~m_ex__quancong"] = "吾逐名如筑室道谋，而是用终不溃于成。",
 }
-]]
+
 
 General:new(extension, "m_ex__zhuzhi", "wu", 4):addSkills {
   "m_ex__anguo"

@@ -445,7 +445,7 @@ Fk:loadTranslationTable{
   ["~m_ex__zhuzhi"] = "臣辅孙氏三代之业，今年近古稀，死而无憾。",
 }
 
---[[
+
 General:new(extension, "m_ex__zhangyi", "shu", 4):addSkills {
   "m_ex__wurong",
   --"shizhi"
@@ -456,6 +456,6 @@ Fk:loadTranslationTable{
   ["#m_ex__zhangyi"] = "通壮逾古",
   ["~m_ex__zhangyi"] = "北伐未捷，臣定杀身以报陛下！",
 }
-]]
+
 
 return extension

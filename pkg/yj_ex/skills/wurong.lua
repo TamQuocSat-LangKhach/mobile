@@ -2,6 +2,109 @@ local wurong = fk.CreateSkill{
   name = "m_ex__wurong",
 }
 
+local U = require "packages/utility/utility"
+
+wurong:addEffect("active", {
+  mute = true,
+  card_num = 0,
+  target_num = 1,
+  prompt = "#m_ex__wurong",
+  can_use = function(self, player)
+    return player:usedSkillTimes(self.name, Player.HistoryPhase) == 0
+  end,
+  target_filter = function (self, player, to_select, selected)
+    return #selected == 0 and to_select ~= player
+  end,
+  on_use = function(self, room, effect)
+    local player = effect.from
+    local target = effect.tos[1]
+    player:broadcastSkillInvoke(wurong.name, 1)
+    room:notifySkillInvoked(player, wurong.name, "offensive", {target.id})
+    local result = U.doStrategy(room, player, target, {"wurong-zhenya", "wurong-anfu"}, {"wurong-fankang", "wurong-guishun"}, wurong.name, 666)
+    room:sendLog{
+      type = "#MexWuRongResult",
+      from = player.id,
+      arg = result[1],
+      toast = true,
+    }
+    room:sendLog{
+      type = "#MexWuRongResult",
+      from = target.id,
+      arg = result[2],
+      toast = true,
+    }
+    if result[1] == "wurong-zhenya" then
+      if result[2] == "wurong-fankang" then
+        player:broadcastSkillInvoke(wurong.name, 3)
+        room:doIndicate(player, {target})
+        room:damage({
+          from = player,
+          to = target,
+          damage = 1,
+          skillName = wurong.name,
+        })
+        if not player.dead then
+          player:drawCards(1, wurong.name)
+        end
+      else
+        player:broadcastSkillInvoke(wurong.name, 2)
+        if not target:isNude() then
+          local cards = room:askToChooseCard(player, {
+            target = target, flag = "he", skill_name = wurong.name,
+            prompt = "#m_ex__wurong-prey::"..target.id,
+          })
+          room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, wurong.name, nil, false, player)
+        end
+        if player.dead or target.dead or player:isNude() then return end
+        local cards = player:getCardIds("he")
+        if #cards > 2 then
+          cards = room:askToCards(player, {
+            max_num = 2, min_num = 2, include_equip = true, skill_name = wurong.name, cancelable = false,
+            prompt = "#m_ex__wurong-give::"..target.id,
+          })
+        end
+        room:moveCardTo(cards, Card.PlayerHand, target, fk.ReasonGive, wurong.name, nil, false, player)
+      end
+    else
+      if result[2] == "wurong-fankang" then
+        player:broadcastSkillInvoke(wurong.name, 3)
+        room:damage({
+          to = player,
+          damage = 1,
+          skillName = wurong.name,
+        })
+        if not player.dead then
+          player:drawCards(1, wurong.name)
+        end
+      else
+        player:broadcastSkillInvoke(wurong.name, 2)
+        if #target:getCardIds("he") < 2 then
+          room:setPlayerMark(target, "@@m_ex__wurong_skip", 1)
+        else
+          local cards = room:askToCards(target, {
+            min_num = 2, max_num = 2, include_equip = true, skill_name = wurong.name, cancelable = false,
+            prompt = "#m_ex__wurong-give::"..player.id,
+          })
+          room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonGive, wurong.name, nil, false, target)
+        end
+      end
+    end
+  end,
+})
+
+wurong:addEffect(fk.EventPhaseChanging, {
+  name = "#m_ex__wurong_delay",
+  is_delay_effect = true,
+  can_trigger = function(self, event, target, player, data)
+    return target == player and player:getMark("@@m_ex__wurong_skip") > 0 and data.phase == Player.Draw
+  end,
+  on_cost = Util.TrueFunc,
+  on_use = function (self, event, target, player, data)
+    player.room:setPlayerMark(player, "@@m_ex__wurong_skip", 0)
+    data.skipped = true
+  end,
+})
+
 Fk:loadTranslationTable{
   ["m_ex__wurong"] = "怃戎",
   [":m_ex__wurong"] = "出牌阶段限一次，你可以与一名其他角色谋弈，根据双方选择的结果：<br>"..
@@ -22,6 +125,7 @@ Fk:loadTranslationTable{
   ["#m_ex__wurong-prey"] = "怃戎：获得 %dest 一张牌",
   ["#m_ex__wurong-give"] = "怃戎：请交给 %dest 两张牌",
   ["@@m_ex__wurong_skip"] = "跳过摸牌",
+  ["#MexWuRongResult"] = "%from 选择了 %arg",
 
   ["$m_ex__wurong1"] = "平乱羌，怃蛮夷，开旧道，复驿亭！",
   ["$m_ex__wurong2"] = "识断明果，以肃越巂千里蛮疆！",

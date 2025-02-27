@@ -10,7 +10,6 @@ Fk:loadTranslationTable{
 
 yinshi:addEffect(fk.EventPhaseChanging, {
   mute = true,
-  events = {fk.EventPhaseChanging},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(yinshi.name) and
       table.contains({Player.Start, Player.Judge, Player.Finish}, data.phase) and not data.skipped

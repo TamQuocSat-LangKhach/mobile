@@ -62,7 +62,7 @@ cuizhen:addEffect(fk.TargetSpecified, {
   on_cost = function (self, event, target, player, data)
     if player.room:askToSkillInvoke(player, {
       skill_name = cuizhen.name,
-      prompt = "#lieren-cuizhen::"..data.to.id,
+      prompt = "#cuizhen-choose",
     }) then
       event:setCostData(self, {tos = {data.to}})
       return true

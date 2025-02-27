@@ -15,7 +15,6 @@ local U = require "packages/utility/utility"
 
 yuanqing:addEffect(fk.EventPhaseEnd, {
   anim_type = "special",
-  events = {fk.EventPhaseEnd},
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(yuanqing.name) and player.phase == Player.Play then
       return #player.room.logic:getEventsOfScope(GameEvent.MoveCards, 1, function(e)

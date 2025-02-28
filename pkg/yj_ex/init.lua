@@ -318,7 +318,6 @@ Fk:loadTranslationTable{
   ["$nos__faen_m_ex__chenqun2"] = "严刑峻法，万望慎行。",
 }
 
---[[
 General:new(extension, "m_ex__zhoucang", "shu", 4):addSkills {
   "m_ex__zhongyong",
 }
@@ -340,7 +339,6 @@ Fk:loadTranslationTable{
   ["illustrator:m_ex__caozhen"] = "鬼画府",
   ["~m_ex__caozhen"] = "雍凉动乱，皆吾之过也……",
 }
-]]
 
 General:new(extension, "m_ex__sunluban", "wu", 3, 3, General.Female):addSkills {
   "m_ex__zenhui",

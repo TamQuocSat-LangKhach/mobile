@@ -65,6 +65,7 @@ zenhui:addEffect(fk.TargetSpecifying, {
       })
       room:obtainCard(player, card, false, fk.ReasonPrey, player, zenhui.name)
       data.from = to
+      target = to
     elseif choice == "m_ex__zenhui_becomeuser" then
       room:notifySkillInvoked(player, zenhui.name, "offensive", {to.id})
       player:broadcastSkillInvoke(zenhui.name, 2)

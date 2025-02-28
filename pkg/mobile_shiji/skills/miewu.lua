@@ -18,8 +18,8 @@ miewu:addEffect("viewas", {
   pattern = ".",
   prompt = "#miewu",
   interaction = function(self, player)
-    local all_names = U.getAllCardNames("btd")
-    local names = U.getViewAsCardNames(player, miewu.name, all_names)
+    local all_names = Fk:getAllCardNames("btd")
+    local names = player:getViewAsCardNames(miewu.name, all_names)
     if #names == 0 then return end
     return U.CardNameBox {choices = names, all_choices = all_names}
   end,

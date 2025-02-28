@@ -97,9 +97,9 @@ local guhuo = fk.CreateViewAsSkill{
   name = "m_ex__guhuo",
   pattern = ".",
   prompt = "#m_ex__guhuo-prompt",
-  interaction = function(self)
-    local all_names = U.getAllCardNames("bt")
-    return U.CardNameBox { choices = U.getViewAsCardNames(Self, self.name, all_names) }
+  interaction = function(self, player)
+    local all_names = Fk:getAllCardNames("bt")
+    return U.CardNameBox { choices = player:getViewAsCardNames(self.name, all_names) }
   end,
   card_filter = function(self, to_select, selected)
     return #selected == 0 and Fk:currentRoom():getCardArea(to_select) ~= Card.PlayerEquip

@@ -17,8 +17,8 @@ taoluan:addEffect("viewas", {
   pattern = ".",
   prompt = "#changshi__taoluan",
   interaction = function(self, player)
-    local all_names = U.getAllCardNames("bt")
-    local names = U.getViewAsCardNames(player, taoluan.name, all_names, nil, player:getTableMark("@$taoluan"))
+    local all_names = Fk:getAllCardNames("bt")
+    local names = player:getViewAsCardNames(taoluan.name, all_names, nil, player:getTableMark("@$taoluan"))
     if #names == 0 then return end
     return U.CardNameBox {choices = names, all_choices = all_names}
   end,

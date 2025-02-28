@@ -21,9 +21,9 @@ jianying:addEffect("viewas", {
   max_phase_use_time = 1,
   prompt = "#m_ex__jianying-active",
   interaction = function(self, player)
-    local all_names = U.getAllCardNames("b")
+    local all_names = Fk:getAllCardNames("b")
     return U.CardNameBox {
-      choices = U.getViewAsCardNames(player, jianying.name, all_names),
+      choices = player:getViewAsCardNames(jianying.name, all_names),
       all_choices = all_names,
       default_choice = "AskForCardsChosen",
     }

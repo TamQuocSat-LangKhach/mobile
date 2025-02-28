@@ -41,7 +41,7 @@ dinghan:addEffect(fk.TurnStart, {
     if #record > 0 then
       table.insert(choices, 1, "dinghan_remove")
     end
-    local all_names = table.filter(U.getAllCardNames("td"), function (name)
+    local all_names = table.filter(Fk:getAllCardNames("td"), function (name)
       return not table.contains(record, name)
     end)
     if #all_names > 0 then

@@ -407,7 +407,7 @@ local mobile__gongsun = fk.CreateTriggerSkill{
     local room = player.room
     local to = room:getPlayerById(self.cost_data.tos[1])
     room:throwCard(self.cost_data.cards, self.name, player, player)
-    local names = U.getAllCardNames("bt", true)
+    local names = Fk:getAllCardNames("bt", true)
     if player.dead or #names == 0 or to.dead then return end
     local choice = U.askForChooseCardNames(room, player, names, 1, 1, self.name, "#mobile__gongsun-name:" .. to.id)[1]
     room:addTableMarkIfNeed(player, "_mobile__gongsun", to.id)
@@ -2523,7 +2523,7 @@ local jibing = fk.CreateViewAsSkill{
   prompt = "#jibing",
   interaction = function(self, player)
     local all_names = {"slash", "jink"}
-    local names = U.getViewAsCardNames(player, self.name, all_names)
+    local names = player:getViewAsCardNames(self.name, all_names)
     return U.CardNameBox {choices = names, all_choices = all_names}
   end,
   card_filter = function(self, to_select, selected)
@@ -3402,8 +3402,8 @@ local yizan = fk.CreateViewAsSkill{
     end
   end,
   interaction = function(self, player)
-    local all_names = U.getAllCardNames("b")
-    local names = U.getViewAsCardNames(player, self.name, all_names)
+    local all_names = Fk:getAllCardNames("b")
+    local names = player:getViewAsCardNames(self.name, all_names)
     if #names == 0 then return end
     return U.CardNameBox {choices = names, all_choices = all_names}
   end,
@@ -4902,7 +4902,7 @@ local xiaoni = fk.CreateViewAsSkill{
   name = "xiaoni",
   prompt = "#xiaoni",
   interaction = function(self)
-    local all_names = U.getAllCardNames("btd")
+    local all_names = Fk:getAllCardNames("btd")
     local names = table.filter(all_names, function (name)
       local card = Fk:cloneCard(name)
       card.skillName = self.name

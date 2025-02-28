@@ -22,8 +22,8 @@ zuoxing:addEffect("viewas", {
     return "#zuoxing::"..src
   end,
   interaction = function(self, player)
-    local all_names = U.getAllCardNames("t")
-    local names = U.getViewAsCardNames(player, zuoxing.name, all_names)
+    local all_names = Fk:getAllCardNames("t")
+    local names = player:getViewAsCardNames(zuoxing.name, all_names)
     if #names == 0 then return end
     return U.CardNameBox {choices = names, all_choices = all_names}
   end,

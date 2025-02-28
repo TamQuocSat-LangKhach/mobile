@@ -1117,7 +1117,7 @@ local zujin = fk.CreateViewAsSkill{
   end,
   interaction = function(self, player)
     local all_names = {"slash", "jink", "nullification"}
-    local names = U.getViewAsCardNames(player, self.name, all_names, nil, player:getTableMark("zujin-turn"))
+    local names = player:getViewAsCardNames(self.name, all_names, nil, player:getTableMark("zujin-turn"))
     if #names > 0 then
       return U.CardNameBox { choices = names, all_choices = all_names }
     end

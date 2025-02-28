@@ -2206,9 +2206,9 @@ local m_ex__jianying = fk.CreateViewAsSkill{
   name = "m_ex__jianying",
   prompt = "#m_ex__jianying-active",
   interaction = function(self, player)
-    local all_names = U.getAllCardNames("b")
+    local all_names = Fk:getAllCardNames("b")
     return U.CardNameBox {
-      choices = U.getViewAsCardNames(player, self.name, all_names),
+      choices = player:getViewAsCardNames(self.name, all_names),
       all_choices = all_names,
       default_choice = "AskForCardsChosen",
     }

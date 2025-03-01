@@ -62,7 +62,6 @@ chongjian:addEffect(fk.Damage, {
       return use_event and (use_event.data.extra_data or {}).chongjian == player
     end
   end,
-  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
     local num = math.min(#data.to:getCardIds("e"), data.damage)

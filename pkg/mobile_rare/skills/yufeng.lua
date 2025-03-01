@@ -196,7 +196,6 @@ yufeng:addEffect(fk.EventPhaseStart, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Start and player:getMark("@@mobile__yufeng") > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:setPlayerMark(player, "@@mobile__yufeng", 0)

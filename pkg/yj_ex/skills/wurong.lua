@@ -98,7 +98,6 @@ wurong:addEffect(fk.EventPhaseChanging, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:getMark("@@m_ex__wurong_skip") > 0 and data.phase == Player.Draw
   end,
-  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     player.room:setPlayerMark(player, "@@m_ex__wurong_skip", 0)
     data.skipped = true

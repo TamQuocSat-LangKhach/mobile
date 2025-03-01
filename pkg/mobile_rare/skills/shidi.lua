@@ -39,7 +39,6 @@ shidi:addEffect(fk.CardUsing, {
       end
     end
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     data.disresponsiveList = data.disresponsiveList or {}
     if player:getSwitchSkillState(shidi.name) == fk.SwitchYang then

@@ -51,7 +51,6 @@ local miewu_spec = {
   can_trigger = function(self, event, target, player, data)
     return target == player and table.contains(data.card.skillNames, miewu.name) and not player.dead
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player:drawCards(1, miewu.name)
   end,

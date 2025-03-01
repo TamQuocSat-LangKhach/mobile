@@ -129,7 +129,6 @@ chuhai:addEffect(fk.Damage, {
   can_trigger = function(self, event, target, player, data)
     return table.contains(player:getTableMark("chuhai_target-phase"), data.to.id) and not player.dead
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local cards = {}

@@ -51,7 +51,6 @@ heji:addEffect(fk.CardUsing, {
   can_trigger = function(self, event, target, player, data)
     return not player.dead and data.extra_data and data.extra_data.heji == player.id
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local cards = room:getCardsFromPileByRule(".|.|heart,diamond", 1)

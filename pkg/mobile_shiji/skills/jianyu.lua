@@ -56,7 +56,6 @@ jianyu:addEffect(fk.TargetSpecified, {
       table.contains(player:getMark("jianyu_targets"), data.to) and
       not data.to.dead
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:doIndicate(player, {data.to})

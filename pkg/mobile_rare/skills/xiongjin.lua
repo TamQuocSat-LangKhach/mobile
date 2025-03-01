@@ -55,7 +55,6 @@ xiongjin:addEffect(fk.EventPhaseStart, {
     return target == player and player.phase == Player.Discard and
       (player:getMark("@@xiongjinBasic-turn") > 0 or player:getMark("@@xiongjinNotBasic-turn") > 0)
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     if player:getMark("@@xiongjinBasic-turn") > 0 then

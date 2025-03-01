@@ -68,7 +68,6 @@ weisi:addEffect(fk.Damage, {
       data.card and table.contains(data.card.skillNames, weisi.name) and
       not data.to:isKongcheng()
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local cards = data.to:getCardIds("h")
@@ -84,7 +83,6 @@ weisi:addEffect(fk.TurnEnd, {
   can_trigger = function(self, event, target, player, data)
     return #player:getPile("$mobile__weisi") > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:moveCardTo(player:getPile("$mobile__weisi"), Card.PlayerHand, player, fk.ReasonJustMove, weisi.name, nil, false, player)
   end,

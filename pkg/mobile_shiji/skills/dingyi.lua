@@ -40,7 +40,6 @@ dingyi:addEffect(fk.DrawNCards, {
   can_trigger = function (self, event, target, player, data)
     return target == player and player:getMark("@dingyi") == "dingyi1"
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     data.n = data.n + (2 ^ player:getMark("fubi"))
   end,
@@ -51,7 +50,6 @@ dingyi:addEffect(fk.AfterDying, {
   can_trigger = function (self, event, target, player, data)
     return target == player and player:getMark("@dingyi") == "dingyi4" and player:isWounded()
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:recover{
       who = player,

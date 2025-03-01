@@ -126,7 +126,6 @@ zhengjing:addEffect(fk.EventPhaseStart, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Start and #player:getPile("$zhengxuan_jing") > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     player:skip(Player.Judge)

@@ -62,7 +62,6 @@ pojun:addEffect(fk.TurnEnd, {
   can_trigger = function(self, event, target, player, data)
     return not player.dead and #player:getPile("$m_ex__pojun") > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:moveCardTo(player:getPile("$m_ex__pojun"), Player.Hand, player, fk.ReasonPrey, pojun.name)
   end,

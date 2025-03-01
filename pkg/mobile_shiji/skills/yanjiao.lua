@@ -59,7 +59,6 @@ yanjiao:addEffect(fk.TurnStart, {
   can_trigger = function(self, event, target, player, data)
     return target == player and not player.dead and player:getMark("@mobile__yanjiao") > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local n = player:getMark("@mobile__yanjiao")

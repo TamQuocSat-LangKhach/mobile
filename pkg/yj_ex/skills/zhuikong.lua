@@ -52,7 +52,6 @@ zhuikong:addEffect(fk.PindianResultConfirmed, {
     return not player.dead and data.from == player and data.reason == zhuikong.name and data.winner and data.winner ~= player and
       data.toCard and player.room:getCardArea(data.toCard) == Card.Processing
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     player.room:obtainCard(player, data.toCard, true, fk.ReasonJustMove, player, zhuikong.name)
   end,

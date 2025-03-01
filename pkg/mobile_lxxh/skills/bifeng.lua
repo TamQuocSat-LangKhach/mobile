@@ -42,7 +42,6 @@ bifeng:addEffect(fk.CardUseFinished, {
     return not player.dead and data.extra_data and data.extra_data.bifeng and
       table.contains(data.extra_data.bifeng, player)
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local useEvent = room.logic:getCurrentEvent():findParent(GameEvent.UseCard)

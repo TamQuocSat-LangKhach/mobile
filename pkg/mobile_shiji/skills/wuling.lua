@@ -157,7 +157,6 @@ wuling:addEffect(fk.DamageCaused, {
       end
     end
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     data:changeDamage(1)
   end,
@@ -169,7 +168,6 @@ wuling:addEffect(fk.DamageInflicted, {
     return target == player and player:getMark("wuling_invoke") == 3 and
       player:usedEffectTimes(self.name, Player.HistoryTurn) == 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     data:changeDamage(-1)
   end,
@@ -185,7 +183,6 @@ wuling:addEffect(fk.EventPhaseStart, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:getMark("wuling_invoke") ~= 0 and player.phase == Player.Start
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local result = player:getMark(wuling.name)[1]

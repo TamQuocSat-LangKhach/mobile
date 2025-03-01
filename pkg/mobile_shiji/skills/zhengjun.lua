@@ -44,7 +44,6 @@ zhengjun:addEffect(fk.EventPhaseEnd, {
     return target == player and player.phase == Player.Discard and not player.dead and
       U.checkZhengsu(player, target, zhengjun.name)
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     local choices = {"draw2"}

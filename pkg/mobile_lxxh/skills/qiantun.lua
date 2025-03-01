@@ -107,7 +107,6 @@ qiantun:addEffect(fk.StartPindian, {
       end
     end
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     for _, to in ipairs(data.tos) do

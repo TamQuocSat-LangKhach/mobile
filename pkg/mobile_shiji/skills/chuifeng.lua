@@ -45,7 +45,6 @@ chuifeng:addEffect(fk.DamageInflicted, {
       return use_event and (use_event.data.extra_data or {}).chuifeng == player
     end
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     data:preventDamage()
     player.room:invalidateSkill(player, "chuifeng", "-phase")

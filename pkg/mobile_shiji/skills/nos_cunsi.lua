@@ -44,7 +44,6 @@ cunsi:addEffect(fk.AfterCardUseDeclared, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:getMark("@@nos__cunsi") > 0 and data.card.trueName == "slash"
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     data.additionalDamage = (data.additionalDamage or 0) + player:getMark("@@nos__cunsi")
     player.room:setPlayerMark(player, "@@nos__cunsi", 0)

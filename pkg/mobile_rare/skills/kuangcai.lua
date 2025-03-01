@@ -26,7 +26,6 @@ kuangcai:addEffect(fk.CardUsing, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:usedSkillTimes(kuangcai.name, Player.HistoryPhase) > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:removePlayerMark(player, kuangcai.name, 1)

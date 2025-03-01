@@ -55,7 +55,6 @@ binglun:addEffect(fk.TurnEnd, {
   can_trigger = function (self, event, target, player, data)
     return target == player and player:getMark(binglun.name) > 0
   end,
-  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
     local n = player:getMark(binglun.name)

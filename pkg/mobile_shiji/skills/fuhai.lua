@@ -25,7 +25,7 @@ fuhai:addEffect(fk.TargetSpecified, {
     end
   end,
 })
-fuhai:addEffect(fk.TargetSpecified, {
+fuhai:addEffect(fk.Death, {
   anim_type = "drawcard",
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(fuhai.name) and target:getMark("@yingba_pingding") > 0

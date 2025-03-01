@@ -100,7 +100,6 @@ yaohu:addEffect(fk.TargetSpecifying, {
     return data.to == player and table.contains(target:getTableMark("@@yaohu-phase"), player.id) and
       data.card.is_damage_card
   end,
-  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
     if #target:getCardIds("he") < 2 then

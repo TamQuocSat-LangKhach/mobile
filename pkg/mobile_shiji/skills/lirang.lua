@@ -52,7 +52,6 @@ lirang:addEffect(fk.EventPhaseEnd, {
       end, Player.HistoryPhase) > 0
     end
   end,
-  on_cost = Util.TrueFunc,
   on_use = function (self, event, target, player, data)
     local room = player.room
     local ids = {}

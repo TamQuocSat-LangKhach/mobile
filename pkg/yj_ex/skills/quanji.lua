@@ -42,7 +42,9 @@ quanji:addEffect(fk.EventPhaseEnd, {
 
 quanji:addEffect(fk.Damaged, {
   anim_type = "masochism",
-  --FIXME:暂无按点卖血机制
+  trigger_times = function(self, event, target, player, data)
+    return data.damage
+  end,
   on_use = quanjiUse,
 })
 

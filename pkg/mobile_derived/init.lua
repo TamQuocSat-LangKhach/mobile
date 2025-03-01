@@ -3,7 +3,7 @@
 local extension = Package:new("mobile_derived", Package.CardPack)
 extension.extensionName = "mobile"
 
-extension:loadSkillSkels(require("packages.mobile.pkg.mobile_derived.skills"))
+extension:loadSkillSkelsByPath("./packages/mobile/pkg/mobile_derived/skills")
 
 Fk:loadTranslationTable{
   ["mobile_derived"] = "手杀衍生牌",

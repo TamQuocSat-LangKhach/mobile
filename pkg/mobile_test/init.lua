@@ -1,7 +1,7 @@
 local extension = Package:new("mobile_test")
 extension.extensionName = "mobile"
 
-extension:loadSkillSkels(require("packages.mobile.pkg.mobile_test.skills"))
+extension:loadSkillSkelsByPath("./packages/mobile/pkg/mobile_test/skills")
 
 Fk:loadTranslationTable{
   ["mobile_test"] = "手杀-测试服",

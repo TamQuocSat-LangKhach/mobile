@@ -1,54 +1,7 @@
 local extension = Package:new("m_yj_ex")
 extension.extensionName = "mobile"
 
-local prefix = "packages.mobile.pkg.yj_ex.skills."
-
-extension:loadSkillSkels{
-  require(prefix .. "pojun"),
-  require(prefix .. "ganlu"),
-  require(prefix .. "xianzhen"),
-  require(prefix .. "jinjiu"),
-  require(prefix .. "jieyue"),
-  require(prefix .. "jieyue_active"),
-  require(prefix .. "jiushi"),
-  require(prefix .. "chengzhang"),
-  require(prefix .. "xuanfeng"),
-  require(prefix .. "xuanfeng_active"),
-  require(prefix .. "yicong"),
-  require(prefix .. "quanji"),
-  require(prefix .. "zili"),
-  require(prefix .. "paiyi"),
-  require(prefix .. "zongshi"),
-  require(prefix .. "anxu"),
-  require(prefix .. "dangxian"),
-  require(prefix .. "fuli"),
-  require(prefix .. "jiangchi"),
-  require(prefix .. "danshou"),
-  require(prefix .. "duodao"),
-  require(prefix .. "anjian"),
-  require(prefix .. "junxing"),
-  require(prefix .. "qiaoshui"),
-  require(prefix .. "zongshij"),
-  require(prefix .. "zongxuan"),
-  require(prefix .. "juece"),
-  require(prefix .. "mieji"),
-  require(prefix .. "zhuikong"),
-  require(prefix .. "qiuyuan"),
-  require(prefix .. "dingpin"),
-  require(prefix .. "zhongyong"),
-  require(prefix .. "sidi"),
-  require(prefix .. "zenhui"),
-  require(prefix .. "jiaojin"),
-  require(prefix .. "qieting"),
-  require(prefix .. "jianying"),
-  require(prefix .. "benxi"),
-  require(prefix .. "pingkou"),
-  require(prefix .. "yanzhu"),
-  require(prefix .. "xingxue"),
-  require(prefix .. "yaoming"),
-  require(prefix .. "anguo"),
-  require(prefix .. "wurong"),
-}
+extension:loadSkillSkelsByPath("./packages/mobile/pkg/yj_ex/skills")
 
 Fk:loadTranslationTable{
   ["m_yj_ex"] = "手杀-界一将成名",

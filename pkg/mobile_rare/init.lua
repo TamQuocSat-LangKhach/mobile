@@ -1,7 +1,7 @@
 local extension = Package:new("mobile_rare")
 extension.extensionName = "mobile"
 
-extension:loadSkillSkels(require("packages.mobile.pkg.mobile_rare.skills"))
+extension:loadSkillSkelsByPath("./packages/mobile/pkg/mobile_rare/skills")
 
 Fk:loadTranslationTable{
   ["mobile_rare"] = "手杀-稀有专属",

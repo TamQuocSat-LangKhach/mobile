@@ -1,7 +1,7 @@
 local extension = Package:new("mobile_shiji")
 extension.extensionName = "mobile"
 
-extension:loadSkillSkels(require("packages.mobile.pkg.mobile_shiji.skills"))
+extension:loadSkillSkelsByPath("./packages/mobile/pkg/mobile_shiji/skills")
 
 Fk:loadTranslationTable{
   ["mobile_shiji"] = "手杀-始计篇",

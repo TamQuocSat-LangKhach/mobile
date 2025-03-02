@@ -76,7 +76,7 @@ Fk:loadTranslationTable{
   ["illustrator:majun"] = "聚一_小道恩",
 
   ["~majun"] = "衡石不用，美玉见诬啊！",
-  ["$majun_win_audio"] = "吾巧益于世间，真乃幸事！",
+  ["!majun"] = "吾巧益于世间，真乃幸事！",
 }
 
 General:new(extension, "zhengxuan", "qun", 3):addSkills { "zhengjing" }

@@ -15,7 +15,7 @@ Fk:loadTranslationTable{
 shidi:addEffect(fk.EventPhaseStart, {
   mute = true,
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(self) then
+    if target == player and player:hasSkill(shidi.name) then
       if player:getSwitchSkillState(shidi.name) == fk.SwitchYin then
         return player.phase == Player.Start
       elseif player:getSwitchSkillState(shidi.name) == fk.SwitchYang then

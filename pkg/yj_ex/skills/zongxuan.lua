@@ -42,7 +42,7 @@ zongxuan:addEffect("active", {
 zongxuan:addEffect(fk.AfterCardsMove, {
   anim_type = "control",
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(self) then
+    if player:hasSkill(zongxuan.name) then
       local room = player.room
       local cards = {}
       for _, move in ipairs(data) do

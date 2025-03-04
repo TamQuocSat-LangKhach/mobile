@@ -7,6 +7,7 @@ Fk:loadTranslationTable{
   ["mobile_rare"] = "手杀-稀有专属",
   ["mobile"] = "手杀",
   ["mxing"] = "手杀星",
+  ["m_friend"] = "友",
 }
 
 --袖里乾坤：
@@ -268,6 +269,53 @@ Fk:loadTranslationTable{
   ["#mxing__dongzhuo"] = "破羌安边",
 
   ["~mxing__dongzhuo"] = "本欲坐观时变，奈何天不遂我啊。",
+}
+
+--老友季：诸葛亮 庞统 徐庶 崔钧 石韬
+General:new(extension, "m_friend__zhugeliang", "qun", 3):addSkills { "yance", "fangqiu", "zhugeliang__gongli" }
+Fk:loadTranslationTable{
+  ["m_friend__zhugeliang"] = "友诸葛亮",
+  ["#m_friend__zhugeliang"] = "龙骧九天",
+  --["illustrator:m_friend__zhugeliang"] = "",
+
+  ["~m_friend__zhugeliang"] = "吾既得明主，纵不得良时，亦当全力一试……",
+  ["$m_friend__zhugeliang_win_audio"] = "鼎足之势若成，则将军中原可图也。",
+}
+
+General:new(extension, "m_friend__pangtong", "qun", 3):addSkills { "friend__manjuan", "friend__yangming", "pangtong__gongli" }
+Fk:loadTranslationTable{
+  ["m_friend__pangtong"] = "友庞统",
+  ["#m_friend__pangtong"] = "凤翥南地",
+  --["illustrator:m_friend__pangtong"] = "",
+
+  ["~m_friend__pangtong"] = "大事未竟，惜哉，惜哉……",
+}
+
+General:new(extension, "m_friend__xushu", "qun", 3):addSkills { "xiaxing", "qihui", "xushu__gongli" }
+Fk:loadTranslationTable{
+  ["m_friend__xushu"] = "友徐庶",
+  ["#m_friend__xushu"] = "潜悟诲人",
+  --["illustrator:m_friend__xushu"] = "",
+
+  ["~m_friend__xushu"] = "百姓陷于苦海，而吾却难以济之……",
+}
+
+General:new(extension, "m_friend__cuijun", "qun", 3):addSkills { "shunyi", "biwei", "cuijun__gongli" }
+Fk:loadTranslationTable{
+  ["m_friend__cuijun"] = "友崔钧",
+  ["#m_friend__cuijun"] = "日奋金丝",
+  --["illustrator:m_friend__cuijun"] = "",
+
+  ["~m_friend__cuijun"] = "与君等交何其之快，只惜无再聚之日矣……",
+}
+
+General:new(extension, "m_friend__shitao", "qun", 3):addSkills { "qinying", "lunxiong", "shitao__gongli" }
+Fk:loadTranslationTable{
+  ["m_friend__shitao"] = "友石韬",
+  ["#m_friend__shitao"] = "月堕窠臼",
+  --["illustrator:m_friend__shitao"] = "",
+
+  ["~m_friend__shitao"] = "空有一腔热血，却是报国无门……",
 }
 
 return extension

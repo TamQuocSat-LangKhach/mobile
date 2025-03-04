@@ -15,7 +15,7 @@ Fk:loadTranslationTable{
 local lunxiong_spec = {
   anim_type = "masochism",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(self) and not player:isKongcheng() and
+    return target == player and player:hasSkill(lunxiong.name) and not player:isKongcheng() and
       player:getMark(lunxiong.name) < 13
   end,
   on_cost = function (self, event, target, player, data)

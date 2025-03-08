@@ -13,8 +13,6 @@ Fk:loadTranslationTable{
   ["$m_ex__ganlu2"] = "好一个郎才女貌，真是天作之合啊。",
 }
 
-local U = require "packages/utility/utility"
-
 ganlu:addEffect("active", {
   anim_type = "control",
   prompt = function (self, player)
@@ -26,27 +24,15 @@ ganlu:addEffect("active", {
   card_filter = Util.FalseFunc,
   target_filter = function(self, player, to_select, selected)
     if #selected == 0 then
-      return #to_select.player_cards[Player.Equip] > 0
+      return true
     elseif #selected == 1 then
-      return (
-        selected[1] == player or
-        to_select == player or
-        math.abs(#to_select.player_cards[Player.Equip] - #selected[1].player_cards[Player.Equip]) <= player:getLostHp()
-      )
+      return (selected[1] == player or to_select == player or
+        math.abs(#to_select:getCardIds("e") - #selected[1]:getCardIds("e")) <= player:getLostHp()) and
+        not (#to_select:getCardIds("e") == 0 and #selected[1]:getCardIds("e") == 0)
     end
-    return false
   end,
   on_use = function(self, room, effect)
-    U.swapCards(
-      room,
-      effect.from,
-      effect.tos[1],
-      effect.tos[2],
-      effect.tos[1]:getCardIds(Player.Equip),
-      effect.tos[2]:getCardIds(Player.Equip),
-      ganlu.name,
-      Player.Equip
-    )
+    room:swapAllCards(effect.from, effect.tos, ganlu.name, "e")
   end,
 })
 

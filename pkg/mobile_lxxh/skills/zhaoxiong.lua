@@ -2,6 +2,13 @@ local zhaoxiong = fk.CreateSkill {
   name = "mobile__zhaoxiong",
   tags = { Skill.Permanent, Skill.Limited },
 }
+zhaoxiong.dynamicDesc = function (self, player, lang)
+  if Fk:currentRoom():isGameMode("role_mode") then
+    return "mobile__zhaoxiong_role_mode"
+  else
+    return "mobile__zhaoxiong_1v2"
+  end
+end
 
 Fk:loadTranslationTable{
   ["mobile__zhaoxiong"] = "昭凶",
@@ -18,13 +25,7 @@ Fk:loadTranslationTable{
 }
 
 zhaoxiong:addEffect(fk.EventPhaseStart, {
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("role_mode") then
-      return "mobile__zhaoxiong_role_mode"
-    else
-      return "mobile__zhaoxiong_1v2"
-    end
-  end,
+  
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(zhaoxiong.name) and player.phase == Player.Start and
       player:usedSkillTimes(zhaoxiong.name, Player.HistoryGame) == 0 and

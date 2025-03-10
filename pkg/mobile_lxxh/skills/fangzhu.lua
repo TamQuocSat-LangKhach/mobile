@@ -63,7 +63,8 @@ fangzhu:addEffect(fk.TurnStart, {
     room:setPlayerMark(player, "mobile_qianlong__fangzhu_target-turn", fangzhuTarget)
   end,
 })
-fangzhu:addEffect(fk.AfterTurnEnd, {
+fangzhu:addEffect(fk.TurnEnd, {
+  late_refresh = true,
   can_refresh = function (self, event, target, player, data)
     return target == player and
       table.find({ "@mobile_qianlong__fangzhu_limit", "@@mobile_qianlong__fangzhu_skill_nullified" }, function(markName)

@@ -95,7 +95,7 @@ Fk:loadTranslationTable{
   ["illustrator:godguojia"] = "木美人",
 
   ["~godguojia"] = "可叹桢干命也迂……",
-  ["$godguojia_win_audio"] = "既为奇佐，怎可徒有虚名？",
+  ["!godguojia"] = "既为奇佐，怎可徒有虚名？",
 }
 
 General:new(extension, "godxunyu", "god", 3):addSkills { "tianzuo", "lingce", "dinghan" }
@@ -105,7 +105,7 @@ Fk:loadTranslationTable{
   ["illustrator:godxunyu"] = "枭瞳",
 
   ["~godxunyu"] = "宁鸣而死，不默而生……",
-  ["$godxunyu_win_audio"] = "汉室复兴，指日可待！",
+  ["!godxunyu"] = "汉室复兴，指日可待！",
 }
 
 --信：辛毗 周处 吴景 王甫赵累 羊祜 糜夫人 王凌 孔融 神太史慈 神孙策
@@ -206,7 +206,7 @@ Fk:loadTranslationTable{
   ["illustrator:godsunce"] = "枭瞳",
 
   ["~godsunce"] = "无耻小人！竟敢暗算于我……",
-  ["$godsunce_win_audio"] = "平定三郡，稳据江东！",
+  ["!godsunce"] = "平定三郡，稳据江东！",
 }
 
 local godtaishici =  General:new(extension, "godtaishici", "god", 4)
@@ -218,7 +218,7 @@ Fk:loadTranslationTable{
   ["illustrator:godtaishici"] = "枭瞳",
 
   ["~godtaishici"] = "魂归……天地……",
-  ["$godtaishici_win_audio"] = "执此神弓，恭行天罚！",
+  ["!godtaishici"] = "执此神弓，恭行天罚！",
 }
 
 --仁：许靖 向宠 刘璋 华歆 张仲景 张温 蔡贞姬 桥公 神华佗 神鲁肃
@@ -307,7 +307,7 @@ Fk:loadTranslationTable{
   ["illustrator:godhuatuo"] = "吴涛",
 
   ["~godhuatuo"] = "人间诸疾未解，老夫怎入轮回……",
-  ["$godhuatuo_win_audio"] = "但愿世间人无病，何惜架上药生尘。",
+  ["!godhuatuo"] = "但愿世间人无病，何惜架上药生尘。",
 }
 for _, name in ipairs({"wulingHu", "wulingLu", "wulingXiong", "wulingYuan", "wulingHe"}) do
   local card = fk.CreateCard{
@@ -325,7 +325,7 @@ Fk:loadTranslationTable{
   ["illustrator:godlusu"] = "漫想族",
 
   ["~godlusu"] = "常计小利，何成大局……",
-  ["$godlusu_win_audio"] = "至尊高坐天中，四海皆在目下！",
+  ["!godlusu"] = "至尊高坐天中，四海皆在目下！",
 }
 
 --勇：孙翊 高览 宗预 花鬘 陈武董袭 文鸯 袁涣 王双

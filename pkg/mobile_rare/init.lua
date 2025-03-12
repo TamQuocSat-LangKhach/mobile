@@ -97,8 +97,8 @@ Fk:loadTranslationTable{
   ["cv:nanhualaoxian"] = "宋国庆",
   ["illustrator:nanhualaoxian"] = "君桓文化",
 
-  ["$nanhualaoxian_win_audio"] = "纷总总兮九州，何寿夭兮在予？",
   ["~nanhualaoxian"] = "天机求而近，执而远……",
+  ["!nanhualaoxian"] = "纷总总兮九州，何寿夭兮在予？",
 }
 
 local shichangshi = General:new(extension, "shichangshi", "qun", 1)
@@ -158,7 +158,7 @@ Fk:loadTranslationTable{
   ["changshi__gaowang"] = "高望",
   ["illustrator:changshi__gaowang"] = "鬼画府",
 
-  ["$shichangshi_win_audio"] = "十常侍威势更甚，再无人可掣肘。",
+  ["!shichangshi"] = "十常侍威势更甚，再无人可掣肘。",
 
   ["$changshi__zhangrang_taunt1"] = "吾乃当今帝父，汝岂配与我同列？",
   ["$changshi__zhaozhong_taunt1"] = "汝此等语，何不以溺自照？",
@@ -178,8 +178,8 @@ Fk:loadTranslationTable{
   ["#mobile__zhangfen"] = "究械菁杰",
   --["illustrator:mobile__zhangfen"] = "",
 
-  ["$mobile__zhangfen_win_audio"] = "治于神者，众人当知其功！",
   ["~mobile__zhangfen"] = "而立之年，未立功名，实憾也……",
+  ["!mobile__zhangfen"] = "治于神者，众人当知其功！",
 }
 
 local godsimayi = General:new(extension, "mobile__godsimayi", "god", 4)
@@ -201,7 +201,7 @@ Fk:loadTranslationTable{
   ["illustrator:mxing__zhangliao"] = "王强",
 
   ["~mxing__zhangliao"] = "惑于女子而尽失战机，庸主误我啊。",
-  ["$mxing__zhangliao_win_audio"] = "并州雄骑，自当扫清六合！",
+  ["!mxing__zhangliao"] = "并州雄骑，自当扫清六合！",
 }
 
 General:new(extension, "mxing__zhanghe", "qun", 4):addSkills { "zhilve" }
@@ -211,7 +211,7 @@ Fk:loadTranslationTable{
   ["illustrator:mxing__zhanghe"] = "王强",
 
   ["~mxing__zhanghe"] = "若非小人作梗，何至官渡之败……",
-  ["$mxing__zhanghe_win_audio"] = "水因地制流，兵因敌制胜！",
+  ["!mxing__zhanghe"] = "水因地制流，兵因敌制胜！",
 }
 
 General:new(extension, "mxing__xuhuang", "qun", 4):addSkills { "mxing__zhiyan" }
@@ -221,7 +221,7 @@ Fk:loadTranslationTable{
   ["illustrator:mxing__xuhuang"] = "王强",
 
   ["~mxing__xuhuang"] = "唉，明主未遇，大功未成……",
-  ["$mxing__xuhuang_win_audio"] = "幸遇明主，更应立功报效国君。",
+  ["!mxing__xuhuang"] = "幸遇明主，更应立功报效国君。",
 }
 
 General:new(extension, "mxing__ganning", "qun", 4):addSkills { "jinfan", "sheque" }
@@ -231,7 +231,7 @@ Fk:loadTranslationTable{
   ["illustrator:mxing__ganning"] = "王强",
 
   ["~mxing__ganning"] = "铜铃声……怕是听不到了……",
-  ["$mxing__ganning_win_audio"] = "又是大丰收啊！弟兄们，扬帆起航！",
+  ["!mxing__ganning"] = "又是大丰收啊！弟兄们，扬帆起航！",
 }
 
 General:new(extension, "mxing__huangzhong", "qun", 4):addSkills { "shidi", "xing__yishi", "qishe" }
@@ -279,7 +279,7 @@ Fk:loadTranslationTable{
   --["illustrator:m_friend__zhugeliang"] = "",
 
   ["~m_friend__zhugeliang"] = "吾既得明主，纵不得良时，亦当全力一试……",
-  ["$m_friend__zhugeliang_win_audio"] = "鼎足之势若成，则将军中原可图也。",
+  ["!m_friend__zhugeliang"] = "鼎足之势若成，则将军中原可图也。",
 }
 
 General:new(extension, "m_friend__pangtong", "qun", 3):addSkills { "friend__manjuan", "friend__yangming", "pangtong__gongli" }

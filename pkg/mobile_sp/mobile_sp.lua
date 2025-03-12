@@ -7,12 +7,6 @@ Fk:loadTranslationTable{
   ["mobile_sp"] = "手杀-SP",
 }
 
-local function AddWinAudio(general)
-  local Win = fk.CreateActiveSkill{ name = general.name.."_win_audio" }
-  Win.package = extension
-  Fk:addSkill(Win)
-end
-
 --SP4：贺齐
 local heqi = General(extension, "mobile__heqi", "wu", 4)
 local function QizhouChange(player, num, skill_name)
@@ -1136,7 +1130,7 @@ Fk:loadTranslationTable{
   ["$jianxiong_mobile__caoying"] = "为大事者，当如祖父一般，眼界高远。",
   ["$xingshang_mobile__caoying"] = "将军忠魂不泯，应当厚葬。",
   ["~mobile__caoying"] = "吾虽身陨，无碍大魏之兴……",
-  ["$mobile__caoying_win_audio"] = "此战既胜，破蜀吞吴，指日可待！",
+  ["!mobile__caoying"] = "此战既胜，破蜀吞吴，指日可待！",
 }
 
 local baosanniang = General(extension, "mobile__baosanniang", "shu", 3, 3, General.Female)
@@ -2122,7 +2116,7 @@ Fk:loadTranslationTable{
   ["$mobile__dianhua1"] = "点之以形，化之以心。 ",
   ["$mobile__dianhua2"] = "俯仰喟天地，坐化对本心。",
   ["~mobile__zhangqiying"] = "天地不仁，以万物为刍狗……",
-  ["$mobile__zhangqiying_win_audio"] = "谷神不死，是谓玄牝。",
+  ["!mobile__zhangqiying"] = "谷神不死，是谓玄牝。",
 }
 
 local gongsunkang = General(extension, "gongsunkang", "qun", 4)
@@ -2398,7 +2392,7 @@ Fk:loadTranslationTable{
   ['$tiansuan1'] = '汝既持签问卜，亦当应天授命。',
   ['$tiansuan2'] = '尔若居正体道，福寿自当天成。',
   ['~zhouqun'] = '及时止损，过犹不及…',
-  ['$zhouqun_win_audio'] = '占星问卜，莫不言精！',
+  ['!zhouqun'] = '占星问卜，莫不言精！',
 }
 
 --SP11：阎圃 马元义 毛玠 傅佥 阮慧 马日磾 王濬
@@ -3466,7 +3460,7 @@ Fk:loadTranslationTable{
   ["$longyuan1"] = "金鳞岂是池中物，一遇风云便化龙。",
   ["$longyuan2"] = "忍时待机，今日终于可以建功立业。",
   ["~zhaotongzhaoguang"] = "守业死战，不愧初心。",
-  ["$zhaotongzhaoguang_win_audio"] = "身继龙魂，效捷致果！",
+  ["!zhaotongzhaoguang"] = "身继龙魂，效捷致果！",
 }
 
 local liuye = General(extension, "mobile__liuye", "wei", 3)
@@ -3907,7 +3901,7 @@ Fk:loadTranslationTable{
   ["$weimu_mobile__wangyuanji"] = "宫闱之内，何必擅涉外事！",
   ["$mingzhe_mobile__wangyuanji"] = "谦瑾行事，方能多吉少恙。",
   ["~mobile__wangyuanji"] = "世事沉浮，非是一人可逆啊……",
-  ["$mobile__wangyuanji_win_audio"] = "苍生黎庶，都会有一个美好的未来了。",
+  ["!mobile__wangyuanji"] = "苍生黎庶，都会有一个美好的未来了。",
 }
 
 local yanghuiyu = General(extension, "mobile__yanghuiyu", "wei", 3, 3, General.Female)
@@ -4210,7 +4204,7 @@ Fk:loadTranslationTable{
   ["~yangbiao"] = "未能效死佑汉，只因宗族之重……",
 }
 
-local simazhao = General(extension, "mob_sp__simazhao", "wei", 3)
+local simazhao = General(extension, "m_sp__simazhao", "wei", 3)
 local zhaoxin = fk.CreateActiveSkill{
   name = "zhaoxin",
   anim_type = "drawcard",
@@ -4308,8 +4302,8 @@ simazhao:addSkill(zhaoxin)
 simazhao:addSkill(daigong)
 AddWinAudio(simazhao)
 Fk:loadTranslationTable{
-  ["mob_sp__simazhao"] = "司马昭", -- 手杀称为SP司马昭
-  ["#mob_sp__simazhao"] = "四海威服",
+  ["m_sp__simazhao"] = "司马昭", -- 手杀称为SP司马昭
+  ["#m_sp__simazhao"] = "四海威服",
   ["zhaoxin"] = "昭心",
   [":zhaoxin"] = "出牌阶段限一次，你可以将任意张牌置于你的武将牌上，称为“望”（其总数不能超过3），然后摸等量的牌。你和你攻击范围内角色的摸牌阶段"..
   "结束时，其可以获得一张你选择的“望”，然后你可以对其造成1点伤害。",
@@ -4327,8 +4321,8 @@ Fk:loadTranslationTable{
   ["$zhaoxin2"] = "公此行欲何为，吾自有量度。",
   ["$daigong1"] = "不急，只等敌军士气渐殆。",
   ["$daigong2"] = "敌谋吾已尽料，可以长策縻之。",
-  ["~mob_sp__simazhao"] = "安世，接下来，就看你的了……",
-  ["$mob_sp__simazhao_win_audio"] = "天下归一之功，已近在咫尺。",
+  ["~m_sp__simazhao"] = "安世，接下来，就看你的了……",
+  ["!m_sp__simazhao"] = "天下归一之功，已近在咫尺。",
 }
 
 --SP13：曹嵩 裴秀 杨阜 彭羕 牵招 郭女王 韩遂 阎象 李遗

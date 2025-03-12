@@ -13,8 +13,8 @@ Fk:loadTranslationTable{
   ["m_shi__taishici"] = "势太史慈",
   ["#m_shi__taishici"] = "志踏天阶",
 
-  ["$m_shi__taishici_win_audio"] = "幸遇伯符，吾之壮志成矣！",
   ["~m_shi__taishici"] = "身证大义，魂念江东……",
+  ["!m_shi__taishici"] = "幸遇伯符，吾之壮志成矣！",
 }
 
 General:new(extension, "m_shi__dongzhao", "wei", 3):addSkills { "miaolue", "yingjia" }

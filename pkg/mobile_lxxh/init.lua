@@ -17,8 +17,8 @@ Fk:loadTranslationTable{
   ["#mobile__caomao"] = "向死存魏",
   ["illustrator:mobile__caomao"] = "铁杵",
 
-  ["$mobile__caomao_win_audio"] = "少康诛寒浞以中兴，朕夷司马未尝不可！",
   ["~mobile__caomao"] = "纵不成身死，朕亦为太祖子孙，大魏君王……",
+  ["!mobile__caomao"] = "少康诛寒浞以中兴，朕夷司马未尝不可！",
 }
 local caomao2 = General:new(extension, "mobile2__caomao", "wei", 3)
 caomao2:addSkills { "mobile__qianlong", "weitong" }
@@ -112,7 +112,7 @@ Fk:loadTranslationTable{
   ["illustrator:mobile__simazhao"] = "腥鱼仔",
 
   ["~mobile__simazhao"] = "曹髦小儿竟有如此肝胆……我实不甘。",
-  ["$mobile__simazhao_win_audio"] = "明日正为吉日，当举禅位之典。",
+  ["!mobile__simazhao"] = "明日正为吉日，当举禅位之典。",
 }
 local simazhao2 = General:new(extension, "mobile2__simazhao", "qun", 3)
 simazhao2.hidden = true
@@ -123,7 +123,7 @@ Fk:loadTranslationTable{
   ["illustrator:mobile2__simazhao"] = "腥鱼仔",
 
   ["~mobile2__simazhao"] = "愿我晋祚，万世不易，国运永昌。",
-  ["$mobile2__simazhao_win_audio"] = "万里山河，终至我司马一家。",
+  ["!mobile2__simazhao"] = "万里山河，终至我司马一家。",
 }
 
 return extension

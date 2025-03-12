@@ -7,12 +7,6 @@ Fk:loadTranslationTable{
   ["mobile_sp2"] = "手杀-SP2",
 }
 
-local function AddWinAudio(general)
-  local Win = fk.CreateActiveSkill{ name = general.name.."_win_audio" }
-  Win.package = extension
-  Fk:addSkill(Win)
-end
-
 --未分组：吴班 鲍信 胡班 陈珪 霍峻 木鹿大王 蒋干 杨奉 SP孙策 来敏
 
 local laimin = General(extension, "laimin", "shu", 3)
@@ -1383,11 +1377,6 @@ Fk:loadTranslationTable{
   ["~mobile__baoxin"] = "区区黄巾流寇，如何挡我？呃啊……",
 }
 
-local zhenji = General(extension, "mob_sp__zhenji", "qun", 3, 3, General.Female)
-local zhenjiWin = fk.CreateActiveSkill{ name = "mob_sp__zhenji_win_audio" }
-zhenjiWin.package = extension
-Fk:addSkill(zhenjiWin)
-
 local bojian = fk.CreateTriggerSkill {
   name = "bojian",
   anim_type = "drawcard",
@@ -1546,11 +1535,11 @@ local jiwei = fk.CreateTriggerSkill {
 zhenji:addSkill(bojian)
 zhenji:addSkill(jiwei)
 Fk:loadTranslationTable{
-  ["mob_sp__zhenji"] = "甄姬",
-  ["#mob_sp__zhenji"] = "明珠锦玉",
-  ["illustrator:mob_sp__zhenji"] = "铁杵",
-  ["~mob_sp__zhenji"] = "悔入帝王家，万愿皆成空……",
-  ["$mob_sp__zhenji_win_audio"] = "昔见百姓十室九空，更惜今日安居乐业。",
+  ["m_sp__zhenji"] = "甄姬",
+  ["#m_sp__zhenji"] = "明珠锦玉",
+  ["illustrator:m_sp__zhenji"] = "铁杵",
+  ["~m_sp__zhenji"] = "悔入帝王家，万愿皆成空……",
+  ["$m_sp__zhenji_win_audio"] = "昔见百姓十室九空，更惜今日安居乐业。",
 
   ["bojian"] = "博鉴",
   [":bojian"] = "锁定技，出牌阶段结束时，若你本阶段使用的牌数与花色数与你上个出牌阶段均不同，则你摸两张牌；否则你选择弃牌堆中你本阶段使用过"..
@@ -2197,7 +2186,7 @@ Fk:loadTranslationTable{
   ["#mobile__qinghegongzhu"] = "蛊虿之谗",
   --["illustrator:mobile__qinghegongzhu"] = "",
   ["~mobile__qinghegongzhu"] = "夏侯楙徒有形表，实非良人……",
-  ["$mobile__qinghegongzhu_win_audio"] = "夫君自走死路，何可怨得妾身。",
+  ["!mobile__qinghegongzhu"] = "夫君自走死路，何可怨得妾身。",
 }
 
 

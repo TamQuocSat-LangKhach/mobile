@@ -11,7 +11,7 @@ Fk:loadTranslationTable{
 xiefang:addEffect("distance", {
   correct_func = function(self, from, to)
     if from:hasSkill(xiefang.name) then
-      return -table.filter(Fk:currentRoom().alive_players, function (p)
+      return -#table.filter(Fk:currentRoom().alive_players, function (p)
         return p:isFemale()
       end)
     end

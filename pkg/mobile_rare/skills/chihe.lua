@@ -31,7 +31,8 @@ chihe:addEffect(fk.TargetSpecified, {
     local cardUseEvent = room.logic:getCurrentEvent().parent
     cardUseEvent.changshiChiheUsed = true
 
-    local cards = room:turnOverCardsFromDrawPile(player, room:getNCards(2), chihe.name)
+    local cards = room:getNCards(2)
+    room:turnOverCardsFromDrawPile(player, cards, chihe.name)
 
     local idsMatched = table.filter(cards, function(id)
       local c = Fk:getCardById(id)

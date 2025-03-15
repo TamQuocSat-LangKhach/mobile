@@ -74,7 +74,8 @@ yangming:addEffect(fk.EventPhaseEnd, {
     if player:hasSkill("pangtong__gongli") and GongliFriend(room, player, "m_friend__zhugeliang") then
       n = n + 1
     end
-    local cards = room:turnOverCardsFromDrawPile(player, room:getNCards(n), yangming.name)
+    local cards = room:getNCards(n)
+    room:turnOverCardsFromDrawPile(player, cards, yangming.name)
     if player.dead then
       room:cleanProcessingArea(cards)
       return

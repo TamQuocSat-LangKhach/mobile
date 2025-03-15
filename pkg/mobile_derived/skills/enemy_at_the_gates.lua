@@ -18,7 +18,8 @@ skill:addEffect("cardskill", {
   on_effect = function(self, room, effect)
     local player = effect.from
     local to = effect.to
-    local cards = room:turnOverCardsFromDrawPile(player, room:getNCards(4), skill.name)
+    local cards = room:getNCards(4)
+    room:turnOverCardsFromDrawPile(player, cards, skill.name)
     for _, id in ipairs(cards) do
       local card = Fk:getCardById(id)
       if card.trueName == "slash" and not player:prohibitUse(card) and not player:isProhibited(to, card) and to:isAlive() then

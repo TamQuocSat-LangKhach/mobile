@@ -22,7 +22,7 @@ Fk:loadTranslationTable{
 
 General:new(extension, "m_ex__wuguotai", "wu", 3, 3, General.Female):addSkills {
   "m_ex__ganlu",
-  --"buyi"
+  "buyi"
 }
 
 Fk:loadTranslationTable{
@@ -59,7 +59,7 @@ Fk:loadTranslationTable{
 }
 
 General:new(extension, "m_ex__caozhi", "wei", 3):addSkills {
-  --"luoying",
+  "luoying",
   "m_ex__jiushi",
   "chengzhang"
 }
@@ -86,7 +86,7 @@ Fk:loadTranslationTable{
 }
 
 General:new(extension, "m_ex__gongsunzan", "qun", 4):addSkills {
-  --"qiaomeng",
+  "qiaomeng",
   "m_ex__yicong"
 }
 
@@ -112,7 +112,7 @@ Fk:loadTranslationTable{
 }
 
 General:new(extension, "m_ex__liubiao", "qun", 3):addSkills {
-  --"qiaomeng",
+  "re__zishou",
   "m_ex__zongshi"
 }
 
@@ -128,7 +128,7 @@ Fk:loadTranslationTable{
 
 General:new(extension, "m_ex__bulianshi", "wu", 3, 3, General.Female):addSkills {
   "m_ex__anxu",
-  --"zhuiyi"
+  "zhuiyi"
 }
 
 Fk:loadTranslationTable{
@@ -190,7 +190,7 @@ Fk:loadTranslationTable{
 
 General:new(extension, "m_ex__yufan", "wu", 3):addSkills {
   "m_ex__zongxuan",
-  --"zhiyan"
+  "zhiyan"
 }
 
 Fk:loadTranslationTable{
@@ -202,7 +202,7 @@ Fk:loadTranslationTable{
 
 General:new(extension, "m_ex__manchong", "wei", 3):addSkills {
   "m_ex__junxing",
-  --"yuce"
+  "yuce"
 }
 
 Fk:loadTranslationTable{
@@ -219,7 +219,7 @@ Fk:loadTranslationTable{
 General:new(extension, "m_ex__liru", "qun", 3):addSkills {
   "m_ex__juece",
   "m_ex__mieji",
-  --"fencheng"
+  "fencheng"
 }
 
 Fk:loadTranslationTable{
@@ -258,7 +258,7 @@ Fk:loadTranslationTable{
 
 General:new(extension, "m_ex__chenqun", "wei", 3):addSkills {
   "m_ex__dingpin",
-  --"nos__faen"
+  "nos__faen"
 }
 
 Fk:loadTranslationTable{
@@ -307,7 +307,7 @@ Fk:loadTranslationTable{
 
 General:new(extension, "m_ex__caifuren", "qun", 3, 3, General.Female):addSkills {
   "m_ex__qieting",
-  --"xianzhou"
+  "xianzhou"
 }
 
 Fk:loadTranslationTable{
@@ -324,7 +324,7 @@ local jushou = General:new(extension, "m_ex__jvshou", "qun", 2, 3)
 jushou.shield = 3
 jushou:addSkills {
   "m_ex__jianying",
-  --"shibei"
+  "shibei"
 }
 
 Fk:loadTranslationTable{
@@ -347,7 +347,7 @@ Fk:loadTranslationTable{
 }
 
 General:new(extension, "m_ex__zhuhuan", "wu", 4):addSkills {
-  --"fenli",
+  "fenli",
   "m_ex__pingkou"
 }
 
@@ -363,7 +363,7 @@ Fk:loadTranslationTable{
 General:new(extension, "m_ex__sunxiu", "wu", 3):addSkills {
   "m_ex__yanzhu",
   "m_ex__xingxue",
-  --"zhaofu"
+  "zhaofu"
 }
 
 Fk:loadTranslationTable{
@@ -399,7 +399,7 @@ Fk:loadTranslationTable{
 
 General:new(extension, "m_ex__zhangyi", "shu", 4):addSkills {
   "m_ex__wurong",
-  --"shizhi"
+  "shizhi"
 }
 
 Fk:loadTranslationTable{

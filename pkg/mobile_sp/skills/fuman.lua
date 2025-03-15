@@ -53,6 +53,7 @@ fuman:addEffect(fk.PreCardUse, {
   end,
 })
 fuman:addEffect(fk.TurnEnd, {
+  late_refresh = true,
   can_refresh = function(self, event, target, player, data)
     return target == player and not player:isKongcheng()
   end,

@@ -17,7 +17,7 @@ Fk:addQmlMark{
   qml_path = "",
   how_to_show = function(name, value, p)
     if p.phase == Player.Play then
-      local x = p.hp - p:getMark("mobile__zhixi-phase")
+      local x = p.hp - p:usedSkillTimes(zhixi.name, Player.HistoryPhase)
       if x < 1 then
         return Fk:translate("mobile__zhixi_prohibit")
       else
@@ -28,11 +28,12 @@ Fk:addQmlMark{
   end,
 }
 zhixi:addEffect(fk.CardUseFinished, {
-  can_refresh = function (self, event, target, player, data)
+  anim_type = "negative",
+  mute = true,
+  can_trigger = function (self, event, target, player, data)
     return target == player and player:hasSkill(zhixi.name) and player.phase == Player.Play
   end,
-  on_refresh = function (self, event, target, player, data)
-    player.room:addPlayerMark(player, "mobile__zhixi-phase", 1)
+  on_use = function (self, event, target, player, data)
     if data.card.type == Card.TypeTrick then
       player:endPlayPhase()
     end

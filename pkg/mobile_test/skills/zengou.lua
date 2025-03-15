@@ -60,6 +60,7 @@ end
 zengou:addEffect("active", {
   anim_type = "control",
   prompt = "#mobile__zengou-active",
+  mute = true,
   max_phase_use_time = 1,
   card_num = 0,
   target_num = 1,

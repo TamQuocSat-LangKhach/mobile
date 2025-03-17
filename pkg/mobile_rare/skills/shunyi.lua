@@ -1,5 +1,10 @@
 local shunyi = fk.CreateSkill {
   name = "shunyi",
+  dynamic_desc = function(self, player)
+    return "shunyi_inner:"..table.concat(table.map(player:getTableMark("shunyi"), function (s)
+      return Fk:translate(U.ConvertSuit(s, "int", "sym"))
+    end), "")
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -25,11 +30,6 @@ end)
 
 shunyi:addEffect(fk.CardUsing, {
   anim_type = "drawcard",
-  dynamic_desc = function(self, player)
-    return "shunyi_inner:"..table.concat(table.map(player:getTableMark("shunyi"), function (s)
-      return Fk:translate(U.ConvertSuit(s, "int", "sym"))
-    end), "")
-  end,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(shunyi.name) and-- not player:isKongcheng() and
       data:IsUsingHandcard(player) and

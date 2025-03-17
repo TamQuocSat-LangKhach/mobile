@@ -1,6 +1,13 @@
 local zuoyou = fk.CreateSkill {
   name = "zuoyou",
   tags = { Skill.Switch },
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("2v2_mode") then
+      return "zuoyou_2v2"
+    else
+      return "zuoyou_role_mode"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -52,13 +59,6 @@ local function DoZuoyou(player, status)
   end
 end
 zuoyou:addEffect("active", {
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("2v2_mode") then
-      return "zuoyou_2v2"
-    else
-      return "zuoyou_role_mode"
-    end
-  end,
   anim_type = "switch",
   card_num = 0,
   target_num = 1,

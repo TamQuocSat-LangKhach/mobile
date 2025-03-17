@@ -1,5 +1,12 @@
 local suwang = fk.CreateSkill {
   name = "suwang",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("2v2_mode") then
+      return "suwang_2v2"
+    else
+      return "suwang_role_mode"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -21,13 +28,6 @@ Fk:loadTranslationTable{
 }
 
 suwang:addEffect(fk.TurnEnd, {
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("2v2_mode") then
-      return "suwang_2v2"
-    else
-      return "suwang_role_mode"
-    end
-  end,
   derived_piles = "$suwang",
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(suwang.name) and player:getMark("suwang_aimed-turn") == 0 then

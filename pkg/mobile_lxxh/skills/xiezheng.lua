@@ -1,5 +1,18 @@
 local xiezheng = fk.CreateSkill {
   name = "mobile__xiezheng",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("role_mode") then
+      if player:getMark("mobile__xiezheng_updata") > 0 then
+        return "mobile__xiezheng_role_mode2"
+      else
+        return "mobile__xiezheng_role_mode"
+      end
+    elseif Fk:currentRoom():isGameMode("1v2_mode") then
+      return "mobile__xiezheng_1v2"
+    else
+      return "mobile__xiezheng_2v2"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -28,19 +41,6 @@ Fk:loadTranslationTable{
 
 xiezheng:addEffect(fk.EventPhaseStart, {
   anim_type = "control",
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("role_mode") then
-      if player:getMark("mobile__xiezheng_updata") > 0 then
-        return "mobile__xiezheng_role_mode2"
-      else
-        return "mobile__xiezheng_role_mode"
-      end
-    elseif Fk:currentRoom():isGameMode("1v2_mode") then
-      return "mobile__xiezheng_1v2"
-    else
-      return "mobile__xiezheng_2v2"
-    end
-  end,
   can_trigger = function(self, event, target, player, data)
     if player.room:isGameMode("1v2_mode") and player:usedSkillTimes(xiezheng.name, Player.HistoryGame) > 0 then return false end
     return target == player and player:hasSkill(xiezheng.name) and player.phase == Player.Finish and

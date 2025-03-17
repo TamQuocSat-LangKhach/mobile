@@ -1,5 +1,12 @@
 local quchong = fk.CreateSkill {
   name = "quchong",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") or Fk:currentRoom():isGameMode("2v2_mode") then
+      return "quchong_1v2"
+    else
+      return "quchong_role_mode"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -38,13 +45,6 @@ end)
 
 quchong:addEffect("active", {
   anim_type = "drawcard",
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("1v2_mode") or Fk:currentRoom():isGameMode("2v2_mode") then
-      return "quchong_1v2"
-    else
-      return "quchong_role_mode"
-    end
-  end,
   prompt = "#quchong-active",
   card_num = 1,
   target_num = 0,

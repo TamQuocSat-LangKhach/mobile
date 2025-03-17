@@ -1,6 +1,23 @@
+local function GongliFriend(room, player, friend)
+  return (room:isGameMode("1v2_mode") or room:isGameMode("2v2_mode")) and
+    table.find(room.alive_players, function (p)
+      return p.role == player.role and (p.general == friend or p.deputyGeneral == friend)
+    end)
+end
+
 local gongli = fk.CreateSkill {
   name = "xushu__gongli",
   tags = { Skill.Compulsory },
+  dynamic_desc = function(self, player)
+    if GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") and GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") then
+      return "xushu__gongli"
+    elseif GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") then
+      return "xushu__gongli_zhugeliang"
+    elseif GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") then
+      return "xushu__gongli_pangtong"
+    end
+    return "dummyskill"
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -15,24 +32,7 @@ Fk:loadTranslationTable{
   ["$xushu__gongli2"] = "以吾等之才，何不同辅一主，共成王霸之业。",
 }
 
-local function GongliFriend(room, player, friend)
-  return (room:isGameMode("1v2_mode") or room:isGameMode("2v2_mode")) and
-    table.find(room.alive_players, function (p)
-      return p.role == player.role and (p.general == friend or p.deputyGeneral == friend)
-    end)
-end
-
 gongli:addEffect("targetmod", {
-  dynamic_desc = function(self, player)
-    if GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") and GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") then
-      return "xushu__gongli"
-    elseif GongliFriend(Fk:currentRoom(), player, "m_friend__zhugeliang") then
-      return "xushu__gongli_zhugeliang"
-    elseif GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") then
-      return "xushu__gongli_pangtong"
-    end
-    return "dummyskill"
-  end,
   bypass_distances = function (self, player, skill, card, to)
     return player:hasSkill(gongli.name) and GongliFriend(Fk:currentRoom(), player, "m_friend__pangtong") and card and
       table.contains(card.skillNames, "xuanjian_sword")

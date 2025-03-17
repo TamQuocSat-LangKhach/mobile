@@ -2,6 +2,13 @@ local weisi = fk.CreateSkill {
   name = "weisi",
   tags = { Skill.AttachedKingdom },
   attached_kingdom = {"qun"},
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "mobile__weisi_1v2"
+    else
+      return "mobile__weisi_role_mode"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -25,13 +32,6 @@ Fk:loadTranslationTable{
 
 weisi:addEffect("active", {
   anim_type = "offensive",
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("1v2_mode") then
-      return "mobile__weisi_1v2"
-    else
-      return "mobile__weisi_role_mode"
-    end
-  end,
   card_num = 0,
   target_num = 1,
   prompt = "#mobile__weisi",

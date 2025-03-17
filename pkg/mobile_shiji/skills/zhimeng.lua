@@ -1,5 +1,12 @@
 local zhimeng = fk.CreateSkill {
   name = "zhimeng",
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("role_mode") then
+      return "zhimeng_role_mode"
+    else
+      return "zhimeng_1v2"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -17,13 +24,6 @@ Fk:loadTranslationTable{
 }
 
 zhimeng:addEffect(fk.TurnEnd, {
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("role_mode") then
-      return "zhimeng_role_mode"
-    else
-      return "zhimeng_1v2"
-    end
-  end,
   anim_type = "control",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(zhimeng.name) and

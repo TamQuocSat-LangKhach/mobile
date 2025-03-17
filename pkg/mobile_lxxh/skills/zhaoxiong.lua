@@ -1,14 +1,14 @@
 local zhaoxiong = fk.CreateSkill {
   name = "mobile__zhaoxiong",
   tags = { Skill.Permanent, Skill.Limited },
+  dynamic_desc = function (self, player, lang)
+    if Fk:currentRoom():isGameMode("role_mode") then
+      return "mobile__zhaoxiong_role_mode"
+    else
+      return "mobile__zhaoxiong_1v2"
+    end
+  end,
 }
-zhaoxiong.dynamicDesc = function (self, player, lang)
-  if Fk:currentRoom():isGameMode("role_mode") then
-    return "mobile__zhaoxiong_role_mode"
-  else
-    return "mobile__zhaoxiong_1v2"
-  end
-end
 
 Fk:loadTranslationTable{
   ["mobile__zhaoxiong"] = "昭凶",

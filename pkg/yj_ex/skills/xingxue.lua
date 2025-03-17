@@ -1,5 +1,8 @@
 local xingxue = fk.CreateSkill{
   name = "m_ex__xingxue",
+  dynamic_desc = function(self, player)
+    return player:hasSkill("m_ex__yanzhu", true) and "m_ex__xingxue_normal" or "m_ex__xingxue_upgrade"
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -22,9 +25,6 @@ Fk:loadTranslationTable{
 }
 
 xingxue:addEffect(fk.EventPhaseStart, {
-  dynamic_desc = function(self, player)
-    return player:hasSkill("m_ex__yanzhu", true) and "m_ex__xingxue_normal" or "m_ex__xingxue_upgrade"
-  end,
   anim_type = "support",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(xingxue.name) and player.phase == Player.Finish

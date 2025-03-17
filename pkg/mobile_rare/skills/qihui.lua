@@ -1,6 +1,13 @@
 local qihui = fk.CreateSkill {
   name = "qihui",
   tags = { Skill.Compulsory },
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "qihui_1v2"
+    else
+      return "qihui_role_mode"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -24,13 +31,6 @@ Fk:loadTranslationTable{
 }
 
 qihui:addEffect(fk.CardUsing, {
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("1v2_mode") then
-      return "qihui_1v2"
-    else
-      return "qihui_role_mode"
-    end
-  end,
   anim_type = "special",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(qihui.name) and

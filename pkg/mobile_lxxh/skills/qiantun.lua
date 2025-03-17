@@ -2,6 +2,13 @@ local qiantun = fk.CreateSkill {
   name = "mobile__qiantun",
   tags = {Skill.AttachedKingdom},
   attached_kingdom = {"wei"},
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "mobile__qiantun_1v2"
+    else
+      return "mobile__qiantun_role_mode"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -26,13 +33,6 @@ Fk:loadTranslationTable{
 
 qiantun:addEffect("active", {
   anim_type = "control",
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("1v2_mode") then
-      return "mobile__qiantun_1v2"
-    else
-      return "mobile__qiantun_role_mode"
-    end
-  end,
   card_num = 0,
   target_num = 1,
   prompt = "#mobile__qiantun",

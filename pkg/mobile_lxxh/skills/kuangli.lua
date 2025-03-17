@@ -1,6 +1,13 @@
 local kuangli = fk.CreateSkill {
   name = "kuangli",
   tags = { Skill.Compulsory },
+  dynamic_desc = function(self, player)
+    if Fk:currentRoom():isGameMode("1v2_mode") then
+      return "kuangli_1v2"
+    else
+      return "kuangli_role_mode"
+    end
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -21,13 +28,6 @@ Fk:loadTranslationTable{
 
 kuangli:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  dynamic_desc = function(self, player)
-    if Fk:currentRoom():isGameMode("1v2_mode") then
-      return "kuangli_1v2"
-    else
-      return "kuangli_role_mode"
-    end
-  end,
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(kuangli.name) and player.phase == Player.Play and
       #player.room:getOtherPlayers(player, false) > 0

@@ -1,5 +1,8 @@
 local jiushi = fk.CreateSkill {
   name = "m_ex__jiushi",
+  dynamic_desc = function(self, player)
+    return player:getMark("m_ex__jiushi_upgrade") > 0 and "m_ex__jiushi_upgrade" or "m_ex__jiushi"
+  end,
 }
 
 Fk:loadTranslationTable{
@@ -18,9 +21,6 @@ Fk:loadTranslationTable{
 }
 
 jiushi:addEffect("viewas", {
-  dynamic_desc = function(self, player)
-    return player:getMark("m_ex__jiushi_upgrade") > 0 and "m_ex__jiushi_upgrade" or "m_ex__jiushi"
-  end,
   anim_type = "support",
   prompt = "#m_ex__jiushi-active",
   pattern = "analeptic",

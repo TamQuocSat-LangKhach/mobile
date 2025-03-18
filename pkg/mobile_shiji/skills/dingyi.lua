@@ -22,7 +22,7 @@ dingyi:addEffect(fk.GameStart, {
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(dingyi.name)
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     local room = player.room
     local choice = room:askToChoice(player, {
       choices = {"dingyi1", "dingyi2", "dingyi3", "dingyi4"},

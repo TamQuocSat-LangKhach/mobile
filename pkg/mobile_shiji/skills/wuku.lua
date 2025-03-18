@@ -17,7 +17,7 @@ wuku:addEffect(fk.CardUsing, {
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(wuku.name) and data.card.type == Card.TypeEquip and player:getMark("@wuku") < 3
   end,
-  on_use = function(self, event, target, player)
+  on_use = function(self, event, target, player, data)
     player.room:addPlayerMark(player, "@wuku")
   end,
 })

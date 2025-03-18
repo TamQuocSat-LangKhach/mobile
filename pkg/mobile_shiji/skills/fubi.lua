@@ -54,7 +54,7 @@ fubi:addEffect(fk.TurnStart, {
   can_refresh = function(self, event, target, player, data)
     return target == player and player:getMark("fubi_using") ~= 0
   end,
-  on_refresh = function(self, event, target, player)
+  on_refresh = function(self, event, target, player, data)
     local room = player.room
     local p = room:getPlayerById(player:getMark("fubi_using"))
     room:setPlayerMark(player, "fubi_using", 0)

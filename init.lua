@@ -7,7 +7,7 @@ local prefix = "packages.mobile.pkg."
 local mobile_bingshi = require (prefix.."mobile_bingshi")
 --local mobile_mougong = require (prefix.."mobile_mougong")
 local mobile_shiji = require (prefix.."mobile_shiji")
---local ex_shzl = require (prefix.."m_shzl_ex")
+local ex_shzl = require (prefix.."shzl_ex")
 local ex_yj = require (prefix.."yj_ex")
 local mobile_sp = require (prefix.."mobile_sp")
 local mobile_lxxh = require (prefix.."mobile_lxxh")
@@ -20,7 +20,7 @@ return {
     mobile_bingshi,
     --mobile_mougong,
     mobile_shiji,
-    --ex_shzl,
+    ex_shzl,
     ex_yj,
     mobile_sp,
     mobile_lxxh,

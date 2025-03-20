@@ -53,6 +53,17 @@ Fk:loadTranslationTable{
 
 --SP8：审配
 --SP9：苏飞 贾逵 张恭 许贡 曹婴 鲍三娘 徐荣
+General:new(extension, "mobile__zhanggong", "wei", 3):addSkills { "mobile__qianxinz", "zhenxing" }
+Fk:loadTranslationTable{
+  ["mobile__zhanggong"] = "张恭",
+  ["#mobile__zhanggong"] = "西域长歌",
+  ["illustrator:mobile__zhanggong"] = "B_LEE",
+  ["designer:mobile__zhanggong"] = "笔枔",
+
+  ["$zhenxing_mobile__zhanggong1"] = "东征西讨，募军百里挑一。",
+  ["$zhenxing_mobile__zhanggong2"] = "众口铄金，积毁销骨。",
+  ["~mobile__zhanggong"] = "大漠孤烟，孤立无援啊……",
+}
 --SP10：丁原 傅肜 邓芝 陈登 张翼 张琪瑛 公孙康 周群
 --SP11：阎圃 马元义 毛玠 傅佥 阮慧 马日磾 王濬
 --SP12：赵统赵广 刘晔 李丰 诸葛果 胡金定 王元姬 羊徽瑜 杨彪 司马昭

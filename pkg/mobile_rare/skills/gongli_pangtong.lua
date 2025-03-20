@@ -1,3 +1,17 @@
+
+Fk:loadTranslationTable{
+  ["pangtong__gongli"] = "共砺",
+  [":pangtong__gongli"] = "锁定技，若友方友诸葛亮在场，你发动〖养名〗亮出牌张数+1；"..
+  "若友方友徐庶在场，你发动〖养名〗后，获得一张本次亮出牌中未使用过的花色的牌。（仅斗地主和2v2模式生效）",
+
+  [":pangtong__gongli_zhugeliang"] = "锁定技，若友方友诸葛亮在场，你发动〖养名〗亮出牌张数+1。",
+  [":pangtong__gongli_xushu"] = "锁定技，若友方友徐庶在场，你发动〖养名〗后，获得一张本次亮出牌中未使用过的花色的牌。",
+  ["#pangtong__gongli-prey"] = "共砺：获得其中一张牌",
+
+  ["$pangtong__gongli1"] = "你我同有此志，更应砥砺共进。",
+  ["$pangtong__gongli2"] = "三人同心，诸事可期。",
+}
+
 local function GongliFriend(room, player, friend)
   return (room:isGameMode("1v2_mode") or room:isGameMode("2v2_mode")) and
     table.find(room.alive_players, function (p)
@@ -20,17 +34,6 @@ local gongli = fk.CreateSkill {
   end,
 }
 
-Fk:loadTranslationTable{
-  ["pangtong__gongli"] = "共砺",
-  [":pangtong__gongli"] = "锁定技，若友方友诸葛亮在场，你发动〖养名〗亮出牌张数+1；"..
-  "若友方友徐庶在场，你发动〖养名〗后，获得一张本次亮出牌中未使用过的花色的牌。（仅斗地主和2v2模式生效）",
-
-  [":pangtong__gongli_zhugeliang"] = "锁定技，若友方友诸葛亮在场，你发动〖养名〗亮出牌张数+1。",
-  [":pangtong__gongli_xushu"] = "锁定技，若友方友徐庶在场，你发动〖养名〗后，获得一张本次亮出牌中未使用过的花色的牌。",
-  ["#pangtong__gongli-prey"] = "共砺：获得其中一张牌",
-
-  ["$pangtong__gongli1"] = "你我同有此志，更应砥砺共进。",
-  ["$pangtong__gongli2"] = "三人同心，诸事可期。",
-}
+gongli:addEffect("visibility", {})
 
 return gongli

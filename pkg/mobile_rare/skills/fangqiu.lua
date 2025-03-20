@@ -14,10 +14,13 @@ Fk:loadTranslationTable{
   ["$fangqiu3"] = "哈哈哈哈，果不出我所料。",
 }
 
-fangqiu:addEffect(fk.YanceEvent, {
+fangqiu:addEffect(fk.AfterSkillEffect, {
   anim_type = "special",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(fangqiu.name) and player:usedSkillTimes(fangqiu.name, Player.HistoryGame) == 0
+    return target == player and player:hasSkill(fangqiu.name) and
+      player:usedSkillTimes(fangqiu.name, Player.HistoryGame) == 0 and
+      (data.skill.name == "yance" or data.skill.name == "#yance_2_trig") and
+      player:getMark("@[yance]") ~= 0
   end,
   on_cost = function (self, event, target, player, data)
     return player.room:askToSkillInvoke(player, {

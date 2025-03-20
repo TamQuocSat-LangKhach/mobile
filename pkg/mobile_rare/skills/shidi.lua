@@ -42,7 +42,7 @@ shidi:addEffect(fk.CardUsing, {
   on_use = function(self, event, target, player, data)
     data.disresponsiveList = data.disresponsiveList or {}
     if player:getSwitchSkillState(shidi.name) == fk.SwitchYang then
-      data.disresponsiveList = player.room.alive_players
+      data.disresponsiveList = table.simpleClone(player.room.players)
     else
       table.insertIfNeed(data.disresponsiveList, player)
     end

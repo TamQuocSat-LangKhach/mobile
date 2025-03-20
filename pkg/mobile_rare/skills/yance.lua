@@ -36,15 +36,6 @@ local function GongliFriend(room, player, friend)
     end)
 end
 
----@class YanceEvent: TriggerEvent
-fk.YanceEvent = TriggerEvent:subclass("YanceEvent")
-
----@alias YanceEventFunc fun(self: TriggerEvent, event: YanceEvent, target: ServerPlayer, player: ServerPlayer, data: {})
-
----@class SkillSkeleton
----@field public addEffect fun(self: SkillSkeleton, key: YanceEvent,
----  data: TrigSkelSpec<YanceEventFunc>, attr: TrigSkelAttribute?): SkillSkeleton
-
 local function DoYance(player)
   local room = player.room
   local results = table.simpleClone(player:getTableMark("yance_results"))
@@ -172,7 +163,6 @@ local yance_spec = {
           room:setPlayerMark(player, "@[yance]", mark)
         end
       end
-      room.logic:trigger(fk.YanceEvent, player, {})
     end
   end,
 }

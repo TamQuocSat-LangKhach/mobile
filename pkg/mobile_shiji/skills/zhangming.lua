@@ -21,7 +21,7 @@ zhangming:addEffect(fk.CardUsing, {
       (data.card.trueName == "slash" or data.card:isCommonTrick()) and data.card.suit == Card.Club
   end,
   on_use = function(self, event, target, player, data)
-    data.disresponsiveList = player.room.players
+    data.disresponsiveList = table.simpleClone(player.room.players)
   end,
 })
 zhangming:addEffect(fk.Damage, {

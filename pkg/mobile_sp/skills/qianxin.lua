@@ -44,7 +44,7 @@ qianxin:addEffect("active", {
         moveReason = fk.ReasonGive,
         skillName = qianxin.name,
         moveVisible = false,
-        proposer = player.id,
+        proposer = player,
         moveMark = {"@@mobile__mail-inhand", player.id},
       })
     end

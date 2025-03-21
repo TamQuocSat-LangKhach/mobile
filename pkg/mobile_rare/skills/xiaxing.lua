@@ -56,7 +56,7 @@ xiaxing:addEffect(fk.AfterCardsMove, {
           end
         end
       end
-      cards = U.moveCardsHoldingAreaCheck(player.room, cards)
+      cards = player.room.logic:moveCardsHoldingAreaCheck(cards)
       if #cards > 0 then
         event:setCostData(self, {cards = cards})
         return true

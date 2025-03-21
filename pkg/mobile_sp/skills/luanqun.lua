@@ -27,8 +27,6 @@ Fk:loadTranslationTable{
   ["$luanqun2"] = "位居执慎，博涉多闻，更应秉性而论！",
 }
 
-local U = require "packages/utility/utility"
-
 luanqun:addEffect("active", {
   anim_type = "control",
   prompt = "#luanqun",
@@ -44,7 +42,14 @@ luanqun:addEffect("active", {
     local targets = table.filter(room.alive_players, function(p)
       return not p:isKongcheng()
     end)
-    local result = U.askForJointCard(targets, 1, 1, false, luanqun.name, false, nil, "#luanqun-card")
+    local result = room:askToJointCards(player, {
+      players = targets,
+      min_num = 1,
+      max_num = 1,
+      cancelable = false,
+      skill_name = luanqun.name,
+      prompt = "#luanqun-card",
+    })
     local all_cards = {}
     for _, p in ipairs(targets) do
       local id = result[p][1]

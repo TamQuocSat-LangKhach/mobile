@@ -15,8 +15,6 @@ Fk:loadTranslationTable{
   ["$mobile__fuhaiw2"] = "跨海南征，波涛起浮。",
 }
 
-local U = require "packages/utility/utility"
-
 fuhai:addEffect("active", {
   anim_type = "drawcard",
   prompt = "#mobile__fuhaiw",
@@ -30,9 +28,13 @@ fuhai:addEffect("active", {
     local player = effect.from
     local targets = room:getOtherPlayers(player, false)
     room:doIndicate(player, targets)
-    local result = U.askForJointChoice(targets, {"mobile__fuhaiw1", "mobile__fuhaiw2"}, fuhai.name,
-      "#mobile__fuhaiw-choice:"..player.id, true)
-
+    local result = room:askToJointChoice(player, {
+      players = targets,
+      choices = {"mobile__fuhaiw1", "mobile__fuhaiw2"},
+      skill_name = fuhai.name,
+      prompt = "#mobile__fuhaiw-choice:"..player.id,
+      send_log = true,
+    })
     local n, str = 0, ""
     for _, p in ipairs(targets) do
       if str == "" then

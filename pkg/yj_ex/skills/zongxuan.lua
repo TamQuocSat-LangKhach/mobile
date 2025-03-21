@@ -13,8 +13,6 @@ Fk:loadTranslationTable{
   ["$m_ex__zongxuan2"] = "",
 }
 
-local U = require "packages/utility/utility"
-
 zongxuan:addEffect("active", {
   anim_type = "drawcard",
   prompt = "#m_ex__zongxuan-active",
@@ -56,7 +54,7 @@ zongxuan:addEffect(fk.AfterCardsMove, {
           end
         end
       end
-      cards = U.moveCardsHoldingAreaCheck(room, cards)
+      cards = room.logic:moveCardsHoldingAreaCheck(cards)
       if #cards > 0 then
         event:setCostData(self, {cards = cards})
         return true

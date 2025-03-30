@@ -48,6 +48,7 @@ bojian:addEffect(fk.EventPhaseEnd, {
         table.removeOne(suit1, Card.NoSuit)
         table.removeOne(suit2, Card.NoSuit)
         if n1 ~= n2 and #suit1 ~= #suit2 then
+          event:setCostData(self, {choice = 1})
           return true
         else
           if #room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)

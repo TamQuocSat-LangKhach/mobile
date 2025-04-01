@@ -32,6 +32,33 @@ Fk:loadTranslationTable{
   ["$shoufa2"] = "虎豹豺狼，皆听我令！",
 }
 
+local shoufaOnUse = function(self, event, target, player, data)
+  local room = player.room
+  local to = event:getCostData(self).tos[1]
+  local beasts = { "shoufa_bao", "shoufa_ying", "shoufa_xiong", "shoufa_tu" }
+  local beast = player:getMark("@zhoulin") ~= 0 and player:getMark("@zhoulin") or table.random(beasts)
+
+  if beast == beasts[1] then
+    room:damage{
+      to = to,
+      damage = 1,
+      skillName = shoufa.name,
+    }
+  elseif beast == beasts[2] then
+    if to == player then
+      if #player:getCardIds("e") > 0 then
+        room:obtainCard(player, table.random(player:getCardIds("e")), true, fk.ReasonPrey, player)
+      end
+    elseif not to:isNude() then
+      room:obtainCard(player, table.random(to:getCardIds("he")), false, fk.ReasonPrey, player)
+    end
+  elseif beast == beasts[3] then
+    room:throwCard(table.random(to:getCardIds("e")), shoufa.name, to, player)
+  else
+    to:drawCards(1, shoufa.name)
+  end
+end
+
 shoufa:addEffect(fk.Damage, {
   anim_type = "offensive",
   can_trigger = function (self, event, target, player, data)
@@ -60,33 +87,9 @@ shoufa:addEffect(fk.Damage, {
       return true
     end
   end,
-  on_use = function(self, event, target, player, data)
-    local room = player.room
-    local to = event:getCostData(self).tos[1]
-    local beasts = { "shoufa_bao", "shoufa_ying", "shoufa_xiong", "shoufa_tu" }
-    local beast = player:getMark("@zhoulin") ~= 0 and player:getMark("@zhoulin") or table.random(beasts)
-
-    if beast == beasts[1] then
-      room:damage{
-        to = to,
-        damage = 1,
-        skillName = shoufa.name,
-      }
-    elseif beast == beasts[2] then
-      if to == player then
-        if #player:getCardIds("e") > 0 then
-          room:obtainCard(player, table.random(player:getCardIds("e")), true, fk.ReasonPrey, player)
-        end
-      elseif not to:isNude() then
-        room:obtainCard(player, table.random(to:getCardIds("he")), false, fk.ReasonPrey, player)
-      end
-    elseif beast == beasts[3] then
-      room:throwCard(table.random(to:getCardIds("e")), shoufa.name, to, player)
-    else
-      to:drawCards(1, shoufa.name)
-    end
-  end,
+  on_use = shoufaOnUse,
 })
+
 shoufa:addEffect(fk.Damaged, {
   anim_type = "masochism",
   can_trigger = function (self, event, target, player, data)
@@ -114,6 +117,7 @@ shoufa:addEffect(fk.Damaged, {
       return true
     end
   end,
+  on_use = shoufaOnUse,
 })
 
 return shoufa

@@ -311,7 +311,7 @@ Fk:loadTranslationTable{
 }
 for _, name in ipairs({"wulingHu", "wulingLu", "wulingXiong", "wulingYuan", "wulingHe"}) do
   local card = fk.CreateCard{
-    name = name,
+    name = "&" .. name,
     type = Card.TypeTrick,
   }
   extension:loadCardSkels{card}

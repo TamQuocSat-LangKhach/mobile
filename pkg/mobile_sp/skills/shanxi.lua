@@ -35,7 +35,7 @@ shanxi:addEffect(fk.EventPhaseStart, {
       min_num = 1,
       max_num = 1,
       targets = targets,
-      pattern = ".|.|heart,diamond",
+      pattern = ".|.|heart,diamond|.|.|basic",
       skill_name = shanxi.name,
       prompt = "#mobile__shanxi-choose",
       cancelable = true,

@@ -19,7 +19,7 @@ yirang:addEffect(fk.EventPhaseStart, {
     return target == player and player:hasSkill(yirang.name) and player.phase == Player.Play and
       not player:isNude() and
       table.find(player.room:getOtherPlayers(player, false), function (p)
-        return p.maxHp > player
+        return p.maxHp > player.maxHp
       end)
   end,
   on_cost = function (self, event, target, player, data)
@@ -39,7 +39,7 @@ yirang:addEffect(fk.EventPhaseStart, {
       return
     end
     local targets = table.filter(player.room:getOtherPlayers(player, false), function (p)
-      return p.maxHp > player
+      return p.maxHp > player.maxHp
     end)
     local to = room:askToChoosePlayers(player, {
       min_num = 1,

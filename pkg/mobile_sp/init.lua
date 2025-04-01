@@ -111,6 +111,24 @@ Fk:loadTranslationTable{
 }
 
 --SP9：苏飞 贾逵 张恭 许贡 曹婴 鲍三娘 徐荣
+General:new(extension, "mobile__sufei", "wu", 4):addSkills { "zhengjian", "gaoyuan" }
+Fk:loadTranslationTable{
+  ["mobile__sufei"] = "苏飞",
+  ["#mobile__sufei"] = "诤友投明",
+  ["illustrator:mobile__sufei"] = "石蝉",
+
+  ["~mobile__sufei"] = "本可共图大业，奈何主公量狭器小啊……",
+}
+
+General:new(extension, "tongqu__jiakui", "wei", 4):addSkills { "tongqu", "wanlan" }
+Fk:loadTranslationTable{
+  ["tongqu__jiakui"] = "贾逵",
+  ["#tongqu__jiakui"] = "肃齐万里",
+  ["illustrator:tongqu__jiakui"] = "福州暗金", -- 皮肤 水到渠成
+
+  ["~tongqu__jiakui"] = "生怀死忠之心，死必为报国之鬼！",
+}
+
 General:new(extension, "mobile__zhanggong", "wei", 3):addSkills { "mobile__qianxinz", "zhenxing" }
 Fk:loadTranslationTable{
   ["mobile__zhanggong"] = "张恭",
@@ -122,10 +140,321 @@ Fk:loadTranslationTable{
   ["$zhenxing_mobile__zhanggong2"] = "众口铄金，积毁销骨。",
   ["~mobile__zhanggong"] = "大漠孤烟，孤立无援啊……",
 }
+
+General:new(extension, "mobile__xugong", "wu", 3):addSkills { "mobile__biaozhao", "yechou" }
+Fk:loadTranslationTable{
+  ["mobile__xugong"] = "许贡",
+  ["#mobile__xugong"] = "独计击流",
+
+  ["$yechou_mobile__xugong1"] = "孙策小儿，你必还恶报！",
+  ["$yechou_mobile__xugong2"] = "吾命丧黄泉，你也休想得安!",
+
+  ["~mobile__xugong"] = "此表非我所写，岂可污我！",
+}
+
+local mobileCaoying = General:new(extension, "mobile__caoying", "wei", 4, 4, General.Female)
+mobileCaoying:addSkills { "mobile__lingren", "mobile__fujian" }
+mobileCaoying:addRelatedSkills({ "jianxiong", "xingshang" })
+Fk:loadTranslationTable{
+  ["mobile__caoying"] = "曹婴",
+  ["#mobile__caoying"] = "龙城凤鸣",
+  ["cv:mobile__caoying"] = "水原",
+  ["illustrator:mobile__caoying"] = "DH",--锋芒毕露*曹婴 of 三国杀·移动版
+  ["designer:mobile__caoying"] = "韩旭",
+
+  ["$jianxiong_mobile__caoying"] = "为大事者，当如祖父一般，眼界高远。",
+  ["$xingshang_mobile__caoying"] = "将军忠魂不泯，应当厚葬。",
+
+  ["~mobile__caoying"] = "吾虽身陨，无碍大魏之兴……",
+  ["!mobile__caoying"] = "此战既胜，破蜀吞吴，指日可待！",
+}
+
+local mobileBaosangniang = General:new(extension, "mobile__baosanniang", "shu", 3, 3, General.Female)
+mobileBaosangniang:addSkills { "shuyong", "mobile__xushen", "mobile__zhennan" }
+mobileBaosangniang:addRelatedSkills({ "wusheng", "dangxian" })
+Fk:loadTranslationTable{
+  ["mobile__baosanniang"] = "鲍三娘",
+  ["#mobile__baosanniang"] = "慕花之姝",
+  ["illustrator:mobile__baosanniang"] = "迷走之音", -- 皮肤 嫣然一笑
+
+  ["$jianxiong_mobile__caoying"] = "为大事者，当如祖父一般，眼界高远。",
+  ["$xingshang_mobile__caoying"] = "将军忠魂不泯，应当厚葬。",
+
+  ["~mobile__baosanniang"] = "夫君，来世还愿与你相伴……",
+}
+
+General:new(extension, "mobile__xurong", "qun", 4):addSkills { "mobile__xionghuo", "mobile__shajue" }
+Fk:loadTranslationTable{
+  ["mobile__xurong"] = "徐荣",
+  ["#mobile__xurong"] = "玄菟战魔",
+  ["cv:mobile__xurong"] = "曹真",
+  ["designer:mobile__xurong"] = "Loun老萌",
+  ["illustrator:mobile__xurong"] = "青岛磐蒲",-- 烬灭神骇*徐荣 of 三国杀·移动版
+
+  ["~mobile__xurong"] = "死于战场……是个不错的结局……",
+}
+
 --SP10：丁原 傅肜 邓芝 陈登 张翼 张琪瑛 公孙康 周群
+General:new(extension, "dingyuan", "qun", 4):addSkills { "beizhu" }
+Fk:loadTranslationTable{
+  ["dingyuan"] = "丁原",
+  ["#dingyuan"] = "饲虎成患",
+
+  ["~dingyuan"] = "奉先何故心变，啊！",
+}
+
+General:new(extension, "mobile__furong", "shu", 4):addSkills { "mobile__xuewei", "mobile__liechi" }
+Fk:loadTranslationTable{
+  ["mobile__furong"] = "傅肜",
+  ["#mobile__furong"] = "危汉烈义",
+  ["illustrator:mobile__furong"] = "三道纹",
+
+  ["~mobile__furong"] = "此战有死而已，何须多言。",
+}
+
+General:new(extension, "mobile__dengzhi", "shu", 3):addSkills { "mobile__jimeng", "mobile__shuaiyan" }
+Fk:loadTranslationTable{
+  ["mobile__dengzhi"] = "邓芝",
+  ["#mobile__dengzhi"] = "绝境外交家",
+  ["illustrator:mobile__dengzhi"] = "齐名", -- 皮肤 出使东吴
+
+  ["~mobile__dengzhi"] = "一生为国，已然无憾矣。",
+}
+
+General:new(extension, "mobile__chendeng", "qun", 3):addSkills { "mobile__zhouxuan", "mobile__fengji" }
+Fk:loadTranslationTable{
+  ["mobile__chendeng"] = "陈登",
+  ["#mobile__chendeng"] = "雄气壮节",
+  ["illustrator:mobile__chendeng"] = "小强",
+
+  ["~mobile__chendeng"] = "诸卿何患无令君乎？",
+}
+
+General:new(extension, "mobile__zhangyiy", "shu", 4):addSkills { "zhiyi" }
+Fk:loadTranslationTable{
+  ["mobile__zhangyiy"] = "张翼",
+  ["#mobile__zhangyiy"] = "亢锐怀忠",
+  ["illustrator:mobile__zhangyiy"] = "王强",
+
+  ["~mobile__zhangyiy"] = "唯愿百姓，不受此乱所害，哎……",
+}
+
+General:new(extension, "mobile__zhangqiying", "qun", 3, 3, General.Female):addSkills {
+  "mobile__falu",
+  "mobile__zhenyi",
+  "mobile__dianhua",
+}
+Fk:loadTranslationTable{
+  ["mobile__zhangqiying"] = "张琪瑛",
+  ["#mobile__zhangqiying"] = "禳祷西东",
+  ["illustrator:mobile__zhangqiying"] = "蛋费鸡丁",
+
+  -- aduio：漫天银色*张琪瑛 of 三国杀·移动版
+  ["~mobile__zhangqiying"] = "天地不仁，以万物为刍狗……",
+  ["!mobile__zhangqiying"] = "谷神不死，是谓玄牝。",
+}
+
+General:new(extension, "gongsunkang", "qun", 4):addSkills { "juliao", "taomie" }
+Fk:loadTranslationTable{
+  ["gongsunkang"] = "公孙康",
+  ["#gongsunkang"] = "沸流腾蛟",
+  ["illustrator:gongsunkang"] = "小强",
+
+  ["~gongsunkang"] = "枭雄一世，何有所憾！",
+}
+
+General:new(extension, "zhouqun", "shu", 3):addSkills { "tiansuan" }
+Fk:loadTranslationTable{
+  ["zhouqun"] = "周群",
+  ["#zhouqun"] = "后圣",
+  ["illustrator:zhouqun"] = "张帅",
+
+  ['~zhouqun'] = '及时止损，过犹不及…',
+  ['!zhouqun'] = '占星问卜，莫不言精！',
+}
+
 --SP11：阎圃 马元义 毛玠 傅佥 阮慧 马日磾 王濬
+General:new(extension, "yanpu", "qun", 3):addSkills { "huantu", "bihuoy" }
+Fk:loadTranslationTable{
+  ["yanpu"] = "阎圃",
+  ["#yanpu"] = "盱衡识势",
+  ["illustrator:yanpu"] = "鬼画府",
+
+  ["~yanpu"] = "公皆听吾计，圃岂敢不专……",
+}
+
+local mayuanyi = General:new(extension, "mayuanyi", "qun", 4)
+mayuanyi:addSkills {
+  "jibing",
+  "wangjingm",
+  "moucuan",
+}
+mayuanyi:addRelatedSkill("binghuo")
+Fk:loadTranslationTable{
+  ["mayuanyi"] = "马元义",
+  ["#mayuanyi"] = "黄天擎炬",
+  ["illustrator:mayuanyi"] = "丸点科技",
+
+  ["~mayuanyi"] = "唐周……无耻！",
+}
+
+General:new(extension, "maojie", "wei", 3):addSkills { "bingqing" }
+Fk:loadTranslationTable{
+  ["maojie"] = "毛玠",
+  ["#maojie"] = "清公素履",
+  ["cv:maojie"] = "刘强",
+
+  ["~maojie"] = "废立大事，公不可不慎……",
+}
+
+General:new(extension, "fuqian", "wei", 3):addSkills { "poxiang", "jueyong" }
+Fk:loadTranslationTable{
+  ["fuqian"] = "傅佥",
+  ["#fuqian"] = "危汉绝勇",
+  ["illustrator:fuqian"] = "君桓文化",
+  ["cv:fuqian"] = "杨超然",
+
+  ["~fuqian"] = "生为蜀臣，死……亦当为蜀！",
+}
+
+General:new(extension, "ruanhui", "wei", 3, 3, General.Female):addSkills {
+  "mingcha",
+  "jingzhong",
+}
+Fk:loadTranslationTable{
+  ["ruanhui"] = "阮慧",
+  ["#ruanhui"] = "明察福祸",
+
+  ["~ruanhui"] = "贱妾茕茕守空房，忧来思君不敢忘……",
+}
+
+General:new(extension, "mobile__mamidi", "qun", 3):addSkills { "chengye", "buxu" }
+Fk:loadTranslationTable{
+  ["mobile__mamidi"] = "马日磾",
+  ["#mobile__mamidi"] = "少传融业",
+  ["illustrator:mobile__mamidi"] = "君桓文化",
+
+  ["~mobile__mamidi"] = "袁公路！汝怎可欺我！",
+}
+
+local wangjun = General:new(extension, "wangjun", "qun", 4)
+wangjun.subkingdom = "jin"
+wangjun:addSkills { "zhujian", "duansuo" }
+Fk:loadTranslationTable{
+  ["wangjun"] = "王濬",
+  ["#wangjun"] = "首下石城",
+  ["illustrator:wangjun"] = "凝聚永恒",
+
+  ["~wangjun"] = "问鼎金瓯碎，临江铁索寒……",
+}
+
 --SP12：赵统赵广 刘晔 李丰 诸葛果 胡金定 王元姬 羊徽瑜 杨彪 司马昭
+General:new(extension, "zhaotongzhaoguang", "shu", 4):addSkills { "yizan", "longyuan" }
+Fk:loadTranslationTable{
+  ["zhaotongzhaoguang"] = "赵统赵广",
+  ["#zhaotongzhaoguang"] = "翊赞季兴",
+  ["designer:zhaotongzhaoguang"] = "Loun老萌",
+  ["illustrator:zhaotongzhaoguang"] = "蛋费鸡丁",
+
+  ["~zhaotongzhaoguang"] = "守业死战，不愧初心。",
+  ["!zhaotongzhaoguang"] = "身继龙魂，效捷致果！",
+}
+
+General:new(extension, "mobile__liuye", "wei", 3):addSkills { "polu", "choulue" }
+Fk:loadTranslationTable{
+  ["mobile__liuye"] = "刘晔",
+  ["#mobile__liuye"] = "佐世之才",
+  ["designer:mobile__liuye"] = "荼蘼",
+  ["illustrator:mobile__liuye"] = "Thinking",
+
+  ["~mobile__liuye"] = "唉，于上不能佐君主，于下不能亲同僚，吾愧为佐世人臣。",
+}
+
+General:new(extension, "lifeng", "shu", 3):addSkills { "tunchu", "shuliang" }
+Fk:loadTranslationTable{
+  ["lifeng"] = "李丰",
+  ["#lifeng"] = "朱提太守",
+  ["cv:lifeng"] = "秦且歌",
+  ["illustrator:lifeng"] = "NOVART",
+
+  ["~lifeng"] = "吾，有负丞相重托。",
+}
+
+General:new(extension, "hujinding", "shu", 2, 6, General.Female):addSkills {
+  "renshi",
+  "wuyuan",
+  "huaizi",
+}
+Fk:loadTranslationTable{
+  ["hujinding"] = "胡金定",
+  ["#hujinding"] = "怀子求怜",
+  ["illustrator:hujinding"] = "Thinking",
+
+  ["~hujinding"] = "云长，重逢不久，又要相别么……",
+}
+
+local mobileWangyuanji = General:new(extension, "mobile__wangyuanji", "wei", 3, 3, General.Female)
+mobileWangyuanji:addSkills { "qianchong", "shangjian" }
+mobileWangyuanji:addRelatedSkills { "weimu", "mingzhe" }
+Fk:loadTranslationTable{
+  ["mobile__wangyuanji"] = "王元姬",
+  ["#mobile__wangyuanji"] = "清雅抑华",
+  ["illustrator:mobile__wangyuanji"] = "凝聚永恒",
+
+  ["$weimu_mobile__wangyuanji"] = "宫闱之内，何必擅涉外事！",
+  ["$mingzhe_mobile__wangyuanji"] = "谦瑾行事，方能多吉少恙。",
+
+  ["~mobile__wangyuanji"] = "世事沉浮，非是一人可逆啊……",
+  ["!mobile__wangyuanji"] = "苍生黎庶，都会有一个美好的未来了。",
+}
+
+General:new(extension, "mobile__yanghuiyu", "wei", 3, 3, General.Female):addSkills {
+  "hongyi",
+  "quanfeng",
+}
+Fk:loadTranslationTable{
+  ["mobile__yanghuiyu"] = "羊徽瑜",
+  ["#mobile__yanghuiyu"] = "温慧母仪",
+  ["designer:mobile__yanghuiyu"] = "Loun老萌",
+  ["illustrator:mobile__yanghuiyu"] = "石蝉",
+
+  ["~mobile__yanghuiyu"] = "桃符，一定要平安啊……",
+}
+
+General:new(extension, "yangbiao", "qun", 3):addSkills {
+  "zhaohan",
+  "rangjie",
+  "mobile__yizheng",
+}
+Fk:loadTranslationTable{
+  ["yangbiao"] = "杨彪",
+  ["#yangbiao"] = "德彰海内",
+  ["cv:yangbiao"] = "袁国庆",
+  ["designer:yangbiao"] = "Loun老萌",
+  ["illustrator:yangbiao"] = "木美人",
+
+  ["~yangbiao"] = "未能效死佑汉，只因宗族之重……",
+}
+
+General:new(extension, "m_sp__simazhao", "wei", 3):addSkills { "zhaoxin", "daigong" }
+Fk:loadTranslationTable{
+  ["m_sp__simazhao"] = "司马昭", -- 手杀称为SP司马昭
+  ["#m_sp__simazhao"] = "四海威服",
+
+  ["~m_sp__simazhao"] = "安世，接下来，就看你的了……",
+  ["!m_sp__simazhao"] = "天下归一之功，已近在咫尺。",
+}
+
 --SP13：曹嵩 裴秀 杨阜 彭羕 牵招 郭女王 韩遂 阎象 李遗
+General:new(extension, "mobile__caosong", "wei", 3):addSkills { "yijin", "guanzong" }
+Fk:loadTranslationTable{
+  ["mobile__caosong"] = "曹嵩",
+  ["#mobile__caosong"] = "舆金贾权",
+  ["illustrator:mobile__caosong"] = "黯荧岛工作室",
+
+  ["~mobile__caosong"] = "长恨人心不如水，等闲平地起波澜……",
+}
+
 local peixiu = General:new(extension, "peixiu", "qun", 3)
 peixiu.subkingdom = "jin"
 peixiu:addSkills { "xingtu", "juezhi"}
@@ -145,6 +474,54 @@ Fk:loadTranslationTable{
   ["illustrator:yangfu"] = "铁杵文化",
 
   ["~yangfu"] = "汝背父叛君，吾誓，杀……",
+}
+
+General:new(extension, "pengyang", "shu", 3):addSkills { "daming", "xiaoni" }
+Fk:loadTranslationTable{
+  ["pengyang"] = "彭羕",
+  ["#pengyang"] = "难别菽麦",
+  ["illustrator:pengyang"] = "铁杵文化",
+
+  ["~pengyang"] = "招祸自咎，无不自己……",
+}
+
+General:new(extension, "qianzhao", "wei", 4):addSkills { "shihe", "zhenfu" }
+Fk:loadTranslationTable{
+  ["qianzhao"] = "牵招",
+  ["#qianzhao"] = "威风远振",
+
+  ["~qianzhao"] = "治边数载，虽不敢称功，亦可谓无过……",
+}
+
+General:new(extension, "mobile__guozhao", "wei", 3, 3, General.Female):addSkills {
+  "yichong",
+  "wufei",
+}
+Fk:loadTranslationTable{
+  ["mobile__guozhao"] = "郭女王",
+  ["#mobile__guozhao"] = "文德皇后",
+  ["illustrator:mobile__guozhao"] = "凡果",
+
+  ["~mobile__guozhao"] = "不觉泪下……沾衣裳……",
+}
+
+local mobileHansui = General:new(extension, "mobile__hansui", "qun", 4)
+mobileHansui.shield = 1
+mobileHansui:addSkills { "mobile__niluan", "mobile__xiaoxi" }
+Fk:loadTranslationTable{
+  ["mobile__hansui"] = "韩遂",
+  ["#mobile__hansui"] = "雄踞北疆",
+
+  ["~mobile__hansui"] = "称雄三十载，一败化为尘……",
+}
+
+General:new(extension, "mobile__yanxiang", "qun", 3):addSkills { "kujian", "ruilian" }
+Fk:loadTranslationTable{
+  ["mobile__yanxiang"] = "阎象",
+  ["#mobile__yanxiang"] = "明尚夙达",
+  ["illustrator:mobile__yanxiang"] = "君桓文化",
+
+  ["~mobile__yanxiang"] = "若遇明主，或可青史留名……",
 }
 
 General:new(extension, "mobile__liwei", "shu", 4):addSkills { "mobile__jiaohua" }
@@ -176,7 +553,7 @@ Fk:loadTranslationTable{
   ["~mobile__huban"] = "生虽微而志不可改，位虽卑而节不可夺……",
 }
 
---General:new(extension, "mobile__chengui", "qun", 3):addSkills { "guimou", "zhouxian" }
+General:new(extension, "mobile__chengui", "qun", 3):addSkills { "guimou", "zhouxian" }
 Fk:loadTranslationTable{
   ["mobile__chengui"] = "陈珪",
   ["#mobile__chengui"] = "弄辞巧掇",
@@ -185,7 +562,7 @@ Fk:loadTranslationTable{
   ["~mobile__chengui"] = "布非忠良之士，将军宜早图之……",
 }
 
---General:new(extension, "mobile__huojun", "shu", 4):addSkills { "mobile__sidai", "mobile__jieyu" }
+General:new(extension, "mobile__huojun", "shu", 4):addSkills { "mobile__sidai", "mobile__jieyu" }
 Fk:loadTranslationTable{
   ["mobile__huojun"] = "霍峻",
   ["#mobile__huojun"] = "葭萌铁狮",
@@ -206,7 +583,7 @@ Fk:loadTranslationTable{
   ["~muludawang"] = "啊啊，诸葛亮神人降世，吾等难挡天威。",
 }
 
---General:new(extension, "mobile__jianggan", "wei", 3):addSkills { "mobile__daoshu", "daizui" }
+General:new(extension, "mobile__jianggan", "wei", 3):addSkills { "mobile__daoshu", "daizui" }
 Fk:loadTranslationTable{
   ["mobile__jianggan"] = "蒋干",
   ["#mobile__jianggan"] = "虚义伪诚",
@@ -215,7 +592,9 @@ Fk:loadTranslationTable{
   ["~mobile__jianggan"] = "唉，假信害我不浅啊……",
 }
 
---General:new(extension, "yangfeng", "qun", 4):addSkills { "xuetu", "weiming" }
+local yangfeng = General:new(extension, "yangfeng", "qun", 4)
+yangfeng:addSkills { "xuetu", "weiming" }
+yangfeng:addRelatedSkills { "xuetu_v2", "xuetu_v3" }
 Fk:loadTranslationTable{
   ["yangfeng"] = "杨奉",
   ["#yangfeng"] = "忠勇半途",

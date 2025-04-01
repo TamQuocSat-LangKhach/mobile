@@ -1,5 +1,5 @@
 local gongsun = fk.CreateSkill{
-  name = "gongsun",
+  name = "mobile__gongsun",
 }
 
 Fk:loadTranslationTable{

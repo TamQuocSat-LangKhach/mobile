@@ -26,11 +26,11 @@ fuhai:addEffect("active", {
   card_filter = Util.FalseFunc,
   on_use = function(self, room, effect)
     local player = effect.from
-    local targets = room:getOtherPlayers(player, false)
+    local targets = room:getOtherPlayers(player)
     room:doIndicate(player, targets)
     local result = room:askToJointChoice(player, {
       players = targets,
-      choices = {"mobile__fuhaiw1", "mobile__fuhaiw2"},
+      choices = { "mobile__fuhaiw1", "mobile__fuhaiw2" },
       skill_name = fuhai.name,
       prompt = "#mobile__fuhaiw-choice:"..player.id,
       send_log = true,
@@ -48,7 +48,9 @@ fuhai:addEffect("active", {
     end
 
     room:delay(1000)
-    player:drawCards(n, fuhai.name)
+    if n > 1 then
+      player:drawCards(n, fuhai.name)
+    end
   end,
 })
 

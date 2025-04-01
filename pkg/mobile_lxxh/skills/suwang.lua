@@ -30,7 +30,7 @@ Fk:loadTranslationTable{
 suwang:addEffect(fk.TurnEnd, {
   derived_piles = "$suwang",
   can_trigger = function(self, event, target, player, data)
-    if player:hasSkill(suwang.name) and player:getMark("suwang_aimed-turn") == 0 then
+    if player:hasSkill(suwang.name) and player:getMark("suwang_aimed-turn") > 0 then
       local room = player.room
       if room:isGameMode("2v2_mode") then
         local n = 0
@@ -91,7 +91,9 @@ suwang:addEffect(fk.CardUsing, {
   on_refresh = function (self, event, target, player, data)
     local room = player.room
     for _, p in ipairs(data.tos) do
-      room:setPlayerMark(p, "suwang_aimed-turn", 1)
+      if p:getMark("suwang_aimed-turn") == 0 then
+        room:setPlayerMark(p, "suwang_aimed-turn", 1)
+      end
     end
   end,
 })

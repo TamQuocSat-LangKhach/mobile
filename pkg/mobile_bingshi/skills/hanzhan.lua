@@ -32,7 +32,7 @@ hanzhan:addEffect("active", {
     for _, p in ipairs({ player, target }) do
       if not p.dead then
         local n = p.maxHp
-        local change = player:getMark("@shi__zhenfeng_"..hanzhan.name)
+        local change = player:getMark("@mobile__zhenfeng_"..hanzhan.name)
         if change ~= 0 then
           if change == "mobile__zhenfeng_hp" then
             n = p.hp

@@ -109,9 +109,8 @@ zhanlie:addEffect(fk.EventPhaseEnd, {
     if buffNum > 0 then
       local all_choices = { "zhanlie_target", "zhanlie_damage", "zhanlie_disresponsive", "zhanlie_draw" }
       local choiceList = table.simpleClone(all_choices)
-      local targets = table.filter(room:getOtherPlayers(player, false), function (p)
-        return not table.contains(use.tos, p) and player:canUseTo(use.card, p, use.extra_data)
-      end)
+
+      local targets = UseCardData:new(use):getExtraTargets()
       if (#targets == 0) then
         table.remove(choiceList, 1)
       end
@@ -162,7 +161,7 @@ zhanlie:addEffect(fk.TurnStart, {
     local room = player.room
     local dat = parseZhanLieMark(player)
     local n = player:getAttackRange()
-    local change = player:getMark("@shi__zhenfeng_"..zhanlie.name)
+    local change = player:getMark("@mobile__zhenfeng_"..zhanlie.name)
     if change ~= 0 then
       if change == "mobile__zhenfeng_hp" then
         n = player.hp

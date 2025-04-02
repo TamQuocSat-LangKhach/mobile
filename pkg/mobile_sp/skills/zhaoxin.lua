@@ -24,7 +24,7 @@ zhaoxin:addEffect("active", {
   target_num = 0,
   prompt = "#zhaoxin",
   can_use = function(self, player)
-    return player:usedEffectTimes(zhaoxin.name, Player.HistoryPhase) == 0 and #player:getPile("simazhao_wang") < 3
+    return player:usedEffectTimes(self.name, Player.HistoryPhase) == 0 and #player:getPile("simazhao_wang") < 3
   end,
   card_filter = function(self, player, to_select, selected)
     return #selected < 3 - #player:getPile("simazhao_wang")

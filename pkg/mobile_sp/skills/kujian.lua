@@ -20,7 +20,7 @@ kujian:addEffect("active", {
   prompt = "#kujian-active",
   mute = true,
   can_use = function(self, player)
-    return player:usedEffectTimes(kujian.name, Player.HistoryPhase) == 0
+    return player:usedEffectTimes(self.name, Player.HistoryPhase) == 0
   end,
   max_card_num = 3,
   min_card_num = 1,

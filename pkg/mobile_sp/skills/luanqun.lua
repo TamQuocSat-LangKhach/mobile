@@ -121,7 +121,7 @@ luanqun:addEffect("prohibit", {
       local targets = table.filter(Fk:currentRoom().alive_players, function(p)
         return table.contains(from:getTableMark("luanqun_target-turn"), p.id)
       end)
-      return #targets > 0 and not table.contains(targets, to.id)
+      return #targets > 0 and not table.contains(targets, to)
     end
   end,
 })

@@ -94,7 +94,7 @@ shoufa:addEffect(fk.Damaged, {
   anim_type = "masochism",
   can_trigger = function (self, event, target, player, data)
     return target == player and player:hasSkill(shoufa.name) and
-      player:usedEffectTimes(shoufa.name, Player.HistoryTurn) < 5  and
+      player:usedEffectTimes(self.name, Player.HistoryTurn) < 5 and
       table.find(player.room:getOtherPlayers(player, false), function(p)
         return p:distanceTo(player) > (player.room:isGameMode("1v2_mode") and 0 or 1)
       end)

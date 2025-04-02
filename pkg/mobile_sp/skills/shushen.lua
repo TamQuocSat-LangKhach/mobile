@@ -43,8 +43,7 @@ shushen:addEffect(fk.HpRecover, {
 shushen:addEffect(fk.AfterCardsMove, {
   anim_type = "support",
   can_trigger = function(self, event, target, player, data)
-    if target == player and player:hasSkill(shushen.name) and
-      player:usedEffectTimes(self.name, Player.HistoryTurn) == 0 then
+    if player:hasSkill(shushen.name) and player:usedEffectTimes(self.name, Player.HistoryTurn) == 0 then
       local x = 0
       for _, move in ipairs(data) do
         if move.to == player and move.toArea == Player.Hand then

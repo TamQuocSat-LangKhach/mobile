@@ -23,14 +23,10 @@ zhijie:addEffect(fk.EventPhaseStart, {
       not (target.dead or target:isKongcheng())
   end,
   on_cost = function (self, event, target, player, data)
-    local room = player.room
-    if room:askToSkillInvoke(player, {
+    return player.room:askToSkillInvoke(player, {
       skill_name = zhijie.name,
-      prompt = "#zhijie-invoke::"..target.id,
-    }) then
-      event:setCostData(self, {tos = {target}})
-      return true
-    end
+      prompt = "#zhijie-invoke::" .. target.id,
+    })
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
@@ -39,7 +35,7 @@ zhijie:addEffect(fk.EventPhaseStart, {
       flag = "h",
       skill_name = zhijie.name,
     })
-    local type = Fk:getCardById(card[1]):getTypeString()
+    local type = Fk:getCardById(card):getTypeString()
     target:showCards(card)
     if not target.dead then
       room:setPlayerMark(target, "@zhijie-phase", {type.."_char", 0})

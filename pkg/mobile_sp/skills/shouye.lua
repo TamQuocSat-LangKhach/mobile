@@ -27,7 +27,7 @@ shouye:addEffect(fk.TargetConfirmed, {
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(shouye.name) and
       player:usedSkillTimes(shouye.name, Player.HistoryTurn) == 0 and
-      data.from ~= player and #data.use.tos == 1
+      data.from ~= player and data:isOnlyTarget(player)
   end,
   on_cost = function (self, event, target, player, data)
     local room = player.room

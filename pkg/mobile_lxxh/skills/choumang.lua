@@ -21,7 +21,7 @@ local choumang_spec = {
   anim_type = "offensive",
   can_trigger = function (self, event, target, player, data)
     return target == player and player:hasSkill(choumang.name) and data.card.trueName == "slash" and
-      #data.use.tos == 1 and player:usedSkillTimes(choumang.name, Player.HistoryTurn) == 0
+      data:isOnlyTarget(data.use.tos[1]) and player:usedSkillTimes(choumang.name, Player.HistoryTurn) == 0
   end,
   on_cost = function (self, event, target, player, data)
     local room = player.room

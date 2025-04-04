@@ -18,7 +18,7 @@ heji:addEffect(fk.CardUseFinished, {
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(heji.name) and #player:getHandlyIds() > 0 and
       (data.card.trueName == "duel" or (data.card.trueName == "slash" and data.card.color == Card.Red)) and
-      #data.tos == 1 and data.tos[1] ~= player and not data.tos[1].dead
+      data:isOnlyTarget(data.tos[1]) and data.tos[1] ~= player and not data.tos[1].dead
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room

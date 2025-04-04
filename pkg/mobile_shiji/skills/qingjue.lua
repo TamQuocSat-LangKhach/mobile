@@ -17,7 +17,7 @@ Fk:loadTranslationTable{
 qingjue:addEffect(fk.TargetSpecifying, {
   anim_type = "control",
   can_trigger = function(self, event, target, player, data)
-    return player:hasSkill(qingjue.name) and target ~= player and #data.use.tos == 1 and
+    return player:hasSkill(qingjue.name) and target ~= player and data:isOnlyTarget(data.to) and
       data.to ~= player and target.hp > data.to.hp and
       not table.find(player.room.alive_players, function(p)
         return p.dying

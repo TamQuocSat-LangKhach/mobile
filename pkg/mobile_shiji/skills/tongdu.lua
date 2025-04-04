@@ -18,7 +18,7 @@ tongdu:addEffect(fk.TargetConfirmed, {
   anim_type = "support",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(tongdu.name) and data.from ~= player and
-      #data.use.tos == 1 and player:usedSkillTimes(tongdu.name, Player.HistoryTurn) == 0 and
+      data:isOnlyTarget(player) and player:usedSkillTimes(tongdu.name, Player.HistoryTurn) == 0 and
       table.find(player.room.alive_players, function(p)
         return not p:isNude()
       end)

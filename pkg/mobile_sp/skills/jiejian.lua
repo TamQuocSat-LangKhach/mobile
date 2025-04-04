@@ -53,7 +53,7 @@ jiejian:addEffect(fk.TargetConfirming, {
   can_trigger = function(self, event, target, player, data)
     return player:hasSkill(jiejian.name) and target:getMark("@jiejianw") ~= 0 and
       player:usedEffectTimes(self.name, Player.HistoryTurn) == 0 and
-      #data.use.tos == 1 and data.from ~= player and data.card.type ~= Card.TypeEquip and
+      data:isOnlyTarget(target) and data.from ~= player and data.card.type ~= Card.TypeEquip and
       not data.from:isProhibited(player, data.card) and
       player.room.logic:getCurrentEvent():findParent(GameEvent.Turn) ~= nil
   end,

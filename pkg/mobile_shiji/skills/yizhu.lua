@@ -54,7 +54,7 @@ yizhu:addEffect(fk.TargetSpecified, {
   can_trigger = function(self, event, target, player, data)
     if target ~= player and player:hasSkill(yizhu.name) then
       local mark = player:getTableMark("yizhu_cards")
-      if #mark > 0 and #data.use.tos == 1 then
+      if #mark > 0 and data:isOnlyTarget(data.to) then
         return table.find(Card:getIdList(data.card), function(id)
           return table.contains(mark, id)
         end)

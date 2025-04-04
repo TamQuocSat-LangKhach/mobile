@@ -23,8 +23,7 @@ quedi:addEffect(fk.TargetSpecified, {
     return target == player and player:hasSkill(quedi.name) and
       player:usedSkillTimes(quedi.name, Player.HistoryTurn) < (1 + player:getMark("choujue_buff-turn")) and
       table.contains({ "slash", "duel" }, data.card.trueName) and
-      #data.use.tos == 1 and not data.to.dead and
-      not (data.to:isKongcheng() and player:isKongcheng())
+      data:isOnlyTarget(data.to) and not (data.to:isKongcheng() and player:isKongcheng())
   end,
   on_cost = function(self, event, target, player, data)
     local room = player.room

@@ -15,7 +15,7 @@ Fk:loadTranslationTable{
 chijie:addEffect(fk.TargetConfirming, {
   anim_type = "defensive",
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(chijie.name) and #data.use.tos == 1 and
+    return target == player and player:hasSkill(chijie.name) and data:isOnlyTarget(player) and
       data.from ~= player and player:usedSkillTimes(chijie.name, Player.HistoryTurn) == 0
   end,
   on_cost = function(self, event, target, player, data)

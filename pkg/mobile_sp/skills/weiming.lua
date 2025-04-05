@@ -70,6 +70,10 @@ weiming:addEffect(fk.EventPhaseStart, {
 weiming:addEffect(fk.Deathed, {
   mute = true,
   can_trigger = function(self, event, target, player, data)
+    if not player:hasSkill(weiming.name) then
+      return false
+    end
+
     return
       (
         data.who and

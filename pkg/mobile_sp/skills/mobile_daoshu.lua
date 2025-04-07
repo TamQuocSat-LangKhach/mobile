@@ -25,6 +25,10 @@ Fk:loadTranslationTable{
   ["#mobile__daoshu"] = "盗书：你可与队友查看1名敌人的手牌，并找出其伪装牌名的牌",
   ["#mobile__daoshu-choose"] = "盗书：请选择左侧的牌名并选择一张手牌，将此牌伪装成此牌名",
   ["#mobile__daoshu-guess"] = "猜测其中伪装牌名的牌",
+
+  ["$mobile__daoshu1"] = "嗨！不过区区信件，何妨故友一观？",
+  ["$mobile__daoshu2"] = "幸吾有备而来，不然为汝所戏矣。",
+  ["$mobile__daoshu3"] = "亏我一世英名，竟上了周瑜的大当！",
 }
 
 local U = require "packages/utility/utility"

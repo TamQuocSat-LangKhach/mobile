@@ -9,6 +9,9 @@ Fk:loadTranslationTable{
 
   ["#xuetu_v3_yang"] = "血途：你可回复1点体力并令一名角色弃两张牌",
   ["#xuetu_v3_yin"] = "血途：你可摸一张牌并对一名角色造成1点伤害",
+
+  ["$xuetu_v31"] = "徐、扬粮草甚多，众将随我前往。",
+  ["$xuetu_v32"] = "哈哈哈哈，所过之处，粒粟不留。",
 }
 
 xuetuV3:addEffect("active", {

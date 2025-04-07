@@ -307,7 +307,7 @@ Fk:loadTranslationTable{
   ["~maojie"] = "废立大事，公不可不慎……",
 }
 
-General:new(extension, "fuqian", "wei", 3):addSkills { "poxiang", "jueyong" }
+General:new(extension, "fuqian", "shu", 4):addSkills { "poxiang", "jueyong" }
 Fk:loadTranslationTable{
   ["fuqian"] = "傅佥",
   ["#fuqian"] = "危汉绝勇",

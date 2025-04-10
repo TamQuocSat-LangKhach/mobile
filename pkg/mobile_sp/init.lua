@@ -538,10 +538,10 @@ General:new(extension, "mobile__baoxin", "qun", 4):addSkills { "mobile__mutao", 
 Fk:loadTranslationTable{
   ["mobile__baoxin"] = "鲍信",
   ["#mobile__baoxin"] = "坚朴的忠相",
-  ["illustrator:mobile__baoxin"] = "凡果",
+  ["illustrator:mobile__baoxin"] = "梦想君",
   ["designer:mobile__baoxin"] = "jcj熊",
 
-  ["~mobile__baoxin"] = "区区黄巾流寇，如何挡我？呃啊……",
+  ["~mobile__baoxin"] = "良谋有壮骨，奈何不逢时啊！",
 }
 
 General:new(extension, "mobile__huban", "wei", 4):addSkills { "mobile__yilie" }
@@ -566,10 +566,10 @@ General:new(extension, "mobile__huojun", "shu", 4):addSkills { "mobile__sidai", 
 Fk:loadTranslationTable{
   ["mobile__huojun"] = "霍峻",
   ["#mobile__huojun"] = "葭萌铁狮",
-  ["illustrator:mobile__huojun"] = "枭瞳",
+  ["illustrator:mobile__huojun"] = "君桓文化",
   ["designer:mobile__huojun"] = "步穗",
 
-  ["~mobile__huojun"] = "恨，不能与使君共成霸业……",
+  ["~mobile__huojun"] = "使君，葭萌城……守住了……",
 }
 
 local muludawang = General:new(extension, "muludawang", "qun", 3)
@@ -612,7 +612,7 @@ Fk:loadTranslationTable{
   ["~laimin"] = "狂嚣之言，一言十过啊……",
 }
 
---未分组：SP甄姬 甘夫人 王经
+--未分组：SP甄姬 甘夫人 王经 清河公主
 General:new(extension, "m_sp__zhenji", "qun", 3, 3, General.Female):addSkills { "bojian", "jiwei" }
 Fk:loadTranslationTable{
   ["m_sp__zhenji"] = "甄姬",
@@ -639,6 +639,16 @@ Fk:loadTranslationTable{
   ["illustrator:wangjing"] = "凝聚永恒",
 
   ["~wangjing"] = "有母此言，经死之无悔。",
+}
+
+General:new(extension, "mobile__qinghegongzhu", "wei", 3, 3, General.Female):addSkills { "mobile__zengou", "feili" }
+Fk:loadTranslationTable{
+  ["mobile__qinghegongzhu"] = "清河公主",
+  ["#mobile__qinghegongzhu"] = "蛊虿之谗",
+  --["illustrator:mobile__qinghegongzhu"] = "",
+
+  ["~mobile__qinghegongzhu"] = "夏侯楙徒有形表，实非良人……",
+  ["!mobile__qinghegongzhu"] = "夫君自走死路，何可怨得妾身。",
 }
 
 return extension

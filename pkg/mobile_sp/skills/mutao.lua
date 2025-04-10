@@ -9,8 +9,8 @@ Fk:loadTranslationTable{
 
   ["#mobile__mutao"] = "募讨：选择一名角色分发其手牌中的【杀】，对最后一名角色造成伤害",
 
-  ["$mobile__mutao1"] = "董贼暴乱，天下定当奋节讨之！",
-  ["$mobile__mutao2"] = "募州郡义士，讨祸国逆贼！",
+  ["$mobile__mutao1"] = "今起义兵，只为还天下清明！",
+  ["$mobile__mutao2"] = "董贼不除，汉室如何可兴？",
 }
 
 mutao:addEffect("active", {

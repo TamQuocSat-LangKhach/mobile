@@ -8,8 +8,8 @@ Fk:loadTranslationTable{
   "你成为其他角色【杀】或伤害类锦囊目标的次数，X至少为1）。",
   ["@mobile__jieyu"] = "竭御",
 
-  ["$mobile__jieyu1"] = "葭萌，蜀之咽喉，峻必竭力守之。",
-  ["$mobile__jieyu2"] = "吾头可得，城不可得。",
+  ["$mobile__jieyu1"] = "既事使君，峻自不负重任！",
+  ["$mobile__jieyu2"] = "吾头可得，城不可得！",
 }
 
 mobileJieyu:addEffect(fk.EventPhaseStart, {

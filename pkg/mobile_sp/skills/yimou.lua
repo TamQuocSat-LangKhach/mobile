@@ -10,8 +10,8 @@ Fk:loadTranslationTable{
   ["mobile__yimou_give"] = "%dest将一张手牌交给另一名角色，摸一张牌",
   ["#mobile__yimou-give"] = "毅谋：将一张手牌交给一名其他角色，然后摸一张牌",
 
-  ["$mobile__yimou1"] = "今蓄士众之力，据其要害，贼可破之。",
-  ["$mobile__yimou2"] = "绍因权专利，久必生变，不若屯军以观。",
+  ["$mobile__yimou1"] = "泰然若定，攻敌自溃！",
+  ["$mobile__yimou2"] = "吾等当为大义，兴大谋，成大事！",
 }
 
 yimou:addEffect(fk.Damaged, {

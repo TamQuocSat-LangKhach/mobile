@@ -4,13 +4,12 @@ local zengou = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ["mobile__zengou"] = "谮构",
-  [":mobile__zengou"] = "出牌阶段限一次，你可以观看一名角色的所有手牌，选择："..
-    "1.依次可以视为使用其手牌区里没有的牌名的基本牌各一张（不计入次数且无次数限制）；"..
-    "2.你与其依次将手牌区里的共有牌名的牌替换为牌堆中等量的【杀】（以此法得到的【杀】直到各自的回合结束之前不计入手牌上限）。"..
-    "然后其获得一个“诬”标记并记录一个你指定的基本牌名。"..
-    "拥有此标记的角色每回合使用的第一张牌结算后，若与记录的牌名相同，其移除此标记并失去1点体力。",
+  [":mobile__zengou"] = "出牌阶段限一次，你可以观看一名角色的所有手牌，然后选择一项：<br>"..
+  "1.依次视为使用至多两张其手牌中没有的牌名的基本牌各一张（不计入次数且无次数限制）；<br>"..
+  "2.你与其依次将手牌区里的共有牌名的牌替换为牌堆中等量的【杀】（以此法得到的【杀】不计入手牌上限，直到各自的回合结束）。<br>"..
+  "然后其获得一个你指定基本牌名的“诬”标记。拥有此标记的角色每回合使用的第一张牌结算后，若与记录的牌名相同，其移除此标记并失去1点体力。",
 
-  ["#mobile__zengou-active"] = "发动 谮构，选择一名角色，观看其所有手牌",
+  ["#mobile__zengou"] = "谮构：观看一名角色手牌并选择一项",
   ["#mobile__zengou-choose"] = "谮构：观看%dest的手牌并选择一项",
   ["mobile__zengou_use"] = "视为使用基本牌",
   ["mobile__zengou_exchange"] = "将牌替换为【杀】",
@@ -59,7 +58,7 @@ end
 
 zengou:addEffect("active", {
   anim_type = "control",
-  prompt = "#mobile__zengou-active",
+  prompt = "#mobile__zengou",
   mute = true,
   max_phase_use_time = 1,
   card_num = 0,
@@ -87,7 +86,8 @@ zengou:addEffect("active", {
           return cardName ~= Fk:getCardById(id2).trueName
         end)
       end)
-      while #toUse > 0 do
+      for i = 1, 2 do
+        if #cards == 0 then break end
         local use = room:askToUseRealCard(player, {
           pattern = toUse,
           skill_name = zengou.name,

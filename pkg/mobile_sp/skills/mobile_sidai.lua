@@ -11,8 +11,8 @@ Fk:loadTranslationTable{
   ["#mobile__sidai_nojink"] = "伺怠：弃置一张基本牌，否则不能响应此【杀】",
   ["#mobile__sidai"] = "伺怠：你可将所有基本牌当【杀】使用（有桃、闪则获得额外效果）！",
 
-  ["$mobile__sidai1"] = "敌军疲乏，正是战机，随我杀！",
-  ["$mobile__sidai2"] = "敌军无备，随我冲锋！",
+  ["$mobile__sidai1"] = "敌已力竭，到吾主动出击之时！",
+  ["$mobile__sidai2"] = "敌军疲惫，吾等可趁势击之！",
 }
 
 mobileSidai:addEffect("viewas", {

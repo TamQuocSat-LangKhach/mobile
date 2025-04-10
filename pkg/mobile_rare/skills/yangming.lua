@@ -13,8 +13,6 @@ Fk:loadTranslationTable{
   ["$friend__yangming2"] = "贤人何其之多，但无识才之人也。",
 }
 
-local U = require "packages/utility/utility"
-
 local function GongliFriend(room, player, friend)
   return (room:isGameMode("1v2_mode") or room:isGameMode("2v2_mode")) and
     table.find(room.alive_players, function (p)
@@ -108,13 +106,20 @@ yangming:addEffect(fk.EventPhaseEnd, {
     end
     room:cleanProcessingArea(cards)
     if player:hasSkill("pangtong__gongli") and GongliFriend(room, player, "m_friend__xushu") then
+      player:broadcastSkillInvoke("pangtong__gongli")
+      room:notifySkillInvoked(player, "pangtong__gongli", "drawcard")
       cards = table.filter(cards, function (id)
         return room:getCardArea(id) == Card.DiscardPile and not table.contains(suits, Fk:getCardById(id).suit) and
           Fk:getCardById(id).suit ~= Card.NoSuit
       end)
       if #cards > 0 then
         if #cards > 1 then
-          cards = U.askforChooseCardsAndChoice(player, cards, {"OK"}, yangming.name, "#pangtong__gongli-prey")
+          cards = room:askToChooseCard(player, {
+            target = player,
+            flag = { card_data = {{ yangming.name, cards }} },
+            skill_name = yangming.name,
+            prompt = "#pangtong__gongli-prey",
+          })
         end
         room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonJustMove, yangming.name, nil, true, player)
       end

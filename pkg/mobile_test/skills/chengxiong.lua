@@ -4,7 +4,7 @@ local chengxiong = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ["chengxiong"] = "惩凶",
-  [":chengxiong"] = "当你使用锦囊牌指定第一个目标后，若目标包含其他角色，你可以选择一名牌数不小于X的角色（X为你此阶段使用的牌数），弃置其一张牌，"..
+  [":chengxiong"] = "当你使用锦囊牌仅指定其他角色为目标后，你可以选择一名牌数不小于X的角色（X为你此阶段使用的牌数），弃置其一张牌，"..
   "若此牌颜色与你使用的锦囊牌颜色相同，你对其造成1点伤害。",
 
   ["#chengxiong-choose"] = "惩凶：弃置一名角色一张牌，若为%arg，对其造成1点伤害",
@@ -15,9 +15,7 @@ chengxiong:addEffect(fk.TargetSpecified, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
     if target == player and player:hasSkill(chengxiong.name) and data.card.type == Card.TypeTrick and data.firstTarget and
-      table.find(data.use.tos, function(p)
-        return p ~= player
-      end) then
+      not table.contains(data.use.tos, player) then
       local room = player.room
       local n = #room.logic:getEventsOfScope(GameEvent.UseCard, 999, function(e)
         return e.data.from == player

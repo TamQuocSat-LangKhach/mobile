@@ -128,7 +128,7 @@ kujian:addEffect(fk.AfterCardsMove, {
       return 0
     end
 
-    local kujianTargets = event:getSkillData(self, "kujian:" .. player.id)
+    local kujianTargets = event:getSkillData(self, "kujian_" .. player.id)
     if kujianTargets then
       local unDoneTargets = table.simpleClone(kujianTargets.unDone)
       for _, to in ipairs(unDoneTargets) do
@@ -170,7 +170,7 @@ kujian:addEffect(fk.AfterCardsMove, {
   on_cost = function(self, event, target, player, data)
     local kujianTargets = event:getSkillData(self, "kujian_" .. player.id)
     local to = table.remove(kujianTargets.unDone, 1)
-    table.insert(kujianTargets.done, player)
+    table.insert(kujianTargets.done, to)
     event:setSkillData(self, "kujian_" .. player.id, kujianTargets)
 
     event:setCostData(self, to)

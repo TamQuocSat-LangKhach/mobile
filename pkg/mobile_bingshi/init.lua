@@ -25,4 +25,12 @@ Fk:loadTranslationTable{
   --["~m_shi__dongzhao"] = "",
 }
 
+General:new(extension, "mobile__lougui", "wei", 3):addSkills { "guansha", "jiyul" }
+Fk:loadTranslationTable{
+  ["mobile__lougui"] = "娄圭",
+  ["#mobile__lougui"] = "一日之寒",
+
+  ["~mobile__lougui"] = "丞相留步，老夫告辞。",
+}
+
 return extension

@@ -25,14 +25,14 @@ Fk:loadTranslationTable{
   ["#mobile__qiantun-ask"] = "谦吞：请展示任意张手牌，你将只能用这些牌与 %src 拼点，根据拼点结果其获得你的展示牌或未展示牌！",
   ["#mobile__qiantun-pindian"] = "谦吞：你只能用这些牌与 %src 拼点！若其赢，其获得你的展示牌；若其没赢，其获得你未展示的手牌",
 
-  ["$mobile__qiantun1"] = "辅国臣之本分，何敢图于禄勋。",
-  ["$mobile__qiantun2"] = "蜀贼吴寇未灭，臣未可受此殊荣。",
-  ["$mobile__qiantun3"] = "陛下一国之君，不可使以小性。",--谦吞（赢）	
-  ["$mobile__qiantun4"] = "讲经宴筵，实非治国之道也。",--谦吞（没赢）
+  ["$mobile__qiantun1"] = "天下未定，吾当辞邑修身，何敢冒僭？",
+  ["$mobile__qiantun2"] = "统摄朝野，威加海内，此皆陛下恩德！",
+  ["$mobile__qiantun3"] = "满朝尽忠天子，何有不臣之人？",--谦吞（赢）	
+  ["$mobile__qiantun4"] = "九辞封赐，足见臣一片忠心。",--谦吞（没赢）
 }
 
 qiantun:addEffect("active", {
-  anim_type = "control",
+  mute = true,
   card_num = 0,
   target_num = 1,
   prompt = "#mobile__qiantun",
@@ -46,6 +46,8 @@ qiantun:addEffect("active", {
   on_use = function(self, room, effect)
     local player = effect.from
     local target = effect.tos[1]
+    player:broadcastSkillInvoke(qiantun.name, math.random(1, 2))
+    room:notifySkillInvoked(player, qiantun.name, "control")
     local cards = room:askToCards(target, {
       min_num = 1,
       max_num = 999,
@@ -75,10 +77,12 @@ qiantun:addEffect("active", {
     room:pindian(pindian)
     if player.dead or target.dead then return end
     if pindian.results[target].winner == player then
+      player:broadcastSkillInvoke(qiantun.name, 3)
       cards = table.filter(target:getCardIds("h"), function (id)
         return table.contains(cards, id)
       end)
     else
+      player:broadcastSkillInvoke(qiantun.name, 4)
       cards = table.filter(target:getCardIds("h"), function (id)
         return not table.contains(cards, id)
       end)

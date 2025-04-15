@@ -33,10 +33,8 @@ Fk:loadTranslationTable{
   ["#mobile__xiezheng-use"] = "挟征：视为使用一张【兵临城下】！若未造成伤害，你失去1点体力",
   ["mobile__xiezheng_debuff"] = "优先指定同势力角色为目标的",
 
-  ["$mobile__xiezheng1"] = "烈祖明皇帝乘舆仍出，陛下何妨效之。",
-  ["$mobile__xiezheng2"] = "陛下宜誓临戎，使将士得凭天威。",
-  ["$mobile__xiezheng3"] = "既得众将之力，何愁贼不得平？",--挟征（第二形态）
-  ["$mobile__xiezheng4"] = "逆贼起兵作乱，诸位无心报国乎？",--挟征（第二形态）
+  ["$mobile__xiezheng1"] = "臣请陛下亲讨乱贼，以昭帝威！",
+  ["$mobile__xiezheng2"] = "天子亲征，淮南之乱，不日可平！",
 }
 
 xiezheng:addEffect(fk.EventPhaseStart, {

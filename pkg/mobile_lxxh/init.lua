@@ -111,19 +111,21 @@ Fk:loadTranslationTable{
   ["#mobile__simazhao"] = "独祅吞天",
   ["illustrator:mobile__simazhao"] = "腥鱼仔",
 
-  ["~mobile__simazhao"] = "曹髦小儿竟有如此肝胆……我实不甘。",
-  ["!mobile__simazhao"] = "明日正为吉日，当举禅位之典。",
+  ["~mobile__simazhao"] = "锋芒毕露，野心昭彰，竟有此果……",
+  ["!mobile__simazhao"] = "执掌朝野，尽吞大魏河山！",
 }
 local simazhao2 = General:new(extension, "mobile2__simazhao", "qun", 3)
 simazhao2.hidden = true
-simazhao2:addSkills { "mobile__xiezheng", "mobile__weisi", "mobile__zhaoxiong", "mobile__dangyi" }
+simazhao2:addSkills { "mobile__weisi", "mobile__xiezheng", "mobile__dangyi" }
 Fk:loadTranslationTable{
   ["mobile2__simazhao"] = "司马昭",
   ["#mobile2__simazhao"] = "独祅吞天",
   ["illustrator:mobile2__simazhao"] = "腥鱼仔",
 
-  ["~mobile2__simazhao"] = "愿我晋祚，万世不易，国运永昌。",
-  ["!mobile2__simazhao"] = "万里山河，终至我司马一家。",
+  ["$mobile__xiezheng_mobile2__simazhao1"] = "吾今大权独揽，何可再予他人？",
+  ["$mobile__xiezheng_mobile2__simazhao2"] = "吾领三军于外，岂容陛下收政于京！",
+  ["~mobile2__simazhao"] = "王权崩坏，此罪弥天……",
+  ["!mobile2__simazhao"] = "一统之世，当由我司马氏开创！",
 }
 
 return extension

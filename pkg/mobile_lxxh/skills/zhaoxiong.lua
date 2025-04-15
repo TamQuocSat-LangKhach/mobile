@@ -20,12 +20,13 @@ Fk:loadTranslationTable{
   [":mobile__zhaoxiong_1v2"] = "持恒技，限定技，准备阶段，若你已受伤，你可以将势力变更为群，然后你获得技能〖荡异〗。",
 
   ["#mobile__zhaoxiong-invoke"] = "昭凶：是否变为群势力、失去“谦吞”、获得“威肆”和“荡异”？",
-  ["$mobile__zhaoxiong1"] = "若得灭蜀之功，何不可受禅为帝。",
-  ["$mobile__zhaoxiong2"] = "已极人臣之贵，当一尝人主之威。",
+
+  ["$mobile__zhaoxiong1"] = "天下名为曹姓，实归吾司马一族！",
+  ["$mobile__zhaoxiong2"] = "陛下有罪，吾当治之以对天下！",
 }
 
 zhaoxiong:addEffect(fk.EventPhaseStart, {
-  
+  anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(zhaoxiong.name) and player.phase == Player.Start and
       player:usedSkillTimes(zhaoxiong.name, Player.HistoryGame) == 0 and

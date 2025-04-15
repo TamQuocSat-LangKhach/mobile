@@ -1,5 +1,5 @@
 local dangyi = fk.CreateSkill {
-  name = "dangyi",
+  name = "mobile__dangyi",
   tags = { Skill.Lord, Skill.Permanent },
 }
 
@@ -9,8 +9,8 @@ Fk:loadTranslationTable{
 
   ["#mobile__dangyi-invoke"] = "荡异：是否令你对 %dest 造成的伤害+1？（还剩%arg次！）",
 
-  ["$mobile__dangyi1"] = "哼！斩首示众，以儆效尤。",
-  ["$mobile__dangyi2"] = "汝等仍存异心，可见心存魏阙。",
+  ["$mobile__dangyi1"] = "徒生逆心，未有其力，破之易如反掌！",
+  ["$mobile__dangyi2"] = "司马氏江山，自不容怀异之徒！",
 }
 
 dangyi:addEffect(fk.DamageCaused, {

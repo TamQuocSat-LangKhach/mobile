@@ -1,5 +1,5 @@
 local weisi = fk.CreateSkill {
-  name = "weisi",
+  name = "mobile__weisi",
   tags = { Skill.AttachedKingdom },
   attached_kingdom = {"qun"},
   dynamic_desc = function(self, player)
@@ -25,13 +25,13 @@ Fk:loadTranslationTable{
   ["#mobile__weisi-ask"] = "威肆：%src 将对你使用【决斗】！请将任意张手牌本回合移出游戏，【决斗】对你造成伤害后其获得你手牌！",
   ["$mobile__weisi"] = "威肆",
 
-  ["$mobile__weisi1"] = "上者慑敌以威，灭敌以势。",
-  ["$mobile__weisi2"] = "哼，求存者多，未见求死者也。",
-  ["$mobile__weisi3"] = "未想逆贼区区，竟然好物甚巨。", --威肆（获得手牌）
+  ["$mobile__weisi1"] = "城破之日，定诛此逆贼三族！",
+  ["$mobile__weisi2"] = "平叛淮南，吾司马氏当再立不世之功！",
+  ["$mobile__weisi3"] = "众将平乱所获，皆为陛下所赐！", --威肆（获得手牌）
 }
 
 weisi:addEffect("active", {
-  anim_type = "offensive",
+  mute = true,
   card_num = 0,
   target_num = 1,
   prompt = "#mobile__weisi",
@@ -45,6 +45,8 @@ weisi:addEffect("active", {
   on_use = function(self, room, effect)
     local player = effect.from
     local target = effect.tos[1]
+    player:broadcastSkillInvoke(weisi.name, math.random(1, 2))
+    room:notifySkillInvoked(player, weisi.name, "offensive")
     local cards = room:askToCards(target, {
       min_num = 1,
       max_num = 999,
@@ -60,6 +62,7 @@ weisi:addEffect("active", {
     room:useVirtualCard("duel", nil, player, target, weisi.name)
   end,
 })
+
 weisi:addEffect(fk.Damage, {
   mute = true,
   is_delay_effect = true,
@@ -74,9 +77,11 @@ weisi:addEffect(fk.Damage, {
     if room:isGameMode("1v2_mode") then
       cards = table.random(cards, 1)
     end
+    player:broadcastSkillInvoke(weisi.name, 3)
     room:moveCardTo(cards, Card.PlayerHand, player, fk.ReasonPrey, weisi.name, nil, false, player)
   end,
 })
+
 weisi:addEffect(fk.TurnEnd, {
   mute = true,
   is_delay_effect = true,

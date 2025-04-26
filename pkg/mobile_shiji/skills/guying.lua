@@ -24,7 +24,7 @@ guying:addEffect(fk.AfterCardsMove, {
       player:usedSkillTimes(guying.name, Player.HistoryTurn) == 0 then
       for _, move in ipairs(data) do
         if move.from == player and #move.moveInfo == 1 and
-          table.contains({fk.ReasonUse, fk.ReasonResonpse, fk.ReasonDiscard}, move.moveReason) then
+          table.contains({fk.ReasonUse, fk.ReasonResponse, fk.ReasonDiscard}, move.moveReason) then
           for _, info in ipairs(move.moveInfo) do
             if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
               return true
@@ -34,13 +34,16 @@ guying:addEffect(fk.AfterCardsMove, {
       end
     end
   end,
+  on_cost = function (self, event, target, player, data)
+    event:setCostData(self, { tos = {player.room.current} })
+    return true
+  end,
   on_use = function (self, event, target, player, data)
     local room = player.room
-    room:doIndicate(player, {room.current})
     local id
     for _, move in ipairs(data) do
       if move.from == player and #move.moveInfo == 1 and
-        table.contains({fk.ReasonUse, fk.ReasonResonpse, fk.ReasonDiscard}, move.moveReason) then
+        table.contains({fk.ReasonUse, fk.ReasonResponse, fk.ReasonDiscard}, move.moveReason) then
         for _, info in ipairs(move.moveInfo) do
           if info.fromArea == Card.PlayerHand or info.fromArea == Card.PlayerEquip then
             id = info.cardId

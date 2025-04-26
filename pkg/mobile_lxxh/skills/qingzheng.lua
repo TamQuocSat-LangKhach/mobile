@@ -59,7 +59,7 @@ qingzheng:addEffect(fk.EventPhaseStart, {
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local choice = self.cost_data.choice
+    local choice = event:getCostData(self).choice
     local to = event:getCostData(self).tos[1]
     local my_throw = table.filter(player:getCardIds("h"), function (id)
       return not player:prohibitDiscard(Fk:getCardById(id)) and Fk:getCardById(id):getSuitString(true) == choice

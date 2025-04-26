@@ -84,9 +84,9 @@ jilue:addEffect(fk.EventPhaseStart, {
     if choice:startsWith("mobile__jilue_skill") then
       room:removePlayerMark(player, "@mobile__renjie_ren", math.max(player:getMark("mobile__jilue_option1") + 1, 2))
       room:addPlayerMark(player, "mobile__jilue_option1")
-      room:handleAddLoseSkills(player, self.cost_data:split(":")[2])
+      room:handleAddLoseSkills(player, choice:split(":")[2])
     else
-      local cost = tonumber(choice:split(":")[2])
+      local cost = tonumber(choice:split(":")[2]) ---@type integer
       room:removePlayerMark(player, "@mobile__renjie_ren", cost)
       player:drawCards(cost, jilue.name)
     end

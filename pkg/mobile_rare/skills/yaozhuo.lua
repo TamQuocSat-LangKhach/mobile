@@ -44,7 +44,6 @@ yaozhuo:addEffect("active", {
   end,
 })
 yaozhuo:addEffect(fk.EventPhaseChanging, {
-  refresh_events = {fk.EventPhaseChanging},
   can_refresh = function(self, event, target, player, data)
     return target == player and player:getMark("@@changshi__yaozhuo") > 0 and data.phase == Player.Draw
   end,

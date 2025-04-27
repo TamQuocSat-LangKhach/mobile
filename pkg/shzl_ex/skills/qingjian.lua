@@ -43,7 +43,6 @@ qingjian:addEffect(fk.AfterCardsMove, {
   end,
 })
 qingjian:addEffect(fk.EventPhaseStart, {
-  events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     return target.phase == Player.Finish and #player:getPile("$m_ex__qingjian") > 0 and
       #player.room:getOtherPlayers(player, false) > 0

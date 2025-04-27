@@ -15,7 +15,6 @@ Fk:loadTranslationTable{
 
 daigong:addEffect(fk.DamageInflicted, {
   anim_type = "defensive",
-  events = {fk.DamageInflicted},
   can_trigger = function(self, event, target, player, data)
     return
       target == player and

@@ -12,7 +12,6 @@ Fk:loadTranslationTable{
 
 mobileDianhua:addEffect(fk.EventPhaseStart, {
   anim_type = "control",
-  events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     return
       target == player and

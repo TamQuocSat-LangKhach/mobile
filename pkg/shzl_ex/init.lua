@@ -144,7 +144,7 @@ General:new(extension, "m_ex__yanliangwenchou", "qun", 4):addSkills { "m_ex__shu
 Fk:loadTranslationTable{
   ["m_ex__yanliangwenchou"] = "界颜良文丑",
   ["#m_ex__yanliangwenchou"] = "虎狼兄弟",
-  ["illustrator:m_ex__yanliangwenchou"] = "",
+  ["illustrator:m_ex__yanliangwenchou"] = "凝聚永恒",
 
   ["~m_ex__yanliangwenchou"] = "不是叫你看好我身后吗……",
 }

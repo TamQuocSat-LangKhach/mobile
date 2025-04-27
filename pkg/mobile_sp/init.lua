@@ -145,6 +145,7 @@ General:new(extension, "mobile__xugong", "wu", 3):addSkills { "mobile__biaozhao"
 Fk:loadTranslationTable{
   ["mobile__xugong"] = "许贡",
   ["#mobile__xugong"] = "独计击流",
+  ["illustrator:mobile__xugong"] = "鬼画府",
 
   ["$yechou_mobile__xugong1"] = "孙策小儿，你必还恶报！",
   ["$yechou_mobile__xugong2"] = "吾命丧黄泉，你也休想得安!",
@@ -199,6 +200,7 @@ General:new(extension, "dingyuan", "qun", 4):addSkills { "beizhu" }
 Fk:loadTranslationTable{
   ["dingyuan"] = "丁原",
   ["#dingyuan"] = "饲虎成患",
+  ["illustrator:dingyuan"] = "M云涯",
 
   ["~dingyuan"] = "奉先何故心变，啊！",
 }
@@ -303,6 +305,7 @@ Fk:loadTranslationTable{
   ["maojie"] = "毛玠",
   ["#maojie"] = "清公素履",
   ["cv:maojie"] = "刘强",
+  ["illustrator:maojie"] = "君桓文化",
 
   ["~maojie"] = "废立大事，公不可不慎……",
 }
@@ -324,6 +327,7 @@ General:new(extension, "ruanhui", "wei", 3, 3, General.Female):addSkills {
 Fk:loadTranslationTable{
   ["ruanhui"] = "阮慧",
   ["#ruanhui"] = "明察福祸",
+  ["illustrator:ruanhui"] = "匠人绘",
 
   ["~ruanhui"] = "贱妾茕茕守空房，忧来思君不敢忘……",
 }
@@ -440,6 +444,7 @@ General:new(extension, "m_sp__simazhao", "wei", 3):addSkills { "zhaoxin", "daigo
 Fk:loadTranslationTable{
   ["m_sp__simazhao"] = "司马昭", -- 手杀称为SP司马昭
   ["#m_sp__simazhao"] = "四海威服",
+  ["illustrator:m_sp__simazhao"] = "Thinking",
 
   ["~m_sp__simazhao"] = "安世，接下来，就看你的了……",
   ["!m_sp__simazhao"] = "天下归一之功，已近在咫尺。",
@@ -489,6 +494,7 @@ General:new(extension, "qianzhao", "wei", 4):addSkills { "shihe", "zhenfu" }
 Fk:loadTranslationTable{
   ["qianzhao"] = "牵招",
   ["#qianzhao"] = "威风远振",
+  ["illustrator:qianzhao"] = "错落宇宙",
 
   ["~qianzhao"] = "治边数载，虽不敢称功，亦可谓无过……",
 }
@@ -511,6 +517,7 @@ mobileHansui:addSkills { "mobile__niluan", "mobile__xiaoxi" }
 Fk:loadTranslationTable{
   ["mobile__hansui"] = "韩遂",
   ["#mobile__hansui"] = "雄踞北疆",
+  ["illustrator:mobile__hansui"] = "鱼仔",
 
   ["~mobile__hansui"] = "称雄三十载，一败化为尘……",
 }

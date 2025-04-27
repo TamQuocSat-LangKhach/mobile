@@ -134,6 +134,7 @@ Fk:loadTranslationTable{
   ["mobile__wujing"] = "吴景",
   ["#mobile__wujing"] = "助吴征战",
   ["cv:mobile__wujing"] = "虞晓旭",
+  ["illustrator:mobile__wujing"] = "匠人绘",
 
   ["~mobile__wujing"] = "贼寇未除，奈何吾身先丧……",
 }

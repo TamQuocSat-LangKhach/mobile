@@ -15,7 +15,6 @@ Fk:loadTranslationTable{
 
 mobileNiluan:addEffect(fk.EventPhaseStart, {
   anim_type = "offensive",
-  events = {fk.EventPhaseStart},
   can_trigger = function(self, event, target, player, data)
     if player:hasSkill(mobileNiluan.name) and target.phase == Player.Finish and target:isAlive() and target ~= player then
       return #player.room.logic:getEventsOfScope(GameEvent.UseCard, 1, function (e)

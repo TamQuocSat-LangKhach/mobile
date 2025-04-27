@@ -196,8 +196,8 @@ General:new(extension, "m_ex__yufan", "wu", 3):addSkills {
 Fk:loadTranslationTable{
   ["m_ex__yufan"] = "界虞翻",
   ["#m_ex__yufan"] = "狂直之士",
-  --["illustrator:m_ex__yufan"] = "",
-  --["~m_ex__yufan"] = "",
+  ["illustrator:m_ex__yufan"] = "YanBai",
+  ["~m_ex__yufan"] = "彼皆死人，何语神仙？",
 }
 
 General:new(extension, "m_ex__manchong", "wei", 3):addSkills {
@@ -278,7 +278,7 @@ General:new(extension, "m_ex__zhoucang", "shu", 4):addSkills {
 Fk:loadTranslationTable{
   ["m_ex__zhoucang"] = "界周仓",
   ["#m_ex__zhoucang"] = "披肝沥胆",
-  --["illustrator:m_ex__zhoucang"] = "",
+  ["illustrator:m_ex__zhoucang"] = "腥鱼仔",
   ["~m_ex__zhoucang"] = "九泉之下，仓陪将军再走一遭……",
 }
 
@@ -330,6 +330,7 @@ jushou:addSkills {
 Fk:loadTranslationTable{
   ["m_ex__jvshou"] = "界沮授",
   ["#m_ex__jvshou"] = "监军谋国",
+  ["illustrator:m_ex__jvshou"] = "鬼画府",
   ["~m_ex__jvshou"] = "授，无愧主公之恩……",
 
   ["$shibei_m_ex__jvshou1"] = "只有杀身士，绝无降曹夫！",
@@ -343,6 +344,7 @@ General:new(extension, "m_ex__wuyi", "shu", 4):addSkills {
 Fk:loadTranslationTable{
   ["m_ex__wuyi"] = "界吴懿",
   ["#m_ex__wuyi"] = "建兴鞍辔",
+  ["illustrator:m_ex__wuyi"] = "鬼画府",
   ["~m_ex__wuyi"] = "吾等虽不惧蜀道之险，却亦难过这渭水长安……",
 }
 
@@ -354,6 +356,7 @@ General:new(extension, "m_ex__zhuhuan", "wu", 4):addSkills {
 Fk:loadTranslationTable{
   ["m_ex__zhuhuan"] = "界朱桓",
   ["#m_ex__zhuhuan"] = "中洲拒天人",
+  ["illustrator:m_ex__zhuhuan"] = "聚一工作室",
   ["~m_ex__zhuhuan"] = "为将不行前而为人下，非可生受之辱……",
 
   ["$fenli_m_ex__zhuhuan1"] = "为主制客，乃百战百胜之势。",
@@ -393,6 +396,7 @@ General:new(extension, "m_ex__zhuzhi", "wu", 4):addSkills {
 Fk:loadTranslationTable{
   ["m_ex__zhuzhi"] = "界朱治",
   ["#m_ex__zhuzhi"] = "功崇信重",
+  ["illustrator:m_ex__zhuzhi"] = "凝聚永恒",
   ["~m_ex__zhuzhi"] = "臣辅孙氏三代之业，今年近古稀，死而无憾。",
 }
 
@@ -405,6 +409,7 @@ General:new(extension, "m_ex__zhangyi", "shu", 4):addSkills {
 Fk:loadTranslationTable{
   ["m_ex__zhangyi"] = "界张嶷",
   ["#m_ex__zhangyi"] = "通壮逾古",
+  ["illustrator:m_ex__zhangyi"] = "成都琥羽",
   ["~m_ex__zhangyi"] = "北伐未捷，臣定杀身以报陛下！",
 }
 

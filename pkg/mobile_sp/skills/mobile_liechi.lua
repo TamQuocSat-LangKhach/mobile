@@ -13,8 +13,6 @@ Fk:loadTranslationTable{
 
 mobileLiechi:addEffect(fk.EnterDying, {
   anim_type = "control",
-  frequency = Skill.Compulsory,
-  events = {fk.EnterDying},
   can_trigger = function(self, event, target, player, data)
     return target == player and player:hasSkill(mobileLiechi.name) and data.damage and data.damage.from and data.damage.from:isAlive()
   end,

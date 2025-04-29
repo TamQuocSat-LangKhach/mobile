@@ -76,7 +76,7 @@ guying:addEffect(fk.AfterCardsMove, {
         })
       end
     else
-      local card = room:askToCards(player, {
+      local card = room:askToCards(room.current, {
         min_num = 1,
         max_num = 1,
         include_equip = true,

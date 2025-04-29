@@ -100,7 +100,7 @@ Fk:loadTranslationTable{
   ["~guansuo"] = "只恨天下未平，空留遗志。",
 }
 
---SP8：审配
+--SP8：审配 王允
 General:new(extension, "mobile__shenpei", "qun", 2, 3):addSkills { "shouye", "liezhi" }
 Fk:loadTranslationTable{
   ["mobile__shenpei"] = "审配",
@@ -108,6 +108,18 @@ Fk:loadTranslationTable{
   ["illustrator:mobile__shenpei"] = "YanBai",
 
   ["~mobile__shenpei"] = "吾君在北，但求面北而亡！",
+}
+
+local wangyun = General:new(extension, "mobile__wangyun", "qun", 3)
+wangyun:addSkills { "mobile__lianji", "mobile__moucheng" }
+wangyun:addRelatedSkill("mobile__jingong")
+Fk:loadTranslationTable{
+  ["mobile__wangyun"] = "王允",
+  ["#mobile__wangyun"] = "忠魂不泯",
+  ["illustrator:mobile__wangyun"] = "鬼画府",
+
+  ["~mobile__wangyun"] = "逆贼何必多言？今日有死而已！",
+  ["!mobile__wangyun"] = "奸贼既除，乱世将定，大汉国祚永存。",
 }
 
 --SP9：苏飞 贾逵 张恭 许贡 曹婴 鲍三娘 徐荣
@@ -541,6 +553,15 @@ Fk:loadTranslationTable{
 }
 
 --SP14：吴班 鲍信 胡班 陈珪 霍峻 木鹿大王 蒋干 杨奉 来敏
+General:new(extension, "mobile__wuban", "shu", 4):addSkills { "mobile__jintao" }
+Fk:loadTranslationTable{
+  ["mobile__wuban"] = "吴班",
+  ["#mobile__wuban"] = "碧血的英豪",
+  ["illustrator:mobile__wuban"] = "鬼画府",
+
+  ["~mobile__wuban"] = "汉室倾颓，匡复无望……",
+}
+
 General:new(extension, "mobile__baoxin", "qun", 4):addSkills { "mobile__mutao", "mobile__yimou" }
 Fk:loadTranslationTable{
   ["mobile__baoxin"] = "鲍信",

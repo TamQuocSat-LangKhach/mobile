@@ -552,7 +552,7 @@ Fk:loadTranslationTable{
   ["~mobile__liwei"] = "安南重任，万不可轻之……",
 }
 
---SP14：吴班 鲍信 胡班 陈珪 霍峻 木鹿大王 蒋干 杨奉 来敏
+--SP14：吴班 鲍信 胡班 陈珪 霍峻 木鹿大王 蒋干 杨奉 甘夫人 来敏
 General:new(extension, "mobile__wuban", "shu", 4):addSkills { "mobile__jintao" }
 Fk:loadTranslationTable{
   ["mobile__wuban"] = "吴班",
@@ -631,6 +631,15 @@ Fk:loadTranslationTable{
   ["~yangfeng"] = "刘备！本共图吕布，何设鸿门相欺！",
 }
 
+General:new(extension, "mobile__ganfuren", "shu", 3, 3, General.Female):addSkills { "zhijie", "mobile__shushen" }
+Fk:loadTranslationTable{
+  ["mobile__ganfuren"] = "甘夫人",
+  ["#mobile__ganfuren"] = "昭烈皇后",
+  --["illustrator:mobile__ganfuren"] = "",
+
+  ["~mobile__ganfuren"] = "只愿夫君，大事可成，兴汉有期……",
+}
+
 General:new(extension, "laimin", "shu", 3):addSkills { "laishou", "luanqun" }
 Fk:loadTranslationTable{
   ["laimin"] = "来敏",
@@ -640,7 +649,7 @@ Fk:loadTranslationTable{
   ["~laimin"] = "狂嚣之言，一言十过啊……",
 }
 
---未分组：SP甄姬 甘夫人 王经 清河公主
+--未分组：SP甄姬 甘夫人 王经 清河公主 张布
 General:new(extension, "m_sp__zhenji", "qun", 3, 3, General.Female):addSkills { "bojian", "jiwei" }
 Fk:loadTranslationTable{
   ["m_sp__zhenji"] = "甄姬",
@@ -649,15 +658,6 @@ Fk:loadTranslationTable{
 
   ["~m_sp__zhenji"] = "悔入帝王家，万愿皆成空……",
   ["!m_sp__zhenji"] = "昔见百姓十室九空，更惜今日安居乐业。",
-}
-
-General:new(extension, "mobile__ganfuren", "shu", 3, 3, General.Female):addSkills { "zhijie", "mobile__shushen" }
-Fk:loadTranslationTable{
-  ["mobile__ganfuren"] = "甘夫人",
-  ["#mobile__ganfuren"] = "昭烈皇后",
-  --["illustrator:mobile__ganfuren"] = "",
-
-  ["~mobile__ganfuren"] = "只愿夫君，大事可成，兴汉有期……",
 }
 
 General:new(extension, "wangjing", "wei", 3):addSkills { "zujin", "jiejianw" }
@@ -677,6 +677,15 @@ Fk:loadTranslationTable{
 
   ["~mobile__qinghegongzhu"] = "夏侯楙徒有形表，实非良人……",
   ["!mobile__qinghegongzhu"] = "夫君自走死路，何可怨得妾身。",
+}
+
+General:new(extension, "zhangbu", "wu", 3):addSkills { "chengxiong", "wangzhuan" }
+Fk:loadTranslationTable{
+  ["zhangbu"] = "张布",
+  ["#zhangbu"] = "主胜辅义",
+  --["illustrator:zhangbu"] = "",
+
+  ["~zhangbu"] = "悔不遵先帝遗命啊。",
 }
 
 return extension

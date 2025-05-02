@@ -43,7 +43,7 @@ shuangxiong:addEffect("viewas", {
     end
     return table.contains(player:getHandlyIds(), to_select) and table.contains(player:getMark("@shuangxiong-turn"), color)
   end,
-  view_as = function(self, cards)
+  view_as = function(self, player, cards)
     if #cards ~= 1 then return end
     local card = Fk:cloneCard("duel")
     card:addSubcard(cards[1])

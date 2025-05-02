@@ -4,10 +4,13 @@ local wangzhuan = fk.CreateSkill {
 
 Fk:loadTranslationTable{
   ["wangzhuan"] = "妄专",
-  [":wangzhuan"] = "当一名角色受到非游戏牌造成的伤害后，若你是伤害来源或受伤角色，你可以摸一张牌，然后当前回合角色非锁定技失效直到回合结束。",
+  [":wangzhuan"] = "当一名角色受到非游戏牌造成的伤害后，若你是伤害来源或受伤角色，你可以摸一张牌，然后当前回合角色本回合非锁定技失效。",
 
   ["#wangzhuan-invoke"] = "妄专：你可以摸一张牌，令当前回合角色本回合非锁定技无效",
   ["@@wangzhuan-turn"] = "妄专",
+
+  ["$wangzhuan1"] = "此事若入君耳，后果汝当自知。",
+  ["$wangzhuan2"] = "孙綝既诛，便是我一言之堂。",
 }
 
 wangzhuan:addEffect(fk.Damaged, {

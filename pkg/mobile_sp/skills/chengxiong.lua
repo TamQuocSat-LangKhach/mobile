@@ -9,6 +9,9 @@ Fk:loadTranslationTable{
 
   ["#chengxiong-choose"] = "惩凶：弃置一名角色一张牌，若为%arg，对其造成1点伤害",
   ["#chengxiong-discard"] = "惩凶：弃置 %dest 一张牌",
+
+  ["$chengxiong1"] = "天子殿前，岂容不节之臣。",
+  ["$chengxiong2"] = "陛下有令，还不将其斩之。",
 }
 
 chengxiong:addEffect(fk.TargetSpecified, {

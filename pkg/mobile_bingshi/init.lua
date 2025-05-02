@@ -33,4 +33,21 @@ Fk:loadTranslationTable{
   ["~mobile__lougui"] = "丞相留步，老夫告辞。",
 }
 
+General:new(extension, "m_shi__yuji", "qun", 3):addSkills { "fujiy", "daozhuan" }
+Fk:loadTranslationTable{
+  ["m_shi__yuji"] = "势于吉",
+  ["#m_shi__yuji"] = "夙仙望道",
+
+  ["~m_shi__yuji"] = "子为愚者，尚迷不信道，堕卑贱苦岂不哀哉？",
+  ["!m_shi__yuji"] = "夫寿命，天之重宝也，所以私有德，不可伪致。",
+}
+
+General:new(extension, "mobile__yanghong", "qun", 3):addSkills { "mobile__jianji", "mobile__yuanmo" }
+Fk:loadTranslationTable{
+  ["mobile__yanghong"] = "杨弘",
+  ["#mobile__yanghong"] = "柔迩驭远",
+
+  ["~mobile__yanghong"] = "今日固死，死有何惧。",
+}
+
 return extension

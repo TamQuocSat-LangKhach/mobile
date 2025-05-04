@@ -33,7 +33,7 @@ local raid_and_frontal_attack = fk.CreateCard{
 Fk:loadTranslationTable{
   ["raid_and_frontal_attack"] = "奇正相生",
   [":raid_and_frontal_attack"] = "锦囊牌<br/><b>时机</b>：出牌阶段<br/><b>目标</b>：一名其他角色<br/><b>效果</b>：当此牌指定目标后，"..
-  "你为其指定“奇兵”或“正兵”。目标角色可以打出一张【杀】或【闪】，然后若其为：“正兵”目标且未打出【杀】，你对其造成1点伤害；“奇兵”目标且未打出【闪】，"..
+  "你为其指定“奇兵”或“正兵”。目标角色可以打出一张【杀】或【闪】，然后若其为：“奇兵”目标且未打出【杀】，你对其造成1点伤害；“正兵”目标且未打出【闪】，"..
   "你获得其一张牌。",
 }
 extension:addCardSpec("raid_and_frontal_attack", Card.Spade, 2)

@@ -33,7 +33,7 @@ skill:addEffect("cardskill", {
       room:responseCard(respond)
     end
     local RFAChosen = (effect.extra_data or {}).RFAChosen or "RFA_raid"
-    if not (respond and respond.trueName == (RFAChosen == "RFA_frontal" and "jink" or "slash")) then
+    if not (respond and respond.card.trueName == (RFAChosen == "RFA_frontal" and "jink" or "slash")) then
       if RFAChosen == "RFA_raid" then
         room:damage({
           from = from,
@@ -50,7 +50,7 @@ skill:addEffect("cardskill", {
             flag = "he",
             skill_name = skill.name,
           })
-          room:obtainCard(from, cardId, room:getCardArea(cardId) == Player.Equip, fk.ReasonPrey)
+          room:obtainCard(from, cardId, nil, fk.ReasonPrey, from, skill.name)
         end
       end
     end
@@ -65,7 +65,7 @@ skill:addEffect(fk.TargetSpecified, {
   end,
   on_trigger = function(self, event, target, player, data)
     local choice = player.room:askToChoice(player, {
-      choices = { "RFA_frontal", "RFA_raid" },
+      choices = { "RFA_frontal", "RFA_raid" }, -- 正兵，奇兵
       skill_name = skill.name,
       prompt = "#RFA-choose::" .. data.to.id,
     })
@@ -73,5 +73,40 @@ skill:addEffect(fk.TargetSpecified, {
     data.extra_data.RFAChosen = choice
   end,
 })
+
+skill:addTest(function (room, me)
+  local comp2 = room.players[2]
+  local slash, jink = room:printCard("slash"), room:printCard("jink")
+  FkTest.setNextReplies(me, { "RFA_frontal", "RFA_frontal" }) -- 先正兵，再奇兵
+  FkTest.setNextReplies(comp2, { json.encode {
+    card = jink.id,
+    targets = { }
+  }, json.encode {
+    card = slash.id,
+    targets = { }
+  } })
+  local doTest = function ()
+    room:obtainCard(comp2, slash, nil, fk.ReasonPrey, me, skill.name)
+    room:obtainCard(comp2, jink, nil, fk.ReasonPrey, me, skill.name)
+    room:moveCardTo(1, Card.PlayerHand, comp2)
+    room:useVirtualCard("raid_and_frontal_attack", nil, me, comp2)
+    room:useVirtualCard("raid_and_frontal_attack", nil, me, comp2)
+  end
+  FkTest.runInRoom(doTest)
+  lu.assertIsTrue(comp2:isKongcheng())
+  lu.assertEquals(comp2.hp, 4)
+
+  FkTest.setNextReplies(me, { "RFA_raid", "RFA_raid" })
+  FkTest.setNextReplies(comp2, { json.encode {
+    card = slash.id,
+    targets = { }
+  }, json.encode {
+    card = jink.id,
+    targets = { }
+  } })
+  FkTest.runInRoom(doTest)
+  lu.assertEquals(comp2:getCardIds(Player.Hand), { 1 })
+  lu.assertEquals(comp2.hp, 3)
+end)
 
 return skill

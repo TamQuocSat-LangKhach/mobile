@@ -26,7 +26,7 @@ qingnang:addEffect("active", {
     return #selected == 0 and table.contains(player:getCardIds("h"), to_select) and not player:prohibitDiscard(to_select)
   end,
   target_filter = function(self, player, to_select, selected, cards)
-    return #selected == 0 and to_select:isWounded()
+    return #selected == 0 and to_select:isWounded() and not table.contains(player:getTableMark("m_ex__qingnang-phase"), to_select.id)
   end,
   on_use = function(self, room, effect)
     local player = effect.from
@@ -51,9 +51,6 @@ qingnang:addEffect("active", {
           skill_name = qingnang.name,
           prompt = "#m_ex__qingnang-invoke",
           cancelable = true,
-          extra_data = {
-            exclusive_targets = targets
-          },
         })
       end
     end

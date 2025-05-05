@@ -15,8 +15,6 @@ Fk:loadTranslationTable{
   ["$daizui2"] = "干，谢丞相不杀之恩！",
 }
 
-local U = require "packages/utility/utility"
-
 daizui:addEffect(fk.DamageInflicted, {
   anim_type = "defensive",
   can_trigger = function(self, event, target, player, data)
@@ -29,7 +27,7 @@ daizui:addEffect(fk.DamageInflicted, {
   on_use = function(self, event, target, player, data)
     local room = player.room
     data:preventDamage()
-    if data.card and data.from and data.from:isAlive() and U.hasFullRealCard(room, data.card) then
+    if data.card and data.from and data.from:isAlive() and room:getCardArea(data.card) == Card.Processing then
       data.from:addToPile("daizui_shi", data.card, true, daizui.name, player)
     end
   end,

@@ -16,8 +16,6 @@ Fk:loadTranslationTable{
   ["$jueyong2"] = "身陷敌阵，战而弥勇！",
 }
 
-local U = require "packages/utility/utility"
-
 jueyong:addEffect(fk.TargetConfirming, {
   anim_type = "defensive",
   derived_piles = "jueyong_desperation",
@@ -29,7 +27,7 @@ jueyong:addEffect(fk.TargetConfirming, {
       data.card.trueName ~= "analeptic" and
       not (data.extra_data and
       data.extra_data.useByJueyong) and
-      U.isPureCard(data.card) and
+      #Card:getIdList(data.card) == 1 and Fk:getCardById(Card:getIdList(data.card)[1], true).name == data.card.name and
       data:isOnlyTarget(player) and
       #player:getPile("jueyong_desperation") < player.hp
   end,

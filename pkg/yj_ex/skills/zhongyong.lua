@@ -21,8 +21,6 @@ Fk:loadTranslationTable{
   ["$m_ex__zhongyong2"] = "青龙三停刀，斩敌万千条！",
 }
 
-local U = require "packages/utility/utility"
-
 zhongyong:addEffect(fk.CardUseFinished, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
@@ -40,7 +38,7 @@ zhongyong:addEffect(fk.CardUseFinished, {
         end
       end, use_event.id)
       if #jinks == 0 then
-        if U.hasFullRealCard(room, data.card) then
+        if room:getCardArea(data.card) == Card.Processing then
           event:setCostData(self, {cards = Card:getIdList(data.card), choice = "slash"})
           return true
         end
@@ -114,7 +112,7 @@ zhongyong:addEffect(fk.CardUseFinished, {
         end
       else
         room:obtainCard(player, dat.cards, true, fk.ReasonJustMove, player, zhongyong.name, "@@m_ex__zhongyong-inhand-turn")
-        if not player.dead and U.hasFullRealCard(room, data.card) then
+        if not player.dead and room:getCardArea(data.card) == Card.Processing then
           local tos = table.filter(room.alive_players, function (p)
             return p ~= player and not table.contains(data.tos, p)
           end)

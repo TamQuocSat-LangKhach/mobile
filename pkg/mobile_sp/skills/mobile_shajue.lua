@@ -11,8 +11,6 @@ Fk:loadTranslationTable{
   ["$mobile__shajue2"] = "与我们为敌的人，一个都不用留。",
 }
 
-local U = require "packages/utility/utility"
-
 mobileShajue:addEffect(fk.EnterDying, {
   anim_type = "offensive",
   can_trigger = function(self, event, target, player, data)
@@ -21,7 +19,7 @@ mobileShajue:addEffect(fk.EnterDying, {
   on_use = function(self, event, target, player, data)
     local room = player.room
     room:addPlayerMark(player, "@mobile__baoli", 1)
-    if data.damage and data.damage.card and U.hasFullRealCard(room, data.damage.card) then
+    if data.damage and data.damage.card and room:getCardArea(data.damage.card) == Card.Processing then
       room:obtainCard(player, data.damage.card, true, fk.ReasonPrey, player)
     end
   end,

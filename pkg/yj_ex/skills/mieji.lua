@@ -9,7 +9,7 @@ Fk:loadTranslationTable{
   [":m_ex__mieji"] = "出牌阶段限一次，你可以将一张黑色锦囊牌置于牌堆顶并选择一名有手牌的其他角色，"..
     "其选择：1.将一张锦囊牌交给你；2.依次弃置两张非锦囊牌（不足则弃置一张）。",
 
-  ["#m_ex__mieji-active"] = "灭计：选择1张黑色锦囊牌置于牌堆顶，并选择1名其他角色",
+  ["#m_ex__mieji-active"] = "灭计：选择一张黑色锦囊牌置于牌堆顶，并选择一名其他角色",
   ["#m_ex__mieji-choice"] = "灭计：选择交给%src一张锦囊牌，或依次弃置两张非锦囊牌",
   ["m_ex__mieji_handovertrick"] = "交出一张锦囊牌",
   ["m_ex__mieji_dis2card"] = "依次弃置两张非锦囊牌",
@@ -48,7 +48,7 @@ mieji:addEffect("active", {
         { ".|.|.|.|.|trick", 1, 1, "m_ex__mieji_handovertrick" },
         { tostring(Exppattern{ id = ids }), 1, 1, "m_ex__mieji_dis2card" }
       },
-      self.name,
+      mieji.name,
       false,
       "#m_ex__mieji-choice:" .. player.id
     )
@@ -69,5 +69,33 @@ mieji:addEffect("active", {
     end
   end,
 })
+
+mieji:addTest(function (room, me)
+  local comp2 = room.players[2]
+  FkTest.runInRoom(function () room:handleAddLoseSkills(me, mieji.name) end)
+  local card = room:printCard("duel", Card.Spade, 1)
+  FkTest.setNextReplies(me, {json.encode {
+    card = { skill = mieji.name, subcards = {card.id} }, targets = { comp2.id }
+  } })
+  FkTest.runInRoom(function ()
+    room:obtainCard(me, card)
+    room:drawCards(comp2, 2)
+    GameEvent.Turn:create(TurnData:new(me, "game_rule", { Player.Play })):exec()
+  end)
+  lu.assertIsTrue(comp2:isKongcheng())
+  lu.assertIsTrue(me:isKongcheng())
+
+  local card2 = room:printCard("duel", Card.Spade, 2)
+  FkTest.setNextReplies(me, {json.encode {
+    card = { skill = mieji.name, subcards = {card.id} }, targets = { comp2.id }
+  } })
+  FkTest.runInRoom(function ()
+    room:obtainCard(me, card)
+    room:obtainCard(comp2, card2)
+    GameEvent.Turn:create(TurnData:new(me, "game_rule", { Player.Play })):exec()
+  end)
+  lu.assertIsTrue(comp2:isKongcheng())
+  lu.assertEquals(me:getHandcardNum(), 1)
+end)
 
 return mieji

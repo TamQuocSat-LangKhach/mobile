@@ -31,7 +31,7 @@ jianji:addEffect("active", {
       if #selected == 0 then
         return true
       else
-        return selected[1]:canPindian(to_select, true, true)
+        return selected[1]:canPindian(to_select)
       end
     end
   end,

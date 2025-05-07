@@ -35,7 +35,7 @@ renjie:addEffect(fk.AfterAskForCardResponse, {
 })
 renjie:addEffect(fk.AfterAskForNullification, {
   can_trigger = function(self, event, target, player, data)
-    return target == player and player:hasSkill(renjie.name) and data.eventData and data.eventData.from ~= player and
+    return player:hasSkill(renjie.name) and data.eventData and data.eventData.from ~= player and
       player:usedSkillTimes(renjie.name, Player.HistoryRound) < 4 and
       not (data.result and data.result.from == player)
   end,

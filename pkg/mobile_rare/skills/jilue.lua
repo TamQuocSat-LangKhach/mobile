@@ -94,7 +94,7 @@ jilue:addEffect(fk.EventPhaseStart, {
 })
 jilue:addEffect(fk.EventAcquireSkill, {
   can_trigger = function (self, event, target, player, data)
-    return target == player and data.skill.name == jilue.name
+    return target == player and data.name == jilue.name
   end,
   on_trigger = function (self, event, target, player, data)
     local toAcquire = "guicai"

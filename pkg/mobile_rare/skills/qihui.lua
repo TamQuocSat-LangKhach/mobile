@@ -13,11 +13,11 @@ local qihui = fk.CreateSkill {
 Fk:loadTranslationTable{
   ["qihui"] = "启诲",
   [":qihui"] = "锁定技，当你使用牌时，若你没有此牌对应类别的标记，你获得1个对应类别的“启诲”标记，然后若你拥有3个“启诲”标记，"..
-  "你移除2个“启诲”标记（若为斗地主模式则移除所有“启诲”标记）并选择一项：回复1点体力；摸两张牌（若为斗地主模式则摸三张牌）；"..
+  "你移除2个“启诲”标记（若为斗地主模式则移除所有“启诲”标记）并选择一项：回复1点体力；摸两张牌；"..
   "你使用的下一张牌不计入次数且无次数限制。",
 
   [":qihui_1v2"] = "锁定技，当你使用牌时，若你没有此牌对应类别的标记，你获得1个对应类别的“启诲”标记，然后若你拥有3个“启诲”标记，"..
-  "你移除所有“启诲”标记并选择一项：回复1点体力；摸三张牌；你使用的下一张牌不计入次数且无次数限制。",
+  "你移除所有“启诲”标记并选择一项：回复1点体力；摸两张牌；你使用的下一张牌不计入次数且无次数限制。",
   [":qihui_role_mode"] = "锁定技，当你使用牌时，若你没有此牌对应类别的标记，你获得1个对应类别的“启诲”标记，然后若你拥有3个“启诲”标记，"..
   "你移除2个“启诲”标记并选择一项：回复1点体力；摸两张牌；你使用的下一张牌不计入次数且无次数限制。",
 
@@ -56,9 +56,6 @@ qihui:addEffect(fk.CardUsing, {
         end
       end
       local all_choices = {"recover", "draw2", "qihui_use"}
-      if room:isGameMode("1v2_mode") then
-        all_choices[2] = "draw3"
-      end
       local choices = table.simpleClone(all_choices)
       if not player:isWounded() then
         table.remove(choices, 1)
@@ -76,8 +73,6 @@ qihui:addEffect(fk.CardUsing, {
         }
       elseif choice == "draw2" then
         player:drawCards(2, qihui.name)
-      elseif choice == "draw3" then
-        player:drawCards(3, qihui.name)
       elseif choice == "qihui_use" then
         room:setPlayerMark(player, "qihui_use", 1)
       end

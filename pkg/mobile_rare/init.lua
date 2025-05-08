@@ -300,22 +300,4 @@ Fk:loadTranslationTable{
   ["~m_friend__xushu"] = "百姓陷于苦海，而吾却难以济之……",
 }
 
-General:new(extension, "m_friend__cuijun", "qun", 3):addSkills { "shunyi", "biwei", "cuijun__gongli" }
-Fk:loadTranslationTable{
-  ["m_friend__cuijun"] = "友崔钧",
-  ["#m_friend__cuijun"] = "日奋金丝",
-  --["illustrator:m_friend__cuijun"] = "",
-
-  ["~m_friend__cuijun"] = "与君等交何其之快，只惜无再聚之日矣……",
-}
-
-General:new(extension, "m_friend__shitao", "qun", 3):addSkills { "qinying", "lunxiong", "shitao__gongli" }
-Fk:loadTranslationTable{
-  ["m_friend__shitao"] = "友石韬",
-  ["#m_friend__shitao"] = "月堕窠臼",
-  --["illustrator:m_friend__shitao"] = "",
-
-  ["~m_friend__shitao"] = "空有一腔热血，却是报国无门……",
-}
-
 return extension

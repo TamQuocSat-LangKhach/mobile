@@ -1,3 +1,6 @@
+
+local U = require "packages/utility/utility"
+
 local shunyi = fk.CreateSkill {
   name = "shunyi",
   dynamic_desc = function(self, player)
@@ -21,8 +24,6 @@ Fk:loadTranslationTable{
   ["$shunyi1"] = "将军岂不知顺天者逸，逆天者劳乎？",
   ["$shunyi2"] = "我本山野村夫，不足与将军论天下大事。",
 }
-
-local U = require "packages/utility/utility"
 
 shunyi:addAcquireEffect(function (self, player)
   player.room:setPlayerMark(player, shunyi.name, {Card.Heart})

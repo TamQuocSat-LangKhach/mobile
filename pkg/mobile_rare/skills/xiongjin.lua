@@ -45,19 +45,20 @@ xiongjin:addEffect(fk.EventPhaseStart, {
     if drawNum > 0 then
       target:drawCards(drawNum, xiongjin.name)
     end
-    room:setPlayerMark(target, target == player and "@@xiongjinNotBasic-turn" or "@@xiongjinBasic-turn", 1)
+    room:addTableMarkIfNeed(target, target == player and "@@xiongjinNotBasic-turn" or "@@xiongjinBasic-turn", player.id)
   end,
 })
+
 xiongjin:addEffect(fk.EventPhaseStart, {
   mute = true,
   is_delay_effect = true,
   can_trigger = function(self, event, target, player, data)
     return target == player and player.phase == Player.Discard and
-      (player:getMark("@@xiongjinBasic-turn") > 0 or player:getMark("@@xiongjinNotBasic-turn") > 0)
+      (player:getMark("@@xiongjinBasic-turn") ~= 0 or player:getMark("@@xiongjinNotBasic-turn") ~= 0)
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    if player:getMark("@@xiongjinBasic-turn") > 0 then
+    if player:getMark("@@xiongjinBasic-turn") ~= 0 then
       local cards = table.filter(player:getCardIds("he"), function(id)
         return Fk:getCardById(id).type == Card.TypeBasic
       end)
@@ -65,7 +66,7 @@ xiongjin:addEffect(fk.EventPhaseStart, {
         room:throwCard(cards, xiongjin.name, player, player)
       end
     end
-    if player:getMark("@@xiongjinNotBasic-turn") > 0 then
+    if player:getMark("@@xiongjinNotBasic-turn") ~= 0 then
       local cards = table.filter(player:getCardIds("he"), function(id)
         return Fk:getCardById(id).type ~= Card.TypeBasic
       end)
@@ -76,5 +77,13 @@ xiongjin:addEffect(fk.EventPhaseStart, {
     end
   end,
 })
+
+xiongjin:addLoseEffect(function (self, player, is_death)
+  local room = player.room
+  for _, p in ipairs(room.alive_players) do
+    room:removeTableMark(p, "@@xiongjinBasic-turn", player.id)
+    room:removeTableMark(p, "@@xiongjinNotBasic-turn", player.id)
+  end
+end)
 
 return xiongjin

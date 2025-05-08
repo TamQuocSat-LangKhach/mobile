@@ -74,4 +74,11 @@ dingyi:addEffect("atkrange", {
   end,
 })
 
+dingyi:addLoseEffect(function (self, player, is_death)
+  local room = player.room
+  for _, p in ipairs(room.alive_players) do
+    room:setPlayerMark(player, "@dingyi", 0)
+  end
+end)
+
 return dingyi

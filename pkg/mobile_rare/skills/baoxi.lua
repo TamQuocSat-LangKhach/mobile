@@ -69,28 +69,30 @@ baoxi:addEffect(fk.AfterCardsMove, {
     local room = player.room
     local choice = event:getCostData(self).choice
     local name = choice == "baoxiBasic" and "duel" or "slash"
-    room:setPlayerMark(player, "baoxiUseCard", name)
-    local success, dat = room:askToUseActiveSkill(player, {
-      skill_name = "baoxi_viewas",
+    local use = room:askToUseVirtualCard(player, {
+      name = name,
+      skill_name = baoxi.name,
       prompt = "#baoxi-use:::"..name,
       cancelable = true,
       extra_data = {
         bypass_times = true,
       },
+      card_filter = {
+        n = 1,
+        cards = player:getHandlyIds(),
+      },
+      skip = true,
     })
-    room:setPlayerMark(player, "baoxiUseCard", 0)
-    if success and dat then
+    if use then
       room:setPlayerMark(player, choice.."-round", 1)
-      event:setCostData(self, {tos = dat.targets, cards = dat.cards, choice = name})
+      event:setCostData(self, {extra_data = use})
       return true
     end
   end,
   on_use = function(self, event, target, player, data)
     local room = player.room
-    local dat = event:getCostData(self)
     room:changeMaxHp(player, -1)
-    room:sortByAction(dat.tos)
-    room:useVirtualCard(dat.choice, dat.cards, player, dat.tos, baoxi.name, true)
+    room:useCard(event:getCostData(self).extra_data)
   end,
 })
 
